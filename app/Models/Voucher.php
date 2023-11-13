@@ -1,0 +1,142 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\LogOptions;
+
+/**
+ * @OA\Schema(
+ *      schema="Voucher",
+ *      required={"code","quantity","remaining_balance","payed","client_id","school_id"},
+ *      @OA\Property(
+ *          property="code",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="string",
+ *      ),
+ *      @OA\Property(
+ *          property="quantity",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="number",
+ *          format="number"
+ *      ),
+ *      @OA\Property(
+ *          property="remaining_balance",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="number",
+ *          format="number"
+ *      ),
+ *      @OA\Property(
+ *          property="payed",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="boolean",
+ *      ),
+ *      @OA\Property(
+ *          property="payrexx_reference",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=true,
+ *          type="string",
+ *      ),
+ *      @OA\Property(
+ *          property="payrexx_transaction",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=true,
+ *          type="string",
+ *      ),
+ *      @OA\Property(
+ *          property="created_at",
+ *          description="",
+ *          readOnly=true,
+ *          nullable=true,
+ *          type="string",
+ *          format="date-time"
+ *      ),
+ *      @OA\Property(
+ *          property="updated_at",
+ *          description="",
+ *          readOnly=true,
+ *          nullable=true,
+ *          type="string",
+ *          format="date-time"
+ *      ),
+ *      @OA\Property(
+ *          property="deleted_at",
+ *          description="",
+ *          readOnly=true,
+ *          nullable=true,
+ *          type="string",
+ *          format="date-time"
+ *      )
+ * )
+ */class Voucher extends Model
+{
+     use SoftDeletes;    use HasFactory;    public $table = 'vouchers';
+
+    public $fillable = [
+        'code',
+        'quantity',
+        'remaining_balance',
+        'payed',
+        'client_id',
+        'school_id',
+        'payrexx_reference',
+        'payrexx_transaction'
+    ];
+
+    protected $casts = [
+        'code' => 'string',
+        'quantity' => 'float',
+        'remaining_balance' => 'float',
+        'payed' => 'boolean',
+        'payrexx_reference' => 'string',
+        'payrexx_transaction' => 'string'
+    ];
+
+    public static array $rules = [
+        'code' => 'required|string|max:255',
+        'quantity' => 'required|numeric',
+        'remaining_balance' => 'required|numeric',
+        'payed' => 'required|boolean',
+        'client_id' => 'required',
+        'school_id' => 'required',
+        'payrexx_reference' => 'nullable|string|max:65535',
+        'payrexx_transaction' => 'nullable|string|max:65535',
+        'created_at' => 'nullable',
+        'updated_at' => 'nullable',
+        'deleted_at' => 'nullable'
+    ];
+
+    public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Client::class, 'client_id');
+    }
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\School::class, 'school_id');
+    }
+
+    public function vouchersLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\VouchersLog::class, 'voucher_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
+    }
+}
