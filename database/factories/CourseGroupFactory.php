@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 use App\Models\Degree;
 use App\Models\CourseDate;
-use App\Models\Degree;
+
 use App\Models\Course;
 
 class CourseGroupFactory extends Factory
@@ -26,7 +26,7 @@ class CourseGroupFactory extends Factory
      */
     public function definition()
     {
-        
+
         $course = Course::first();
         if (!$course) {
             $course = Course::factory()->create();

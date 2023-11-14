@@ -4,11 +4,9 @@ namespace Database\Factories;
 
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
-use App\Models\Language;
 use App\Models\Language;
 use App\Models\User;
-use App\Models\Language;
+
 
 class ClientFactory extends Factory
 {
@@ -26,7 +24,7 @@ class ClientFactory extends Factory
      */
     public function definition()
     {
-        
+
         $language = Language::first();
         if (!$language) {
             $language = Language::factory()->create();

@@ -6,7 +6,7 @@ use App\Models\ClientsUtilizer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 use App\Models\Client;
-use App\Models\Client;
+
 
 class ClientsUtilizerFactory extends Factory
 {
@@ -24,7 +24,7 @@ class ClientsUtilizerFactory extends Factory
      */
     public function definition()
     {
-        
+
         $client = Client::first();
         if (!$client) {
             $client = Client::factory()->create();
