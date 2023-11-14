@@ -77,6 +77,7 @@ class AuthController extends AppBaseController
             }
             $success['token'] = $user->createToken('Boukii')->plainTextToken;
             $user->load('monitors');
+            $user->tokenCan('teach:all');
             $success['user'] =  $user;
 
             return $this->sendResponse($success, 'User login successfully.');

@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="BookingUser",
- *      required={"booking_id","client_id","price","currency","course_date_id","attended"},
+ *      required={""school_id","booking_id","client_id","price","currency","course_date_id","attended"},
  *      @OA\Property(
  *          property="price",
  *          description="",
@@ -77,6 +77,7 @@ use Spatie\Activitylog\LogOptions;
     use SoftDeletes;    use HasFactory;    public $table = 'booking_users';
 
     public $fillable = [
+        'school_id',
         'booking_id',
         'client_id',
         'price',
@@ -103,6 +104,7 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     public static array $rules = [
+        'school_id' => 'required',
         'booking_id' => 'required',
         'client_id' => 'required',
         'price' => 'required|numeric',
@@ -127,6 +129,12 @@ use Spatie\Activitylog\LogOptions;
     {
         return $this->belongsTo(\App\Models\Client::class, 'client_id');
     }
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\School::class, 'school_id');
+    }
+
 
     public function degree(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

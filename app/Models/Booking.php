@@ -214,4 +214,14 @@ use Spatie\Activitylog\LogOptions;
             ->dontSubmitEmptyLogs()
             ->useLogName('activity');
     }
+
+    public function scopeByMonitor($query, $monitor)
+    {
+        return $query->whereHas('bookingUsers', function ($query, $monitor) {
+            $query->where('monitor_id', $monitor)->orWhereHas('booking_users', function ($query, $monitor) {
+                $query->where('monitor_id', $monitor);
+            });
+        });
+    }
+
 }
