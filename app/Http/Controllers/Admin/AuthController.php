@@ -26,22 +26,19 @@ class AuthController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/login",
+     *      path="/admin/login",
      *      summary="Login",
      *      tags={"Auth"},
      *      description="Login user",
-     *     @OA\RequestBody(
-     *         @OA\JsonContent(),
-     *         @OA\MediaType(
-     *            mediaType="multipart/form-data",
-     *            @OA\Schema(
-     *               type="object",
-     *               required={"email", "password"},
-     *               @OA\Property(property="email", type="email"),
-     *               @OA\Property(property="password", type="password")
-     *            ),
-     *        ),
-     *    ),
+     *      @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"email", "password"},
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string")
+     *         ),
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="successful operation",
@@ -53,7 +50,7 @@ class AuthController extends AppBaseController
      *              ),
      *              @OA\Property(
      *                  property="data",
-     *                  ref="#/components/schemas/UserResponse"
+     *                  ref="#/components/schemas/User"
      *              ),
      *              @OA\Property(
      *                  property="message",
@@ -72,11 +69,11 @@ class AuthController extends AppBaseController
 
         if(Auth::attempt($credentials)){
             $user = Auth::user();
-            //$user['role'] = $user->roles[0]->name;
 
             if($user->type == 'superadmin') {
                 $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
             } else if($user->type == 'admin') {
+                $user->load('schools');
                 $user->tokenCan('admin:all');
             }
             $success['user'] =  $user;

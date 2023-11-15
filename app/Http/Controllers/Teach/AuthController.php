@@ -26,8 +26,8 @@ class AuthController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/login",
-     *      summary="Login",
+     *      path="/teach/login",
+     *      summary="Teach Login",
      *      tags={"Auth"},
      *      description="Login user",
      *     @OA\RequestBody(
@@ -53,7 +53,7 @@ class AuthController extends AppBaseController
      *              ),
      *              @OA\Property(
      *                  property="data",
-     *                  ref="#/components/schemas/UserResponse"
+     *                  ref="#/components/schemas/User"
      *              ),
      *              @OA\Property(
      *                  property="message",

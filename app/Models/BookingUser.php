@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="BookingUser",
- *      required={""school_id","booking_id","client_id","price","currency","course_date_id","attended"},
+ *      required={"school_id","booking_id","client_id","price","currency","course_date_id","attended"},
  *      @OA\Property(
  *          property="price",
  *          description="",
@@ -72,7 +72,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class BookingUser extends Model
+ */
+class BookingUser extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'booking_users';
 
@@ -169,6 +170,11 @@ use Spatie\Activitylog\LogOptions;
     public function bookingUserExtras(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\BookingUserExtra::class, 'boouking_user_id');
+    }
+
+    public function scopeByMonitor($query, $monitor)
+    {
+        return $query->where('monitor_id', $monitor);
     }
 
     public function getActivitylogOptions(): LogOptions

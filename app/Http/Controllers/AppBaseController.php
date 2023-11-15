@@ -47,4 +47,10 @@ class AppBaseController extends Controller
             'errors' => $errors
         ], 200);
     }
+
+    public function getMonitor($request) {
+        $user = $request->user();
+        $user->load('monitors');
+        return $user->monitors[0];
+    }
 }

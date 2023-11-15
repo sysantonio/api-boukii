@@ -28,7 +28,7 @@ class BookingController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/bookings",
+     *      path="/admin/bookings",
      *      summary="getBookingList",
      *      tags={"Booking"},
      *      description="Get all Bookings",
