@@ -17,6 +17,42 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false,
  *          type="boolean",
  *      ),
+ *       @OA\Property(
+ *           property="sport_id",
+ *           description="ID of the sport",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="degree_id",
+ *           description="ID of the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="monitor_id",
+ *           description="ID of the monitor",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="salary_level",
+ *           description="Salary level for the monitor",
+ *           type="string",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="allow_adults",
+ *           description="Indicates if adults are allowed",
+ *           type="boolean",
+ *           nullable=true
+ *       ),
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -42,7 +78,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class MonitorSportsDegree extends Model
+ */
+class MonitorSportsDegree extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'monitor_sports_degrees';
 

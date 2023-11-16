@@ -12,51 +12,48 @@ use Spatie\Activitylog\LogOptions;
  *      required={"name","icon_selected","icon_unselected","sport_type"},
  *      @OA\Property(
  *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
+ *          description="Name of the sport",
+ *          type="string"
  *      ),
  *      @OA\Property(
  *          property="icon_selected",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
+ *          description="Icon when the sport is selected",
+ *          type="string"
  *      ),
  *      @OA\Property(
  *          property="icon_unselected",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
+ *          description="Icon when the sport is not selected",
+ *          type="string"
+ *      ),
+ *      @OA\Property(
+ *          property="sport_type",
+ *          description="Type of sport",
+ *          type="string"
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Last update timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class Sport extends Model
+ */
+class Sport extends Model
 {
      use SoftDeletes;    use HasFactory;    public $table = 'sports';
 

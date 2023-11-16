@@ -11,6 +11,20 @@ use Spatie\Activitylog\LogOptions;
  *      schema="SchoolUser",
  *      required={"school_id","user_id"},
  *      @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school",
+ *           type="integer",
+ *           format="int64",
+ *           example=1
+ *       ),
+ *      @OA\Property(
+ *           property="user_id",
+ *           description="ID of the user",
+ *           type="integer",
+ *           format="int64",
+ *           example=2
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,

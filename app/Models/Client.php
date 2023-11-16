@@ -96,6 +96,48 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="language1_id",
+ *           description="First language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language2_id",
+ *           description="Second language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language3_id",
+ *           description="Third language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language4_id",
+ *           description="Fourth language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language5_id",
+ *           description="Fifth language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language6_id",
+ *           description="Sixth language ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="user_id",
+ *           description="User ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -251,6 +293,10 @@ use Spatie\Activitylog\LogOptions;
     public function vouchers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Voucher::class, 'client_id');
+    }
+
+    public static function checkBookingOverlap() {
+
     }
 
     public function getActivitylogOptions(): LogOptions

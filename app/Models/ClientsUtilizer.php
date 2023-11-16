@@ -9,33 +9,43 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="ClientsUtilizer",
- *      required={"main_id","client_id"},
+ *      required={"main_id", "client_id"},
  *      @OA\Property(
- *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
+ *          property="main_id",
+ *          description="Main client ID",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="client_id",
+ *          description="Utilizer client ID",
+ *          type="integer",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="updated_at",
+ *          description="Update timestamp",
+ *          type="string",
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class ClientsUtilizer extends Model
+ */
+class ClientsUtilizer extends Model
 {
      use SoftDeletes;    use HasFactory;    public $table = 'clients_utilizers';
 

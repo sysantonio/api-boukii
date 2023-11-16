@@ -12,22 +12,36 @@ use Spatie\Activitylog\LogOptions;
  *      required={"name","date","time","school_id"},
  *      @OA\Property(
  *          property="name",
- *          description="",
+ *          description="The name of the task",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="date",
- *          description="",
+ *          description="The date of the task",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *          format="date"
  *      ),
  *      @OA\Property(
+ *          property="time",
+ *          description="The time of the task",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="string",
+ *      ),
+ *      @OA\Property(
+ *          property="school_id",
+ *          description="The ID of the school associated with the task",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the task was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -35,7 +49,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the task was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -43,16 +57,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the task was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class Task extends Model
+ */
+class Task extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'tasks';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'tasks';
 
     public $fillable = [
         'name',
@@ -63,14 +80,16 @@ use Spatie\Activitylog\LogOptions;
 
     protected $casts = [
         'name' => 'string',
-        'date' => 'date'
+        'date' => 'date',
+        'time' => 'string',
+        'school_id' => 'integer',
     ];
 
     public static array $rules = [
         'name' => 'required|string|max:200',
-        'date' => 'required',
-        'time' => 'required',
-        'school_id' => 'required',
+        'date' => 'required|date',
+        'time' => 'required|string',
+        'school_id' => 'required|integer',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

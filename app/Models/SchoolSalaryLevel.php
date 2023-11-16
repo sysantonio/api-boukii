@@ -26,6 +26,12 @@ use Spatie\Activitylog\LogOptions;
  *          format="number"
  *      ),
  *      @OA\Property(
+ *          property="school_id",
+ *          description="ID of the associated school",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -50,7 +56,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class SchoolSalaryLevel extends Model
+ */
+class SchoolSalaryLevel extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'school_salary_levels';
 

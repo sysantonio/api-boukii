@@ -91,6 +91,30 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="school_id",
+ *           description="School ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="client_main_id",
+ *           description="Main Client ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="payment_method_id",
+ *           description="Payment Method ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="paxes",
+ *           description="Number of paxes",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
  *          property="color",
  *          description="",
  *          readOnly=false,

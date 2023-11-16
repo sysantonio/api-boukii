@@ -9,41 +9,56 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="CourseDate",
- *      required={"course_id","date","hour_start","hour_end"},
+ *      required={"course_id", "date", "hour_start", "hour_end"},
+ *      @OA\Property(
+ *          property="course_id",
+ *          description="ID of the course",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="date",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Date of the course session",
  *          type="string",
- *          format="date"
+ *          format="date",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="hour_start",
+ *          description="Start hour of the course session",
+ *          type="string",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="hour_end",
+ *          description="End hour of the course session",
+ *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Update timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class CourseDate extends Model
+ */
+class CourseDate extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'course_dates';
 

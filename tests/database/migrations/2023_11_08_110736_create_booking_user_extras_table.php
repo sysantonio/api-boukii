@@ -15,12 +15,12 @@ class CreateBookingUserExtrasTable extends Migration
     {
         Schema::create('booking_user_extras', function (Blueprint $table) {
             $table->bigInteger('id')->primary();
-            $table->bigInteger('boouking_user_id');
+            $table->bigInteger('booking_user_id');
             $table->bigInteger('course_extra_id');
             $table->timestamps();
             $table->timestamp('deleted_at')->nullable();
-            
-            $table->foreign('boouking_user_id', 'booking_user_extras_ibfk_1')->references('id')->on('booking_users');
+
+            $table->foreign('booking_user_id', 'booking_user_extras_ibfk_1')->references('id')->on('booking_users');
             $table->foreign('course_extra_id', 'booking_user_extras_ibfk_2')->references('id')->on('course_extras');
         });
     }

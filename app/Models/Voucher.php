@@ -12,14 +12,14 @@ use Spatie\Activitylog\LogOptions;
  *      required={"code","quantity","remaining_balance","payed","client_id","school_id"},
  *      @OA\Property(
  *          property="code",
- *          description="",
+ *          description="The voucher code",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="quantity",
- *          description="",
+ *          description="The quantity of the voucher",
  *          readOnly=false,
  *          nullable=false,
  *          type="number",
@@ -27,7 +27,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="remaining_balance",
- *          description="",
+ *          description="The remaining balance of the voucher",
  *          readOnly=false,
  *          nullable=false,
  *          type="number",
@@ -35,28 +35,28 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="payed",
- *          description="",
+ *          description="Indicates whether the voucher has been paid or not",
  *          readOnly=false,
  *          nullable=false,
  *          type="boolean",
  *      ),
  *      @OA\Property(
  *          property="payrexx_reference",
- *          description="",
+ *          description="The reference related to payment through Payrexx",
  *          readOnly=false,
  *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="payrexx_transaction",
- *          description="",
+ *          description="The transaction related to payment through Payrexx",
  *          readOnly=false,
  *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the voucher was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -64,7 +64,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the voucher was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -72,16 +72,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the voucher was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class Voucher extends Model
+ */
+class Voucher extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'vouchers';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'vouchers';
 
     public $fillable = [
         'code',
@@ -100,7 +103,7 @@ use Spatie\Activitylog\LogOptions;
         'remaining_balance' => 'float',
         'payed' => 'boolean',
         'payrexx_reference' => 'string',
-        'payrexx_transaction' => 'string'
+        'payrexx_transaction' => 'string',
     ];
 
     public static array $rules = [

@@ -12,7 +12,7 @@
         "inView": false
     },
     {
-        "name": "boouking_user_id",
+        "name": "booking_user_id",
         "dbType": "bigInteger,false",
         "htmlType": "number",
         "validations": "required",
@@ -73,7 +73,7 @@
     },
     {
         "type": "relation",
-        "relation": "mt1,BookingUser,boouking_user_id"
+        "relation": "mt1,BookingUser,booking_user_id"
     },
     {
         "type": "relation",

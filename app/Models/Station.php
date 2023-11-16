@@ -11,12 +11,10 @@ use Spatie\Activitylog\LogOptions;
  *      schema="Station",
  *      required={"name","country","province","address","image","map","latitude","longitude","num_hanger","num_chairlift","num_cabin","num_cabin_large","num_fonicular","show_details","active"},
  *      @OA\Property(
- *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *      ),
+ *           property="name",
+ *           description="Name of the station",
+ *           type="string"
+ *       ),
  *      @OA\Property(
  *          property="cp",
  *          description="",
@@ -101,6 +99,31 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=true,
  *          type="string",
  *      ),
+ *       @OA\Property(
+ *           property="num_hanger",
+ *           description="Number of hangers",
+ *           type="integer"
+ *       ),
+ *       @OA\Property(
+ *           property="num_chairlift",
+ *           description="Number of chairlifts",
+ *           type="integer"
+ *       ),
+ *       @OA\Property(
+ *           property="num_cabin",
+ *           description="Number of cabins",
+ *           type="integer"
+ *       ),
+ *       @OA\Property(
+ *           property="num_cabin_large",
+ *           description="Number of large cabins",
+ *           type="integer"
+ *       ),
+ *       @OA\Property(
+ *           property="num_fonicular",
+ *           description="Number of funiculars",
+ *           type="integer"
+ *       ),
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -126,7 +149,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Station extends Model
+ */
+class Station extends Model
 {
      use SoftDeletes;    use HasFactory;    public $table = 'stations';
 

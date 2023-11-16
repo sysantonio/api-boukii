@@ -9,47 +9,43 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Language",
- *      required={"code","name"},
+ *      required={"code", "name"},
  *      @OA\Property(
  *          property="code",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="ISO language code (e.g., 'en' for English, 'es' for Spanish)",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Full name of the language (e.g., 'English', 'Spanish')",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp of the language record",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Last update timestamp of the language record",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp of the language record",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class Language extends Model
+ */
+class Language extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'languages';
 

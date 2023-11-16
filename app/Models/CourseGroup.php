@@ -10,20 +10,72 @@ use Spatie\Activitylog\LogOptions;
  * @OA\Schema(
  *      schema="CourseGroup",
  *      required={"course_id","course_date_id","degree_id","teachers_min","teachers_max","auto"},
- *      @OA\Property(
- *          property="observations",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="auto",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="boolean",
- *      ),
+ *       @OA\Property(
+ *           property="course_id",
+ *           description="ID of the course",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="course_date_id",
+ *           description="ID of the course date",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="degree_id",
+ *           description="ID of the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="age_min",
+ *           description="Minimum age for participants",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="age_max",
+ *           description="Maximum age for participants",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="recommended_age",
+ *           description="Recommended age for participants",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="teachers_min",
+ *           description="Minimum number of teachers",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="teachers_max",
+ *           description="Maximum number of teachers",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="teacher_min_degree",
+ *           description="Minimum degree required for teachers",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="observations",
+ *           description="Observations about the course group",
+ *           type="string",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="auto",
+ *           description="Indicates whether group assignment is automatic",
+ *           type="boolean",
+ *           nullable=false
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",
@@ -49,7 +101,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class CourseGroup extends Model
+ */
+class CourseGroup extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'course_groups';
 

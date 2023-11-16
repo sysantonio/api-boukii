@@ -9,33 +9,43 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="EvaluationFulfilledGoal",
- *      required={"evaluation_id","degrees_school_sport_goals_id"},
+ *      required={"evaluation_id", "degrees_school_sport_goals_id"},
+ *      @OA\Property(
+ *          property="evaluation_id",
+ *          description="ID of the evaluation",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="degrees_school_sport_goals_id",
+ *          description="ID of the degree's school sport goal",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp of the fulfilled goal",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Last update timestamp of the fulfilled goal",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp of the fulfilled goal",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class EvaluationFulfilledGoal extends Model
+ */
+class EvaluationFulfilledGoal extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'evaluation_fulfilled_goals';
 

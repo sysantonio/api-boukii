@@ -11,21 +11,37 @@ use Spatie\Activitylog\LogOptions;
  *      schema="MonitorNwd",
  *      required={"monitor_id","start_date","end_date","full_day"},
  *      @OA\Property(
- *          property="start_date",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *          format="date"
- *      ),
- *      @OA\Property(
- *          property="end_date",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *          format="date"
- *      ),
+ *           property="start_time",
+ *           description="Start time of the non-working duration",
+ *           type="string",
+ *           format="time",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="end_time",
+ *           description="End time of the non-working duration",
+ *           type="string",
+ *           format="time",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="monitor_id",
+ *           description="ID of the monitor",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="station_id",
+ *           description="ID of the station",
+ *           type="integer",
+ *           nullable=true
+ *       ),
  *      @OA\Property(
  *          property="full_day",
  *          description="",
@@ -79,7 +95,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class MonitorNwd extends Model
+ */
+class MonitorNwd extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'monitor_nwd';
 

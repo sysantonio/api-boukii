@@ -9323,6 +9323,26 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "school_id": {
+                        "description": "School ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "client_main_id": {
+                        "description": "Main Client ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "payment_method_id": {
+                        "description": "Payment Method ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "paxes": {
+                        "description": "Number of paxes",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "color": {
                         "description": "",
                         "type": "string",
@@ -9360,43 +9380,44 @@
                     "user_id"
                 ],
                 "properties": {
+                    "booking_id": {
+                        "description": "Booking ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "action": {
-                        "description": "",
+                        "description": "Action performed",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "description": {
-                        "description": "",
+                        "description": "Description of the action",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
+                    "user_id": {
+                        "description": "User ID who performed the action",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "before_change": {
-                        "description": "",
+                        "description": "State of booking before the change",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "created_at": {
-                        "description": "",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -9413,6 +9434,63 @@
                     "attended"
                 ],
                 "properties": {
+                    "school_id": {
+                        "description": "School ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "booking_id": {
+                        "description": "Booking ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "client_id": {
+                        "description": "Client ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "course_subgroup_id": {
+                        "description": "Course Subgroup ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "course_id": {
+                        "description": "Course ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "course_date_id": {
+                        "description": "Course Date ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degree_id": {
+                        "description": "Degree ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "course_group_id": {
+                        "description": "Course Group ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "monitor_id": {
+                        "description": "Monitor ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "hour_start": {
+                        "description": "Start Hour",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
+                    "hour_end": {
+                        "description": "End Hour",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
                     "price": {
                         "description": "",
                         "type": "number",
@@ -9471,26 +9549,36 @@
             },
             "BookingUserExtra": {
                 "required": [
-                    "boouking_user_id",
+                    "booking_user_id",
                     "course_extra_id"
                 ],
                 "properties": {
+                    "booking_user_id": {
+                        "description": "Booking User ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "course_extra_id": {
+                        "description": "Course Extra ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Update timestamp",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -9579,6 +9667,41 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "language1_id": {
+                        "description": "First language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language2_id": {
+                        "description": "Second language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language3_id": {
+                        "description": "Third language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language4_id": {
+                        "description": "Fourth language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language5_id": {
+                        "description": "Fifth language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language6_id": {
+                        "description": "Sixth language ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "description": "User ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -9606,35 +9729,46 @@
                 ],
                 "properties": {
                     "general": {
-                        "description": "",
+                        "description": "General observations about the client",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "notes": {
-                        "description": "",
+                        "description": "Additional notes regarding the client",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "historical": {
-                        "description": "",
+                        "description": "Historical information about the client",
                         "type": "string",
-                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "client_id": {
+                        "description": "ID of the client",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp of the observation",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp of the observation",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "deleted_at": {
+                        "description": "Deletion timestamp of the observation",
+                        "type": "string",
+                        "format": "date-time",
                         "nullable": true
                     }
                 },
@@ -9646,39 +9780,44 @@
                     "school_id"
                 ],
                 "properties": {
-                    "updated_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true
+                    "client_id": {
+                        "description": "Client ID",
+                        "type": "integer",
+                        "nullable": false
                     },
-                    "created_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true
-                    },
-                    "deleted_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true
+                    "school_id": {
+                        "description": "School ID",
+                        "type": "integer",
+                        "nullable": false
                     },
                     "status_updated_at": {
-                        "description": "",
+                        "description": "Timestamp of the last status update",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "accepted_at": {
-                        "description": "",
+                        "description": "Timestamp of acceptance",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "description": "Creation timestamp",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "description": "Update timestamp",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "deleted_at": {
+                        "description": "Deletion timestamp",
+                        "type": "string",
+                        "format": "date-time",
                         "nullable": true
                     }
                 },
@@ -9690,25 +9829,32 @@
                     "client_id"
                 ],
                 "properties": {
-                    "updated_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true
+                    "main_id": {
+                        "description": "Main client ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "client_id": {
+                        "description": "Utilizer client ID",
+                        "type": "integer",
+                        "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "description": "Update timestamp",
+                        "type": "string",
+                        "format": "date-time",
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -9812,18 +9958,6 @@
                         "readOnly": false,
                         "nullable": true
                     },
-                    "hour_min": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": true
-                    },
-                    "hour_max": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": true
-                    },
                     "confirm_attendance": {
                         "description": "",
                         "type": "boolean",
@@ -9872,6 +10006,41 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "sport_id": {
+                        "description": "Sport ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "School ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "station_id": {
+                        "description": "Station ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "max_participants": {
+                        "description": "Maximum number of participants",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "duration": {
+                        "description": "Duration of the course",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "hour_min": {
+                        "description": "Minimum hour for the course",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "hour_max": {
+                        "description": "Maximum hour for the course",
+                        "type": "string",
+                        "nullable": true
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -9904,32 +10073,43 @@
                     "hour_end"
                 ],
                 "properties": {
+                    "course_id": {
+                        "description": "ID of the course",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "date": {
-                        "description": "",
+                        "description": "Date of the course session",
                         "type": "string",
                         "format": "date",
-                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "hour_start": {
+                        "description": "Start hour of the course session",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "hour_end": {
+                        "description": "End hour of the course session",
+                        "type": "string",
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Update timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -9942,44 +10122,43 @@
                     "price"
                 ],
                 "properties": {
+                    "course_id": {
+                        "description": "ID of the course",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "name": {
-                        "description": "",
+                        "description": "Name of the course extra",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "description": {
-                        "description": "",
+                        "description": "Description of the course extra",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "price": {
-                        "description": "",
+                        "description": "Price of the course extra",
                         "type": "number",
                         "format": "number",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Update timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -9995,16 +10174,59 @@
                     "auto"
                 ],
                 "properties": {
+                    "course_id": {
+                        "description": "ID of the course",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "course_date_id": {
+                        "description": "ID of the course date",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degree_id": {
+                        "description": "ID of the degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "age_min": {
+                        "description": "Minimum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "age_max": {
+                        "description": "Maximum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "recommended_age": {
+                        "description": "Recommended age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "teachers_min": {
+                        "description": "Minimum number of teachers",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "teachers_max": {
+                        "description": "Maximum number of teachers",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "teacher_min_degree": {
+                        "description": "Minimum degree required for teachers",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "observations": {
-                        "description": "",
+                        "description": "Observations about the course group",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "auto": {
-                        "description": "",
+                        "description": "Indicates whether group assignment is automatic",
                         "type": "boolean",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
@@ -10039,6 +10261,36 @@
                     "course_group_id"
                 ],
                 "properties": {
+                    "course_id": {
+                        "description": "ID of the course",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "course_date_id": {
+                        "description": "ID of the course date",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degree_id": {
+                        "description": "ID of the degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "course_group_id": {
+                        "description": "ID of the course group",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "monitor_id": {
+                        "description": "ID of the assigned monitor",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "max_participants": {
+                        "description": "Maximum number of participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -10075,33 +10327,48 @@
                 ],
                 "properties": {
                     "league": {
-                        "description": "",
+                        "description": "League of the degree",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "level": {
-                        "description": "",
+                        "description": "Level of the degree",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "name": {
-                        "description": "",
+                        "description": "Name of the degree",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "annotation": {
-                        "description": "null for unused at this school",
+                        "description": "Additional annotation, null for unused at this school",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
+                    "degree_order": {
+                        "description": "Order of the degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "progress": {
+                        "description": "Progress level of the degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "color": {
-                        "description": "",
+                        "description": "Color associated with the degree",
                         "type": "string",
-                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school associated with the degree",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "sport_id": {
+                        "description": "ID of the sport associated with the degree",
+                        "type": "integer",
                         "nullable": false
                     },
                     "created_at": {
@@ -10134,31 +10401,32 @@
                     "name"
                 ],
                 "properties": {
+                    "degree_id": {
+                        "description": "ID of the associated degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "name": {
-                        "description": "",
+                        "description": "Name of the goal",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp of the school sport goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp of the school sport goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp of the school sport goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -10256,31 +10524,37 @@
                     "degree_id"
                 ],
                 "properties": {
+                    "client_id": {
+                        "description": "ID of the client being evaluated",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degree_id": {
+                        "description": "ID of the degree related to the evaluation",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "observations": {
-                        "description": "",
+                        "description": "Observations made during the evaluation",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp of the evaluation",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp of the evaluation",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp of the evaluation",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -10292,25 +10566,32 @@
                     "degrees_school_sport_goals_id"
                 ],
                 "properties": {
+                    "evaluation_id": {
+                        "description": "ID of the evaluation",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degrees_school_sport_goals_id": {
+                        "description": "ID of the degree's school sport goal",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp of the fulfilled goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp of the fulfilled goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp of the fulfilled goal",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -10323,36 +10604,31 @@
                 ],
                 "properties": {
                     "code": {
-                        "description": "",
+                        "description": "ISO language code (e.g., 'en' for English, 'es' for Spanish)",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "name": {
-                        "description": "",
+                        "description": "Full name of the language (e.g., 'English', 'Spanish')",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp of the language record",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp of the language record",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp of the language record",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -10492,6 +10768,46 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "language1_id": {
+                        "description": "ID of the first language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language2_id": {
+                        "description": "ID of the second language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language3_id": {
+                        "description": "ID of the third language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language4_id": {
+                        "description": "ID of the fourth language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language5_id": {
+                        "description": "ID of the fifth language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "language6_id": {
+                        "description": "ID of the sixth language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "partner_percentaje": {
+                        "description": "Percentage of partner's work",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "description": "User ID associated with the monitor",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -10524,19 +10840,32 @@
                     "full_day"
                 ],
                 "properties": {
-                    "start_date": {
-                        "description": "",
+                    "start_time": {
+                        "description": "Start time of the non-working duration",
                         "type": "string",
-                        "format": "date",
-                        "readOnly": false,
+                        "format": "time",
+                        "nullable": true
+                    },
+                    "end_time": {
+                        "description": "End time of the non-working duration",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
+                    "monitor_id": {
+                        "description": "ID of the monitor",
+                        "type": "integer",
                         "nullable": false
                     },
-                    "end_date": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date",
-                        "readOnly": false,
-                        "nullable": false
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "station_id": {
+                        "description": "ID of the station",
+                        "type": "integer",
+                        "nullable": true
                     },
                     "full_day": {
                         "description": "",
@@ -10613,6 +10942,16 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "monitor_id": {
+                        "description": "ID of the monitor the observation is about",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school associated with the observation",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -10643,6 +10982,16 @@
                     "degree_id"
                 ],
                 "properties": {
+                    "monitor_sport_id": {
+                        "description": "ID of the monitor sport",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "degree_id": {
+                        "description": "ID of the degree authorized for the monitor sport",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -10681,6 +11030,36 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "sport_id": {
+                        "description": "ID of the sport",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "degree_id": {
+                        "description": "ID of the degree",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "monitor_id": {
+                        "description": "ID of the monitor",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "salary_level": {
+                        "description": "Salary level for the monitor",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "allow_adults": {
+                        "description": "Indicates if adults are allowed",
+                        "type": "boolean",
+                        "nullable": true
+                    },
                     "updated_at": {
                         "description": "",
                         "type": "string",
@@ -10711,6 +11090,33 @@
                     "school_id"
                 ],
                 "properties": {
+                    "monitor_id": {
+                        "description": "ID of the monitor",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "station_id": {
+                        "description": "ID of the station",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "status_updated_at": {
+                        "description": "Timestamp when the status was last updated",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "accepted_at": {
+                        "description": "Timestamp when the monitor was accepted at the school",
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
                     "updated_at": {
                         "description": "",
                         "type": "string",
@@ -10730,20 +11136,6 @@
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
-                        "nullable": true
-                    },
-                    "status_updated_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": false,
-                        "nullable": true
-                    },
-                    "accepted_at": {
-                        "description": "",
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": false,
                         "nullable": true
                     }
                 },
@@ -11028,15 +11420,18 @@
                 ],
                 "properties": {
                     "name": {
-                        "description": "",
+                        "description": "Name of the color associated with the school",
                         "type": "string",
-                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "Unique identifier of the school associated with this color",
+                        "type": "integer",
                         "nullable": false
                     },
                     "color": {
-                        "description": "",
+                        "description": "Hexadecimal or other string representation of the color",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "created_at": {
@@ -11083,6 +11478,11 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "school_id": {
+                        "description": "ID of the associated school",
+                        "type": "integer",
+                        "nullable": false
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -11113,6 +11513,18 @@
                     "sport_id"
                 ],
                 "properties": {
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "sport_id": {
+                        "description": "ID of the sport",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -11143,6 +11555,18 @@
                     "user_id"
                 ],
                 "properties": {
+                    "school_id": {
+                        "description": "ID of the school",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "description": "ID of the user",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 2
+                    },
                     "created_at": {
                         "description": "",
                         "type": "string",
@@ -11200,6 +11624,12 @@
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false
+                    },
+                    "school_id": {
+                        "description": "ID of the school associated with the season",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
                     },
                     "created_at": {
                         "description": "",
@@ -11269,42 +11699,37 @@
                 ],
                 "properties": {
                     "name": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": false
+                        "description": "Name of the sport",
+                        "type": "string"
                     },
                     "icon_selected": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": false
+                        "description": "Icon when the sport is selected",
+                        "type": "string"
                     },
                     "icon_unselected": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": false
+                        "description": "Icon when the sport is not selected",
+                        "type": "string"
+                    },
+                    "sport_type": {
+                        "description": "Type of sport",
+                        "type": "string"
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Last update timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },
@@ -11365,10 +11790,8 @@
                 ],
                 "properties": {
                     "name": {
-                        "description": "",
-                        "type": "string",
-                        "readOnly": false,
-                        "nullable": false
+                        "description": "Name of the station",
+                        "type": "string"
                     },
                     "cp": {
                         "description": "",
@@ -11442,6 +11865,26 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "num_hanger": {
+                        "description": "Number of hangers",
+                        "type": "integer"
+                    },
+                    "num_chairlift": {
+                        "description": "Number of chairlifts",
+                        "type": "integer"
+                    },
+                    "num_cabin": {
+                        "description": "Number of cabins",
+                        "type": "integer"
+                    },
+                    "num_cabin_large": {
+                        "description": "Number of large cabins",
+                        "type": "integer"
+                    },
+                    "num_fonicular": {
+                        "description": "Number of funiculars",
+                        "type": "integer"
+                    },
                     "updated_at": {
                         "description": "",
                         "type": "string",
@@ -11471,62 +11914,77 @@
                     "station_id",
                     "service_type_id",
                     "name",
+                    "url",
+                    "telephone",
+                    "email",
                     "image",
                     "active"
                 ],
                 "properties": {
+                    "station_id": {
+                        "description": "The ID of the station to which the service belongs",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "service_type_id": {
+                        "description": "The ID of the service type",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "name": {
-                        "description": "",
+                        "description": "The name of the service",
                         "type": "string",
                         "readOnly": false,
                         "nullable": false
                     },
                     "url": {
-                        "description": "",
+                        "description": "The URL related to the service",
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
                     "telephone": {
-                        "description": "",
+                        "description": "The telephone number related to the service",
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
                     "email": {
-                        "description": "",
+                        "description": "The email address related to the service",
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
                     "image": {
-                        "description": "",
+                        "description": "The image related to the service",
                         "type": "string",
                         "readOnly": false,
                         "nullable": false
                     },
                     "active": {
-                        "description": "",
+                        "description": "Indicates if the service is active",
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the service was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the service was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the service was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -11541,22 +11999,34 @@
                     "school_id"
                 ],
                 "properties": {
+                    "station_id": {
+                        "description": "The ID of the station",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "The ID of the school",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the relationship was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the relationship was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the relationship was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -11574,34 +12044,46 @@
                 ],
                 "properties": {
                     "name": {
-                        "description": "",
+                        "description": "The name of the task",
                         "type": "string",
                         "readOnly": false,
                         "nullable": false
                     },
                     "date": {
-                        "description": "",
+                        "description": "The date of the task",
                         "type": "string",
                         "format": "date",
                         "readOnly": false,
                         "nullable": false
                     },
+                    "time": {
+                        "description": "The time of the task",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "school_id": {
+                        "description": "The ID of the school associated with the task",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the task was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the task was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the task was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -11618,33 +12100,39 @@
                 ],
                 "properties": {
                     "text": {
-                        "description": "",
+                        "description": "The text of the task check",
                         "type": "string",
                         "readOnly": false,
                         "nullable": false
                     },
                     "checked": {
-                        "description": "",
+                        "description": "Indicates whether the task check is checked or not",
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false
                     },
+                    "task_id": {
+                        "description": "The ID of the task associated with the check",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the task check was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the task check was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the task check was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -11736,59 +12224,59 @@
                 ],
                 "properties": {
                     "code": {
-                        "description": "",
+                        "description": "The voucher code",
                         "type": "string",
                         "readOnly": false,
                         "nullable": false
                     },
                     "quantity": {
-                        "description": "",
+                        "description": "The quantity of the voucher",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
                         "nullable": false
                     },
                     "remaining_balance": {
-                        "description": "",
+                        "description": "The remaining balance of the voucher",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
                         "nullable": false
                     },
                     "payed": {
-                        "description": "",
+                        "description": "Indicates whether the voucher has been paid or not",
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false
                     },
                     "payrexx_reference": {
-                        "description": "",
+                        "description": "The reference related to payment through Payrexx",
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
                     "payrexx_transaction": {
-                        "description": "",
+                        "description": "The transaction related to payment through Payrexx",
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the voucher was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the voucher was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the voucher was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
@@ -11804,29 +12292,41 @@
                     "amount"
                 ],
                 "properties": {
+                    "voucher_id": {
+                        "description": "The ID of the voucher associated with the log entry",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "booking_id": {
+                        "description": "The ID of the booking associated with the log entry",
+                        "type": "integer",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "amount": {
-                        "description": "",
+                        "description": "The amount associated with the log entry",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "The timestamp when the log entry was created",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "The timestamp when the log entry was last updated",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "The timestamp when the log entry was deleted",
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,

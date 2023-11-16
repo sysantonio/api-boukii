@@ -9,40 +9,49 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Evaluation",
- *      required={"client_id","degree_id"},
+ *      required={"client_id", "degree_id"},
+ *      @OA\Property(
+ *          property="client_id",
+ *          description="ID of the client being evaluated",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="degree_id",
+ *          description="ID of the degree related to the evaluation",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="observations",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Observations made during the evaluation",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp of the evaluation",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Last update timestamp of the evaluation",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp of the evaluation",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class Evaluation extends Model
+ */
+class Evaluation extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'evaluations';
 

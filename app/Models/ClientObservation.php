@@ -9,46 +9,61 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="ClientObservation",
- *      required={"general","notes","historical","client_id","school_id"},
+ *      required={"general", "notes", "historical", "client_id", "school_id"},
  *      @OA\Property(
  *          property="general",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="General observations about the client",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="notes",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Additional notes regarding the client",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="historical",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Historical information about the client",
  *          type="string",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="client_id",
+ *          description="ID of the client",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="school_id",
+ *          description="ID of the school",
+ *          type="integer",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp of the observation",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Last update timestamp of the observation",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="deleted_at",
+ *          description="Deletion timestamp of the observation",
+ *          type="string",
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class ClientObservation extends Model
+ */
+class ClientObservation extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'client_observations';
 

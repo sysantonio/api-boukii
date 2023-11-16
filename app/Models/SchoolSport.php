@@ -11,6 +11,20 @@ use Spatie\Activitylog\LogOptions;
  *      schema="SchoolSport",
  *      required={"school_id","sport_id"},
  *      @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school",
+ *           type="integer",
+ *           format="int64",
+ *           example=1
+ *       ),
+ *       @OA\Property(
+ *           property="sport_id",
+ *           description="ID of the sport",
+ *           type="integer",
+ *           format="int64",
+ *           example=1
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,

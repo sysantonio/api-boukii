@@ -10,6 +10,74 @@ use Spatie\Activitylog\LogOptions;
  * @OA\Schema(
  *      schema="BookingUser",
  *      required={"school_id","booking_id","client_id","price","currency","course_date_id","attended"},
+ *           @OA\Property(
+ *           property="school_id",
+ *           description="School ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="booking_id",
+ *           description="Booking ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="client_id",
+ *           description="Client ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="course_subgroup_id",
+ *           description="Course Subgroup ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="course_id",
+ *           description="Course ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="course_date_id",
+ *           description="Course Date ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="degree_id",
+ *           description="Degree ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="course_group_id",
+ *           description="Course Group ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="monitor_id",
+ *           description="Monitor ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="hour_start",
+ *           description="Start Hour",
+ *           type="string",
+ *           nullable=true,
+ *           format="time"
+ *       ),
+ *       @OA\Property(
+ *           property="hour_end",
+ *           description="End Hour",
+ *           type="string",
+ *           nullable=true,
+ *           format="time"
+ *       ),
  *      @OA\Property(
  *          property="price",
  *          description="",
@@ -169,7 +237,7 @@ class BookingUser extends Model
 
     public function bookingUserExtras(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\BookingUserExtra::class, 'boouking_user_id');
+        return $this->hasMany(\App\Models\BookingUserExtra::class, 'booking_user_id');
     }
 
     public function scopeByMonitor($query, $monitor)

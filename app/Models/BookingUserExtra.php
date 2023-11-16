@@ -9,10 +9,22 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="BookingUserExtra",
- *      required={"boouking_user_id","course_extra_id"},
+ *      required={"booking_user_id", "course_extra_id"},
+ *      @OA\Property(
+ *          property="booking_user_id",
+ *          description="Booking User ID",
+ *          type="integer",
+ *          nullable=false
+ *      ),
+ *      @OA\Property(
+ *          property="course_extra_id",
+ *          description="Course Extra ID",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="Creation timestamp",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -20,7 +32,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="Update timestamp",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -28,37 +40,41 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="Deletion timestamp",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class BookingUserExtra extends Model
+ */
+class BookingUserExtra extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'booking_user_extras';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'booking_user_extras';
 
     public $fillable = [
-        'boouking_user_id',
+        'booking_user_id', // Corregido el nombre de la propiedad
         'course_extra_id'
     ];
 
     protected $casts = [
-
+        // Tus definiciones de casts si son necesarias
     ];
 
     public static array $rules = [
-        'boouking_user_id' => 'required',
+        'booking_user_id' => 'required',
         'course_extra_id' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
 
+
     public function booukingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(\App\Models\BookingUser::class, 'boouking_user_id');
+        return $this->belongsTo(\App\Models\BookingUser::class, 'booking_user_id');
     }
 
     public function courseExtra(): \Illuminate\Database\Eloquent\Relations\BelongsTo

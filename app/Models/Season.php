@@ -41,6 +41,13 @@ use Spatie\Activitylog\LogOptions;
  *          type="boolean",
  *      ),
  *      @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school associated with the season",
+ *           type="integer",
+ *           format="int64",
+ *           example=1
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,

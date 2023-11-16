@@ -11,6 +11,42 @@ use Spatie\Activitylog\LogOptions;
  *      schema="CourseSubgroup",
  *      required={"course_id","course_date_id","degree_id","course_group_id"},
  *      @OA\Property(
+ *           property="course_id",
+ *           description="ID of the course",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="course_date_id",
+ *           description="ID of the course date",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="degree_id",
+ *           description="ID of the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="course_group_id",
+ *           description="ID of the course group",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="monitor_id",
+ *           description="ID of the assigned monitor",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="max_participants",
+ *           description="Maximum number of participants",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -35,7 +71,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class CourseSubgroup extends Model
+ */
+class CourseSubgroup extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'course_subgroups';
 

@@ -10,41 +10,60 @@ use Spatie\Activitylog\LogOptions;
  * @OA\Schema(
  *      schema="Degree",
  *      required={"league","level","name","degree_order","progress","color","sport_id"},
- *      @OA\Property(
- *          property="league",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="level",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="annotation",
- *          description="null for unused at this school",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="color",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="string",
- *      ),
+ *       @OA\Property(
+ *           property="league",
+ *           description="League of the degree",
+ *           type="string",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="level",
+ *           description="Level of the degree",
+ *           type="string",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="name",
+ *           description="Name of the degree",
+ *           type="string",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="annotation",
+ *           description="Additional annotation, null for unused at this school",
+ *           type="string",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="degree_order",
+ *           description="Order of the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="progress",
+ *           description="Progress level of the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="color",
+ *           description="Color associated with the degree",
+ *           type="string",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school associated with the degree",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="sport_id",
+ *           description="ID of the sport associated with the degree",
+ *           type="integer",
+ *           nullable=false
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",
@@ -70,7 +89,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Degree extends Model
+ */
+class Degree extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'degrees';
 

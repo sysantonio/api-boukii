@@ -12,21 +12,28 @@ use Spatie\Activitylog\LogOptions;
  *      required={"text","checked","task_id"},
  *      @OA\Property(
  *          property="text",
- *          description="",
+ *          description="The text of the task check",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="checked",
- *          description="",
+ *          description="Indicates whether the task check is checked or not",
  *          readOnly=false,
  *          nullable=false,
  *          type="boolean",
  *      ),
  *      @OA\Property(
+ *          property="task_id",
+ *          description="The ID of the task associated with the check",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the task check was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -34,7 +41,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the task check was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -42,16 +49,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the task check was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class TaskCheck extends Model
+ */
+class TaskCheck extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'task_checks';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'task_checks';
 
     public $fillable = [
         'text',
@@ -61,13 +71,14 @@ use Spatie\Activitylog\LogOptions;
 
     protected $casts = [
         'text' => 'string',
-        'checked' => 'boolean'
+        'checked' => 'boolean',
+        'task_id' => 'integer',
     ];
 
     public static array $rules = [
         'text' => 'required|string|max:200',
         'checked' => 'required|boolean',
-        'task_id' => 'required',
+        'task_id' => 'required|integer',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

@@ -32,6 +32,18 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="monitor_id",
+ *           description="ID of the monitor the observation is about",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school associated with the observation",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,

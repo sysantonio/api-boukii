@@ -12,17 +12,21 @@ use Spatie\Activitylog\LogOptions;
  *      required={"school_id","name"},
  *      @OA\Property(
  *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Name of the color associated with the school",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
+ *           property="school_id",
+ *           description="Unique identifier of the school associated with this color",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
  *          property="color",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Hexadecimal or other string representation of the color",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="created_at",
@@ -49,7 +53,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class SchoolColor extends Model
+ */
+class SchoolColor extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'school_colors';
 

@@ -9,52 +9,66 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="StationService",
- *      required={"station_id","service_type_id","name","image","active"},
+ *      required={"station_id","service_type_id","name","url","telephone","email","image","active"},
+ *      @OA\Property(
+ *          property="station_id",
+ *          description="The ID of the station to which the service belongs",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
+ *          property="service_type_id",
+ *          description="The ID of the service type",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
  *      @OA\Property(
  *          property="name",
- *          description="",
+ *          description="The name of the service",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="url",
- *          description="",
+ *          description="The URL related to the service",
  *          readOnly=false,
  *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="telephone",
- *          description="",
+ *          description="The telephone number related to the service",
  *          readOnly=false,
  *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="email",
- *          description="",
+ *          description="The email address related to the service",
  *          readOnly=false,
  *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="image",
- *          description="",
+ *          description="The image related to the service",
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
  *      ),
  *      @OA\Property(
  *          property="active",
- *          description="",
+ *          description="Indicates if the service is active",
  *          readOnly=false,
  *          nullable=false,
  *          type="boolean",
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the service was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -62,7 +76,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the service was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -70,16 +84,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the service was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class StationService extends Model
+ */
+class StationService extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'station_service';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'station_service';
 
     public $fillable = [
         'station_id',
@@ -93,6 +110,8 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     protected $casts = [
+        'station_id' => 'integer',
+        'service_type_id' => 'integer',
         'name' => 'string',
         'url' => 'string',
         'telephone' => 'string',
@@ -102,8 +121,8 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     public static array $rules = [
-        'station_id' => 'required',
-        'service_type_id' => 'required',
+        'station_id' => 'required|integer',
+        'service_type_id' => 'required|integer',
         'name' => 'required|string|max:100',
         'url' => 'nullable|string|max:100',
         'telephone' => 'nullable|string|max:100',

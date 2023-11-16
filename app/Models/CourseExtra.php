@@ -9,55 +9,56 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="CourseExtra",
- *      required={"course_id","name","price"},
+ *      required={"course_id", "name", "price"},
+ *      @OA\Property(
+ *          property="course_id",
+ *          description="ID of the course",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="name",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Name of the course extra",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="description",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Description of the course extra",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="price",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Price of the course extra",
  *          type="number",
- *          format="number"
+ *          format="number",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Update timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class CourseExtra extends Model
+ */
+class CourseExtra extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'course_extras';
 

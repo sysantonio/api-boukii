@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 class BookingUserExtraRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-        'boouking_user_id',
+        'booking_user_id',
         'course_extra_id'
     ];
 

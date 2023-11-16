@@ -11,8 +11,22 @@ use Spatie\Activitylog\LogOptions;
  *      schema="StationsSchool",
  *      required={"station_id","school_id"},
  *      @OA\Property(
+ *          property="station_id",
+ *          description="The ID of the station",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
+ *          property="school_id",
+ *          description="The ID of the school",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the relationship was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -20,7 +34,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the relationship was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -28,16 +42,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the relationship was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class StationsSchool extends Model
+ */
+class StationsSchool extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'stations_schools';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'stations_schools';
 
     public $fillable = [
         'station_id',
@@ -45,12 +62,13 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     protected $casts = [
-
+        'station_id' => 'integer',
+        'school_id' => 'integer',
     ];
 
     public static array $rules = [
-        'station_id' => 'required',
-        'school_id' => 'required',
+        'station_id' => 'required|integer',
+        'school_id' => 'required|integer',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

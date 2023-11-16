@@ -257,6 +257,6 @@
     },
     {
         "type": "relation",
-        "relation": "1tm,BookingUserExtra,boouking_user_id"
+        "relation": "1tm,BookingUserExtra,booking_user_id"
     }
 ]

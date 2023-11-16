@@ -292,7 +292,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class School extends Model
+ */
+class School extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'schools';
 

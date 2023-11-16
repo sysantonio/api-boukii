@@ -10,6 +10,18 @@ use Spatie\Activitylog\LogOptions;
  * @OA\Schema(
  *      schema="MonitorSportAuthorizedDegree",
  *      required={"monitor_sport_id","degree_id"},
+ *       @OA\Property(
+ *           property="monitor_sport_id",
+ *           description="ID of the monitor sport",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="degree_id",
+ *           description="ID of the degree authorized for the monitor sport",
+ *           type="integer",
+ *           nullable=false
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",

@@ -11,8 +11,22 @@ use Spatie\Activitylog\LogOptions;
  *      schema="VouchersLog",
  *      required={"voucher_id","booking_id","amount"},
  *      @OA\Property(
+ *          property="voucher_id",
+ *          description="The ID of the voucher associated with the log entry",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
+ *          property="booking_id",
+ *          description="The ID of the booking associated with the log entry",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="integer",
+ *      ),
+ *      @OA\Property(
  *          property="amount",
- *          description="",
+ *          description="The amount associated with the log entry",
  *          readOnly=false,
  *          nullable=false,
  *          type="number",
@@ -20,7 +34,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
+ *          description="The timestamp when the log entry was created",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -28,7 +42,7 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
+ *          description="The timestamp when the log entry was last updated",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
@@ -36,16 +50,19 @@ use Spatie\Activitylog\LogOptions;
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
+ *          description="The timestamp when the log entry was deleted",
  *          readOnly=true,
  *          nullable=true,
  *          type="string",
  *          format="date-time"
  *      )
  * )
- */class VouchersLog extends Model
+ */
+class VouchersLog extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'vouchers_log';
+    use SoftDeletes;
+    use HasFactory;
+    public $table = 'vouchers_log';
 
     public $fillable = [
         'voucher_id',

@@ -100,20 +100,6 @@ use Spatie\Activitylog\LogOptions;
  *          format="date"
  *      ),
  *      @OA\Property(
- *          property="hour_min",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *      ),
- *      @OA\Property(
- *          property="hour_max",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *      ),
- *      @OA\Property(
  *          property="confirm_attendance",
  *          description="",
  *          readOnly=false,
@@ -169,6 +155,48 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=true,
  *          type="string",
  *      ),
+ *      @OA\Property(
+ *           property="sport_id",
+ *           description="Sport ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="School ID",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="station_id",
+ *           description="Station ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="max_participants",
+ *           description="Maximum number of participants",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="duration",
+ *           description="Duration of the course",
+ *           type="string",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="hour_min",
+ *           description="Minimum hour for the course",
+ *           type="string",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="hour_max",
+ *           description="Maximum hour for the course",
+ *           type="string",
+ *           nullable=true
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",

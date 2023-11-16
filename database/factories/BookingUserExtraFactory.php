@@ -24,14 +24,14 @@ class BookingUserExtraFactory extends Factory
      */
     public function definition()
     {
-        
+
         $courseExtra = CourseExtra::first();
         if (!$courseExtra) {
             $courseExtra = CourseExtra::factory()->create();
         }
 
         return [
-            'boouking_user_id' => $this->faker->word,
+            'booking_user_id' => $this->faker->word,
             'course_extra_id' => $this->faker->word,
             'created_at' => $this->faker->date('Y-m-d H:i:s'),
             'updated_at' => $this->faker->date('Y-m-d H:i:s'),

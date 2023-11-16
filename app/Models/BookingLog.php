@@ -9,54 +9,58 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="BookingLog",
- *      required={"booking_id","action","user_id"},
+ *      required={"booking_id", "action", "user_id"},
+ *      @OA\Property(
+ *          property="booking_id",
+ *          description="Booking ID",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="action",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Action performed",
  *          type="string",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="description",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Description of the action",
  *          type="string",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="user_id",
+ *          description="User ID who performed the action",
+ *          type="integer",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="before_change",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="State of booking before the change",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class BookingLog extends Model
+ */
+class BookingLog extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'booking_logs';
 

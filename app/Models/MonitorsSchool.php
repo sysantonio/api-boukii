@@ -10,6 +10,38 @@ use Spatie\Activitylog\LogOptions;
  * @OA\Schema(
  *      schema="MonitorsSchool",
  *      required={"monitor_id","school_id"},
+ *       @OA\Property(
+ *           property="monitor_id",
+ *           description="ID of the monitor",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="school_id",
+ *           description="ID of the school",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
+ *           property="station_id",
+ *           description="ID of the station",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="status_updated_at",
+ *           description="Timestamp when the status was last updated",
+ *           type="string",
+ *           format="date-time",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="accepted_at",
+ *           description="Timestamp when the monitor was accepted at the school",
+ *           type="string",
+ *           format="date-time",
+ *           nullable=true
+ *       ),
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -33,25 +65,10 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=true,
  *          type="string",
  *          format="date-time"
- *      ),
- *      @OA\Property(
- *          property="status_updated_at",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
- *      ),
- *      @OA\Property(
- *          property="accepted_at",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
  *      )
  * )
- */class MonitorsSchool extends Model
+ */
+class MonitorsSchool extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'monitors_schools';
 

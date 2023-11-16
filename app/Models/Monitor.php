@@ -152,6 +152,54 @@ use Spatie\Activitylog\LogOptions;
  *          type="boolean",
  *      ),
  *      @OA\Property(
+ *           property="language1_id",
+ *           description="ID of the first language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language2_id",
+ *           description="ID of the second language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language3_id",
+ *           description="ID of the third language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language4_id",
+ *           description="ID of the fourth language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language5_id",
+ *           description="ID of the fifth language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="language6_id",
+ *           description="ID of the sixth language",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="partner_percentaje",
+ *           description="Percentage of partner's work",
+ *           type="string",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
+ *           property="user_id",
+ *           description="User ID associated with the monitor",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -176,7 +224,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Monitor extends Model
+ */
+class Monitor extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'monitors';
 

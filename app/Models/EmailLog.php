@@ -99,7 +99,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class EmailLog extends Model
+ */
+class EmailLog extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'email_log';
 

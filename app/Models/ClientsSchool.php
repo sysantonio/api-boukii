@@ -9,49 +9,57 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="ClientsSchool",
- *      required={"client_id","school_id"},
+ *      required={"client_id", "school_id"},
  *      @OA\Property(
- *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
+ *          property="client_id",
+ *          description="Client ID",
+ *          type="integer",
+ *          nullable=false
  *      ),
  *      @OA\Property(
- *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
- *      ),
- *      @OA\Property(
- *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
- *          type="string",
- *          format="date-time"
+ *          property="school_id",
+ *          description="School ID",
+ *          type="integer",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="status_updated_at",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Timestamp of the last status update",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="accepted_at",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Timestamp of acceptance",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="created_at",
+ *          description="Creation timestamp",
+ *          type="string",
+ *          format="date-time",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="updated_at",
+ *          description="Update timestamp",
+ *          type="string",
+ *          format="date-time",
+ *          nullable=true
+ *      ),
+ *      @OA\Property(
+ *          property="deleted_at",
+ *          description="Deletion timestamp",
+ *          type="string",
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
- */class ClientsSchool extends Model
+ */
+class ClientsSchool extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'clients_schools';
 
