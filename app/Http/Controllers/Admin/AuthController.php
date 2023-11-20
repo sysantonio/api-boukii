@@ -74,7 +74,7 @@ class AuthController extends AppBaseController
                 $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
             } else if($user->type == 'admin') {
                 $user->load('schools');
-                $user->tokenCan('admin:all');
+                $success['token'] =  $user->createToken('Boukii', ['admin:all'])->plainTextToken;
             }
             $success['user'] =  $user;
 
