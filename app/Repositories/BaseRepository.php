@@ -77,7 +77,7 @@ abstract class BaseRepository
         $query = $this->model->newQuery();
 
         if (count($searchArray)) {
-            foreach($search as $key => $value) {
+            foreach($searchArray as $key => $value) {
                 if (in_array($key, $this->getFieldsSearchable())) {
                     $query->where($key, $value);
                 }

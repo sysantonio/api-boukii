@@ -56,9 +56,11 @@ class SchoolSalaryLevelAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $schoolSalaryLevels = $this->schoolSalaryLevelRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(SchoolSalaryLevelResource::collection($schoolSalaryLevels), 'School Salary Levels retrieved successfully');

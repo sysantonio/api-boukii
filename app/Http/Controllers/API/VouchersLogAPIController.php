@@ -56,9 +56,11 @@ class VouchersLogAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $vouchersLogs = $this->vouchersLogRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(VouchersLogResource::collection($vouchersLogs), 'Vouchers Logs retrieved successfully');

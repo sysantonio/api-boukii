@@ -56,9 +56,11 @@ class StationServiceAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $stationServices = $this->stationServiceRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(StationServiceResource::collection($stationServices), 'Station Services retrieved successfully');

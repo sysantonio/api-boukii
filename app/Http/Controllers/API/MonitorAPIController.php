@@ -56,9 +56,11 @@ class MonitorAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitors = $this->monitorRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(MonitorResource::collection($monitors), 'Monitors retrieved successfully');

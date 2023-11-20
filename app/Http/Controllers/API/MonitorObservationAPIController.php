@@ -56,9 +56,11 @@ class MonitorObservationAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorObservations = $this->monitorObservationRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(MonitorObservationResource::collection($monitorObservations), 'Monitor Observations retrieved successfully');

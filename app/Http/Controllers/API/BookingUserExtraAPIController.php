@@ -56,9 +56,11 @@ class BookingUserExtraAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookingUserExtras = $this->bookingUserExtraRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(BookingUserExtraResource::collection($bookingUserExtras), 'Booking User Extras retrieved successfully');

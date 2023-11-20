@@ -56,9 +56,11 @@ class MonitorNwdAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorNwds = $this->monitorNwdRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(MonitorNwdResource::collection($monitorNwds), 'Monitor Nwds retrieved successfully');

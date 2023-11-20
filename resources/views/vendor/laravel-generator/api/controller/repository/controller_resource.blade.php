@@ -28,9 +28,11 @@ class {{ $config->modelNames->name }}APIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         ${{ $config->modelNames->camelPlural }} = $this->{{ $config->modelNames->camel }}Repository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
 @if($config->options->localized)

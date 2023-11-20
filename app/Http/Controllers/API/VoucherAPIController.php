@@ -56,9 +56,11 @@ class VoucherAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $vouchers = $this->voucherRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(VoucherResource::collection($vouchers), 'Vouchers retrieved successfully');

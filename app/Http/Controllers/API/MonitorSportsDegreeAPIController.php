@@ -56,9 +56,11 @@ class MonitorSportsDegreeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorSportsDegrees = $this->monitorSportsDegreeRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(MonitorSportsDegreeResource::collection($monitorSportsDegrees), 'Monitor Sports Degrees retrieved successfully');

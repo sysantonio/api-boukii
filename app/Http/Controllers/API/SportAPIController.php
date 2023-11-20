@@ -56,9 +56,11 @@ class SportAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $sports = $this->sportRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(SportResource::collection($sports), 'Sports retrieved successfully');

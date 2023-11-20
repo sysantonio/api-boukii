@@ -56,9 +56,11 @@ class BookingAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookings = $this->bookingRepository->all(
-            $request->except(['skip', 'limit']),
+             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->get('search'),
             $request->get('skip'),
-            $request->get('limit')
+            $request->get('limit'),
+            $request->perPage
         );
 
         return $this->sendResponse(BookingResource::collection($bookings), 'Bookings retrieved successfully');
