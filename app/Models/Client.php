@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
 
@@ -278,6 +279,18 @@ use Spatie\Activitylog\LogOptions;
     public function clientsUtilizers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\ClientsUtilizer::class, 'main_id');
+    }
+
+    public function utilizers(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Client::class,  // Modelo de destino (Utilizer)
+            ClientsUtilizer::class,  // Modelo intermedio (ClientsUtilizer)
+            'main_id',  // Clave extranjera en ClientsUtilizer que relaciona con Client
+            'id',  // Clave primaria en Utilizer
+            'id',  // Clave primaria en Client
+            'client_id'  // Clave extranjera en ClientsUtilizer que relaciona con Utilizer
+        );
     }
 
     public function clientsUtilizer3s(): \Illuminate\Database\Eloquent\Relations\HasMany

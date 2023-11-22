@@ -12,12 +12,17 @@ Route::delete('logout', [\App\Http\Controllers\Auth\LogoutController::class, 'de
 Route::post('auth/recover-password', [\App\Http\Controllers\Auth\AuthController::class, 'recoverPassword'])->name('api.admin.recoverPassword');
 Route::post('auth/reset-password/{token}', [\App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);*/
 
+
 // Private
-Route::middleware(['auth:sanctum', 'ability:permissions:all'])->group(function() {
-    Route::get('hash', function (Request $request){
-        $request->user()->givePermissionTo('edit articles');
-        return $request->user();
-        return Hash::make($request->password);
-    });
+Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
+
+    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)
+        ->except(['create', 'edit']);
+
+
+    Route::resource('clients', App\Http\Controllers\Admin\ClientsController::class)
+        ->except(['create', 'edit']);
+
+    Route::get('clients/{id}/utilizers', [\App\Http\Controllers\Admin\ClientsController::class, 'getUtilizers']);
 
 });
