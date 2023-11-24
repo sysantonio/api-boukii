@@ -29,9 +29,9 @@ class CourseController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/courses",
+     *      path="/admin/courses",
      *      summary="getCourseList",
-     *      tags={"COurse"},
+     *      tags={"Admin"},
      *      description="Get all Courses",
      *      @OA\Response(
      *          response=200,
@@ -66,9 +66,9 @@ class CourseController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/courses",
+     *      path="/admin/courses",
      *      summary="createCourse",
-     *      tags={"Course"},
+     *      tags={"Admin"},
      *      description="Create Course",
      *      @OA\RequestBody(
      *        required=true,
@@ -178,9 +178,9 @@ class CourseController extends AppBaseController
 
     /**
      * @OA\Put(
-     *      path="/courses/{id}",
+     *      path="/admin/courses/{id}",
      *      summary="updateCourse",
-     *      tags={"Course"},
+     *      tags={"Admin"},
      *      description="Update Course",
      *      @OA\Parameter(
      *          name="id",

@@ -7,6 +7,7 @@ use App\Http\Requests\API\CreateSchoolAPIRequest;
 use App\Http\Requests\API\UpdateSchoolAPIRequest;
 use App\Http\Resources\API\SchoolResource;
 use App\Models\School;
+use App\Models\SchoolSport;
 use App\Repositories\SchoolRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -208,6 +209,90 @@ class SchoolAPIController extends AppBaseController
         $school = $this->schoolRepository->update($input, $id);
 
         return $this->sendResponse(new SchoolResource($school), 'School updated successfully');
+    }
+
+    /**
+     * @OA\Put(
+     *      path="/schools/{id}/sports",
+     *      summary="updateSchoolSports",
+     *      tags={"School"},
+     *      description="Update School Sports",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="ID of School",
+     *          @OA\Schema(
+     *             type="integer"
+     *          ),
+     *          required=true,
+     *          in="path"
+     *      ),
+     *      @OA\RequestBody(
+     *        required=true,
+     *        @OA\JsonContent(
+     *           @OA\Property(
+     *               property="sport_ids",
+     *               type="array",
+     *               @OA\Items(type="integer"),
+     *               description="An array of Sport IDs to synchronize with the school."
+     *           )
+     *        )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="School not found",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="string",
+     *                  description="Error message"
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Validation error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="string",
+     *                  description="Error message"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function updateSchoolSports($schoolId, Request $request): JsonResponse
+    {
+        $input = $request->all();
+
+        /** @var School $school */
+        $school = School::find($schoolId);
+
+        if (empty($school)) {
+            return $this->sendError('School not found');
+        }
+
+        // Sincroniza los deportes relacionados con los IDs proporcionados en $input['sport_ids']
+        $school->sports()->sync($input['sport_ids']);
+
+        return $this->sendResponse('School sports updated successfully');
     }
 
     /**

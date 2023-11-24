@@ -5600,6 +5600,98 @@
                 }
             }
         },
+        "/schools/{id}/sports": {
+            "put": {
+                "tags": [
+                    "School"
+                ],
+                "summary": "updateSchoolSports",
+                "description": "Update School Sports",
+                "operationId": "9f8c28176f1e355f2e19cbc71a4e4a8c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of School",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sport_ids": {
+                                        "description": "An array of Sport IDs to synchronize with the school.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "School not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/school-colors": {
             "get": {
                 "tags": [
@@ -9132,6 +9224,253 @@
                 }
             }
         },
+        "/admin/clients": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getClientList",
+                "description": "Get all Clients",
+                "operationId": "aa42ababd1b3c7806f3238032fcd96d4",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/clients/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getClientItem",
+                "description": "Get Client",
+                "operationId": "9d39001ea1689db16f89c723c92dc597",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Client",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Client"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/clients/{id}/utilizers": {
+            "get": {
+                "tags": [
+                    "Client"
+                ],
+                "summary": "getClientUtilizersList",
+                "description": "Get all Clients",
+                "operationId": "4babe536d9af77298ab152b58b376bcb",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/courses": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getCourseList",
+                "description": "Get all Courses",
+                "operationId": "11452bfa2e671e6b88756ad67afdd3ca",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Course"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "createCourse",
+                "description": "Create Course",
+                "operationId": "9a87693b1accd809d98fab3fbb5567be",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Course"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/courses/{id}": {
+            "put": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "updateCourse",
+                "description": "Update Course",
+                "operationId": "45fc69452ddb5477d8da1fab5ad0af75",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Course",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Course"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/teach/login": {
             "post": {
                 "tags": [
@@ -9189,6 +9528,78 @@
                 }
             }
         },
+        "/teach/clients": {
+            "get": {
+                "tags": [
+                    "Client"
+                ],
+                "summary": "getClientList",
+                "description": "Get all Clients of monitor",
+                "operationId": "542b1c5bcbc902515823e4f6cfd837ec",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/teach/clients/{id}/bookings": {
+            "get": {
+                "tags": [
+                    "Teach"
+                ],
+                "summary": "getClientBookingsList",
+                "description": "Get all Client bookings",
+                "operationId": "0fd14795d97a8d439fbf46757a7a9b99",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BookingUser"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/teach/getAgenda": {
             "get": {
                 "tags": [
@@ -9223,6 +9634,78 @@
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/teach/monitor": {
+            "put": {
+                "tags": [
+                    "Teach"
+                ],
+                "summary": "Update Monitor",
+                "description": "Update Monitor",
+                "operationId": "566443a36976cf61128a5b3eda123637",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Monitor"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/teach/monitor/pastBookings": {
+            "get": {
+                "tags": [
+                    "Teach"
+                ],
+                "summary": "getMonitorPastBookings",
+                "description": "Get past Bookings of Monitor",
+                "operationId": "f1e30541f81470be96fba9ac6cdfb58f",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
                                         },
                                         "message": {
                                             "type": "string"
@@ -11618,6 +12101,18 @@
                         "format": "date",
                         "readOnly": false,
                         "nullable": false
+                    },
+                    "hour_start": {
+                        "description": "Start Hour",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
+                    "hour_end": {
+                        "description": "End Hour",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
                     },
                     "is_active": {
                         "description": "",

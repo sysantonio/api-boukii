@@ -29,9 +29,9 @@ class ClientsController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/clients",
+     *      path="/admin/clients",
      *      summary="getClientList",
-     *      tags={"Client"},
+     *      tags={"Admin"},
      *      description="Get all Clients",
      *      @OA\Response(
      *          response=200,
@@ -64,9 +64,9 @@ class ClientsController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/clients/{id}",
+     *      path="/admin/clients/{id}",
      *      summary="getClientItem",
-     *      tags={"Client"},
+     *      tags={"Admin"},
      *      description="Get Client",
      *      @OA\Parameter(
      *          name="id",

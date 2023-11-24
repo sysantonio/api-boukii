@@ -38,6 +38,7 @@ Route::prefix('superadmin')
 /* API APP SPORTS */
 Route::prefix('sports')
     ->group(base_path('routes/api/sports.php'));
+
 /* API APP SPORTS */
 
 
@@ -75,6 +76,9 @@ Route::resource('sport-types', App\Http\Controllers\API\SportTypeAPIController::
 
 Route::resource('sports', App\Http\Controllers\API\SportAPIController::class)
     ->except(['create', 'edit']);
+
+Route::get('schools/{id}/sports', [\App\Http\Controllers\API\SchoolAPIController::class, 'updateSchoolSports'])
+    ->name('api.schools.updateSchoolSports');
 
 Route::resource('schools', App\Http\Controllers\API\SchoolAPIController::class)
     ->except(['create', 'edit']);
