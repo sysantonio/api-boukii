@@ -53,4 +53,10 @@ class AppBaseController extends Controller
         $user->load('monitors');
         return $user->monitors[0];
     }
+
+    public function getSchool($request) {
+        $user = $request->user();
+        $user->load('schools');
+        return $user->schools[0];
+    }
 }

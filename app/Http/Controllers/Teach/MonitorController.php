@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Http\Controllers\Teach;
+
+use App\Http\Controllers\AppBaseController;
+use App\Http\Resources\API\BookingResource;
+use App\Http\Resources\API\BookingUserResource;
+use App\Http\Resources\Teach\HomeAgendaResource;
+use App\Models\Booking;
+use App\Models\BookingUser;
+use App\Models\MonitorNwd;
+use App\Models\MonitorObservation;
+use App\Models\MonitorSportsDegree;
+use App\Models\MonitorsSchool;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Response;
+use Validator;
+
+;
+
+/**
+ * Class HomeController
+ * @package App\Http\Controllers\Teach
+ */
+
+class MonitorController extends AppBaseController
+{
+
+    public function __construct()
+    {
+
+    }
+
+
+    /**
+     * @OA\Get(
+     *      path="/teach/getAgenda",
+     *      summary="Get Monitor Agenda",
+     *      tags={"Teach"},
+     *      description="Get Monitor agenda",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="object",
+     *                  @OA\Property(
+     *                      property="bookings",
+     *                      type="array",
+     *                      @OA\Items(
+     *                          ref="#/components/schemas/Booking"
+     *                      )
+     *                  ),
+     *                  @OA\Property(
+     *                      property="nwds",
+     *                      type="array",
+     *                      @OA\Items(
+     *                          ref="#/components/schemas/MonitorNwd"
+     *                      )
+     *                  )
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+
+    public function update(Request $request): JsonResponse
+    {
+
+
+
+        $validatedData = $request->validate([
+            // Define las reglas de validación para los campos del monitor aquí
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'birth_date' => 'required|date',
+            // Agrega reglas de validación para otros campos del monitor si es necesario
+        ]);
+
+        // Crea una instancia de Monitor con los datos validados
+        $monitor = $this->getMonitor($request);
+
+        // Si hay relaciones que debes editar o eliminar, puedes hacerlo aquí
+        // Por ejemplo, para monitorObservations:
+        $monitorObservationsData = $request->input('monitor_observations');
+        $monitor->monitorObservations()->delete(); // Elimina todas las observaciones existentes
+        foreach ($monitorObservationsData as $observationData) {
+            $monitorObservation = new MonitorObservation($observationData);
+            $monitor->monitorObservations()->save($monitorObservation);
+        }
+
+        // Para monitorSportsDegrees:
+        $monitorSportsDegreesData = $request->input('monitor_sports_degrees');
+        $monitor->monitorSportsDegrees()->delete(); // Elimina todos los grados deportivos existentes
+        foreach ($monitorSportsDegreesData as $sportsDegreeData) {
+            $monitorSportsDegree = new MonitorSportsDegree($sportsDegreeData);
+            $monitor->monitorSportsDegrees()->save($monitorSportsDegree);
+        }
+
+        // Para monitorSchools:
+        $monitorSchoolsData = $request->input('monitor_schools');
+        $monitor->monitorSchools()->delete(); // Elimina todas las escuelas existentes
+        foreach ($monitorSchoolsData as $schoolData) {
+            $monitorSchool = new MonitorsSchool($schoolData);
+            $monitor->monitorSchools()->save($monitorSchool);
+        }
+
+        return $this->sendResponse($monitor, 'Agenda retrieved successfully');
+    }
+
+}

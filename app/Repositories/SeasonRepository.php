@@ -12,6 +12,8 @@ class SeasonRepository extends BaseRepository
         'start_date',
         'end_date',
         'is_active',
+        'hour_start',
+        'hour_end',
         'school_id'
     ];
 

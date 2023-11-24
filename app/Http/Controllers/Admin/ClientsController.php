@@ -64,6 +64,54 @@ class ClientsController extends AppBaseController
 
     /**
      * @OA\Get(
+     *      path="/clients/{id}",
+     *      summary="getClientItem",
+     *      tags={"Client"},
+     *      description="Get Client",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="id of Client",
+     *           @OA\Schema(
+     *             type="integer"
+     *          ),
+     *          required=true,
+     *          in="path"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/Client"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function show($id): JsonResponse
+    {
+        /** @var Client $client */
+        $mainClient = Client::with('utilizers')->find($id);
+
+        if (empty($mainClient)) {
+            return $this->sendError('Client not found');
+        }
+
+        return $this->sendResponse($client, 'Client retrieved successfully');
+    }
+
+    /**
+     * @OA\Get(
      *      path="/admin/clients/{id}/utilizers",
      *      summary="getClientUtilizersList",
      *      tags={"Client"},

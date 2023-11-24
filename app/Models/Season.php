@@ -34,6 +34,20 @@ use Spatie\Activitylog\LogOptions;
  *          format="date"
  *      ),
  *      @OA\Property(
+ *            property="hour_start",
+ *            description="Start Hour",
+ *            type="string",
+ *            nullable=true,
+ *            format="time"
+ *        ),
+ *        @OA\Property(
+ *            property="hour_end",
+ *            description="End Hour",
+ *            type="string",
+ *            nullable=true,
+ *            format="time"
+ *        ),
+ *      @OA\Property(
  *          property="is_active",
  *          description="",
  *          readOnly=false,
@@ -81,6 +95,8 @@ use Spatie\Activitylog\LogOptions;
         'start_date',
         'end_date',
         'is_active',
+        'hour_start',
+        'hour_end',
         'school_id'
     ];
 
@@ -95,6 +111,8 @@ use Spatie\Activitylog\LogOptions;
         'name' => 'nullable|string|max:255',
         'start_date' => 'required',
         'end_date' => 'required',
+        'hour_start' => 'nullable',
+        'hour_end' => 'nullable',
         'is_active' => 'required|boolean',
         'school_id' => 'required',
         'created_at' => 'nullable',
