@@ -15,4 +15,7 @@ Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
     Route::get('monitor/pastBookings', [\App\Http\Controllers\Teach\MonitorController::class, 'getPastBookings'])
         ->name('api.teach.monitor.pastBokkings');
 
+    Route::get('clients', [\App\Http\Controllers\Teach\ClientsController::class, 'index'])
+        ->name('api.teach.clients.index');
+
 });

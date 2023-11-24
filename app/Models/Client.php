@@ -266,7 +266,7 @@ use Spatie\Activitylog\LogOptions;
         return $this->hasMany(\App\Models\Booking::class, 'client_main_id');
     }
 
-    public function clientObservations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function observations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\ClientObservation::class, 'client_id');
     }
