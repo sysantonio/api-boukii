@@ -19,6 +19,8 @@ class SeasonResource extends JsonResource
             'name' => $this->name,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
+            'hour_start' => $this->hour_start,
+            'hour_end' => $this->hour_end,
             'is_active' => $this->is_active,
             'school_id' => $this->school_id,
             'created_at' => $this->created_at,
