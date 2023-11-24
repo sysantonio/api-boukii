@@ -97,9 +97,13 @@ class CourseController extends AppBaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $school = $this->getSchool($request);
+        $request->merge(["school_id"=> $school->id]);
+
+        //$request->school_id = $school->id;
         $request->validate([
-            'course_type' => 'required|boolean',
-            'is_flexible' => 'required|boolean',
+            'course_type' => 'required',
+            'is_flexible' => 'required',
             'sport_id' => 'required|exists:sports,id',
             'school_id' => 'required|exists:schools,id',
             'station_id' => 'nullable|exists:stations,id',
@@ -109,7 +113,7 @@ class CourseController extends AppBaseController
             'price' => 'required|numeric|min:0',
             'currency' => 'required|string|max:3',
             'max_participants' => 'required|integer|min:1',
-            'duration' => 'nullable|integer|min:1',
+            'duration' => 'nullable',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
             'date_start_res' => 'nullable|date',
@@ -119,14 +123,14 @@ class CourseController extends AppBaseController
             'online' => 'required|boolean',
             'image' => 'nullable|string',
             'translations' => 'nullable|string',
-            'price_range' => 'nullable|string',
+            'price_range' => 'nullable',
             'discounts' => 'nullable|string',
             'settings' => 'nullable|string',
             'course_dates' => 'required|array',
             'course_dates.*.date' => 'required|date',
             'course_dates.*.hour_start' => 'required|string|max:255',
             'course_dates.*.hour_end' => 'required|string|max:255',
-            'course_dates.*.groups' => 'required|array',
+            'course_dates.*.groups' => 'required_if:course_type,1|array',
             'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
             'course_dates.*.groups.*.age_min' => 'nullable|integer|min:0',
             'course_dates.*.groups.*.age_max' => 'nullable|integer|min:0',
@@ -142,6 +146,7 @@ class CourseController extends AppBaseController
         ]);
 
         $courseData = $request->all();
+
         $course = Course::create($courseData);
 
         // Crear las fechas y grupos

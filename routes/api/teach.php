@@ -9,6 +9,10 @@ Route::post('login', [\App\Http\Controllers\Teach\AuthController::class, 'login'
 
 // Private
 Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
-    Route::get('getAgenda', [\App\Http\Controllers\Teach\HomeController::class, 'getAgenda'])->name('api.teach.home.agenda');
+    Route::get('getAgenda', [\App\Http\Controllers\Teach\HomeController::class, 'getAgenda'])
+        ->name('api.teach.home.agenda');
+
+    Route::get('monitor/pastBookings', [\App\Http\Controllers\Teach\MonitorController::class, 'getPastBookings'])
+        ->name('api.teach.monitor.pastBokkings');
 
 });

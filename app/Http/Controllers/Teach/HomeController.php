@@ -75,22 +75,47 @@ class HomeController extends AppBaseController
 
     public function getAgenda(Request $request): JsonResponse
     {
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
 
         $monitor = $this->getMonitor($request);
 
-        $bookings = BookingUser::with('booking', 'course.courseDates', 'client')
-            ->where('school_id', $request->school_id)
-            ->whereDate('date', Carbon::today())
+        // Consulta para las reservas (BookingUser)
+        $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client')
+            ->where('school_id', $monitor->active_school)
             ->byMonitor($monitor->id)
-            ->orderBy('hour_start')
-            ->get();
-        $nwd = MonitorNwd::where('monitor_id', $monitor->id)
-            ->whereDate('start_date', '<=', Carbon::today())
-            ->whereDate('end_date', '>=', Carbon::today())
-            ->orderBy('start_time')
-            ->get();
+            ->orderBy('hour_start');
+
+        // Consulta para los MonitorNwd
+        $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
+            ->orderBy('start_time');
+
+        // Si se proporcionaron date_start y date_end, busca en el rango de fechas
+        if ($dateStart && $dateEnd) {
+            // Busca en el rango de fechas proporcionado para las reservas
+            $bookingQuery->whereBetween('date', [$dateStart, $dateEnd]);
+
+            // Busca en el rango de fechas proporcionado para los MonitorNwd
+            $nwdQuery->whereBetween('start_date', [$dateStart, $dateEnd])
+                ->whereBetween('end_date', [$dateStart, $dateEnd]);
+        } else {
+            // Si no se proporcionan fechas, busca en el día de hoy
+            $today = Carbon::today();
+
+            // Busca en el día de hoy para las reservas
+            $bookingQuery->whereDate('date', $today);
+
+            // Busca en el día de hoy para los MonitorNwd
+            $nwdQuery->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today);
+        }
+
+        // Obtén los resultados para las reservas y los MonitorNwd
+        $bookings = $bookingQuery->get();
+        $nwd = $nwdQuery->get();
 
         $data = ['bookings' => $bookings, 'nwd' => $nwd];
+
 
         return $this->sendResponse(new HomeAgendaResource($data), 'Agenda retrieved successfully');
     }

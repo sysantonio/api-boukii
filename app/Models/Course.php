@@ -264,6 +264,7 @@ use Spatie\Activitylog\LogOptions;
         'description' => 'string',
         'price' => 'decimal:2',
         'currency' => 'string',
+        'duration' => 'string',
         'duration_flexible' => 'boolean',
         'date_start' => 'date',
         'date_end' => 'date',
@@ -276,7 +277,7 @@ use Spatie\Activitylog\LogOptions;
         'online' => 'boolean',
         'image' => 'string',
         'translations' => 'string',
-        'price_range' => 'string',
+        'price_range' => 'json',
         'discounts' => 'string',
         'settings' => 'string'
     ];
