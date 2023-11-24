@@ -77,7 +77,7 @@ Route::resource('sport-types', App\Http\Controllers\API\SportTypeAPIController::
 Route::resource('sports', App\Http\Controllers\API\SportAPIController::class)
     ->except(['create', 'edit']);
 
-Route::get('schools/{id}/sports', [\App\Http\Controllers\API\SchoolAPIController::class, 'updateSchoolSports'])
+Route::put('schools/{id}/sports', [\App\Http\Controllers\API\SchoolAPIController::class, 'updateSchoolSports'])
     ->name('api.schools.updateSchoolSports');
 
 Route::resource('schools', App\Http\Controllers\API\SchoolAPIController::class)
