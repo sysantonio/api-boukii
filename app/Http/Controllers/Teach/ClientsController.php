@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teach;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
+use App\Models\BookingUser;
 use App\Models\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -117,10 +118,10 @@ class ClientsController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/admin/clients/{id}/utilizers",
-     *      summary="getClientUtilizersList",
-     *      tags={"Client"},
-     *      description="Get all Clients",
+     *      path="/teach/clients/{id}/bookings",
+     *      summary="getClientBookingsList",
+     *      tags={"Teach"},
+     *      description="Get all Client bookings",
      *      @OA\Response(
      *          response=200,
      *          description="successful operation",
@@ -133,7 +134,7 @@ class ClientsController extends AppBaseController
      *              @OA\Property(
      *                  property="data",
      *                  type="array",
-     *                  @OA\Items(ref="#/components/schemas/Booking")
+     *                  @OA\Items(ref="#/components/schemas/BookingUser")
      *              ),
      *              @OA\Property(
      *                  property="message",
@@ -143,13 +144,15 @@ class ClientsController extends AppBaseController
      *      )
      * )
      */
-    public function getUtilizers($id, Request $request): JsonResponse
+    public function getBookings($id, Request $request): JsonResponse
     {
-        $mainClient = Client::with('utilizers')->find($id);
+        $monitorId = $this->getMonitor($request)->id;
 
-        $utilizers = $mainClient->utilizers;
+        $bookings = BookingUser::with('booking','course.courseDates')
+            ->where('client_id', $id)->where('monitor_id', $monitorId)
+        ->get();
 
-        return $this->sendResponse($utilizers, 'Utilizers returned successfully');
+        return $this->sendResponse($bookings, 'Bookings returned successfully');
     }
 
 }

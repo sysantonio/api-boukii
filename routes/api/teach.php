@@ -18,4 +18,7 @@ Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
     Route::get('clients', [\App\Http\Controllers\Teach\ClientsController::class, 'index'])
         ->name('api.teach.clients.index');
 
+    Route::get('clients/{id}/bookings', [\App\Http\Controllers\Teach\ClientsController::class, 'getBookings'])
+        ->name('api.teach.clients.bookings');
+
 });
