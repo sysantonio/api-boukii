@@ -6122,6 +6122,56 @@
                 }
             }
         },
+        "/api/school-colors/multiple": {
+            "put": {
+                "tags": [
+                    "School Colors"
+                ],
+                "summary": "Update or insert school colors",
+                "description": "Update or insert school colors in bulk.",
+                "operationId": "ea9fd94291fc4fd78a8ddfdceba00598",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "required": [
+                                        "school_id",
+                                        "name",
+                                        "color"
+                                    ],
+                                    "properties": {
+                                        "school_id": {
+                                            "description": "School ID",
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "description": "Color Name",
+                                            "type": "string"
+                                        },
+                                        "color": {
+                                            "description": "Color Code",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Colors updated or inserted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
         "/school-salary-levels": {
             "get": {
                 "tags": [

@@ -86,6 +86,10 @@ Route::resource('schools', App\Http\Controllers\API\SchoolAPIController::class)
 Route::resource('school-users', App\Http\Controllers\API\SchoolUserAPIController::class)
     ->except(['create', 'edit']);
 
+Route::put('/api/school-colors/multiple', [App\Http\Controllers\API\SchoolColorAPIController::class, 'updateColors'])
+    ->name('api.schools.updatemultiple');
+
+
 Route::resource('school-colors', App\Http\Controllers\API\SchoolColorAPIController::class)
     ->except(['create', 'edit']);
 
