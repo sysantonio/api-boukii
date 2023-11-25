@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -293,9 +294,18 @@ use Spatie\Activitylog\LogOptions;
         );
     }
 
+    public function main()
+    {
+        return $this->hasOneThrough(Client::class,
+            ClientsUtilizer::class, 'main_id',
+            'id', 'id',
+            'main_id')
+            ->withDefault($this);
+    }
+
     public function clientsUtilizer3s(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\ClientsUtilizer::class, 'client_id');
+        return $this->hasMany(\App\Models\ClientsUtilizer::class, foreignKey: 'client_id');
     }
 
     public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasMany

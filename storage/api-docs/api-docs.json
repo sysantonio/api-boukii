@@ -9531,7 +9531,7 @@
         "/teach/clients": {
             "get": {
                 "tags": [
-                    "Client"
+                    "Teach"
                 ],
                 "summary": "getClientList",
                 "description": "Get all Clients of monitor",
@@ -9551,6 +9551,50 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Client"
                                             }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/teach/clients/{id}": {
+            "get": {
+                "tags": [
+                    "Teach"
+                ],
+                "summary": "getClientItemMonitor",
+                "description": "Get Client",
+                "operationId": "c157be835768fb37c01658749b01f6b7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Client",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Client"
                                         },
                                         "message": {
                                             "type": "string"

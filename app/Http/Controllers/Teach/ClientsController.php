@@ -32,7 +32,7 @@ class ClientsController extends AppBaseController
      * @OA\Get(
      *      path="/teach/clients",
      *      summary="getClientList",
-     *      tags={"Client"},
+     *      tags={"Teach"},
      *      description="Get all Clients of monitor",
      *      @OA\Response(
      *          response=200,
@@ -60,12 +60,66 @@ class ClientsController extends AppBaseController
     {
         $monitorId = $this->getMonitor($request)->id;
 
-        $clients = Client::with('evaluations.degree', 'evaluations.evaluationFulfilledGoals', 'observations')
+        $clients = Client::with('utilizers','main','evaluations.degree', 'evaluations.evaluationFulfilledGoals', 'observations')
             ->whereHas('bookingUsers', function ($query) use ($monitorId) {
             $query->where('monitor_id', $monitorId);
         })->distinct()->get();
 
         return response()->json($clients);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/teach/clients/{id}",
+     *      summary="getClientItemMonitor",
+     *      tags={"Teach"},
+     *      description="Get Client",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="id of Client",
+     *           @OA\Schema(
+     *             type="integer"
+     *          ),
+     *          required=true,
+     *          in="path"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/Client"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function show($id, Request $request): JsonResponse
+    {
+        $monitorId = $this->getMonitor($request)->id;
+
+        // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
+        $client = Client::with('utilizers', 'main', 'evaluations.degree', 'evaluations.evaluationFulfilledGoals',
+            'observations')->whereHas('bookingUsers', function ($query) use ($monitorId) {
+                $query->where('monitor_id', $monitorId);
+            })
+            ->find($id);
+
+        if (empty($client)) {
+            return $this->sendError('Client does not have booking_users with the specified monitor');
+        }
+
+        return $this->sendResponse($client, 'Client retrieved successfully');
     }
 
     /**
