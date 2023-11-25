@@ -12239,7 +12239,8 @@
                 "required": [
                     "school_id",
                     "name",
-                    "pay"
+                    "pay",
+                    "active"
                 ],
                 "properties": {
                     "name": {
@@ -12252,6 +12253,12 @@
                         "description": "",
                         "type": "number",
                         "format": "number",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "active": {
+                        "description": "",
+                        "type": "boolean",
                         "readOnly": false,
                         "nullable": false
                     },

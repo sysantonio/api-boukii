@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="SchoolSalaryLevel",
- *      required={"school_id","name","pay"},
+ *      required={"school_id","name","pay", "active"},
  *      @OA\Property(
  *          property="name",
  *          description="",
@@ -25,6 +25,13 @@ use Spatie\Activitylog\LogOptions;
  *          type="number",
  *          format="number"
  *      ),
+ *      @OA\Property(
+ *           property="active",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
  *      @OA\Property(
  *          property="school_id",
  *          description="ID of the associated school",
@@ -64,18 +71,21 @@ class SchoolSalaryLevel extends Model
     public $fillable = [
         'school_id',
         'name',
-        'pay'
+        'pay',
+        'active'
     ];
 
     protected $casts = [
         'name' => 'string',
-        'pay' => 'float'
+        'pay' => 'float',
+        'active' => 'boolean',
     ];
 
     public static array $rules = [
         'school_id' => 'required',
         'name' => 'required|string|max:100',
         'pay' => 'required|numeric',
+        'active' => 'required|boolean',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
