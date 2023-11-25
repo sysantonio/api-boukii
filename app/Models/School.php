@@ -482,6 +482,13 @@ class School extends Model
         return $this->hasMany(\App\Models\SchoolSport::class, 'school_id');
     }
 
+    public function sports()
+    {
+        return $this->belongsToMany(Sport::class, 'school_sports',
+            'school_id', 'id', 'id', 'id');
+    }
+
+
     public function schoolUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\SchoolUser::class, 'school_id');

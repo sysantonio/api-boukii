@@ -291,8 +291,9 @@ class SchoolAPIController extends AppBaseController
 
         // Sincroniza los deportes relacionados con los IDs proporcionados en $input['sport_ids']
         $school->sports()->sync($input['sport_ids']);
+        $school->load('sports');
 
-        return $this->sendResponse('School sports updated successfully');
+        return $this->sendResponse($school,'School sports updated successfully');
     }
 
     /**
