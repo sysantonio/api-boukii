@@ -19,6 +19,7 @@ class SchoolSalaryLevelResource extends JsonResource
             'school_id' => $this->school_id,
             'name' => $this->name,
             'pay' => $this->pay,
+            'active' => $this->active,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at
