@@ -6125,7 +6125,7 @@
         "/api/school-colors/multiple": {
             "put": {
                 "tags": [
-                    "School Colors"
+                    "SchoolColor"
                 ],
                 "summary": "Update or insert school colors",
                 "description": "Update or insert school colors in bulk.",

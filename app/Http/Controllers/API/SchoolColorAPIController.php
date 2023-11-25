@@ -214,7 +214,7 @@ class SchoolColorAPIController extends AppBaseController
      * @OA\Put(
      *      path="/api/school-colors/multiple",
      *      summary="Update or insert school colors",
-     *      tags={"School Colors"},
+     *      tags={"SchoolColor"},
      *      description="Update or insert school colors in bulk.",
      *      @OA\RequestBody(
      *          required=true,
