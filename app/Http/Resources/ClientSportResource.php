@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources\API;
+namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class EvaluationFulfilledGoalResource extends JsonResource
+class ClientSportResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,11 +16,10 @@ class EvaluationFulfilledGoalResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'evaluation_id' => $this->evaluation_id,
-            'degrees_school_sport_goals_id' => $this->degrees_school_sport_goals_id,
-            'score' => $this->score,
-            'created_at' => $this->created_at,
+            'client_id' => $this->client_id,
+            'sport_id' => $this->sport_id,
             'updated_at' => $this->updated_at,
+            'created_at' => $this->created_at,
             'deleted_at' => $this->deleted_at
         ];
     }

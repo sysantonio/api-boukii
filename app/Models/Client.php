@@ -294,6 +294,18 @@ use Spatie\Activitylog\LogOptions;
         );
     }
 
+    public function sports(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Sport::class,  // Modelo de destino (Utilizer)
+            ClientSport::class,  // Modelo intermedio (ClientsUtilizer)
+            'sport_id',  // Clave extranjera en ClientsUtilizer que relaciona con Client
+            'id',  // Clave primaria en Utilizer
+            'id',  // Clave primaria en Client
+            'client_id'  // Clave extranjera en ClientsUtilizer que relaciona con Utilizer
+        );
+    }
+
     public function main()
     {
         return $this->hasOneThrough(Client::class,

@@ -23,6 +23,12 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false
  *      ),
  *      @OA\Property(
+ *           property="score",
+ *           description="Score of the evaluation (0-5-10)",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="Creation timestamp of the fulfilled goal",
  *          type="string",
@@ -51,7 +57,8 @@ class EvaluationFulfilledGoal extends Model
 
     public $fillable = [
         'evaluation_id',
-        'degrees_school_sport_goals_id'
+        'degrees_school_sport_goals_id',
+        'score'
     ];
 
     protected $casts = [
@@ -61,6 +68,7 @@ class EvaluationFulfilledGoal extends Model
     public static array $rules = [
         'evaluation_id' => 'required',
         'degrees_school_sport_goals_id' => 'required',
+        'score' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

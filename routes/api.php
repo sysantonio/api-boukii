@@ -187,3 +187,7 @@ Route::resource('vouchers-logs', App\Http\Controllers\API\VouchersLogAPIControll
 
 Route::resource('booking-logs', App\Http\Controllers\API\BookingLogAPIController::class)
     ->except(['create', 'edit']);
+
+
+Route::resource('client-sports', App\Http\Controllers\API\ClientSportAPIController::class)
+    ->except(['create', 'edit']);

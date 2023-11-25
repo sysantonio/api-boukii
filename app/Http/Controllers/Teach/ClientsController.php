@@ -60,7 +60,8 @@ class ClientsController extends AppBaseController
     {
         $monitorId = $this->getMonitor($request)->id;
 
-        $clients = Client::with('utilizers','main','evaluations.degree', 'evaluations.evaluationFulfilledGoals', 'observations')
+        $clients = Client::with('sports', 'utilizers','main','evaluations.degree',
+            'evaluations.evaluationFulfilledGoals', 'observations')
             ->whereHas('bookingUsers', function ($query) use ($monitorId) {
             $query->where('monitor_id', $monitorId);
         })->distinct()->get();
@@ -109,7 +110,7 @@ class ClientsController extends AppBaseController
         $monitorId = $this->getMonitor($request)->id;
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
-        $client = Client::with('utilizers', 'main', 'evaluations.degree', 'evaluations.evaluationFulfilledGoals',
+        $client = Client::with('sports', 'utilizers', 'main', 'evaluations.degree', 'evaluations.evaluationFulfilledGoals',
             'observations')->whereHas('bookingUsers', function ($query) use ($monitorId) {
                 $query->where('monitor_id', $monitorId);
             })
