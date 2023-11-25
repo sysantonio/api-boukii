@@ -484,8 +484,7 @@ class School extends Model
 
     public function sports()
     {
-        return $this->belongsToMany(Sport::class, 'school_sports',
-            'school_id', 'id', 'id', 'id');
+        return $this->belongsToMany(Sport::class, 'school_sports');
     }
 
 
