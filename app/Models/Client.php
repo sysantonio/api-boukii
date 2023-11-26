@@ -294,16 +294,11 @@ use Spatie\Activitylog\LogOptions;
         );
     }
 
-    public function sports(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function sports()
     {
-        return $this->hasManyThrough(
-            Sport::class,  // Modelo de destino (Utilizer)
-            ClientSport::class,  // Modelo intermedio (ClientsUtilizer)
-            'sport_id',  // Clave extranjera en ClientsUtilizer que relaciona con Client
-            'id',  // Clave primaria en Utilizer
-            'id',  // Clave primaria en Client
-            'client_id'  // Clave extranjera en ClientsUtilizer que relaciona con Utilizer
-        );
+        return $this->belongsToMany(Sport::class, 'clients_sports',
+            'client_id', 'sport_id')
+            ->withTimestamps(); // Esto si necesitas las marcas de tiempo
     }
 
     public function main()
