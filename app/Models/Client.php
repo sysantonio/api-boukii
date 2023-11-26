@@ -298,9 +298,10 @@ use Spatie\Activitylog\LogOptions;
     {
         return $this->belongsToMany(Sport::class, 'clients_sports',
             'client_id', 'sport_id')
-            ->withTimestamps(); // Esto si necesitas las marcas de tiempo
+            ->using(ClientSport::class)
+            ->withPivot('degree_id')
+            ->withTimestamps();
     }
-
     public function main()
     {
         return $this->hasOneThrough(Client::class,

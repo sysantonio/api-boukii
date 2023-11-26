@@ -60,11 +60,12 @@ class ClientsController extends AppBaseController
     {
         $monitorId = $this->getMonitor($request)->id;
 
-        $clients = Client::with('sports', 'utilizers','main','evaluations.degree',
-            'evaluations.evaluationFulfilledGoals', 'observations')
+        $clients = Client::with(['sports', 'utilizers', 'main', 'evaluations.degree',
+            'evaluations.evaluationFulfilledGoals', 'observations'])
             ->whereHas('bookingUsers', function ($query) use ($monitorId) {
-            $query->where('monitor_id', $monitorId);
-        })->distinct()->get();
+                $query->where('monitor_id', $monitorId);
+            })->distinct()->get();
+
 
         return response()->json($clients);
     }
@@ -114,8 +115,7 @@ class ClientsController extends AppBaseController
             'evaluations.degree', 'evaluations.evaluationFulfilledGoals',
             'observations')->whereHas('bookingUsers', function ($query) use ($monitorId) {
                 $query->where('monitor_id', $monitorId);
-            })->toSql($id);
-        dd($client);
+            })->find($id);
 
         if (empty($client)) {
             return $this->sendError('Client does not have booking_users with the specified monitor');

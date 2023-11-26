@@ -17,6 +17,7 @@ class ClientSportResource extends JsonResource
         return [
             'id' => $this->id,
             'client_id' => $this->client_id,
+            'degree_id' => $this->degree_id,
             'sport_id' => $this->sport_id,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,

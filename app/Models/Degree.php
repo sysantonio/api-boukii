@@ -53,6 +53,24 @@ use Spatie\Activitylog\LogOptions;
  *           nullable=false
  *       ),
  *       @OA\Property(
+ *            property="age_min",
+ *            description="Minimum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *        @OA\Property(
+ *            property="age_max",
+ *            description="Maximum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *        @OA\Property(
+ *            property="active",
+ *            description="Is active",
+ *            type="boolean",
+ *            nullable=false
+ *        ),
+ *       @OA\Property(
  *           property="school_id",
  *           description="ID of the school associated with the degree",
  *           type="integer",
@@ -102,6 +120,9 @@ class Degree extends Model
         'degree_order',
         'progress',
         'color',
+        'age_min',
+        'age_max',
+        'active',
         'school_id',
         'sport_id'
     ];
@@ -111,7 +132,8 @@ class Degree extends Model
         'level' => 'string',
         'name' => 'string',
         'annotation' => 'string',
-        'color' => 'string'
+        'color' => 'string',
+        'active' => 'boolean'
     ];
 
     public static array $rules = [
@@ -122,6 +144,9 @@ class Degree extends Model
         'degree_order' => 'required',
         'progress' => 'required',
         'color' => 'required|string|max:10',
+        'age_min' => 'nullable',
+        'age_max' => 'nullable',
+        'active' => 'required|boolean',
         'school_id' => 'nullable',
         'sport_id' => 'required',
         'created_at' => 'nullable',
