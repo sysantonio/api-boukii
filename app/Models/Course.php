@@ -257,7 +257,6 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     protected $casts = [
-        'course_type' => 'boolean',
         'is_flexible' => 'boolean',
         'name' => 'string',
         'short_description' => 'string',
@@ -283,7 +282,7 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     public static array $rules = [
-        'course_type' => 'required|boolean',
+        'course_type' => 'required',
         'is_flexible' => 'required|boolean',
         'sport_id' => 'required',
         'school_id' => 'required',
