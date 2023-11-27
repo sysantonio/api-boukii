@@ -10,6 +10,42 @@
         }
     ],
     "paths": {
+        "/availiability": {
+            "get": {
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "getAvailability",
+                "description": "Get availiability",
+                "operationId": "f5ab1f8a36a1a5a6a4e0fe67e924c6e4",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Course"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings": {
             "get": {
                 "tags": [
@@ -11183,6 +11219,21 @@
                         "type": "string",
                         "nullable": false
                     },
+                    "age_min": {
+                        "description": "Minimum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "age_max": {
+                        "description": "Maximum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "active": {
+                        "description": "Is active",
+                        "type": "boolean",
+                        "nullable": false
+                    },
                     "school_id": {
                         "description": "ID of the school associated with the degree",
                         "type": "integer",
@@ -11971,28 +12022,7 @@
             "School": {
                 "required": [
                     "name",
-                    "description",
-                    "fiscal_name",
-                    "fiscal_id",
-                    "fiscal_address",
-                    "fiscal_cp",
-                    "fiscal_city",
-                    "iban",
-                    "logo",
-                    "slug",
-                    "conditions_url",
-                    "bookings_comission_cash",
-                    "bookings_comission_boukii_pay",
-                    "bookings_comission_other",
-                    "school_rate",
-                    "has_ski",
-                    "has_snowboard",
-                    "has_telemark",
-                    "has_rando",
-                    "inscription",
-                    "type",
-                    "active",
-                    "settings"
+                    "description"
                 ],
                 "properties": {
                     "name": {
@@ -12059,31 +12089,31 @@
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "fiscal_id": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "fiscal_address": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "fiscal_cp": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "fiscal_city": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "fiscal_province": {
                         "description": "",
@@ -12101,19 +12131,19 @@
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "logo": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "slug": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "cancellation_insurance_percent": {
                         "description": "",
@@ -12138,28 +12168,28 @@
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "bookings_comission_cash": {
                         "description": "",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "bookings_comission_boukii_pay": {
                         "description": "",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "bookings_comission_other": {
                         "description": "",
                         "type": "number",
                         "format": "number",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "school_rate": {
                         "description": "",
@@ -12172,49 +12202,49 @@
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "has_snowboard": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "has_telemark": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "has_rando": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "inscription": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "type": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "active": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "settings": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "created_at": {
                         "description": "",

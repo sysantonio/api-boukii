@@ -58,6 +58,9 @@ Route::prefix('bookingPage')
     ->group(base_path('routes/api/bookingPage.php'));
 /* API IFRAME */
 
+Route::get('availiability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'index'])
+    ->name('api.availiability.index');
+
 
 Route::resource('stations', App\Http\Controllers\API\StationAPIController::class)
     ->except(['create', 'edit']);
@@ -86,7 +89,7 @@ Route::resource('schools', App\Http\Controllers\API\SchoolAPIController::class)
 Route::resource('school-users', App\Http\Controllers\API\SchoolUserAPIController::class)
     ->except(['create', 'edit']);
 
-Route::put('/api/school-colors/multiple', [App\Http\Controllers\API\SchoolColorAPIController::class, 'updateColors'])
+Route::put('school-colors/multiple', [App\Http\Controllers\API\SchoolColorAPIController::class, 'updateColors'])
     ->name('api.schools.updatemultiple');
 
 

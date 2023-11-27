@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
@@ -352,6 +353,30 @@ use Spatie\Activitylog\LogOptions;
     public function courseSubgroups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
+    }
+
+    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate)
+    {
+        if ($type == 1) {
+            // Lógica para cursos de tipo 1
+            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate) {
+                $subQuery->where('date', '>=', $startDate)
+                    ->where('date', '<=', $endDate)
+                    ->whereHas('courseSubgroups', function (Builder $subQuery) {
+                        $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
+                    });
+            });
+        } elseif ($type == 2) {
+            // Lógica para cursos de tipo 2
+            $query->where('course_type', 2)
+                ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate) {
+                    $subQuery->where('date', '>=', $startDate)
+                        ->where('date', '<=', $endDate)
+                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
+                });
+        }
+
+        return $query;
     }
 
     public function getActivitylogOptions(): LogOptions
