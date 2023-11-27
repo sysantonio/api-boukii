@@ -41,6 +41,18 @@ use Spatie\Activitylog\LogOptions;
  *          type="boolean",
  *      ),
  *      @OA\Property(
+ *            property="school_id",
+ *            description="ID of the school associated with the voucher",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *       @OA\Property(
+ *            property="client_id",
+ *            description="ID of the client associated with the voucher",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *      @OA\Property(
  *          property="payrexx_reference",
  *          description="The reference related to payment through Payrexx",
  *          readOnly=false,

@@ -13125,6 +13125,16 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "school_id": {
+                        "description": "ID of the school associated with the voucher",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "client_id": {
+                        "description": "ID of the client associated with the voucher",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "payrexx_reference": {
                         "description": "The reference related to payment through Payrexx",
                         "type": "string",
