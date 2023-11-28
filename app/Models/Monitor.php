@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Monitor",
- *      required={"first_name","last_name","birth_date","avs","work_license","bank_details","children","partner_work_license","active_school"},
+ *      required={"first_name","last_name","birth_date","avs","work_license","bank_details","children","partner_work_license"},
  *      @OA\Property(
  *          property="email",
  *          description="",
@@ -187,6 +187,18 @@ use Spatie\Activitylog\LogOptions;
  *           type="integer",
  *           nullable=true
  *       ),
+ *        @OA\Property(
+ *            property="active_school",
+ *            description="ID of the active school",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *            @OA\Property(
+ *            property="active_station",
+ *            description="ID of the active station",
+ *            type="integer",
+ *            nullable=true
+ *        ),
  *       @OA\Property(
  *           property="partner_percentaje",
  *           description="Percentage of partner's work",
@@ -258,7 +270,8 @@ class Monitor extends Model
         'partner_works',
         'partner_percentaje',
         'user_id',
-        'active_school'
+        'active_school',
+        'active_station'
     ];
 
     protected $casts = [
@@ -313,7 +326,8 @@ class Monitor extends Model
         'partner_works' => 'nullable|boolean',
         'partner_percentaje' => 'nullable',
         'user_id' => 'nullable',
-        'active_school' => 'required',
+        'active_school' => 'nullable',
+        'active_station' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -327,6 +341,11 @@ class Monitor extends Model
     public function activeSchool(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\School::class, 'active_school');
+    }
+
+    public function activeStation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Station::class, 'active_station');
     }
 
     public function language3(): \Illuminate\Database\Eloquent\Relations\BelongsTo

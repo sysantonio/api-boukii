@@ -11521,8 +11521,7 @@
                     "work_license",
                     "bank_details",
                     "children",
-                    "partner_work_license",
-                    "active_school"
+                    "partner_work_license"
                 ],
                 "properties": {
                     "email": {
@@ -11673,6 +11672,16 @@
                     },
                     "language6_id": {
                         "description": "ID of the sixth language",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "active_school": {
+                        "description": "ID of the active school",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "active_station": {
+                        "description": "ID of the active station",
                         "type": "integer",
                         "nullable": true
                     },
