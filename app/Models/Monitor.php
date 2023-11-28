@@ -128,7 +128,7 @@ use Spatie\Activitylog\LogOptions;
  *          description="",
  *          readOnly=false,
  *          nullable=true,
- *          type="boolean",
+ *          type="string",
  *      ),
  *      @OA\Property(
  *          property="family_allowance",
@@ -278,7 +278,7 @@ class Monitor extends Model
         'work_license' => 'string',
         'bank_details' => 'string',
         'children' => 'boolean',
-        'civil_status' => 'boolean',
+        'civil_status' => 'string',
         'family_allowance' => 'boolean',
         'partner_work_license' => 'string',
         'partner_works' => 'boolean'
@@ -307,7 +307,7 @@ class Monitor extends Model
         'work_license' => 'required|string|max:255',
         'bank_details' => 'required|string|max:255',
         'children' => 'required|boolean',
-        'civil_status' => 'nullable|boolean',
+        'civil_status' => 'nullable|string',
         'family_allowance' => 'nullable|boolean',
         'partner_work_license' => 'required|string|max:255',
         'partner_works' => 'nullable|boolean',

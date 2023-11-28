@@ -11624,7 +11624,7 @@
                     },
                     "civil_status": {
                         "description": "",
-                        "type": "boolean",
+                        "type": "string",
                         "readOnly": false,
                         "nullable": true
                     },
