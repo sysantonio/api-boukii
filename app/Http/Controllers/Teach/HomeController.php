@@ -9,6 +9,8 @@ use App\Http\Resources\Teach\HomeAgendaResource;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\MonitorNwd;
+use App\Models\Station;
+use App\Models\UserSchools;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -119,6 +121,27 @@ class HomeController extends AppBaseController
 
 
         return $this->sendResponse(new HomeAgendaResource($data), 'Agenda retrieved successfully');
+    }
+
+    public function get12HourlyForecastByCoords(Request $request)
+    {
+        $forecast = [];
+
+        $station = Station::find($request->station_id);
+
+        if ($station)
+        {
+            // Pick its Station coordinates:
+            // TODO TBD what about Schools located at _several_ Stations ??
+            // As of 2022-11 just forecast the first one
+            $accuweatherData = ($station && $station->accuweather) ?
+                json_decode($station->accuweather, true) : [];
+            $forecast = $accuweatherData['12HoursForecast'] ?? [];
+        }
+
+        $this->response = $forecast;
+        $this->code = \Illuminate\Http\Response::HTTP_OK;
+        return $this->sendResponse($forecast, 'Weather send correctly');
     }
 
 }
