@@ -79,6 +79,7 @@ class HomeController extends AppBaseController
     {
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
+        $schoolId = $request->input('school_id');
 
         $monitor = $this->getMonitor($request);
 
@@ -92,6 +93,12 @@ class HomeController extends AppBaseController
         // Consulta para los MonitorNwd
         $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
             ->orderBy('start_time');
+
+        if($schoolId) {
+            $bookingQuery->where('school_id', $schoolId);
+
+            $nwdQuery->where('school_id', $schoolId);
+        }
 
         // Si se proporcionaron date_start y date_end, busca en el rango de fechas
         if ($dateStart && $dateEnd) {
