@@ -81,7 +81,7 @@ class HomeController extends AppBaseController
         $monitor = $this->getMonitor($request);
 
         // Consulta para las reservas (BookingUser)
-        $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client',
+        $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client.sports',
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals')
             ->where('school_id', $monitor->active_school)
             ->byMonitor($monitor->id)
