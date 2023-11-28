@@ -42,6 +42,7 @@ class MonitorResource extends JsonResource
             'partner_percentaje' => $this->partner_percentaje,
             'user_id' => $this->user_id,
             'active_school' => $this->active_school,
+            'active_station' => $this->active_station,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at
