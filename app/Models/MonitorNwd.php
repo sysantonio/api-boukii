@@ -67,8 +67,8 @@ use Spatie\Activitylog\LogOptions;
  *          property="user_nwd_subtype_id",
  *          description="",
  *          readOnly=false,
- *          nullable=true,
- *          type="boolean",
+ *          type="integer",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="created_at",
@@ -120,7 +120,6 @@ class MonitorNwd extends Model
         'full_day' => 'boolean',
         'description' => 'string',
         'color' => 'string',
-        'user_nwd_subtype_id' => 'boolean'
     ];
 
     public static array $rules = [
@@ -134,7 +133,7 @@ class MonitorNwd extends Model
         'full_day' => 'required|boolean',
         'description' => 'nullable|string|max:65535',
         'color' => 'nullable|string|max:45',
-        'user_nwd_subtype_id' => 'nullable|boolean',
+        'user_nwd_subtype_id' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
