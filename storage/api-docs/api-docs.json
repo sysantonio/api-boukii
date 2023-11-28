@@ -11680,19 +11680,19 @@
                     },
                     "province": {
                         "description": "",
-                        "type": "string",
+                        "type": "integer",
                         "readOnly": false,
                         "nullable": true
                     },
                     "country": {
                         "description": "",
-                        "type": "string",
+                        "type": "integer",
                         "readOnly": false,
                         "nullable": true
                     },
                     "world_country": {
                         "description": "",
-                        "type": "string",
+                        "type": "integer",
                         "readOnly": false,
                         "nullable": true
                     },
@@ -11722,7 +11722,7 @@
                     },
                     "children": {
                         "description": "",
-                        "type": "boolean",
+                        "type": "integer",
                         "readOnly": false,
                         "nullable": false
                     },
