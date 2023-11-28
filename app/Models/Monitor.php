@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Monitor",
- *      required={"first_name","last_name","birth_date","avs","work_license","bank_details","children","partner_work_license"},
+ *      required={"first_name","last_name","birth_date","avs","work_license","bank_details","children"},
  *      @OA\Property(
  *          property="email",
  *          description="",
@@ -141,7 +141,7 @@ use Spatie\Activitylog\LogOptions;
  *          property="partner_work_license",
  *          description="",
  *          readOnly=false,
- *          nullable=false,
+ *          nullable=true,
  *          type="string",
  *      ),
  *      @OA\Property(
@@ -322,7 +322,7 @@ class Monitor extends Model
         'children' => 'required|boolean',
         'civil_status' => 'nullable|string',
         'family_allowance' => 'nullable|boolean',
-        'partner_work_license' => 'required|string|max:255',
+        'partner_work_license' => 'string|max:255',
         'partner_works' => 'nullable|boolean',
         'partner_percentaje' => 'nullable',
         'user_id' => 'nullable',

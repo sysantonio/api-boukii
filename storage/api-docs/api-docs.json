@@ -11620,8 +11620,7 @@
                     "avs",
                     "work_license",
                     "bank_details",
-                    "children",
-                    "partner_work_license"
+                    "children"
                 ],
                 "properties": {
                     "email": {
@@ -11737,7 +11736,7 @@
                         "description": "",
                         "type": "string",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "partner_works": {
                         "description": "",
