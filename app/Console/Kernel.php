@@ -13,6 +13,12 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+
+        // Once an hour: get weather forecast at all Stations
+        $schedule->command('Station:weatherForecast')
+            ->hourly()
+            ->runInBackground();
+
     }
 
     /**

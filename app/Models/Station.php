@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Http\Utils\AccuweatherHelpers;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
@@ -238,6 +240,66 @@ class Station extends Model
     public function stationsSchools(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\StationsSchool::class, 'station_id');
+    }
+
+    /**
+     * Get "this" Station weather forecast;
+     * this takes a while (and costs X money per Y queries),
+     * so store in database as cache.
+     */
+    public function downloadAccuweatherData()
+    {
+        $data = $this->accuweather ? json_decode($this->accuweather, true) : [];
+        $ah = new AccuweatherHelpers();
+
+        // We need its LocationKey inside Accuweather
+        $locationKey = $data['LocationKey'] ?? '';
+        if (empty($locationKey))
+        {
+            $locationKey = $ah->getLocationKeyByCoords($this->latitude, $this->longitude);
+            $data['LocationKey'] = $locationKey;
+        }
+
+        if (!empty($locationKey))
+        {
+            // 2. Get the forecast: 12 hours, 5 days
+            // As of 2022-11 this project API-key doesn't allow more days
+            $data['12HoursForecast'] = [];
+            foreach ($ah->get12HourForecast($locationKey) as $line)
+            {
+                $data['12HoursForecast'][] = [
+                    'time' => Carbon::parse($line['DateTime'])->format('H:i'),
+                    'temperature' => $line['Temperature']['Value'],
+                    'icon' => $line['WeatherIcon']
+                ];
+            }
+
+            $data['5DaysForecast'] = [];
+            foreach ($ah->getDailyForecast($locationKey, 5) as $line)
+            {
+                $data['5DaysForecast'][] = [
+                    'day' => Carbon::parse($line['Date'])->format('Y-m-d'),
+                    'temperature_min' => $line['Temperature']['Minimum']['Value'],
+                    'temperature_max' => $line['Temperature']['Maximum']['Value'],
+                    'icon' => $line['Day']['Icon']
+                ];
+            }
+        }
+
+        $this->accuweather = json_encode($data);
+        $this->save();
+    }
+
+
+    /**
+     * Get all Stations weather forecast.
+     */
+    public static function downloadAllAccuweatherData()
+    {
+        foreach (Station::get() as $s)
+        {
+            $s->downloadAccuweatherData();
+        }
     }
 
     public function getActivitylogOptions(): LogOptions
