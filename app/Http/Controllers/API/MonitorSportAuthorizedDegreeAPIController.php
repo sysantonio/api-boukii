@@ -211,6 +211,59 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
     }
 
     /**
+     * @OA\Put(
+     *      path="/api/monitor-sport-authorized-degrees/multiple",
+     *      summary="Update or insert multiple monitor sport authorized degrees",
+     *      tags={"MonitorSportAuthorizedDegree"},
+     *      description="Update or insert monitor sport authorized degrees in bulk.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(
+     *                  required={"monitor_sport_id", "degree_id"},
+     *                  @OA\Property(property="monitor_sport_id", type="integer", description="Monitor Sport ID"),
+     *                  @OA\Property(property="degree_id", type="integer", description="Degree ID")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Monitor sport authorized degrees updated or inserted successfully",
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request",
+     *      )
+     * )
+     */
+    public function updateMultiple(Request $request)
+    {
+        $dataToUpdate = $request->json()->all();
+
+        if (empty($dataToUpdate)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        try {
+            foreach ($dataToUpdate as $data) {
+                MonitorSportAuthorizedDegree::updateOrInsert(
+                    [
+                        'monitor_sport_id' => $data['monitor_sport_id'],
+                        'degree_id' => $data['degree_id'],
+                    ]
+                );
+            }
+
+            return response()->json(['message' => 'Monitor sport authorized degrees updated or inserted successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating or inserting monitor sport authorized degrees'], 500);
+        }
+    }
+
+
+
+    /**
      * @OA\Delete(
      *      path="/monitor-sport-authorized-degrees/{id}",
      *      summary="deleteMonitorSportAuthorizedDegree",

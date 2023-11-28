@@ -211,6 +211,63 @@ class MonitorSportsDegreeAPIController extends AppBaseController
     }
 
     /**
+     * @OA\Put(
+     *      path="/api/monitor-sports-degrees/multiple",
+     *      summary="Update or insert multiple monitor sports degrees",
+     *      tags={"MonitorSportsDegree"},
+     *      description="Update or insert monitor sports degrees in bulk.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(
+     *                  required={"sport_id", "degree_id", "monitor_id", "is_default"},
+     *                  @OA\Property(property="sport_id", type="integer", description="Sport ID"),
+     *                  @OA\Property(property="degree_id", type="integer", description="Degree ID"),
+     *                  @OA\Property(property="monitor_id", type="integer", description="Monitor ID"),
+     *                  @OA\Property(property="is_default", type="boolean", description="Is Default")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Monitor sports degrees updated or inserted successfully",
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request",
+     *      )
+     * )
+     */
+    public function updateMultiple(Request $request)
+    {
+        $dataToUpdate = $request->json()->all();
+
+        if (empty($dataToUpdate)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        try {
+            foreach ($dataToUpdate as $data) {
+                MonitorSportsDegree::updateOrInsert(
+                    [
+                        'sport_id' => $data['sport_id'],
+                        'degree_id' => $data['degree_id'],
+                        'monitor_id' => $data['monitor_id'],
+                    ],
+                    [
+                        'is_default' => $data['is_default']
+                    ]
+                );
+            }
+
+            return response()->json(['message' => 'Monitor sports degrees updated or inserted successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating or inserting monitor sports degrees'], 500);
+        }
+    }
+
+    /**
      * @OA\Delete(
      *      path="/monitor-sports-degrees/{id}",
      *      summary="deleteMonitorSportsDegree",

@@ -89,7 +89,7 @@ Route::resource('schools', App\Http\Controllers\API\SchoolAPIController::class)
 Route::resource('school-users', App\Http\Controllers\API\SchoolUserAPIController::class)
     ->except(['create', 'edit']);
 
-Route::put('school-colors/multiple', [App\Http\Controllers\API\SchoolColorAPIController::class, 'updateColors'])
+Route::put('school-colors/multiple', [App\Http\Controllers\API\SchoolColorAPIController::class, 'updateMultiple'])
     ->name('api.schools.updatemultiple');
 
 
@@ -180,8 +180,14 @@ Route::resource('monitor-observations', App\Http\Controllers\API\MonitorObservat
 Route::resource('monitors-schools', App\Http\Controllers\API\MonitorsSchoolAPIController::class)
     ->except(['create', 'edit']);
 
+Route::put('monitor-sports-degrees/multiple', [App\Http\Controllers\API\MonitorSportsDegreeAPIController::class, 'updateMultiple'])
+    ->name('api.monitor-sports-degrees.updatemultiple');
+
 Route::resource('monitor-sports-degrees', App\Http\Controllers\API\MonitorSportsDegreeAPIController::class)
     ->except(['create', 'edit']);
+
+Route::put('monitor-sport-authorized-degrees/multiple', [App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class, 'updateMultiple'])
+    ->name('api.monitor-sport-authorized-degrees.updatemultiple');
 
 Route::resource('monitor-sport-authorized-degrees', App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class)
     ->except(['create', 'edit']);

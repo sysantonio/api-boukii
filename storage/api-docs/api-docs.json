@@ -5206,6 +5206,51 @@
                 }
             }
         },
+        "/api/monitor-sport-authorized-degrees/multiple": {
+            "put": {
+                "tags": [
+                    "MonitorSportAuthorizedDegree"
+                ],
+                "summary": "Update or insert multiple monitor sport authorized degrees",
+                "description": "Update or insert monitor sport authorized degrees in bulk.",
+                "operationId": "b8131f5149334b9288966dad3d8e1f52",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "required": [
+                                        "monitor_sport_id",
+                                        "degree_id"
+                                    ],
+                                    "properties": {
+                                        "monitor_sport_id": {
+                                            "description": "Monitor Sport ID",
+                                            "type": "integer"
+                                        },
+                                        "degree_id": {
+                                            "description": "Degree ID",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Monitor sport authorized degrees updated or inserted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
         "/monitor-sports-degrees": {
             "get": {
                 "tags": [
@@ -5417,6 +5462,61 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/monitor-sports-degrees/multiple": {
+            "put": {
+                "tags": [
+                    "MonitorSportsDegree"
+                ],
+                "summary": "Update or insert multiple monitor sports degrees",
+                "description": "Update or insert monitor sports degrees in bulk.",
+                "operationId": "ec7c19161e21d26389b4891a300f9405",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "required": [
+                                        "sport_id",
+                                        "degree_id",
+                                        "monitor_id",
+                                        "is_default"
+                                    ],
+                                    "properties": {
+                                        "sport_id": {
+                                            "description": "Sport ID",
+                                            "type": "integer"
+                                        },
+                                        "degree_id": {
+                                            "description": "Degree ID",
+                                            "type": "integer"
+                                        },
+                                        "monitor_id": {
+                                            "description": "Monitor ID",
+                                            "type": "integer"
+                                        },
+                                        "is_default": {
+                                            "description": "Is Default",
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Monitor sports degrees updated or inserted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request"
                     }
                 }
             }
