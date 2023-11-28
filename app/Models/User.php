@@ -120,7 +120,7 @@ use Spatie\Permission\Traits\HasRoles;
         'username' => 'nullable|string|max:255',
         'email' => 'nullable|string|max:100',
         'password' => 'required|string|max:255',
-        'image' => 'nullable|string|max:255',
+        'image' => 'nullable|string',
         'type' => 'required|string|max:100',
         'active' => 'required|boolean',
         'recover_token' => 'nullable|string|max:65535',
