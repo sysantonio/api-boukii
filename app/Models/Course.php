@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -355,25 +356,64 @@ use Spatie\Activitylog\LogOptions;
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate)
+    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
+                                                    $clientId = null)
     {
+
+        $clientAge = null;
+        $clientDegreeOrder = null;
+
+        // Si se proporcionó clientId, obtener los detalles del cliente
+        if ($clientId) {
+            $client = Client::find($clientId);
+
+            if ($client) {
+                $degreeId = $client->sports()->where('sports.id', $sportId)->first()->pivot->degree_id ?? null;
+
+                // dd($client->sports()->where('sports.id', $sportId)->toSql());
+                if ($degreeId) {
+                    // Buscando en la tabla degrees para obtener degree_order
+                    $clientDegree = Degree::find($degreeId);
+                    $clientDegreeOrder = $clientDegree->degree_order ?? null;
+
+                }
+
+                $clientAge = Carbon::parse($client->birth_date)->age;
+            }
+        }
+
         if ($type == 1) {
             // Lógica para cursos de tipo 1
-            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate) {
+            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientDegreeOrder, $clientAge) {
                 $subQuery->where('date', '>=', $startDate)
                     ->where('date', '<=', $endDate)
-                    ->whereHas('courseSubgroups', function (Builder $subQuery) {
-                        $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
+                    ->whereHas('courseSubgroups', function (Builder $subQuery) use ($clientDegreeOrder, $clientAge) {
+                        $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)')
+                            ->whereHas('courseGroup', function (Builder $groupQuery) use ($clientDegreeOrder, $clientAge) {
+                                // Comprobación de degree_order y rango de edad
+                                if ($clientDegreeOrder !== null) {
+                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegreeOrder) {
+                                        $degreeQuery->where('degree_order', '<=', $clientDegreeOrder);
+                                    });
+                                }
+                                if ($clientAge !== null) {
+                                    $groupQuery->where('age_min', '<=', $clientAge)
+                                        ->where('age_max', '>=', $clientAge);
+                                }
+                            });
                     });
             });
         } elseif ($type == 2) {
             // Lógica para cursos de tipo 2
             $query->where('course_type', 2)
-                ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate) {
+                ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
+                ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
                     $subQuery->where('date', '>=', $startDate)
                         ->where('date', '<=', $endDate)
                         ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
-                });
+
+                })->where('age_min', '<=', $clientAge)
+                ->where('age_max', '>=', $clientAge);
         }
 
         return $query;

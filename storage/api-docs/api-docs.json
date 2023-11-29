@@ -10,17 +10,66 @@
         }
     ],
     "paths": {
-        "/availiability": {
+        "/availability": {
             "get": {
                 "tags": [
                     "Availability"
                 ],
-                "summary": "getAvailability",
-                "description": "Get availiability",
-                "operationId": "f5ab1f8a36a1a5a6a4e0fe67e924c6e4",
+                "summary": "Get Availability",
+                "description": "Get availability of courses based on type, dates, sport, and client",
+                "operationId": "f8205908c0080b413b8b044402837872",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date of the period",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date of the period",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "course_type",
+                        "in": "query",
+                        "description": "Type of the course",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sport_id",
+                        "in": "query",
+                        "description": "ID of the sport",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "description": "ID of the client",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10808,6 +10857,16 @@
                         "description": "",
                         "type": "string",
                         "readOnly": false,
+                        "nullable": true
+                    },
+                    "age_min": {
+                        "description": "Minimum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "age_max": {
+                        "description": "Maximum age for participants",
+                        "type": "integer",
                         "nullable": true
                     },
                     "language1_id": {

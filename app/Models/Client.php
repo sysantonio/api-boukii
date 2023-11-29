@@ -98,6 +98,18 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *            property="age_min",
+ *            description="Minimum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *        @OA\Property(
+ *            property="age_max",
+ *            description="Maximum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *      @OA\Property(
  *           property="language1_id",
  *           description="First language ID",
  *           type="integer",
@@ -171,6 +183,8 @@ use Spatie\Activitylog\LogOptions;
         'cp',
         'city',
         'province',
+        'age_min',
+        'age_max',
         'country',
         'language1_id',
         'language2_id',
@@ -209,6 +223,8 @@ use Spatie\Activitylog\LogOptions;
         'city' => 'nullable|string|max:65535',
         'province' => 'nullable',
         'country' => 'nullable',
+        'age_min' => 'nullable',
+        'age_max' => 'nullable',
         'language1_id' => 'nullable',
         'language2_id' => 'nullable',
         'language3_id' => 'nullable',

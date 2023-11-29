@@ -29,13 +29,48 @@ class AvailabilityAPIController extends AppBaseController
 
     /**
      * @OA\Get(
-     *      path="/availiability",
-     *      summary="getAvailability",
+     *      path="/availability",
+     *      summary="Get Availability",
      *      tags={"Availability"},
-     *      description="Get availiability",
+     *      description="Get availability of courses based on type, dates, sport, and client",
+     *      @OA\Parameter(
+     *          name="start_date",
+     *          description="Start date of the period",
+     *          required=true,
+     *          in="query",
+     *          @OA\Schema(type="string", format="date")
+     *      ),
+     *      @OA\Parameter(
+     *          name="end_date",
+     *          description="End date of the period",
+     *          required=true,
+     *          in="query",
+     *          @OA\Schema(type="string", format="date")
+     *      ),
+     *      @OA\Parameter(
+     *          name="course_type",
+     *          description="Type of the course",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="sport_id",
+     *          description="ID of the sport",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="client_id",
+     *          description="ID of the client",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="integer")
+     *      ),
      *      @OA\Response(
      *          response=200,
-     *          description="successful operation",
+     *          description="Successful operation",
      *          @OA\JsonContent(
      *              type="object",
      *              @OA\Property(
@@ -57,18 +92,28 @@ class AvailabilityAPIController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $startDate = Carbon::parse($request->input('start_date'))->format('Y-m-d');
-        $endDate = Carbon::parse($request->input('end_date'))->format('Y-m-d');
-        DB::enableQueryLog();
-        //dd($startDate);
+        // Validación de las fechas
+        $startDate = Carbon::parse($request->input('start_date'));
+        $endDate = Carbon::parse($request->input('end_date'));
 
-        $type = $request->input('type') ?? 1; // Asegúrate de que este parámetro se esté pasando en la solicitud
+        if (!$startDate || !$endDate || $startDate->gt($endDate)) {
+            return $this->sendError('Invalid date range', 422);
+        }
 
-        $courses = Course::withAvailableDates($type, $startDate, $endDate)->get();
+        $startDate = $startDate->format('Y-m-d');
+        $endDate = $endDate->format('Y-m-d');
 
-        $queryLog = DB::getQueryLog();
+        $type = $request->input('course_type') ?? 1;
+        $sportId = $request->input('sport_id');
+        $clientId = $request->input('client_id');
 
-        return $this->sendResponse($courses, 'Bookings retrieved successfully');
+        try {
+            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)->get();
+
+            return $this->sendResponse($courses, 'Bookings retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Error retrieving bookings', 500);
+        }
     }
 
 

@@ -58,8 +58,8 @@ Route::prefix('bookingPage')
     ->group(base_path('routes/api/bookingPage.php'));
 /* API IFRAME */
 
-Route::get('availiability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'index'])
-    ->name('api.availiability.index');
+Route::get('availability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'index'])
+    ->name('api.availability.index');
 
 
 Route::resource('stations', App\Http\Controllers\API\StationAPIController::class)
