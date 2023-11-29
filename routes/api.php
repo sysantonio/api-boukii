@@ -204,3 +204,7 @@ Route::resource('booking-logs', App\Http\Controllers\API\BookingLogAPIController
 
 Route::resource('client-sports', App\Http\Controllers\API\ClientSportAPIController::class)
     ->except(['create', 'edit']);
+
+
+Route::resource('evaluation-files', App\Http\Controllers\API\EvaluationFileAPIController::class)
+    ->except(['create', 'edit']);

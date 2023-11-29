@@ -55,6 +55,8 @@ class Evaluation extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'evaluations';
 
+    protected $with = ['files'];
+
     public $fillable = [
         'client_id',
         'degree_id',
@@ -87,6 +89,11 @@ class Evaluation extends Model
     public function evaluationFulfilledGoals(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\EvaluationFulfilledGoal::class, 'evaluation_id');
+    }
+
+    public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\EvaluationFile::class, 'evaluation_id');
     }
 
 

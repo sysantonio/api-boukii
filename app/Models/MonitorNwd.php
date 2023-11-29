@@ -11,88 +11,95 @@ use Spatie\Activitylog\LogOptions;
  *      schema="MonitorNwd",
  *      required={"monitor_id","start_date","end_date","full_day"},
  *      @OA\Property(
- *           property="start_time",
- *           description="Start time of the non-working duration",
- *           type="string",
- *           format="time",
- *           nullable=true
- *       ),
- *       @OA\Property(
- *           property="end_time",
- *           description="End time of the non-working duration",
- *           type="string",
- *           format="time",
- *           nullable=true
- *       ),
- *       @OA\Property(
  *           property="monitor_id",
  *           description="ID of the monitor",
  *           type="integer",
  *           nullable=false
  *       ),
- *       @OA\Property(
+ *      @OA\Property(
  *           property="school_id",
  *           description="ID of the school",
  *           type="integer",
  *           nullable=true
  *       ),
- *       @OA\Property(
+ *      @OA\Property(
  *           property="station_id",
  *           description="ID of the station",
  *           type="integer",
  *           nullable=true
  *       ),
  *      @OA\Property(
+ *           property="start_date",
+ *           description="Start date of the non-working duration",
+ *           type="string",
+ *           format="date",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
+ *           property="end_date",
+ *           description="End date of the non-working duration",
+ *           type="string",
+ *           format="date",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
+ *           property="start_time",
+ *           description="Start time of the non-working duration",
+ *           type="string",
+ *           format="time",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
+ *           property="end_time",
+ *           description="End time of the non-working duration",
+ *           type="string",
+ *           format="time",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
  *          property="full_day",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
+ *          description="Indicates if the non-working duration is for a full day",
  *          type="boolean",
+ *          nullable=false
  *      ),
  *      @OA\Property(
  *          property="description",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Description of the non-working duration",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="color",
- *          description="",
- *          readOnly=false,
- *          nullable=true,
+ *          description="Color code for representing the non-working duration",
  *          type="string",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="user_nwd_subtype_id",
- *          description="",
- *          readOnly=false,
+ *          description="ID of the user NWD subtype",
  *          type="integer",
  *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="created_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Creation timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="updated_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Update timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      ),
  *      @OA\Property(
  *          property="deleted_at",
- *          description="",
- *          readOnly=true,
- *          nullable=true,
+ *          description="Deletion timestamp",
  *          type="string",
- *          format="date-time"
+ *          format="date-time",
+ *          nullable=true
  *      )
  * )
  */

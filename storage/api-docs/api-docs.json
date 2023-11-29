@@ -3916,6 +3916,221 @@
                 }
             }
         },
+        "/evaluation-files": {
+            "get": {
+                "tags": [
+                    "EvaluationFile"
+                ],
+                "summary": "getEvaluationFileList",
+                "description": "Get all EvaluationFiles",
+                "operationId": "7b0c305386ca95589967dfb4cbecc6b6",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EvaluationFile"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "EvaluationFile"
+                ],
+                "summary": "createEvaluationFile",
+                "description": "Create EvaluationFile",
+                "operationId": "3f35e29856b2245edee9d0766a207e67",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EvaluationFile"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationFile"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/evaluation-files/{id}": {
+            "get": {
+                "tags": [
+                    "EvaluationFile"
+                ],
+                "summary": "getEvaluationFileItem",
+                "description": "Get EvaluationFile",
+                "operationId": "18315738b14a342a96e6170e3cf7a50a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of EvaluationFile",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationFile"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "EvaluationFile"
+                ],
+                "summary": "updateEvaluationFile",
+                "description": "Update EvaluationFile",
+                "operationId": "653f5bd88c3f04b75f52e03abc37a5d4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of EvaluationFile",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EvaluationFile"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/EvaluationFile"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "EvaluationFile"
+                ],
+                "summary": "deleteEvaluationFile",
+                "description": "Delete EvaluationFile",
+                "operationId": "cb779ef0cf61fb13eae27678c50d9975",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of EvaluationFile",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/evaluation-fulfilled-goals": {
             "get": {
                 "tags": [
@@ -11533,6 +11748,53 @@
                 },
                 "type": "object"
             },
+            "EvaluationFile": {
+                "required": [
+                    "evaluation_id"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "type": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "file": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "deleted_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "EvaluationFulfilledGoal": {
                 "required": [
                     "evaluation_id",
@@ -11832,18 +12094,6 @@
                     "full_day"
                 ],
                 "properties": {
-                    "start_time": {
-                        "description": "Start time of the non-working duration",
-                        "type": "string",
-                        "format": "time",
-                        "nullable": true
-                    },
-                    "end_time": {
-                        "description": "End time of the non-working duration",
-                        "type": "string",
-                        "format": "time",
-                        "nullable": true
-                    },
                     "monitor_id": {
                         "description": "ID of the monitor",
                         "type": "integer",
@@ -11859,49 +12109,66 @@
                         "type": "integer",
                         "nullable": true
                     },
+                    "start_date": {
+                        "description": "Start date of the non-working duration",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": false
+                    },
+                    "end_date": {
+                        "description": "End date of the non-working duration",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": false
+                    },
+                    "start_time": {
+                        "description": "Start time of the non-working duration",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
+                    "end_time": {
+                        "description": "End time of the non-working duration",
+                        "type": "string",
+                        "format": "time",
+                        "nullable": true
+                    },
                     "full_day": {
-                        "description": "",
+                        "description": "Indicates if the non-working duration is for a full day",
                         "type": "boolean",
-                        "readOnly": false,
                         "nullable": false
                     },
                     "description": {
-                        "description": "",
+                        "description": "Description of the non-working duration",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "color": {
-                        "description": "",
+                        "description": "Color code for representing the non-working duration",
                         "type": "string",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "user_nwd_subtype_id": {
-                        "description": "",
+                        "description": "ID of the user NWD subtype",
                         "type": "integer",
-                        "readOnly": false,
                         "nullable": true
                     },
                     "created_at": {
-                        "description": "",
+                        "description": "Creation timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "updated_at": {
-                        "description": "",
+                        "description": "Update timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     },
                     "deleted_at": {
-                        "description": "",
+                        "description": "Deletion timestamp",
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true,
                         "nullable": true
                     }
                 },

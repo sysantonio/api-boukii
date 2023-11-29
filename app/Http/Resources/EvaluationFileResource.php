@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources\API;
+namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class EvaluationResource extends JsonResource
+class EvaluationFileResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,10 @@ class EvaluationResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'client_id' => $this->client_id,
-            'degree_id' => $this->degree_id,
-            'observations' => $this->observations,
-            'files' => $this->files,
+            'evaluation_id' => $this->evaluation_id,
+            'name' => $this->name,
+            'type' => $this->type,
+            'file' => $this->file,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at
