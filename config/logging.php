@@ -126,6 +126,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'accuweather' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/accuweather.log'),
+            'level' => 'debug',
+            'days' => 7
+        ],
     ],
 
 ];

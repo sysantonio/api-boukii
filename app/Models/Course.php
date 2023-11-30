@@ -11,7 +11,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Course",
- *      required={"course_type","is_flexible","sport_id","school_id","name","short_description","description","price","currency","max_participants","duration","duration_flexible","date_start","date_end","confirm_attendance","active","online"},
+ *      required={"course_type","is_flexible","sport_id","school_id","name","short_description","description","price","currency","max_participants","date_start","date_end","confirm_attendance","active","online"},
  *      @OA\Property(
  *          property="course_type",
  *          description="",
@@ -61,13 +61,6 @@ use Spatie\Activitylog\LogOptions;
  *          readOnly=false,
  *          nullable=false,
  *          type="string",
- *      ),
- *      @OA\Property(
- *          property="duration_flexible",
- *          description="",
- *          readOnly=false,
- *          nullable=false,
- *          type="boolean",
  *      ),
  *      @OA\Property(
  *          property="date_start",
@@ -241,7 +234,6 @@ use Spatie\Activitylog\LogOptions;
         'currency',
         'max_participants',
         'duration',
-        'duration_flexible',
         'date_start',
         'date_end',
         'date_start_res',
@@ -266,7 +258,6 @@ use Spatie\Activitylog\LogOptions;
         'price' => 'decimal:2',
         'currency' => 'string',
         'duration' => 'string',
-        'duration_flexible' => 'boolean',
         'date_start' => 'date',
         'date_end' => 'date',
         'date_start_res' => 'date',
@@ -295,8 +286,7 @@ use Spatie\Activitylog\LogOptions;
         'price' => 'required|numeric',
         'currency' => 'required|string|max:3',
         'max_participants' => 'required',
-        'duration' => 'required',
-        'duration_flexible' => 'required|boolean',
+        'duration' => 'nullable',
         'date_start' => 'required',
         'date_end' => 'required',
         'date_start_res' => 'nullable',
@@ -308,7 +298,7 @@ use Spatie\Activitylog\LogOptions;
         'online' => 'required|boolean',
         'image' => 'nullable|string',
         'translations' => 'nullable|string',
-        'price_range' => 'nullable|string',
+        'price_range' => 'nullable',
         'discounts' => 'nullable|string',
         'settings' => 'nullable|string',
         'created_at' => 'nullable',
