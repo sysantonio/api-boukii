@@ -7,7 +7,11 @@ use App\Http\Requests\API\CreateBookingAPIRequest;
 use App\Http\Requests\API\UpdateBookingAPIRequest;
 use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
+use App\Models\BookingUser;
 use App\Models\Course;
+use App\Models\CourseDate;
+use App\Models\Monitor;
+use App\Models\MonitorNwd;
 use App\Repositories\BookingRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -90,7 +94,7 @@ class AvailabilityAPIController extends AppBaseController
      *      )
      * )
      */
-    public function index(Request $request): JsonResponse
+    public function getCourseAvailability(Request $request): JsonResponse
     {
         // Validación de las fechas
         $startDate = Carbon::parse($request->input('start_date'));
@@ -114,6 +118,55 @@ class AvailabilityAPIController extends AppBaseController
         } catch (\Exception $e) {
             return $this->sendError('Error retrieving bookings', 500);
         }
+    }
+
+    public function findAvailableMonitorsForCourseDate(Request $request): JsonResponse
+    {
+        $courseDateId = $request->input('course_date_id');
+
+        // Asegúrate de que el courseDateId se haya proporcionado
+        if (!$courseDateId) {
+            return $this->sendError('Course Date ID is required.', [], 422);
+        }
+
+        // Obtén la información específica de CourseDate
+        $courseDate = CourseDate::find($courseDateId);
+        if (!$courseDate) {
+            return $this->sendError('Course Date not found.', [], 404);
+        }
+        //TODO: Filter by school
+        $allMonitors = Monitor::all();
+        $availableMonitors = collect();
+
+        foreach ($allMonitors as $monitor) {
+            if (!$this->isMonitorBusy($monitor, $courseDate)) {
+                $availableMonitors->push($monitor);
+            }
+        }
+
+        return $this->sendResponse($availableMonitors, 'Available monitors retrieved successfully');
+    }
+
+    private function isMonitorBusy($monitor, $courseDate)
+    {
+        // Verificar en BookingUser si el monitor está ocupado
+        $isBusyWithBooking = BookingUser::where('monitor_id', $monitor->id)
+            ->whereDate('date', $courseDate->date)
+            ->whereTime('hour_start', '<=', $courseDate->hour_end)
+            ->whereTime('hour_end', '>=', $courseDate->hour_start)
+            ->exists();
+
+        if ($isBusyWithBooking) {
+            return true;
+        }
+
+        // Verificar en MonitorNwd si el monitor tiene un bloqueo
+        $isBusyWithNwd = MonitorNwd::where('monitor_id', $monitor->id)
+            ->whereDate('start_date', '<=', $courseDate->date)
+            ->whereDate('end_date', '>=', $courseDate->date)
+            ->exists();
+
+        return $isBusyWithNwd;
     }
 
 
