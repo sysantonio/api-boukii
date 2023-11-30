@@ -17,7 +17,7 @@
                 ],
                 "summary": "Get Availability",
                 "description": "Get availability of courses based on type, dates, sport, and client",
-                "operationId": "f8205908c0080b413b8b044402837872",
+                "operationId": "25f6bc664c614fff68ea1c6a32873915",
                 "parameters": [
                     {
                         "name": "start_date",
@@ -10296,6 +10296,50 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/BookingUser"
                                             }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/teach/courses/{id}": {
+            "get": {
+                "tags": [
+                    "Teach"
+                ],
+                "summary": "getCourseWithBookings",
+                "description": "Get Course",
+                "operationId": "f82b16649460e74103a8012e87484359",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Course",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
                                         },
                                         "message": {
                                             "type": "string"
