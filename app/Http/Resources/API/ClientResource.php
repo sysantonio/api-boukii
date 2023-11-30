@@ -32,6 +32,7 @@ class ClientResource extends JsonResource
             'language3_id' => $this->language3_id,
             'image' => $this->image,
             'user_id' => $this->user_id,
+            'main' => $this->main,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at
