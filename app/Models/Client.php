@@ -168,7 +168,8 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Client extends Model
+ */
+class Client extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'clients';
 
@@ -320,11 +321,14 @@ use Spatie\Activitylog\LogOptions;
     }
     public function main()
     {
-        return $this->hasOneThrough(Client::class,
-            ClientsUtilizer::class, 'main_id',
-            'id', 'id',
-            'main_id')
-            ->withDefault($this);
+        return $this->hasOneThrough(
+            Client::class,        // Modelo final (Cliente principal)
+            ClientsUtilizer::class, // Modelo intermedio (ClientsUtilizer)
+            'client_id',          // Clave extranjera en ClientsUtilizer que se refiere a Client (este cliente)
+            'id',                 // Clave local en Client que se refiere a la clave principal en Client
+            'id',                 // Clave local en este modelo (Client) que se refiere a la clave extranjera en ClientsUtilizer
+            'main_id'             // Clave extranjera en ClientsUtilizer que se refiere al Cliente principal
+        );
     }
 
     public function clientsUtilizer3s(): \Illuminate\Database\Eloquent\Relations\HasMany
