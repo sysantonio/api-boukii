@@ -109,6 +109,58 @@ class CourseController extends AppBaseController
         ];
     }
 
+
+    /**
+     * @OA\Get(
+     *      path="/admin/courses/{id}",
+     *      summary="getCourseWithBookings",
+     *      tags={"Admin"},
+     *      description="Get Course",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="id of Course",
+     *           @OA\Schema(
+     *             type="integer"
+     *          ),
+     *          required=true,
+     *          in="path"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/Course"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function show($id, Request $request): JsonResponse
+    {
+        $school = $this->getSchool($request);
+
+        // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
+        $course = Course::with( 'bookingUsers.client.sports',
+            'courseDates.courseGroups.courseSubgroups.monitor')->where('school_id', $school->id)->find($id);
+
+        if (empty($course)) {
+            return $this->sendError('Course does not exist in this school');
+        }
+
+        return $this->sendResponse($course, 'Course retrieved successfully');
+    }
+
     /**
      * @OA\Post(
      *      path="/admin/courses",
