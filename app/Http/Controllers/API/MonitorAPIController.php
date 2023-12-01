@@ -118,7 +118,7 @@ class MonitorAPIController extends AppBaseController
             }
 
             $imageName = 'image_'.time().'.'.$type;
-            Storage::disk('local')->put($imageName, $imageData);
+            Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         }
 
@@ -242,7 +242,7 @@ class MonitorAPIController extends AppBaseController
             }
 
             $imageName = 'image_'.time().'.'.$type;
-            Storage::disk('local')->put($imageName, $imageData);
+            Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         } else {
             $input = $request->except('image');

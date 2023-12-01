@@ -137,7 +137,7 @@ class EvaluationFileAPIController extends AppBaseController
             }
 
             $fileName = Str::random(40) .time(). '.' . $extension;
-            Storage::disk('local')->put($fileName, $fileData);
+            Storage::disk('public')->put($fileName, $fileData);
             $input['file'] = url(Storage::url($fileName));
 
         } else {
@@ -282,7 +282,7 @@ class EvaluationFileAPIController extends AppBaseController
             }
 
             $fileName = Str::random(40) .time(). '.' . $extension;
-            Storage::disk('local')->put($fileName, $fileData);
+            Storage::disk('public')->put($fileName, $fileData);
             $input['file'] = url(Storage::url($fileName));
 
         } else {
