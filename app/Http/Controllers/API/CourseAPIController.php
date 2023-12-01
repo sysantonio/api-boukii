@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Repositories\CourseRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class CourseController
@@ -100,6 +101,26 @@ class CourseAPIController extends AppBaseController
     public function store(CreateCourseAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        }
 
         $course = $this->courseRepository->create($input);
 
@@ -203,6 +224,28 @@ class CourseAPIController extends AppBaseController
 
         if (empty($course)) {
             return $this->sendError('Course not found');
+        }
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(url(Storage::url($imageName)));
+        } else {
+            $input = $request->except('image');
         }
 
         $course = $this->courseRepository->update($input, $id);

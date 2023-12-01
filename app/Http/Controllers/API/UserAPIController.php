@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class UserController
@@ -96,6 +97,7 @@ class UserAPIController extends AppBaseController
      *          )
      *      )
      * )
+     * @throws \Exception
      */
     public function store(CreateUserAPIRequest $request): JsonResponse
     {
@@ -107,8 +109,27 @@ class UserAPIController extends AppBaseController
             return $this->sendError('User cannot be created without a password');
         }
 
-        $user = $this->userRepository->create($input);
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
 
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        }
+
+        $user = $this->userRepository->create($input);
         $user->setInitialPermissionsByRole();
 
         return $this->sendResponse(new UserResource($user), 'User saved successfully');
@@ -210,6 +231,28 @@ class UserAPIController extends AppBaseController
             $input['password'] = bcrypt($input['password']);
         } else {
             $input = $request->except('password');
+        }
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        } else {
+            $input = $request->except('image');
         }
 
         /** @var User $user */

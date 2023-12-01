@@ -10,6 +10,7 @@ use App\Models\Monitor;
 use App\Repositories\MonitorRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class MonitorController
@@ -100,6 +101,26 @@ class MonitorAPIController extends AppBaseController
     public function store(CreateMonitorAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        }
 
         $monitor = $this->monitorRepository->create($input);
 
@@ -203,6 +224,28 @@ class MonitorAPIController extends AppBaseController
 
         if (empty($monitor)) {
             return $this->sendError('Monitor not found');
+        }
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        } else {
+            $input = $request->except('image');
         }
 
         $monitor = $this->monitorRepository->update($input, $id);

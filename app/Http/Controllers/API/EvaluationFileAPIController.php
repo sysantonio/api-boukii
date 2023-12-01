@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\EvaluationFileResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class EvaluationFileController
@@ -56,7 +58,7 @@ class EvaluationFileAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $evaluationFiles = $this->evaluationFileRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
@@ -100,6 +102,47 @@ class EvaluationFileAPIController extends AppBaseController
     public function store(CreateEvaluationFileAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        if(!empty($input['file'])) {
+            $base64File = $request->input('file');
+
+            if (preg_match('/^data:([\w\/\-\+]+);base64,/', $base64File, $type)) {
+                $fileData = substr($base64File, strpos($base64File, ',') + 1);
+                $fileData = base64_decode($fileData);
+
+                if ($fileData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $mimeType = $type[1];
+            $extension = '';
+
+            $mimeMap = [
+                'image/png' => 'png',
+                'image/jpeg' => 'jpg',
+                'image/gif' => 'gif',
+                'image/bmp' => 'bmp',
+                'image/tiff' => 'tiff',
+                'image/svg+xml' => 'svg',
+                'image/webp' => 'webp',
+            ];
+
+            if (isset($mimeMap[$mimeType])) {
+                $extension = $mimeMap[$mimeType];
+            } else {
+                throw new \Exception('No valid mime type found for file');
+            }
+
+            $fileName = Str::random(40) .time(). '.' . $extension;
+            Storage::disk('local')->put($fileName, $fileData);
+            $input['file'] = url(Storage::url($fileName));
+
+        } else {
+            return $this->sendError('Evaluation File cannot be created without a file');
+        }
 
         $evaluationFile = $this->evaluationFileRepository->create($input);
 
@@ -203,6 +246,47 @@ class EvaluationFileAPIController extends AppBaseController
 
         if (empty($evaluationFile)) {
             return $this->sendError('Evaluation File not found');
+        }
+
+        if(!empty($input['file'])) {
+            $base64File = $request->input('file');
+
+            if (preg_match('/^data:([\w\/\-\+]+);base64,/', $base64File, $type)) {
+                $fileData = substr($base64File, strpos($base64File, ',') + 1);
+                $fileData = base64_decode($fileData);
+
+                if ($fileData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $mimeType = $type[1];
+            $extension = '';
+
+            $mimeMap = [
+                'image/png' => 'png',
+                'image/jpeg' => 'jpg',
+                'image/gif' => 'gif',
+                'image/bmp' => 'bmp',
+                'image/tiff' => 'tiff',
+                'image/svg+xml' => 'svg',
+                'image/webp' => 'webp',
+            ];
+
+            if (isset($mimeMap[$mimeType])) {
+                $extension = $mimeMap[$mimeType];
+            } else {
+                throw new \Exception('No valid mime type found for file');
+            }
+
+            $fileName = Str::random(40) .time(). '.' . $extension;
+            Storage::disk('local')->put($fileName, $fileData);
+            $input['file'] = url(Storage::url($fileName));
+
+        } else {
+            $input = $request->except('file');
         }
 
         $evaluationFile = $this->evaluationFileRepository->update($input, $id);

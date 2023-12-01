@@ -10,6 +10,7 @@ use App\Models\Station;
 use App\Repositories\StationRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class StationController
@@ -100,6 +101,26 @@ class StationAPIController extends AppBaseController
     public function store(CreateStationAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        }
 
         $station = $this->stationRepository->create($input);
 
@@ -203,6 +224,28 @@ class StationAPIController extends AppBaseController
 
         if (empty($station)) {
             return $this->sendError('Station not found');
+        }
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'image_'.time().'.'.$type;
+            Storage::disk('local')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        } else {
+            $input = $request->except('image');
         }
 
         $station = $this->stationRepository->update($input, $id);
