@@ -44,7 +44,7 @@ class CourseResource extends JsonResource
             'discounts' => $this->discounts,
             'settings' => $this->settings,
             'sport' => $this->sport,
-            'course_dates' => $this->courseDates,
+            'course_dates' => CourseDateResource::collection($this->whenLoaded('courseDates')),
             'course_extras' => $this->courseExtras,
             'total_reservations' => $this->total_reservations,
             'total_available_places' => $this->total_available_places,

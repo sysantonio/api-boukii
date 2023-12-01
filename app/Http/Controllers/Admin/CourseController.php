@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
-use App\Http\Requests\API\CreateCourseAPIRequest;
-use App\Http\Resources\API\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -148,17 +146,18 @@ class CourseController extends AppBaseController
      */
     public function show($id, Request $request): JsonResponse
     {
-        $school = $this->getSchool($request);
+        //$school = $this->getSchool($request);
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with( 'bookingUsers.client.sports',
-            'courseDates.courseGroups.courseSubgroups.monitor')->where('school_id', $school->id)->find($id);
+            'courseDates.courseGroups.courseSubgroups.monitor')
+            ->where('school_id',1)->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
         }
 
-        return $this->sendResponse($course, 'Course retrieved successfully');
+        return $this->sendResponse(new \App\Http\Resources\Admin\CourseResource($course), 'Course retrieved successfully');
     }
 
     /**
