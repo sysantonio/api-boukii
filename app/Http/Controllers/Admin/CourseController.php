@@ -57,11 +57,56 @@ class CourseController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
+        $perPage = $request->input('perPage', 10); // Puedes definir un valor por defecto
+        $school = $this->getSchool($request);
+        $request->merge(["school_id"=> $school->id]);
+
         $courses = Course::with('sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
-            ->where('school_id', $request->school_id)->get();
+            ->where('school_id', $request->school_id)
+            ->paginate($perPage);
+
+        // Calcular reservas y plazas disponibles para cada curso
+        foreach ($courses as $course) {
+            $availability = $this->getCourseAvailability($course);
+            $course->total_reservations = $availability['total_reservations'];
+            $course->total_available_places = $availability['total_available_places'];
+        }
 
         return $this->sendResponse(\App\Http\Resources\Admin\CourseResource::collection($courses),
             'Courses retrieved successfully');
+    }
+
+    public function getCourseAvailability($course)
+    {
+        if (!$course) {
+            return null; // o manejar como prefieras
+        }
+
+        $totalBookings = 0;
+        $totalAvailablePlaces = 0;
+
+        if ($course->course_type == 1) {
+            // Cursos de tipo 1
+            foreach ($course->courseDates as $courseDate) {
+                foreach ($courseDate->courseSubgroups as $subgroup) {
+                    $bookings = $subgroup->bookingUsers()->count();
+                    $totalBookings += $bookings;
+                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
+                }
+            }
+        } else {
+            // Cursos de tipo 2
+            foreach ($course->courseDates as $courseDate) {
+                $bookings = $courseDate->bookingUsers()->count();
+                $totalBookings += $bookings;
+            }
+            $totalAvailablePlaces = max(0, $course->max_participants - $totalBookings);
+        }
+
+        return [
+            'total_reservations' => $totalBookings,
+            'total_available_places' => $totalAvailablePlaces
+        ];
     }
 
     /**
@@ -173,7 +218,7 @@ class CourseController extends AppBaseController
             }
         }
 
-        return response()->json(['message' => 'Curso creado con éxito'], 201);
+        return $this->sendResponse($course,'Curso creado con éxito');
     }
 
     /**

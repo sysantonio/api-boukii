@@ -46,6 +46,8 @@ class CourseResource extends JsonResource
             'sport' => $this->sport,
             'course_dates' => $this->courseDates,
             'course_extras' => $this->courseExtras,
+            'total_reservations' => $this->total_reservations,
+            'total_available_places' => $this->total_available_places,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at

@@ -127,7 +127,7 @@ class HomeController extends AppBaseController
         $data = ['bookings' => $bookings, 'nwd' => $nwd];
 
 
-        return $this->sendResponse(new HomeAgendaResource($data), 'Agenda retrieved successfully');
+        return $this->sendResponse($data, 'Agenda retrieved successfully');
     }
 
     public function get12HourlyForecastByCoords(Request $request)
