@@ -121,13 +121,15 @@ class EvaluationFileAPIController extends AppBaseController
             $extension = '';
 
             $mimeMap = [
-                'image/png' => 'png',
-                'image/jpeg' => 'jpg',
-                'image/gif' => 'gif',
-                'image/bmp' => 'bmp',
-                'image/tiff' => 'tiff',
-                'image/svg+xml' => 'svg',
-                'image/webp' => 'webp',
+                    'image/png' => 'png',
+                    'image/jpeg' => 'jpg',
+                    'image/gif' => 'gif',
+                    'image/bmp' => 'bmp',
+                    'image/tiff' => 'tiff',
+                    'image/svg+xml' => 'svg',
+                    'application/pdf' => 'pdf',
+                    'video/mp4' => 'mp4',
+                    'image/webp' => 'webp',
             ];
 
             if (isset($mimeMap[$mimeType])) {
@@ -266,13 +268,15 @@ class EvaluationFileAPIController extends AppBaseController
             $extension = '';
 
             $mimeMap = [
-                'image/png' => 'png',
-                'image/jpeg' => 'jpg',
-                'image/gif' => 'gif',
-                'image/bmp' => 'bmp',
-                'image/tiff' => 'tiff',
-                'image/svg+xml' => 'svg',
-                'image/webp' => 'webp',
+                    'image/png' => 'png',
+                    'image/jpeg' => 'jpg',
+                    'image/gif' => 'gif',
+                    'image/bmp' => 'bmp',
+                    'image/tiff' => 'tiff',
+                    'image/svg+xml' => 'svg',
+                    'application/pdf' => 'pdf',
+                    'video/mp4' => 'mp4',
+                    'image/webp' => 'webp',
             ];
 
             if (isset($mimeMap[$mimeType])) {

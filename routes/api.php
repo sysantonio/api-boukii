@@ -73,6 +73,8 @@ Route::get('/process-images', function () {
                     'image/bmp' => 'bmp',
                     'image/tiff' => 'tiff',
                     'image/svg+xml' => 'svg',
+                    'application/pdf' => 'pdf',
+                    'video/mp4' => 'mp4',
                     'image/webp' => 'webp',
                     // Añadir más tipos MIME según sea necesario
                 ];
