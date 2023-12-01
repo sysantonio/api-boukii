@@ -114,8 +114,8 @@ class ClientsController extends AppBaseController
         $client = Client::with('sports', 'utilizers', 'main',
             'evaluations.degree', 'evaluations.evaluationFulfilledGoals',
             'observations')->whereHas('bookingUsers', function ($query) use ($monitorId) {
-                $query->where('monitor_id', $monitorId);
-            })->find($id);
+            $query->where('monitor_id', $monitorId);
+        })->find($id);
 
         if (empty($client)) {
             return $this->sendError('Client does not have booking_users with the specified monitor');
@@ -155,10 +155,18 @@ class ClientsController extends AppBaseController
     public function getBookings($id, Request $request): JsonResponse
     {
         $monitorId = $this->getMonitor($request)->id;
+        $dateStart = $request->input('date_start');
+        $dateEnd = $request->input('date_end');
 
-        $bookings = BookingUser::with('booking','course.courseDates')
-            ->where('client_id', $id)->where('monitor_id', $monitorId)
-        ->get();
+        $bookingQuery = BookingUser::with('booking','course.courseDates')
+            ->where('client_id', $id);
+
+        if ($dateStart && $dateEnd) {
+            // Busca en el rango de fechas proporcionado para las reservas
+            $bookingQuery->whereBetween('date', [$dateStart, $dateEnd]);
+        }
+
+        $bookings = $bookingQuery->get();
 
         return $this->sendResponse($bookings, 'Bookings returned successfully');
     }
