@@ -124,7 +124,7 @@ class UserAPIController extends AppBaseController
                 $this->sendError('did not match data URI with image data');
             }
 
-            $imageName = 'image_'.time().'.'.$type;
+            $imageName = 'user/image_'.time().'.'.$type;
             Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         }
@@ -248,7 +248,7 @@ class UserAPIController extends AppBaseController
                 $this->sendError('did not match data URI with image data');
             }
 
-            $imageName = 'image_'.time().'.'.$type;
+            $imageName = 'user/image_'.time().'.'.$type;
             Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         } else {

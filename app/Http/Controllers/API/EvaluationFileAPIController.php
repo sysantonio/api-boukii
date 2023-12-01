@@ -136,7 +136,7 @@ class EvaluationFileAPIController extends AppBaseController
                 throw new \Exception('No valid mime type found for file');
             }
 
-            $fileName = Str::random(40) .time(). '.' . $extension;
+            $fileName = 'files/'.time(). '.' . $extension;
             Storage::disk('public')->put($fileName, $fileData);
             $input['file'] = url(Storage::url($fileName));
 
@@ -281,7 +281,7 @@ class EvaluationFileAPIController extends AppBaseController
                 throw new \Exception('No valid mime type found for file');
             }
 
-            $fileName = Str::random(40) .time(). '.' . $extension;
+            $fileName = 'files/'.time(). '.' . $extension;
             Storage::disk('public')->put($fileName, $fileData);
             $input['file'] = url(Storage::url($fileName));
 

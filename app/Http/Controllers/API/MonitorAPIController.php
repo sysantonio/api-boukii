@@ -117,7 +117,7 @@ class MonitorAPIController extends AppBaseController
                 $this->sendError('did not match data URI with image data');
             }
 
-            $imageName = 'image_'.time().'.'.$type;
+            $imageName = 'monitor/image_'.time().'.'.$type;
             Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         }
@@ -241,7 +241,7 @@ class MonitorAPIController extends AppBaseController
                 $this->sendError('did not match data URI with image data');
             }
 
-            $imageName = 'image_'.time().'.'.$type;
+            $imageName = 'monitor/image_'.time().'.'.$type;
             Storage::disk('public')->put($imageName, $imageData);
             $input['image'] = url(Storage::url($imageName));
         } else {
