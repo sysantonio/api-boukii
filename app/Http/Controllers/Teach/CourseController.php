@@ -70,7 +70,7 @@ class CourseController extends AppBaseController
         $monitorId = $this->getMonitor($request)->id;
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
-        $course = Course::with( 'bookingUsers.client',
+        $course = Course::with( 'bookingUsers.client.sports',
             'courseDates.courseGroups.courseSubgroups.monitor')->find($id);
 
         if (empty($course)) {
