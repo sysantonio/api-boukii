@@ -6,6 +6,7 @@ use App\Http\Controllers\AppBaseController;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Response;
 use Validator;
 
@@ -243,6 +244,26 @@ class CourseController extends AppBaseController
 
         $courseData = $request->all();
 
+        if(!empty($courseData['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'course/image_'.time().'.'.$type;
+            Storage::disk('public')->put($imageName, $imageData);
+            $courseData['image'] = url(Storage::url($imageName));
+        }
+
         $course = Course::create($courseData);
 
         // Crear las fechas y grupos
@@ -316,6 +337,28 @@ class CourseController extends AppBaseController
     {
         $courseData = $request->all();
         $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
+
+        if(!empty($courseData['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'course/image_'.time().'.'.$type;
+            Storage::disk('public')->put($imageName, $imageData);
+            $courseData['image'] = url(url(Storage::url($imageName)));
+        } else {
+            $courseData = $request->except('image');
+        }
 
         // Actualiza los campos principales del curso
         $course->update($courseData);
