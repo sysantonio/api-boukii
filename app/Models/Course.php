@@ -376,14 +376,16 @@ use Spatie\Activitylog\LogOptions;
                     ->whereHas('courseSubgroups', function (Builder $subQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
                         $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)')
                             ->whereHas('courseGroup', function (Builder $groupQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
+
                                 // Comprobación de degree_order y rango de edad
                                 if ($clientDegree !== null && $getLowerDegrees) {
+
                                     $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
                                         $degreeQuery->where('degree_order', '<=', $clientDegree->degree_order);
                                     });
                                 } else if ($clientDegree !== null && !$getLowerDegrees) {
                                     $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
-                                        $degreeQuery->where('degree_order',  $clientDegree->id);
+                                        $degreeQuery->where('id',  $clientDegree->id);
                                     });
                                 }
                                 if ($clientAge !== null) {
