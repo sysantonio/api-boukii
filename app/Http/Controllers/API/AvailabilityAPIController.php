@@ -99,6 +99,7 @@ class AvailabilityAPIController extends AppBaseController
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
+            dd($e);
             return $this->sendError('Error retrieving courses', 500);
         }
     }

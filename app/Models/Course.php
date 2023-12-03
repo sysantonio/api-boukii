@@ -355,16 +355,17 @@ use Spatie\Activitylog\LogOptions;
 
         // Si se proporcionó clientId, obtener los detalles del cliente
 
-        if ($clientId && !$degreeId) {
+        if ($clientId) {
             $client = Client::find($clientId);
-            if ($client) {
-                $clientDegreeId = $client->sports()->where('sports.id', $sportId)->first()->pivot->degree_id ?? null;
-                if ($clientDegreeId) {
-                    $clientDegree = Degree::find($clientDegreeId);
-                }
-                $clientAge = Carbon::parse($client->birth_date)->age;
+            $clientDegreeId = $client->sports()->where('sports.id', $sportId)->first()->pivot->degree_id ?? null;
+            if ($clientDegreeId) {
+                $clientDegree = Degree::find($clientDegreeId);
             }
-        } else {
+            $clientAge = Carbon::parse($client->birth_date)->age;
+
+        }
+
+        if($degreeId) {
             $clientDegree = Degree::find($degreeId);
         }
 
@@ -404,8 +405,12 @@ use Spatie\Activitylog\LogOptions;
                         ->where('date', '<=', $endDate)
                         ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
 
-                })->where('age_min', '<=', $clientAge)
-                ->where('age_max', '>=', $clientAge);
+                });
+
+            if($clientAge) {
+                $query->where('age_min', '<=', $clientAge)
+                    ->where('age_max', '>=', $clientAge);
+            }
         }
 
         return $query;
