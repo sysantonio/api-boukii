@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['guest'])->group(function() {
 
-    Route::get('getCourseAvailability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
+    Route::post('getCourseAvailability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
         ->name('api.availability.getCourseAvailability');
 
     Route::resource('stations', App\Http\Controllers\API\StationAPIController::class)

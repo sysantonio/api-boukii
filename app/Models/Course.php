@@ -347,43 +347,43 @@ use Spatie\Activitylog\LogOptions;
     }
 
     public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
-                                                    $clientId = null)
+                                                    $clientId = null, $degreeId = null, $getLowerDegrees = false)
     {
 
         $clientAge = null;
         $clientDegreeOrder = null;
 
         // Si se proporcionó clientId, obtener los detalles del cliente
-        if ($clientId) {
+
+        if ($clientId && !$degreeId) {
             $client = Client::find($clientId);
-
             if ($client) {
-                $degreeId = $client->sports()->where('sports.id', $sportId)->first()->pivot->degree_id ?? null;
-
-                // dd($client->sports()->where('sports.id', $sportId)->toSql());
-                if ($degreeId) {
-                    // Buscando en la tabla degrees para obtener degree_order
-                    $clientDegree = Degree::find($degreeId);
-                    $clientDegreeOrder = $clientDegree->degree_order ?? null;
-
+                $clientDegreeId = $client->sports()->where('sports.id', $sportId)->first()->pivot->degree_id ?? null;
+                if ($clientDegreeId) {
+                    $clientDegree = Degree::find($clientDegreeId);
                 }
-
                 $clientAge = Carbon::parse($client->birth_date)->age;
             }
+        } else {
+            $clientDegree = Degree::find($degreeId);
         }
 
         if ($type == 1) {
             // Lógica para cursos de tipo 1
-            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientDegreeOrder, $clientAge) {
+            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees) {
                 $subQuery->where('date', '>=', $startDate)
                     ->where('date', '<=', $endDate)
-                    ->whereHas('courseSubgroups', function (Builder $subQuery) use ($clientDegreeOrder, $clientAge) {
+                    ->whereHas('courseSubgroups', function (Builder $subQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
                         $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)')
-                            ->whereHas('courseGroup', function (Builder $groupQuery) use ($clientDegreeOrder, $clientAge) {
+                            ->whereHas('courseGroup', function (Builder $groupQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
                                 // Comprobación de degree_order y rango de edad
-                                if ($clientDegreeOrder !== null) {
-                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegreeOrder) {
-                                        $degreeQuery->where('degree_order', '<=', $clientDegreeOrder);
+                                if ($clientDegree !== null && $getLowerDegrees) {
+                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
+                                        $degreeQuery->where('degree_order', '<=', $clientDegree->degree_order);
+                                    });
+                                } else if ($clientDegree !== null && !$getLowerDegrees) {
+                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
+                                        $degreeQuery->where('degree_order',  $clientDegree->id);
                                     });
                                 }
                                 if ($clientAge !== null) {

@@ -110,6 +110,7 @@ class AvailabilityAPIController extends AppBaseController
         $type = $request->input('course_type') ?? 1;
         $sportId = $request->input('sport_id');
         $clientId = $request->input('client_id');
+        $degreeId = $request->input('degree_id');
 
         try {
             $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)
