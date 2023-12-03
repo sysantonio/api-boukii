@@ -111,9 +111,10 @@ class AvailabilityAPIController extends AppBaseController
         $sportId = $request->input('sport_id');
         $clientId = $request->input('client_id');
         $degreeId = $request->input('degree_id');
+        $getLowerDegrees = $request->input('get_lower_dregrees');
 
         try {
-            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)
+            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees)
                 ->get();
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
