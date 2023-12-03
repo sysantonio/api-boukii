@@ -57,7 +57,7 @@ class ClientsController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $clientsWithUtilizers = Client::has('clientsUtilizers')->with('utilizers')->paginate();
+        $clientsWithUtilizers = Client::with('utilizers', 'sports')->paginate();
 
         return response()->json($clientsWithUtilizers);
     }
