@@ -32,45 +32,23 @@ class AvailabilityAPIController extends AppBaseController
     }
 
     /**
-     * @OA\Get(
+     * @OA\Post(
      *      path="/availability",
-     *      summary="Get Availability",
+     *      summary="Get Course Availability",
      *      tags={"Availability"},
-     *      description="Get availability of courses based on type, dates, sport, and client",
-     *      @OA\Parameter(
-     *          name="start_date",
-     *          description="Start date of the period",
+     *      description="Get availability of courses based on type, dates, sport, client, and degree",
+     *      @OA\RequestBody(
      *          required=true,
-     *          in="query",
-     *          @OA\Schema(type="string", format="date")
-     *      ),
-     *      @OA\Parameter(
-     *          name="end_date",
-     *          description="End date of the period",
-     *          required=true,
-     *          in="query",
-     *          @OA\Schema(type="string", format="date")
-     *      ),
-     *      @OA\Parameter(
-     *          name="course_type",
-     *          description="Type of the course",
-     *          required=false,
-     *          in="query",
-     *          @OA\Schema(type="integer")
-     *      ),
-     *      @OA\Parameter(
-     *          name="sport_id",
-     *          description="ID of the sport",
-     *          required=false,
-     *          in="query",
-     *          @OA\Schema(type="integer")
-     *      ),
-     *      @OA\Parameter(
-     *          name="client_id",
-     *          description="ID of the client",
-     *          required=false,
-     *          in="query",
-     *          @OA\Schema(type="integer")
+     *          @OA\JsonContent(
+     *              required={"start_date", "end_date"},
+     *              @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *              @OA\Property(property="end_date", type="string", format="date", example="2023-01-31"),
+     *              @OA\Property(property="course_type", type="integer", example=1),
+     *              @OA\Property(property="sport_id", type="integer", example=1),
+     *              @OA\Property(property="client_id", type="integer", example=1),
+     *              @OA\Property(property="degree_id", type="integer", example=1),
+     *              @OA\Property(property="get_lower_degrees", type="boolean", example=false)
+     *          )
      *      ),
      *      @OA\Response(
      *          response=200,
@@ -119,7 +97,7 @@ class AvailabilityAPIController extends AppBaseController
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving bookings', 500);
+            return $this->sendError('Error retrieving courses', 500);
         }
     }
 
