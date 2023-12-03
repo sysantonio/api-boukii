@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['guest'])->group(function() {
 
-    Route::post('getCourseAvailability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
-        ->name('api.availability.getCourseAvailability');
+    Route::post('availability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
+        ->name('api.availability.get');
 
     Route::resource('stations', App\Http\Controllers\API\StationAPIController::class)
         ->except(['create', 'edit']);

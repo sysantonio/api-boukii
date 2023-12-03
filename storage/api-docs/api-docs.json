@@ -11,62 +11,59 @@
     ],
     "paths": {
         "/availability": {
-            "get": {
+            "post": {
                 "tags": [
                     "Availability"
                 ],
-                "summary": "Get Availability",
-                "description": "Get availability of courses based on type, dates, sport, and client",
-                "operationId": "25f6bc664c614fff68ea1c6a32873915",
-                "parameters": [
-                    {
-                        "name": "start_date",
-                        "in": "query",
-                        "description": "Start date of the period",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "end_date",
-                        "in": "query",
-                        "description": "End date of the period",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "course_type",
-                        "in": "query",
-                        "description": "Type of the course",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "sport_id",
-                        "in": "query",
-                        "description": "ID of the sport",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "client_id",
-                        "in": "query",
-                        "description": "ID of the client",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Get Course Availability",
+                "description": "Get availability of courses based on type, dates, sport, client, and degree",
+                "operationId": "e261b752537135d32d2136e027255011",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "start_date",
+                                    "end_date"
+                                ],
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-01-01"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-01-31"
+                                    },
+                                    "course_type": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "sport_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "client_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "degree_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "get_lower_degrees": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -10083,6 +10080,48 @@
             }
         },
         "/admin/courses/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getCourseWithBookings",
+                "description": "Get Course",
+                "operationId": "b983638e6771f8f69b1ba719f9bca5e0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Course",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "Admin"
@@ -10111,6 +10150,86 @@
                         }
                     }
                 },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/courses": {
+            "get": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getCourseList",
+                "description": "Get all Courses available by slug",
+                "operationId": "8b83f978a0eedd883eb960e7c2bf9e34",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Course"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/booking/courses/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getCourseWithBookings",
+                "description": "Get Course",
+                "operationId": "e4e7961572deb6068ca65da866756412",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Course",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -11148,8 +11267,6 @@
                     "price",
                     "currency",
                     "max_participants",
-                    "duration",
-                    "duration_flexible",
                     "date_start",
                     "date_end",
                     "confirm_attendance",
@@ -11197,12 +11314,6 @@
                     "currency": {
                         "description": "",
                         "type": "string",
-                        "readOnly": false,
-                        "nullable": false
-                    },
-                    "duration_flexible": {
-                        "description": "",
-                        "type": "boolean",
                         "readOnly": false,
                         "nullable": false
                     },
