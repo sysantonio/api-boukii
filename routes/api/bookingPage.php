@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Route;
 
 
 // Iframe with school
-Route::middleware('iframe')->group(function() {
+Route::middleware(['bookingPage'])->group(function() {
 
 
+    Route::get('courses', [\App\Http\Controllers\BookingPage\CourseController::class, 'index'])
+        ->name('api.bookings.courses.index');
 });

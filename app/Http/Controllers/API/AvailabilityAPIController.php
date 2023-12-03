@@ -112,9 +112,10 @@ class AvailabilityAPIController extends AppBaseController
         $clientId = $request->input('client_id');
 
         try {
-            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)->get();
+            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)
+                ->get();
 
-            return $this->sendResponse($courses, 'Bookings retrieved successfully');
+            return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError('Error retrieving bookings', 500);
         }

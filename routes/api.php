@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
+
+
 Route::get('/process-images', function () {
     $models = [
         Course::all(), Station::all(), Client::all(),
@@ -133,6 +135,6 @@ Route::prefix('')
 /* API PUBLIC */
 
 /* API IFRAME */
-Route::prefix('bookingPage')
+Route::prefix('slug')
     ->group(base_path('routes/api/bookingPage.php'));
 /* API IFRAME */

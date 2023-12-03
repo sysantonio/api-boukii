@@ -13,8 +13,11 @@ Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
     Route::get('getAgenda', [\App\Http\Controllers\Teach\HomeController::class, 'getAgenda'])
         ->name('api.teach.home.agenda');
 
-    Route::get('weather', [\App\Http\Controllers\Teach\HomeController::class, 'get12HourlyForecastByCoords'])
+    Route::get('weather', [\App\Http\Controllers\Teach\HomeController::class, 'get12HourlyForecastByStation'])
         ->name('api.teach.home.weather');
+
+    Route::get('weather/week', [\App\Http\Controllers\Teach\HomeController::class, 'get5DaysForecastByStation'])
+        ->name('api.teach.home.weatherweek');
 
     Route::get('monitor/pastBookings', [\App\Http\Controllers\Teach\MonitorController::class, 'getPastBookings'])
         ->name('api.teach.monitor.pastBokkings');

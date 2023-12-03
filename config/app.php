@@ -161,6 +161,7 @@ return [
          */
         Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
+        Ejarnutowski\LaravelApiKey\Providers\ApiKeyServiceProvider::class,
         /*
          * Application Service Providers...
          */

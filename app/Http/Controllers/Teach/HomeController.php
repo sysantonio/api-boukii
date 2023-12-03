@@ -125,7 +125,7 @@ class HomeController extends AppBaseController
         return $this->sendResponse($data, 'Agenda retrieved successfully');
     }
 
-    public function get12HourlyForecastByCoords(Request $request)
+    public function get12HourlyForecastByStation(Request $request)
     {
         $forecast = [];
 
@@ -141,8 +141,25 @@ class HomeController extends AppBaseController
             $forecast = $accuweatherData['12HoursForecast'] ?? [];
         }
 
-        $this->response = $forecast;
-        $this->code = \Illuminate\Http\Response::HTTP_OK;
+        return $this->sendResponse($forecast, 'Weather send correctly');
+    }
+
+    public function get5DaysForecastByStation(Request $request)
+    {
+        $forecast = [];
+
+        $station = Station::find($request->station_id);
+
+        if ($station)
+        {
+            // Pick its Station coordinates:
+            // TODO TBD what about Schools located at _several_ Stations ??
+            // As of 2022-11 just forecast the first one
+            $accuweatherData = ($station && $station->accuweather) ?
+                json_decode($station->accuweather, true) : [];
+            $forecast = $accuweatherData['5DaysForecast'] ?? [];
+        }
+
         return $this->sendResponse($forecast, 'Weather send correctly');
     }
 
