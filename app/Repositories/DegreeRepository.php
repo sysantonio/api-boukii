@@ -15,6 +15,7 @@ class DegreeRepository extends BaseRepository
         'degree_order',
         'progress',
         'color',
+        'active',
         'school_id',
         'sport_id'
     ];
