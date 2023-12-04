@@ -30,6 +30,7 @@ class BookingResource extends JsonResource
             'attendance' => $this->attendance,
             'payrexx_refund' => $this->payrexx_refund,
             'notes' => $this->notes,
+            'notes_school' => $this->notes_school,
             'paxes' => $this->paxes,
             'color' => $this->color,
             'created_at' => $this->created_at,
