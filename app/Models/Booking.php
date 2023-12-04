@@ -90,6 +90,13 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false,
  *          type="string",
  *      ),
+ *     @OA\Property(
+ *           property="notes_school",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=true,
+ *           type="string",
+ *       ),
  *      @OA\Property(
  *           property="school_id",
  *           description="School ID",
@@ -165,6 +172,7 @@ use Spatie\Activitylog\LogOptions;
         'attendance',
         'payrexx_refund',
         'notes',
+        'notes_school',
         'paxes',
         'color'
     ];
@@ -181,6 +189,7 @@ use Spatie\Activitylog\LogOptions;
         'attendance' => 'boolean',
         'payrexx_refund' => 'boolean',
         'notes' => 'string',
+        'notesnotes_school' => 'string',
         'color' => 'string'
     ];
 
@@ -199,6 +208,7 @@ use Spatie\Activitylog\LogOptions;
         'attendance' => 'required|boolean',
         'payrexx_refund' => 'required|boolean',
         'notes' => 'required|string|max:500',
+        'notes_school' => 'required|string|max:500',
         'paxes' => 'required',
         'color' => 'nullable|string|max:45',
         'created_at' => 'nullable',
