@@ -187,7 +187,7 @@ class BookingUser extends Model
         'date' => 'nullable',
         'hour_start' => 'nullable',
         'hour_end' => 'nullable',
-        'attended' => 'required|boolean',
+        'attended' => 'nullable',
         'color' => 'nullable|string|max:45',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
