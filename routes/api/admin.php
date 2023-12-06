@@ -16,9 +16,8 @@ Route::post('auth/reset-password/{token}', [\App\Http\Controllers\Auth\AuthContr
 // Private
 Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
-    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)
-        ->except(['create', 'edit']);
-
+    Route::get('getPlanner', [\App\Http\Controllers\Admin\PlannerController::class, 'getPlanner'])
+        ->name('api.admin.planner');
 
     Route::resource('clients', App\Http\Controllers\Admin\ClientsController::class)
         ->except(['create', 'edit']);
