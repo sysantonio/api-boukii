@@ -57,7 +57,9 @@ class ClientsController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $clientsWithUtilizers = Client::with('utilizers', 'sports')->paginate();
+        $perPage = $request->input('perPage', 15); // Utiliza 'per_page' de la solicitud o 15 como predeterminado
+
+        $clientsWithUtilizers = Client::with('utilizers', 'sports')->paginate($perPage);
 
         return response()->json($clientsWithUtilizers);
     }
