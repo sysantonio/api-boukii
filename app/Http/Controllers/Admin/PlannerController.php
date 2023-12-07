@@ -122,16 +122,29 @@ class PlannerController extends AppBaseController
         $monitorSchools = MonitorsSchool::with('monitor')->where('school_id', $schoolId)->get();
         $monitors = $monitorSchools->pluck('monitor');
 
-        $groupedData = $monitors->mapWithKeys(function ($monitor) use ($bookings, $nwd) {
+        $groupedData = collect([]);
+
+// Incluye reservas y nwds para cada monitor
+        foreach ($monitors as $monitor) {
             $monitorBookings = $bookings->where('monitor_id', $monitor->id);
             $monitorNwd = $nwd->where('monitor_id', $monitor->id);
 
-            return [$monitor->id => [
+            $groupedData[$monitor->id] = [
                 'monitor' => $monitor,
-                'bookings' => $monitorBookings->groupBy('course.course_type'), // Agrupar por course_type
+                'bookings' => $monitorBookings->groupBy('course.course_type'),
                 'nwds' => $monitorNwd,
-            ]];
-        });
+            ];
+        }
+
+// Incluye reservas que no tienen monitor asignado
+        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id');
+        if ($bookingsWithoutMonitor->isNotEmpty()) {
+            $groupedData['no_monitor'] = [
+                'monitor' => null,
+                'bookings' => $bookingsWithoutMonitor->groupBy('course.course_type'),
+                'nwds' => collect([]), // Suponiendo que no hay nwds sin monitor
+            ];
+        }
 
 
         return $this->sendResponse($groupedData, 'Planner retrieved successfully');
