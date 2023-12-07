@@ -116,6 +116,12 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *            property="status",
+ *            description="Status of the booking user",
+ *            type="integer",
+ *            example=1
+ *        ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -161,6 +167,7 @@ class BookingUser extends Model
         'hour_start',
         'hour_end',
         'attended',
+        'status',
         'color'
     ];
 
@@ -169,6 +176,7 @@ class BookingUser extends Model
         'currency' => 'string',
         'date' => 'date',
         'attended' => 'boolean',
+        'status' => 'integer',
         'color' => 'string'
     ];
 
@@ -188,6 +196,7 @@ class BookingUser extends Model
         'hour_start' => 'nullable',
         'hour_end' => 'nullable',
         'attended' => 'nullable',
+        'status' => 'numeric',
         'color' => 'nullable|string|max:45',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',

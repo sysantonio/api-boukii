@@ -129,6 +129,12 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="status",
+ *           description="Status of the booking",
+ *           type="integer",
+ *           example=1
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -174,6 +180,8 @@ use Spatie\Activitylog\LogOptions;
         'notes',
         'notes_school',
         'paxes',
+        'status',
+        'old_id',
         'color'
     ];
 
@@ -189,6 +197,7 @@ use Spatie\Activitylog\LogOptions;
         'attendance' => 'boolean',
         'payrexx_refund' => 'boolean',
         'notes' => 'string',
+        'status' => 'integer',
         'notesnotes_school' => 'string',
         'color' => 'string'
     ];
@@ -210,6 +219,7 @@ use Spatie\Activitylog\LogOptions;
         'notes' => 'nullable|string|max:500',
         'notes_school' => 'nullable|string|max:500',
         'paxes' => 'required',
+        'status' => 'numeric',
         'color' => 'nullable|string|max:45',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',

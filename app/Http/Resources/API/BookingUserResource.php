@@ -31,6 +31,7 @@ class BookingUserResource extends JsonResource
             'hour_end' => $this->hour_end,
             'attended' => $this->attended,
             'color' => $this->color,
+            'status' => $this->status,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at
