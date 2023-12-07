@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\BookingUser;
+use App\Models\Monitor;
 use App\Models\MonitorNwd;
+use App\Models\MonitorsSchool;
 use App\Models\Station;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -117,12 +119,18 @@ class PlannerController extends AppBaseController
         $bookings = $bookingQuery->get();
         $nwd = $nwdQuery->get();
 
-        $groupedData = $bookings->groupBy('monitor_id')->map(function ($items, $monitorId) use ($nwd) {
-            return [
-                'monitor' => $items->first()->monitor, // Asume que 'monitor' es una relación en BookingUser
-                'bookings' => $items,
-                'nwds' => $nwd->where('monitor_id', $monitorId),
-            ];
+        $monitorSchools = MonitorsSchool::with('monitor')->where('school_id', $schoolId)->get();
+        $monitors = $monitorSchools->pluck('monitor');
+
+        $groupedData = $monitors->mapWithKeys(function ($monitor) use ($bookings, $nwd) {
+            $monitorBookings = $bookings->where('monitor_id', $monitor->id);
+            $monitorNwd = $nwd->where('monitor_id', $monitor->id);
+
+            return [$monitor->id => [
+                'monitor' => $monitor,
+                'bookings' => $monitorBookings->groupBy('course.course_type'), // Agrupar por course_type
+                'nwds' => $monitorNwd,
+            ]];
         });
 
 
