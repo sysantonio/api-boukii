@@ -230,6 +230,7 @@ use Spatie\Activitylog\LogOptions;
         'name',
         'short_description',
         'description',
+        'old_id',
         'price',
         'currency',
         'max_participants',
@@ -352,6 +353,8 @@ use Spatie\Activitylog\LogOptions;
 
         $clientAge = null;
         $clientDegreeOrder = null;
+
+        $query->where('sport_id', $sportId);
 
         // Si se proporcionó clientId, obtener los detalles del cliente
 
