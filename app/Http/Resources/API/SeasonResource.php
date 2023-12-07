@@ -23,6 +23,7 @@ class SeasonResource extends JsonResource
             'hour_end' => $this->hour_end,
             'is_active' => $this->is_active,
             'school_id' => $this->school_id,
+            'vacation_days' => $this->vacation_days,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at

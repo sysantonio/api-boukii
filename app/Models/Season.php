@@ -54,6 +54,13 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false,
  *          type="boolean",
  *      ),
+ *     @OA\Property(
+ *           property="vacation_days",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=true,
+ *           type="string",
+ *       ),
  *      @OA\Property(
  *           property="school_id",
  *           description="ID of the school associated with the season",
@@ -97,6 +104,7 @@ use Spatie\Activitylog\LogOptions;
         'is_active',
         'hour_start',
         'hour_end',
+        'vacation_days',
         'school_id'
     ];
 
@@ -104,6 +112,7 @@ use Spatie\Activitylog\LogOptions;
         'name' => 'string',
         'start_date' => 'date',
         'end_date' => 'date',
+        'vacation_days' => 'string',
         'is_active' => 'boolean'
     ];
 
@@ -115,6 +124,7 @@ use Spatie\Activitylog\LogOptions;
         'hour_end' => 'nullable',
         'is_active' => 'required|boolean',
         'school_id' => 'required',
+        'vacation_days' => 'nullable|string',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
