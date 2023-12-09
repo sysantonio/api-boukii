@@ -72,7 +72,7 @@ class BookingUserExtra extends Model
     ];
 
 
-    public function booukingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function bookingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\BookingUser::class, 'booking_user_id');
     }

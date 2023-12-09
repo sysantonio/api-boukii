@@ -34,6 +34,8 @@ class BookingResource extends JsonResource
             'paxes' => $this->paxes,
             'color' => $this->color,
             'status' => $this->status,
+            'has_boukii_care' => $this->has_boukii_care,
+            'price_boukii_care' => $this->price_boukii_care,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at

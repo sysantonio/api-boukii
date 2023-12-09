@@ -135,6 +135,21 @@ use Spatie\Activitylog\LogOptions;
  *           example=1
  *       ),
  *      @OA\Property(
+ *           property="has_boukii_care",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
+ *     @OA\Property(
+ *           property="price_boukii_care",
+ *           property="paid_total",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="number",
+ *           format="number"
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -182,6 +197,8 @@ use Spatie\Activitylog\LogOptions;
         'paxes',
         'status',
         'old_id',
+        'has_boukii_care',
+        'price_boukii_care',
         'color'
     ];
 
@@ -191,7 +208,9 @@ use Spatie\Activitylog\LogOptions;
         'price_cancellation_insurance' => 'decimal:2',
         'currency' => 'string',
         'paid_total' => 'decimal:2',
+        'price_boukii_care' => 'decimal:2',
         'paid' => 'boolean',
+        'has_boukii_care' => 'boolean',
         'payrexx_reference' => 'string',
         'payrexx_transaction' => 'string',
         'attendance' => 'boolean',
