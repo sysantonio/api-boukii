@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\BookingUser;
+use App\Models\CourseSubgroup;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\MonitorsSchool;
@@ -11,6 +12,7 @@ use App\Models\Station;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Response;
 use Validator;
 
@@ -121,42 +123,37 @@ class PlannerController extends AppBaseController
 
         $monitorSchools = MonitorsSchool::with('monitor')->where('school_id', $schoolId)->get();
         $monitors = $monitorSchools->pluck('monitor');
-
+        $subgroupsPerGroup = CourseSubgroup::select('course_group_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('course_group_id')
+            ->pluck('total', 'course_group_id');
         $groupedData = collect([]);
-
-        // Incluye reservas y nwds para cada monitor
-       /* foreach ($monitors as $monitor) {
-            $monitorBookings = $bookings->where('monitor_id', $monitor->id);
-            $monitorNwd = $nwd->where('monitor_id', $monitor->id);
-
-            $groupedData[$monitor->id] = [
-                'monitor' => $monitor,
-                'bookings' => $monitorBookings->groupBy('course.course_type'),
-                'nwds' => $monitorNwd,
-            ];
-        }
-
-        // Incluye reservas que no tienen monitor asignado
-        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id');
-        if ($bookingsWithoutMonitor->isNotEmpty()) {
-            $groupedData['no_monitor'] = [
-                'monitor' => null,
-                'bookings' => $bookingsWithoutMonitor->groupBy('course.course_type'),
-                'nwds' => collect([]), // Suponiendo que no hay nwds sin monitor
-            ];
-        }*/
-
+       // return $this->sendResponse($subgroupsPerGroup, 'Planner retrieved successfully');
         foreach ($monitors as $monitor) {
-            $monitorBookings = $bookings->where('monitor_id', $monitor->id)->groupBy(function ($booking) {
-                // Diferencia la agrupación basada en el course_type
-                if ($booking->course->course_type == 2) {
-                    // Agrupa por booking.course_id y booking.course_date_id para el tipo 2
-                    return $booking->course_id . '-' . $booking->course_date_id;
-                } else {
-                    // Agrupa por booking.course_id, booking.course_date_id y booking.course_subgroup_id para el tipo 1
-                    return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->course_subgroup_id;
-                }
-            });
+
+            $monitorBookings = $bookings->where('monitor_id', $monitor->id)
+                ->groupBy(function ($booking) use($subgroupsPerGroup) {
+                    $courseId = $booking->course_id;
+                    $courseDateId = $booking->course_date_id;
+                    $subgroupId = $booking->course_subgroup_id ?? 'none';
+
+                    if ($booking->course->course_type == 1 && $subgroupId !== 'none') {
+                        $totalSubgroups = $subgroupsPerGroup[$booking->course_group_id] ?? 1;
+                        $subgroupPosition = CourseSubgroup::where('course_group_id', $booking->course_group_id)
+                            ->where('id', '<=', $subgroupId)
+                            ->count();
+
+                        $booking->subgroup_number = $subgroupPosition;
+                        $booking->total_subgroups = $totalSubgroups;
+                    }
+                    // Diferencia la agrupación basada en el course_type
+                    if ($booking->course->course_type == 2) {
+                        // Agrupa por booking.course_id y booking.course_date_id para el tipo 2
+                        return $booking->course_id . '-' . $booking->course_date_id;
+                    } else {
+                        // Agrupa por booking.course_id, booking.course_date_id y booking.course_subgroup_id para el tipo 1
+                        return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->course_subgroup_id;
+                    }
+                });
 
             $monitorNwd = $nwd->where('monitor_id', $monitor->id);
 
@@ -167,13 +164,24 @@ class PlannerController extends AppBaseController
             ];
         }
 
-// Incluye reservas que no tienen monitor asignado
-        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) {
+//      Incluye reservas que no tienen monitor asignado
+        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) use($subgroupsPerGroup) {
             if ($booking->course->course_type == 2) {
                 return $booking->course_id . '-' . $booking->course_date_id;
             } else {
+                $subgroupId = $booking->course_subgroup_id ?? 'none';
+                if ($subgroupId !== 'none') {
+                    $totalSubgroups = $subgroupsPerGroup[$booking->course_group_id] ?? 1;
+                    $subgroupPosition = CourseSubgroup::where('course_group_id', $booking->course_group_id)
+                        ->where('id', '<=', $subgroupId)
+                        ->count();
+
+                    $booking->subgroup_number = $subgroupPosition;
+                    $booking->total_subgroups = $totalSubgroups;
+                }
                 return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->course_subgroup_id;
             }
+
         });
         if ($bookingsWithoutMonitor->isNotEmpty()) {
             $groupedData['no_monitor'] = [
@@ -185,5 +193,7 @@ class PlannerController extends AppBaseController
 
         return $this->sendResponse($groupedData, 'Planner retrieved successfully');
     }
+
+
 
 }
