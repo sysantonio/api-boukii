@@ -367,30 +367,40 @@ class CourseController extends AppBaseController
         if (isset($courseData['course_dates'])) {
             $updatedCourseDates = [];
             foreach ($courseData['course_dates'] as $dateData) {
-                $date = $course->courseDates()->updateOrCreate(['id' => $dateData['id']], $dateData);
+                // Verifica si existe 'id' antes de usarlo
+                $dateId = isset($dateData['id']) ? $dateData['id'] : null;
+                $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
                 $updatedCourseDates[] = $date->id;
 
-                // Sincroniza los grupos
                 if (isset($dateData['groups'])) {
                     $updatedCourseGroups = [];
                     foreach ($dateData['groups'] as $groupData) {
-                        $group = $date->courseGroups()->updateOrCreate(['id' => $groupData['id']], $groupData);
+                        // Verifica si existe 'id' antes de usarlo
+                        $groupId = isset($groupData['id']) ? $groupData['id'] : null;
+                        $group = $date->courseGroups()->updateOrCreate(['id' => $groupId], $groupData);
                         $updatedCourseGroups[] = $group->id;
 
-                        // Sincroniza los subgrupos
                         if (isset($groupData['subgroups'])) {
-                            foreach ($groupData['subgroups'] as &$subgroup) {
-                                $subgroup['course_id'] = $course->id;
-                                $subgroup['course_date_id'] = $date->id;
+                            foreach ($groupData['subgroups'] as $subgroupData) {
+                                // Preparar los datos de subgroup
+                                $subgroupData['course_id'] = $course->id;
+                                $subgroupData['course_date_id'] = $date->id;
+
+                                // Verifica si existe 'id' antes de usarlo
+                                $subgroupId = isset($subgroupData['id']) ? $subgroupData['id'] : null;
+                                if ($subgroupId) {
+                                    $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
+                                } else {
+                                    $group->courseSubgroups()->create($subgroupData);
+                                }
                             }
-                            $group->courseSubgroups()->delete(); // Elimina todos los subgrupos existentes
-                            $group->courseSubgroups()->createMany($groupData['subgroups']);
+                            // Considera si necesitas borrar subgrupos aquí
                         }
                     }
-                    $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete(); // Elimina los grupos que no se actualicen
+                    $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete();
                 }
             }
-            $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete(); // Elimina las fechas que no se actualicen
+            $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
         }
 
         return $this->sendResponse($course, 'Course updated successfully');
