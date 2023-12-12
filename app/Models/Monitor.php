@@ -279,6 +279,7 @@ class Monitor extends Model
         'partner_percentaje',
         'user_id',
         'active_school',
+        'old_id',
         'active_station'
     ];
 
@@ -410,6 +411,18 @@ class Monitor extends Model
     public function monitorSportsDegrees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'monitor_id');
+    }
+
+    public function sports(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            \App\Models\Sport::class, // Modelo final al que quieres llegar
+            \App\Models\MonitorSportsDegree::class, // Modelo intermedio
+            'monitor_id', // Clave foránea en el modelo intermedio
+            'id', // Clave foránea en el modelo final
+            'id', // Clave local en el modelo inicial
+            'sport_id' // Clave local en el modelo intermedio
+        );
     }
 
     public function monitorsSchools(): \Illuminate\Database\Eloquent\Relations\HasMany

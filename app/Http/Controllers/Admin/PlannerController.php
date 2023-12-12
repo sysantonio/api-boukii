@@ -121,7 +121,7 @@ class PlannerController extends AppBaseController
         $bookings = $bookingQuery->get();
         $nwd = $nwdQuery->get();
 
-        $monitorSchools = MonitorsSchool::with('monitor')->where('school_id', $schoolId)->get();
+        $monitorSchools = MonitorsSchool::with('monitor.sports')->where('school_id', $schoolId)->get();
         $monitors = $monitorSchools->pluck('monitor');
         $subgroupsPerGroup = CourseSubgroup::select('course_group_id', DB::raw('COUNT(*) as total'))
             ->groupBy('course_group_id')
