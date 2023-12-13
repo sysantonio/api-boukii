@@ -109,7 +109,7 @@ class ClientsController extends AppBaseController
             return $this->sendError('Client not found');
         }
 
-        return $this->sendResponse($client, 'Client retrieved successfully');
+        return $this->sendResponse($mainClient, 'Client retrieved successfully');
     }
 
     /**
