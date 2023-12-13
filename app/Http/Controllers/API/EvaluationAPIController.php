@@ -56,14 +56,17 @@ class EvaluationAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $evaluations = $this->evaluationRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(EvaluationResource::collection($evaluations), 'Evaluations retrieved successfully');
+        return $this->sendResponse($evaluations, 'Evaluations retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class EvaluationAPIController extends AppBaseController
 
         $evaluation = $this->evaluationRepository->create($input);
 
-        return $this->sendResponse(new EvaluationResource($evaluation), 'Evaluation saved successfully');
+        return $this->sendResponse($evaluation, 'Evaluation saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class EvaluationAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Evaluation $evaluation */
-        $evaluation = $this->evaluationRepository->find($id);
+        $evaluation = $this->evaluationRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluation)) {
             return $this->sendError('Evaluation not found');
         }
 
-        return $this->sendResponse(new EvaluationResource($evaluation), 'Evaluation retrieved successfully');
+        return $this->sendResponse($evaluation, 'Evaluation retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class EvaluationAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Evaluation $evaluation */
-        $evaluation = $this->evaluationRepository->find($id);
+        $evaluation = $this->evaluationRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluation)) {
             return $this->sendError('Evaluation not found');
@@ -249,7 +252,7 @@ class EvaluationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Evaluation $evaluation */
-        $evaluation = $this->evaluationRepository->find($id);
+        $evaluation = $this->evaluationRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluation)) {
             return $this->sendError('Evaluation not found');

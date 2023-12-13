@@ -56,14 +56,17 @@ class CourseDateAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $courseDates = $this->courseDateRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(CourseDateResource::collection($courseDates), 'Course Dates retrieved successfully');
+        return $this->sendResponse($courseDates, 'Course Dates retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class CourseDateAPIController extends AppBaseController
 
         $courseDate = $this->courseDateRepository->create($input);
 
-        return $this->sendResponse(new CourseDateResource($courseDate), 'Course Date saved successfully');
+        return $this->sendResponse($courseDate, 'Course Date saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class CourseDateAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var CourseDate $courseDate */
-        $courseDate = $this->courseDateRepository->find($id);
+        $courseDate = $this->courseDateRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseDate)) {
             return $this->sendError('Course Date not found');
         }
 
-        return $this->sendResponse(new CourseDateResource($courseDate), 'Course Date retrieved successfully');
+        return $this->sendResponse($courseDate, 'Course Date retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class CourseDateAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var CourseDate $courseDate */
-        $courseDate = $this->courseDateRepository->find($id);
+        $courseDate = $this->courseDateRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseDate)) {
             return $this->sendError('Course Date not found');
@@ -249,7 +252,7 @@ class CourseDateAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseDate $courseDate */
-        $courseDate = $this->courseDateRepository->find($id);
+        $courseDate = $this->courseDateRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseDate)) {
             return $this->sendError('Course Date not found');

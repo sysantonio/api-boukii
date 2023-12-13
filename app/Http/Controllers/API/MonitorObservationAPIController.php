@@ -56,14 +56,17 @@ class MonitorObservationAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorObservations = $this->monitorObservationRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorObservationResource::collection($monitorObservations), 'Monitor Observations retrieved successfully');
+        return $this->sendResponse($monitorObservations, 'Monitor Observations retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class MonitorObservationAPIController extends AppBaseController
 
         $monitorObservation = $this->monitorObservationRepository->create($input);
 
-        return $this->sendResponse(new MonitorObservationResource($monitorObservation), 'Monitor Observation saved successfully');
+        return $this->sendResponse($monitorObservation, 'Monitor Observation saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class MonitorObservationAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var MonitorObservation $monitorObservation */
-        $monitorObservation = $this->monitorObservationRepository->find($id);
+        $monitorObservation = $this->monitorObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorObservation)) {
             return $this->sendError('Monitor Observation not found');
         }
 
-        return $this->sendResponse(new MonitorObservationResource($monitorObservation), 'Monitor Observation retrieved successfully');
+        return $this->sendResponse($monitorObservation, 'Monitor Observation retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class MonitorObservationAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var MonitorObservation $monitorObservation */
-        $monitorObservation = $this->monitorObservationRepository->find($id);
+        $monitorObservation = $this->monitorObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorObservation)) {
             return $this->sendError('Monitor Observation not found');
@@ -249,7 +252,7 @@ class MonitorObservationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorObservation $monitorObservation */
-        $monitorObservation = $this->monitorObservationRepository->find($id);
+        $monitorObservation = $this->monitorObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorObservation)) {
             return $this->sendError('Monitor Observation not found');

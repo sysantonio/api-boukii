@@ -56,14 +56,17 @@ class StationsSchoolAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $stationsSchools = $this->stationsSchoolRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(StationsSchoolResource::collection($stationsSchools), 'Stations Schools retrieved successfully');
+        return $this->sendResponse($stationsSchools, 'Stations Schools retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class StationsSchoolAPIController extends AppBaseController
 
         $stationsSchool = $this->stationsSchoolRepository->create($input);
 
-        return $this->sendResponse(new StationsSchoolResource($stationsSchool), 'Stations School saved successfully');
+        return $this->sendResponse($stationsSchool, 'Stations School saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class StationsSchoolAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var StationsSchool $stationsSchool */
-        $stationsSchool = $this->stationsSchoolRepository->find($id);
+        $stationsSchool = $this->stationsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($stationsSchool)) {
             return $this->sendError('Stations School not found');
         }
 
-        return $this->sendResponse(new StationsSchoolResource($stationsSchool), 'Stations School retrieved successfully');
+        return $this->sendResponse($stationsSchool, 'Stations School retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class StationsSchoolAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var StationsSchool $stationsSchool */
-        $stationsSchool = $this->stationsSchoolRepository->find($id);
+        $stationsSchool = $this->stationsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($stationsSchool)) {
             return $this->sendError('Stations School not found');
@@ -249,7 +252,7 @@ class StationsSchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var StationsSchool $stationsSchool */
-        $stationsSchool = $this->stationsSchoolRepository->find($id);
+        $stationsSchool = $this->stationsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($stationsSchool)) {
             return $this->sendError('Stations School not found');

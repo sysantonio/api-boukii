@@ -56,14 +56,17 @@ class ClientsSchoolAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $clientsSchools = $this->clientsSchoolRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(ClientsSchoolResource::collection($clientsSchools), 'Clients Schools retrieved successfully');
+        return $this->sendResponse($clientsSchools, 'Clients Schools retrieved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class ClientsSchoolAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var ClientsSchool $clientsSchool */
-        $clientsSchool = $this->clientsSchoolRepository->find($id);
+        $clientsSchool = $this->clientsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsSchool)) {
             return $this->sendError('Clients School not found');
         }
 
-        return $this->sendResponse(new ClientsSchoolResource($clientsSchool), 'Clients School retrieved successfully');
+        return $this->sendResponse($clientsSchool, 'Clients School retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class ClientsSchoolAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var ClientsSchool $clientsSchool */
-        $clientsSchool = $this->clientsSchoolRepository->find($id);
+        $clientsSchool = $this->clientsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsSchool)) {
             return $this->sendError('Clients School not found');
@@ -249,7 +252,7 @@ class ClientsSchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientsSchool $clientsSchool */
-        $clientsSchool = $this->clientsSchoolRepository->find($id);
+        $clientsSchool = $this->clientsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsSchool)) {
             return $this->sendError('Clients School not found');

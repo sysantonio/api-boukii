@@ -56,14 +56,17 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorSportAuthorizedDegrees = $this->monitorSportAuthorizedDegreeRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorSportAuthorizedDegreeResource::collection($monitorSportAuthorizedDegrees), 'Monitor Sport Authorized Degrees retrieved successfully');
+        return $this->sendResponse($monitorSportAuthorizedDegrees, 'Monitor Sport Authorized Degrees retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
 
         $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->create($input);
 
-        return $this->sendResponse(new MonitorSportAuthorizedDegreeResource($monitorSportAuthorizedDegree), 'Monitor Sport Authorized Degree saved successfully');
+        return $this->sendResponse($monitorSportAuthorizedDegree, 'Monitor Sport Authorized Degree saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var MonitorSportAuthorizedDegree $monitorSportAuthorizedDegree */
-        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id);
+        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportAuthorizedDegree)) {
             return $this->sendError('Monitor Sport Authorized Degree not found');
         }
 
-        return $this->sendResponse(new MonitorSportAuthorizedDegreeResource($monitorSportAuthorizedDegree), 'Monitor Sport Authorized Degree retrieved successfully');
+        return $this->sendResponse($monitorSportAuthorizedDegree, 'Monitor Sport Authorized Degree retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var MonitorSportAuthorizedDegree $monitorSportAuthorizedDegree */
-        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id);
+        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportAuthorizedDegree)) {
             return $this->sendError('Monitor Sport Authorized Degree not found');
@@ -302,7 +305,7 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorSportAuthorizedDegree $monitorSportAuthorizedDegree */
-        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id);
+        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportAuthorizedDegree)) {
             return $this->sendError('Monitor Sport Authorized Degree not found');

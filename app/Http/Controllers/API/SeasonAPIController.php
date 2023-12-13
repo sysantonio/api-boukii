@@ -56,14 +56,17 @@ class SeasonAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $seasons = $this->seasonRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SeasonResource::collection($seasons), 'Seasons retrieved successfully');
+        return $this->sendResponse($seasons, 'Seasons retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SeasonAPIController extends AppBaseController
 
         $season = $this->seasonRepository->create($input);
 
-        return $this->sendResponse(new SeasonResource($season), 'Season saved successfully');
+        return $this->sendResponse($season, 'Season saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SeasonAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Season $season */
-        $season = $this->seasonRepository->find($id);
+        $season = $this->seasonRepository->find($id, with: $request->get('with', []));
 
         if (empty($season)) {
             return $this->sendError('Season not found');
         }
 
-        return $this->sendResponse(new SeasonResource($season), 'Season retrieved successfully');
+        return $this->sendResponse($season, 'Season retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SeasonAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Season $season */
-        $season = $this->seasonRepository->find($id);
+        $season = $this->seasonRepository->find($id, with: $request->get('with', []));
 
         if (empty($season)) {
             return $this->sendError('Season not found');
@@ -249,7 +252,7 @@ class SeasonAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Season $season */
-        $season = $this->seasonRepository->find($id);
+        $season = $this->seasonRepository->find($id, with: $request->get('with', []));
 
         if (empty($season)) {
             return $this->sendError('Season not found');

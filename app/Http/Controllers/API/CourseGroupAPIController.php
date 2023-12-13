@@ -56,14 +56,17 @@ class CourseGroupAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $courseGroups = $this->courseGroupRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(CourseGroupResource::collection($courseGroups), 'Course Groups retrieved successfully');
+        return $this->sendResponse($courseGroups, 'Course Groups retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class CourseGroupAPIController extends AppBaseController
 
         $courseGroup = $this->courseGroupRepository->create($input);
 
-        return $this->sendResponse(new CourseGroupResource($courseGroup), 'Course Group saved successfully');
+        return $this->sendResponse($courseGroup, 'Course Group saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class CourseGroupAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var CourseGroup $courseGroup */
-        $courseGroup = $this->courseGroupRepository->find($id);
+        $courseGroup = $this->courseGroupRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseGroup)) {
             return $this->sendError('Course Group not found');
         }
 
-        return $this->sendResponse(new CourseGroupResource($courseGroup), 'Course Group retrieved successfully');
+        return $this->sendResponse($courseGroup, 'Course Group retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class CourseGroupAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var CourseGroup $courseGroup */
-        $courseGroup = $this->courseGroupRepository->find($id);
+        $courseGroup = $this->courseGroupRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseGroup)) {
             return $this->sendError('Course Group not found');
@@ -249,7 +252,7 @@ class CourseGroupAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseGroup $courseGroup */
-        $courseGroup = $this->courseGroupRepository->find($id);
+        $courseGroup = $this->courseGroupRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseGroup)) {
             return $this->sendError('Course Group not found');

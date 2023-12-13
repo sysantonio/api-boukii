@@ -56,14 +56,17 @@ class MonitorsSchoolAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorsSchools = $this->monitorsSchoolRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorsSchoolResource::collection($monitorsSchools), 'Monitors Schools retrieved successfully');
+        return $this->sendResponse($monitorsSchools, 'Monitors Schools retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class MonitorsSchoolAPIController extends AppBaseController
 
         $monitorsSchool = $this->monitorsSchoolRepository->create($input);
 
-        return $this->sendResponse(new MonitorsSchoolResource($monitorsSchool), 'Monitors School saved successfully');
+        return $this->sendResponse($monitorsSchool, 'Monitors School saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class MonitorsSchoolAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var MonitorsSchool $monitorsSchool */
-        $monitorsSchool = $this->monitorsSchoolRepository->find($id);
+        $monitorsSchool = $this->monitorsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorsSchool)) {
             return $this->sendError('Monitors School not found');
         }
 
-        return $this->sendResponse(new MonitorsSchoolResource($monitorsSchool), 'Monitors School retrieved successfully');
+        return $this->sendResponse($monitorsSchool, 'Monitors School retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class MonitorsSchoolAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var MonitorsSchool $monitorsSchool */
-        $monitorsSchool = $this->monitorsSchoolRepository->find($id);
+        $monitorsSchool = $this->monitorsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorsSchool)) {
             return $this->sendError('Monitors School not found');
@@ -249,7 +252,7 @@ class MonitorsSchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorsSchool $monitorsSchool */
-        $monitorsSchool = $this->monitorsSchoolRepository->find($id);
+        $monitorsSchool = $this->monitorsSchoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorsSchool)) {
             return $this->sendError('Monitors School not found');

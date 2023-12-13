@@ -56,15 +56,19 @@ class ClientAPIController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
+
         $clients = $this->clientRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(ClientResource::collection($clients), 'Clients retrieved successfully');
+        return $this->sendResponse($clients, 'Clients retrieved successfully');
     }
 
     /**
@@ -163,16 +167,16 @@ class ClientAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Client $client */
-        $client = $this->clientRepository->find($id);
+        $client = $this->clientRepository->find($id, with: $request->get('with', []));
 
         if (empty($client)) {
             return $this->sendError('Client not found');
         }
 
-        return $this->sendResponse(new ClientResource($client), 'Client retrieved successfully');
+        return $this->sendResponse($client, 'Client retrieved successfully');
     }
 
     /**
@@ -220,7 +224,7 @@ class ClientAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Client $client */
-        $client = $this->clientRepository->find($id);
+        $client = $this->clientRepository->find($id, with: $request->get('with', []));
 
         if (empty($client)) {
             return $this->sendError('Client not found');
@@ -292,7 +296,7 @@ class ClientAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Client $client */
-        $client = $this->clientRepository->find($id);
+        $client = $this->clientRepository->find($id, with: $request->get('with', []));
 
         if (empty($client)) {
             return $this->sendError('Client not found');

@@ -56,14 +56,17 @@ class BookingUserAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookingUsers = $this->bookingUserRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(BookingUserResource::collection($bookingUsers), 'Booking Users retrieved successfully');
+        return $this->sendResponse($bookingUsers, 'Booking Users retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class BookingUserAPIController extends AppBaseController
 
         $bookingUser = $this->bookingUserRepository->create($input);
 
-        return $this->sendResponse(new BookingUserResource($bookingUser), 'Booking User saved successfully');
+        return $this->sendResponse($bookingUser, 'Booking User saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class BookingUserAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var BookingUser $bookingUser */
-        $bookingUser = $this->bookingUserRepository->find($id);
+        $bookingUser = $this->bookingUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUser)) {
             return $this->sendError('Booking User not found');
         }
 
-        return $this->sendResponse(new BookingUserResource($bookingUser), 'Booking User retrieved successfully');
+        return $this->sendResponse($bookingUser, 'Booking User retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class BookingUserAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var BookingUser $bookingUser */
-        $bookingUser = $this->bookingUserRepository->find($id);
+        $bookingUser = $this->bookingUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUser)) {
             return $this->sendError('Booking User not found');
@@ -249,7 +252,7 @@ class BookingUserAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var BookingUser $bookingUser */
-        $bookingUser = $this->bookingUserRepository->find($id);
+        $bookingUser = $this->bookingUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUser)) {
             return $this->sendError('Booking User not found');

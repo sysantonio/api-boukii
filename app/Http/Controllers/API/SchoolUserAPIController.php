@@ -56,14 +56,17 @@ class SchoolUserAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $schoolUsers = $this->schoolUserRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SchoolUserResource::collection($schoolUsers), 'School Users retrieved successfully');
+        return $this->sendResponse($schoolUsers, 'School Users retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SchoolUserAPIController extends AppBaseController
 
         $schoolUser = $this->schoolUserRepository->create($input);
 
-        return $this->sendResponse(new SchoolUserResource($schoolUser), 'School User saved successfully');
+        return $this->sendResponse($schoolUser, 'School User saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SchoolUserAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var SchoolUser $schoolUser */
-        $schoolUser = $this->schoolUserRepository->find($id);
+        $schoolUser = $this->schoolUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolUser)) {
             return $this->sendError('School User not found');
         }
 
-        return $this->sendResponse(new SchoolUserResource($schoolUser), 'School User retrieved successfully');
+        return $this->sendResponse($schoolUser, 'School User retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SchoolUserAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var SchoolUser $schoolUser */
-        $schoolUser = $this->schoolUserRepository->find($id);
+        $schoolUser = $this->schoolUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolUser)) {
             return $this->sendError('School User not found');
@@ -249,7 +252,7 @@ class SchoolUserAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolUser $schoolUser */
-        $schoolUser = $this->schoolUserRepository->find($id);
+        $schoolUser = $this->schoolUserRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolUser)) {
             return $this->sendError('School User not found');

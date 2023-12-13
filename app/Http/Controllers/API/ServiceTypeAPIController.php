@@ -56,14 +56,17 @@ class ServiceTypeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $serviceTypes = $this->serviceTypeRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(ServiceTypeResource::collection($serviceTypes), 'Service Types retrieved successfully');
+        return $this->sendResponse($serviceTypes, 'Service Types retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class ServiceTypeAPIController extends AppBaseController
 
         $serviceType = $this->serviceTypeRepository->create($input);
 
-        return $this->sendResponse(new ServiceTypeResource($serviceType), 'Service Type saved successfully');
+        return $this->sendResponse($serviceType, 'Service Type saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class ServiceTypeAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var ServiceType $serviceType */
-        $serviceType = $this->serviceTypeRepository->find($id);
+        $serviceType = $this->serviceTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($serviceType)) {
             return $this->sendError('Service Type not found');
         }
 
-        return $this->sendResponse(new ServiceTypeResource($serviceType), 'Service Type retrieved successfully');
+        return $this->sendResponse($serviceType, 'Service Type retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class ServiceTypeAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var ServiceType $serviceType */
-        $serviceType = $this->serviceTypeRepository->find($id);
+        $serviceType = $this->serviceTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($serviceType)) {
             return $this->sendError('Service Type not found');
@@ -249,7 +252,7 @@ class ServiceTypeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ServiceType $serviceType */
-        $serviceType = $this->serviceTypeRepository->find($id);
+        $serviceType = $this->serviceTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($serviceType)) {
             return $this->sendError('Service Type not found');

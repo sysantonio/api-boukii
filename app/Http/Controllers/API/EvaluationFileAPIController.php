@@ -58,14 +58,17 @@ class EvaluationFileAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $evaluationFiles = $this->evaluationFileRepository->all(
-            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(EvaluationFileResource::collection($evaluationFiles), 'Evaluation Files retrieved successfully');
+        return $this->sendResponse($evaluationFiles, 'Evaluation Files retrieved successfully');
     }
 
     /**
@@ -187,16 +190,16 @@ class EvaluationFileAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var EvaluationFile $evaluationFile */
-        $evaluationFile = $this->evaluationFileRepository->find($id);
+        $evaluationFile = $this->evaluationFileRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFile)) {
             return $this->sendError('Evaluation File not found');
         }
 
-        return $this->sendResponse(new EvaluationFileResource($evaluationFile), 'Evaluation File retrieved successfully');
+        return $this->sendResponse($evaluationFile, 'Evaluation File retrieved successfully');
     }
 
     /**
@@ -244,7 +247,7 @@ class EvaluationFileAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var EvaluationFile $evaluationFile */
-        $evaluationFile = $this->evaluationFileRepository->find($id);
+        $evaluationFile = $this->evaluationFileRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFile)) {
             return $this->sendError('Evaluation File not found');
@@ -337,7 +340,7 @@ class EvaluationFileAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EvaluationFile $evaluationFile */
-        $evaluationFile = $this->evaluationFileRepository->find($id);
+        $evaluationFile = $this->evaluationFileRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFile)) {
             return $this->sendError('Evaluation File not found');

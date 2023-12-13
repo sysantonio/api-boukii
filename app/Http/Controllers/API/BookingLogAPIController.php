@@ -56,14 +56,17 @@ class BookingLogAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookingLogs = $this->bookingLogRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(BookingLogResource::collection($bookingLogs), 'Booking Logs retrieved successfully');
+        return $this->sendResponse($bookingLogs, 'Booking Logs retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class BookingLogAPIController extends AppBaseController
 
         $bookingLog = $this->bookingLogRepository->create($input);
 
-        return $this->sendResponse(new BookingLogResource($bookingLog), 'Booking Log saved successfully');
+        return $this->sendResponse($bookingLog, 'Booking Log saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class BookingLogAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var BookingLog $bookingLog */
-        $bookingLog = $this->bookingLogRepository->find($id);
+        $bookingLog = $this->bookingLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingLog)) {
             return $this->sendError('Booking Log not found');
         }
 
-        return $this->sendResponse(new BookingLogResource($bookingLog), 'Booking Log retrieved successfully');
+        return $this->sendResponse($bookingLog, 'Booking Log retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class BookingLogAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var BookingLog $bookingLog */
-        $bookingLog = $this->bookingLogRepository->find($id);
+        $bookingLog = $this->bookingLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingLog)) {
             return $this->sendError('Booking Log not found');
@@ -249,7 +252,7 @@ class BookingLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var BookingLog $bookingLog */
-        $bookingLog = $this->bookingLogRepository->find($id);
+        $bookingLog = $this->bookingLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingLog)) {
             return $this->sendError('Booking Log not found');

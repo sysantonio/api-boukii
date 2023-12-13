@@ -56,14 +56,17 @@ class ClientsUtilizerAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $clientsUtilizers = $this->clientsUtilizerRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(ClientsUtilizerResource::collection($clientsUtilizers), 'Clients Utilizers retrieved successfully');
+        return $this->sendResponse($clientsUtilizers, 'Clients Utilizers retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class ClientsUtilizerAPIController extends AppBaseController
 
         $clientsUtilizer = $this->clientsUtilizerRepository->create($input);
 
-        return $this->sendResponse(new ClientsUtilizerResource($clientsUtilizer), 'Clients Utilizer saved successfully');
+        return $this->sendResponse($clientsUtilizer, 'Clients Utilizer saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class ClientsUtilizerAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var ClientsUtilizer $clientsUtilizer */
-        $clientsUtilizer = $this->clientsUtilizerRepository->find($id);
+        $clientsUtilizer = $this->clientsUtilizerRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsUtilizer)) {
             return $this->sendError('Clients Utilizer not found');
         }
 
-        return $this->sendResponse(new ClientsUtilizerResource($clientsUtilizer), 'Clients Utilizer retrieved successfully');
+        return $this->sendResponse($clientsUtilizer, 'Clients Utilizer retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class ClientsUtilizerAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var ClientsUtilizer $clientsUtilizer */
-        $clientsUtilizer = $this->clientsUtilizerRepository->find($id);
+        $clientsUtilizer = $this->clientsUtilizerRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsUtilizer)) {
             return $this->sendError('Clients Utilizer not found');
@@ -249,7 +252,7 @@ class ClientsUtilizerAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientsUtilizer $clientsUtilizer */
-        $clientsUtilizer = $this->clientsUtilizerRepository->find($id);
+        $clientsUtilizer = $this->clientsUtilizerRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientsUtilizer)) {
             return $this->sendError('Clients Utilizer not found');

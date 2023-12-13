@@ -56,14 +56,17 @@ class ClientObservationAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $clientObservations = $this->clientObservationRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(ClientObservationResource::collection($clientObservations), 'Client Observations retrieved successfully');
+        return $this->sendResponse($clientObservations, 'Client Observations retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class ClientObservationAPIController extends AppBaseController
 
         $clientObservation = $this->clientObservationRepository->create($input);
 
-        return $this->sendResponse(new ClientObservationResource($clientObservation), 'Client Observation saved successfully');
+        return $this->sendResponse($clientObservation, 'Client Observation saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class ClientObservationAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var ClientObservation $clientObservation */
-        $clientObservation = $this->clientObservationRepository->find($id);
+        $clientObservation = $this->clientObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientObservation)) {
             return $this->sendError('Client Observation not found');
         }
 
-        return $this->sendResponse(new ClientObservationResource($clientObservation), 'Client Observation retrieved successfully');
+        return $this->sendResponse($clientObservation, 'Client Observation retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class ClientObservationAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var ClientObservation $clientObservation */
-        $clientObservation = $this->clientObservationRepository->find($id);
+        $clientObservation = $this->clientObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientObservation)) {
             return $this->sendError('Client Observation not found');
@@ -249,7 +252,7 @@ class ClientObservationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientObservation $clientObservation */
-        $clientObservation = $this->clientObservationRepository->find($id);
+        $clientObservation = $this->clientObservationRepository->find($id, with: $request->get('with', []));
 
         if (empty($clientObservation)) {
             return $this->sendError('Client Observation not found');

@@ -56,14 +56,17 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $evaluationFulfilledGoals = $this->evaluationFulfilledGoalRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(EvaluationFulfilledGoalResource::collection($evaluationFulfilledGoals), 'Evaluation Fulfilled Goals retrieved successfully');
+        return $this->sendResponse($evaluationFulfilledGoals, 'Evaluation Fulfilled Goals retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
 
         $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->create($input);
 
-        return $this->sendResponse(new EvaluationFulfilledGoalResource($evaluationFulfilledGoal), 'Evaluation Fulfilled Goal saved successfully');
+        return $this->sendResponse($evaluationFulfilledGoal, 'Evaluation Fulfilled Goal saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var EvaluationFulfilledGoal $evaluationFulfilledGoal */
-        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id);
+        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFulfilledGoal)) {
             return $this->sendError('Evaluation Fulfilled Goal not found');
         }
 
-        return $this->sendResponse(new EvaluationFulfilledGoalResource($evaluationFulfilledGoal), 'Evaluation Fulfilled Goal retrieved successfully');
+        return $this->sendResponse($evaluationFulfilledGoal, 'Evaluation Fulfilled Goal retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var EvaluationFulfilledGoal $evaluationFulfilledGoal */
-        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id);
+        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFulfilledGoal)) {
             return $this->sendError('Evaluation Fulfilled Goal not found');
@@ -249,7 +252,7 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EvaluationFulfilledGoal $evaluationFulfilledGoal */
-        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id);
+        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id, with: $request->get('with', []));
 
         if (empty($evaluationFulfilledGoal)) {
             return $this->sendError('Evaluation Fulfilled Goal not found');

@@ -56,14 +56,17 @@ class TaskCheckAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $taskChecks = $this->taskCheckRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(TaskCheckResource::collection($taskChecks), 'Task Checks retrieved successfully');
+        return $this->sendResponse($taskChecks, 'Task Checks retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class TaskCheckAPIController extends AppBaseController
 
         $taskCheck = $this->taskCheckRepository->create($input);
 
-        return $this->sendResponse(new TaskCheckResource($taskCheck), 'Task Check saved successfully');
+        return $this->sendResponse($taskCheck, 'Task Check saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class TaskCheckAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var TaskCheck $taskCheck */
-        $taskCheck = $this->taskCheckRepository->find($id);
+        $taskCheck = $this->taskCheckRepository->find($id, with: $request->get('with', []));
 
         if (empty($taskCheck)) {
             return $this->sendError('Task Check not found');
         }
 
-        return $this->sendResponse(new TaskCheckResource($taskCheck), 'Task Check retrieved successfully');
+        return $this->sendResponse($taskCheck, 'Task Check retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class TaskCheckAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var TaskCheck $taskCheck */
-        $taskCheck = $this->taskCheckRepository->find($id);
+        $taskCheck = $this->taskCheckRepository->find($id, with: $request->get('with', []));
 
         if (empty($taskCheck)) {
             return $this->sendError('Task Check not found');
@@ -249,7 +252,7 @@ class TaskCheckAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var TaskCheck $taskCheck */
-        $taskCheck = $this->taskCheckRepository->find($id);
+        $taskCheck = $this->taskCheckRepository->find($id, with: $request->get('with', []));
 
         if (empty($taskCheck)) {
             return $this->sendError('Task Check not found');

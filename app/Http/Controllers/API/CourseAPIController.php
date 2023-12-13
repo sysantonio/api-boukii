@@ -57,14 +57,17 @@ class CourseAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $courses = $this->courseRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(CourseResource::collection($courses), 'Courses retrieved successfully');
+        return $this->sendResponse($courses, 'Courses retrieved successfully');
     }
 
     /**
@@ -124,7 +127,7 @@ class CourseAPIController extends AppBaseController
 
         $course = $this->courseRepository->create($input);
 
-        return $this->sendResponse(new CourseResource($course), 'Course saved successfully');
+        return $this->sendResponse($course, 'Course saved successfully');
     }
 
     /**
@@ -163,16 +166,16 @@ class CourseAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Course $course */
-        $course = $this->courseRepository->find($id);
+        $course = $this->courseRepository->find($id, with: $request->get('with', []));
 
         if (empty($course)) {
             return $this->sendError('Course not found');
         }
 
-        return $this->sendResponse(new CourseResource($course), 'Course retrieved successfully');
+        return $this->sendResponse($course, 'Course retrieved successfully');
     }
 
     /**
@@ -220,7 +223,7 @@ class CourseAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Course $course */
-        $course = $this->courseRepository->find($id);
+        $course = $this->courseRepository->find($id, with: $request->get('with', []));
 
         if (empty($course)) {
             return $this->sendError('Course not found');
@@ -292,7 +295,7 @@ class CourseAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Course $course */
-        $course = $this->courseRepository->find($id);
+        $course = $this->courseRepository->find($id, with: $request->get('with', []));
 
         if (empty($course)) {
             return $this->sendError('Course not found');

@@ -56,14 +56,17 @@ class MonitorNwdAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorNwds = $this->monitorNwdRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorNwdResource::collection($monitorNwds), 'Monitor Nwds retrieved successfully');
+        return $this->sendResponse($monitorNwds, 'Monitor Nwds retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class MonitorNwdAPIController extends AppBaseController
 
         $monitorNwd = $this->monitorNwdRepository->create($input);
 
-        return $this->sendResponse(new MonitorNwdResource($monitorNwd), 'Monitor Nwd saved successfully');
+        return $this->sendResponse($monitorNwd, 'Monitor Nwd saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class MonitorNwdAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var MonitorNwd $monitorNwd */
-        $monitorNwd = $this->monitorNwdRepository->find($id);
+        $monitorNwd = $this->monitorNwdRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorNwd)) {
             return $this->sendError('Monitor Nwd not found');
         }
 
-        return $this->sendResponse(new MonitorNwdResource($monitorNwd), 'Monitor Nwd retrieved successfully');
+        return $this->sendResponse($monitorNwd, 'Monitor Nwd retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class MonitorNwdAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var MonitorNwd $monitorNwd */
-        $monitorNwd = $this->monitorNwdRepository->find($id);
+        $monitorNwd = $this->monitorNwdRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorNwd)) {
             return $this->sendError('Monitor Nwd not found');
@@ -249,7 +252,7 @@ class MonitorNwdAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorNwd $monitorNwd */
-        $monitorNwd = $this->monitorNwdRepository->find($id);
+        $monitorNwd = $this->monitorNwdRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorNwd)) {
             return $this->sendError('Monitor Nwd not found');

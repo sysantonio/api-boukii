@@ -56,14 +56,17 @@ class VouchersLogAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $vouchersLogs = $this->vouchersLogRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(VouchersLogResource::collection($vouchersLogs), 'Vouchers Logs retrieved successfully');
+        return $this->sendResponse($vouchersLogs, 'Vouchers Logs retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class VouchersLogAPIController extends AppBaseController
 
         $vouchersLog = $this->vouchersLogRepository->create($input);
 
-        return $this->sendResponse(new VouchersLogResource($vouchersLog), 'Vouchers Log saved successfully');
+        return $this->sendResponse($vouchersLog, 'Vouchers Log saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class VouchersLogAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var VouchersLog $vouchersLog */
-        $vouchersLog = $this->vouchersLogRepository->find($id);
+        $vouchersLog = $this->vouchersLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($vouchersLog)) {
             return $this->sendError('Vouchers Log not found');
         }
 
-        return $this->sendResponse(new VouchersLogResource($vouchersLog), 'Vouchers Log retrieved successfully');
+        return $this->sendResponse($vouchersLog, 'Vouchers Log retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class VouchersLogAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var VouchersLog $vouchersLog */
-        $vouchersLog = $this->vouchersLogRepository->find($id);
+        $vouchersLog = $this->vouchersLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($vouchersLog)) {
             return $this->sendError('Vouchers Log not found');
@@ -249,7 +252,7 @@ class VouchersLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var VouchersLog $vouchersLog */
-        $vouchersLog = $this->vouchersLogRepository->find($id);
+        $vouchersLog = $this->vouchersLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($vouchersLog)) {
             return $this->sendError('Vouchers Log not found');

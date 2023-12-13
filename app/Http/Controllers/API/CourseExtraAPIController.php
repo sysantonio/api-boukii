@@ -56,14 +56,17 @@ class CourseExtraAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $courseExtras = $this->courseExtraRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(CourseExtraResource::collection($courseExtras), 'Course Extras retrieved successfully');
+        return $this->sendResponse($courseExtras, 'Course Extras retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class CourseExtraAPIController extends AppBaseController
 
         $courseExtra = $this->courseExtraRepository->create($input);
 
-        return $this->sendResponse(new CourseExtraResource($courseExtra), 'Course Extra saved successfully');
+        return $this->sendResponse($courseExtra, 'Course Extra saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class CourseExtraAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var CourseExtra $courseExtra */
-        $courseExtra = $this->courseExtraRepository->find($id);
+        $courseExtra = $this->courseExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseExtra)) {
             return $this->sendError('Course Extra not found');
         }
 
-        return $this->sendResponse(new CourseExtraResource($courseExtra), 'Course Extra retrieved successfully');
+        return $this->sendResponse($courseExtra, 'Course Extra retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class CourseExtraAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var CourseExtra $courseExtra */
-        $courseExtra = $this->courseExtraRepository->find($id);
+        $courseExtra = $this->courseExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseExtra)) {
             return $this->sendError('Course Extra not found');
@@ -249,7 +252,7 @@ class CourseExtraAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseExtra $courseExtra */
-        $courseExtra = $this->courseExtraRepository->find($id);
+        $courseExtra = $this->courseExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($courseExtra)) {
             return $this->sendError('Course Extra not found');

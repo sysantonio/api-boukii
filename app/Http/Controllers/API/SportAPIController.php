@@ -56,14 +56,17 @@ class SportAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $sports = $this->sportRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SportResource::collection($sports), 'Sports retrieved successfully');
+        return $this->sendResponse($sports, 'Sports retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SportAPIController extends AppBaseController
 
         $sport = $this->sportRepository->create($input);
 
-        return $this->sendResponse(new SportResource($sport), 'Sport saved successfully');
+        return $this->sendResponse($sport, 'Sport saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SportAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Sport $sport */
-        $sport = $this->sportRepository->find($id);
+        $sport = $this->sportRepository->find($id, with: $request->get('with', []));
 
         if (empty($sport)) {
             return $this->sendError('Sport not found');
         }
 
-        return $this->sendResponse(new SportResource($sport), 'Sport retrieved successfully');
+        return $this->sendResponse($sport, 'Sport retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SportAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Sport $sport */
-        $sport = $this->sportRepository->find($id);
+        $sport = $this->sportRepository->find($id, with: $request->get('with', []));
 
         if (empty($sport)) {
             return $this->sendError('Sport not found');
@@ -249,7 +252,7 @@ class SportAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Sport $sport */
-        $sport = $this->sportRepository->find($id);
+        $sport = $this->sportRepository->find($id, with: $request->get('with', []));
 
         if (empty($sport)) {
             return $this->sendError('Sport not found');

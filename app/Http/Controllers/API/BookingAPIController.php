@@ -56,14 +56,17 @@ class BookingAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookings = $this->bookingRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(BookingResource::collection($bookings), 'Bookings retrieved successfully');
+        return $this->sendResponse($bookings, 'Bookings retrieved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class BookingAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id);
+        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
 
         if (empty($booking)) {
             return $this->sendError('Booking not found');
         }
 
-        return $this->sendResponse(new BookingResource($booking), 'Booking retrieved successfully');
+        return $this->sendResponse($booking, 'Booking retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class BookingAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id);
+        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
 
         if (empty($booking)) {
             return $this->sendError('Booking not found');
@@ -249,7 +252,7 @@ class BookingAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id);
+        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
 
         if (empty($booking)) {
             return $this->sendError('Booking not found');

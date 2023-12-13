@@ -57,14 +57,17 @@ class StationAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $stations = $this->stationRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(StationResource::collection($stations), 'Stations retrieved successfully');
+        return $this->sendResponse($stations, 'Stations retrieved successfully');
     }
 
     /**
@@ -124,7 +127,7 @@ class StationAPIController extends AppBaseController
 
         $station = $this->stationRepository->create($input);
 
-        return $this->sendResponse(new StationResource($station), 'Station saved successfully');
+        return $this->sendResponse($station, 'Station saved successfully');
     }
 
     /**
@@ -163,16 +166,16 @@ class StationAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Station $station */
-        $station = $this->stationRepository->find($id);
+        $station = $this->stationRepository->find($id, with: $request->get('with', []));
 
         if (empty($station)) {
             return $this->sendError('Station not found');
         }
 
-        return $this->sendResponse(new StationResource($station), 'Station retrieved successfully');
+        return $this->sendResponse($station, 'Station retrieved successfully');
     }
 
     /**
@@ -220,7 +223,7 @@ class StationAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Station $station */
-        $station = $this->stationRepository->find($id);
+        $station = $this->stationRepository->find($id, with: $request->get('with', []));
 
         if (empty($station)) {
             return $this->sendError('Station not found');
@@ -292,7 +295,7 @@ class StationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Station $station */
-        $station = $this->stationRepository->find($id);
+        $station = $this->stationRepository->find($id, with: $request->get('with', []));
 
         if (empty($station)) {
             return $this->sendError('Station not found');

@@ -56,14 +56,17 @@ class BookingUserExtraAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookingUserExtras = $this->bookingUserExtraRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(BookingUserExtraResource::collection($bookingUserExtras), 'Booking User Extras retrieved successfully');
+        return $this->sendResponse($bookingUserExtras, 'Booking User Extras retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class BookingUserExtraAPIController extends AppBaseController
 
         $bookingUserExtra = $this->bookingUserExtraRepository->create($input);
 
-        return $this->sendResponse(new BookingUserExtraResource($bookingUserExtra), 'Booking User Extra saved successfully');
+        return $this->sendResponse($bookingUserExtra, 'Booking User Extra saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class BookingUserExtraAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var BookingUserExtra $bookingUserExtra */
-        $bookingUserExtra = $this->bookingUserExtraRepository->find($id);
+        $bookingUserExtra = $this->bookingUserExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUserExtra)) {
             return $this->sendError('Booking User Extra not found');
         }
 
-        return $this->sendResponse(new BookingUserExtraResource($bookingUserExtra), 'Booking User Extra retrieved successfully');
+        return $this->sendResponse($bookingUserExtra, 'Booking User Extra retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class BookingUserExtraAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var BookingUserExtra $bookingUserExtra */
-        $bookingUserExtra = $this->bookingUserExtraRepository->find($id);
+        $bookingUserExtra = $this->bookingUserExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUserExtra)) {
             return $this->sendError('Booking User Extra not found');
@@ -249,7 +252,7 @@ class BookingUserExtraAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var BookingUserExtra $bookingUserExtra */
-        $bookingUserExtra = $this->bookingUserExtraRepository->find($id);
+        $bookingUserExtra = $this->bookingUserExtraRepository->find($id, with: $request->get('with', []));
 
         if (empty($bookingUserExtra)) {
             return $this->sendError('Booking User Extra not found');

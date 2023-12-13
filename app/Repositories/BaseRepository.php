@@ -72,9 +72,14 @@ abstract class BaseRepository
      * @return Builder
      */
     public function allQuery(array $searchArray = [], string $search = null, int $skip = null, int $limit = null,
-                             string $order = 'desc', string $orderColumn = 'id'): Builder
+                             string $order = 'desc', string $orderColumn = 'id', array $with = []): Builder
     {
         $query = $this->model->newQuery();
+
+        // Agregar los 'with' al query
+        if (!empty($with)) {
+            $query->with($with);
+        }
 
         if (count($searchArray)) {
             foreach($searchArray as $key => $value) {
@@ -107,13 +112,10 @@ abstract class BaseRepository
     /**
      * Retrieve all records with given filter criteria
      */
-    public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10, $scope = false,
+    public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10, array $with = [],
                         $order = 'desc', $orderColumn = 'id'): Builder|LengthAwarePaginator
     {
-        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn);
-        if ($scope) {
-            return $query;
-        }
+        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with);
 
         return $query->paginate($pagination);
     }
@@ -135,11 +137,15 @@ abstract class BaseRepository
      *
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Model|null
      */
-    public function find(int $id, array $columns = ['*'])
+    public function find(int $id, array $with, array $columns = ['*'])
     {
         $query = $this->model->newQuery();
 
-        return $query->find($id, $columns);
+        if (!empty($with)) {
+            $query->with($with);
+        }
+
+        return $query->find($id);
     }
 
     /**

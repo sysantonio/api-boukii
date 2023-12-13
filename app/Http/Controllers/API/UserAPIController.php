@@ -57,14 +57,17 @@ class UserAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $users = $this->userRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(UserResource::collection($users), 'Users retrieved successfully');
+        return $this->sendResponse($users, 'Users retrieved successfully');
     }
 
     /**
@@ -132,7 +135,7 @@ class UserAPIController extends AppBaseController
         $user = $this->userRepository->create($input);
         $user->setInitialPermissionsByRole();
 
-        return $this->sendResponse(new UserResource($user), 'User saved successfully');
+        return $this->sendResponse($user, 'User saved successfully');
     }
 
     /**
@@ -171,16 +174,16 @@ class UserAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var User $user */
-        $user = $this->userRepository->find($id);
+        $user = $this->userRepository->find($id, with: $request->get('with', []));
 
         if (empty($user)) {
             return $this->sendError('User not found');
         }
 
-        return $this->sendResponse(new UserResource($user), 'User retrieved successfully');
+        return $this->sendResponse($user, 'User retrieved successfully');
     }
 
     /**
@@ -256,7 +259,7 @@ class UserAPIController extends AppBaseController
         }
 
         /** @var User $user */
-        $user = $this->userRepository->find($id);
+        $user = $this->userRepository->find($id, with: $request->get('with', []));
 
         if (empty($user)) {
             return $this->sendError('User not found');
@@ -310,7 +313,7 @@ class UserAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var User $user */
-        $user = $this->userRepository->find($id);
+        $user = $this->userRepository->find($id, with: $request->get('with', []));
 
         if (empty($user)) {
             return $this->sendError('User not found');

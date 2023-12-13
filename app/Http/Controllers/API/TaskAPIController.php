@@ -56,14 +56,17 @@ class TaskAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $tasks = $this->taskRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(TaskResource::collection($tasks), 'Tasks retrieved successfully');
+        return $this->sendResponse($tasks, 'Tasks retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class TaskAPIController extends AppBaseController
 
         $task = $this->taskRepository->create($input);
 
-        return $this->sendResponse(new TaskResource($task), 'Task saved successfully');
+        return $this->sendResponse($task, 'Task saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class TaskAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Task $task */
-        $task = $this->taskRepository->find($id);
+        $task = $this->taskRepository->find($id, with: $request->get('with', []));
 
         if (empty($task)) {
             return $this->sendError('Task not found');
         }
 
-        return $this->sendResponse(new TaskResource($task), 'Task retrieved successfully');
+        return $this->sendResponse($task, 'Task retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class TaskAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Task $task */
-        $task = $this->taskRepository->find($id);
+        $task = $this->taskRepository->find($id, with: $request->get('with', []));
 
         if (empty($task)) {
             return $this->sendError('Task not found');
@@ -249,7 +252,7 @@ class TaskAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Task $task */
-        $task = $this->taskRepository->find($id);
+        $task = $this->taskRepository->find($id, with: $request->get('with', []));
 
         if (empty($task)) {
             return $this->sendError('Task not found');

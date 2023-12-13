@@ -56,14 +56,17 @@ class VoucherAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $vouchers = $this->voucherRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(VoucherResource::collection($vouchers), 'Vouchers retrieved successfully');
+        return $this->sendResponse($vouchers, 'Vouchers retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class VoucherAPIController extends AppBaseController
 
         $voucher = $this->voucherRepository->create($input);
 
-        return $this->sendResponse(new VoucherResource($voucher), 'Voucher saved successfully');
+        return $this->sendResponse($voucher, 'Voucher saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class VoucherAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Voucher $voucher */
-        $voucher = $this->voucherRepository->find($id);
+        $voucher = $this->voucherRepository->find($id, with: $request->get('with', []));
 
         if (empty($voucher)) {
             return $this->sendError('Voucher not found');
         }
 
-        return $this->sendResponse(new VoucherResource($voucher), 'Voucher retrieved successfully');
+        return $this->sendResponse($voucher, 'Voucher retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class VoucherAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Voucher $voucher */
-        $voucher = $this->voucherRepository->find($id);
+        $voucher = $this->voucherRepository->find($id, with: $request->get('with', []));
 
         if (empty($voucher)) {
             return $this->sendError('Voucher not found');
@@ -249,7 +252,7 @@ class VoucherAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Voucher $voucher */
-        $voucher = $this->voucherRepository->find($id);
+        $voucher = $this->voucherRepository->find($id, with: $request->get('with', []));
 
         if (empty($voucher)) {
             return $this->sendError('Voucher not found');

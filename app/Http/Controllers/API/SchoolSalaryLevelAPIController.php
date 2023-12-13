@@ -56,14 +56,17 @@ class SchoolSalaryLevelAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $schoolSalaryLevels = $this->schoolSalaryLevelRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SchoolSalaryLevelResource::collection($schoolSalaryLevels), 'School Salary Levels retrieved successfully');
+        return $this->sendResponse($schoolSalaryLevels, 'School Salary Levels retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SchoolSalaryLevelAPIController extends AppBaseController
 
         $schoolSalaryLevel = $this->schoolSalaryLevelRepository->create($input);
 
-        return $this->sendResponse(new SchoolSalaryLevelResource($schoolSalaryLevel), 'School Salary Level saved successfully');
+        return $this->sendResponse($schoolSalaryLevel, 'School Salary Level saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SchoolSalaryLevelAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var SchoolSalaryLevel $schoolSalaryLevel */
-        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id);
+        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolSalaryLevel)) {
             return $this->sendError('School Salary Level not found');
         }
 
-        return $this->sendResponse(new SchoolSalaryLevelResource($schoolSalaryLevel), 'School Salary Level retrieved successfully');
+        return $this->sendResponse($schoolSalaryLevel, 'School Salary Level retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SchoolSalaryLevelAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var SchoolSalaryLevel $schoolSalaryLevel */
-        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id);
+        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolSalaryLevel)) {
             return $this->sendError('School Salary Level not found');
@@ -249,7 +252,7 @@ class SchoolSalaryLevelAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolSalaryLevel $schoolSalaryLevel */
-        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id);
+        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolSalaryLevel)) {
             return $this->sendError('School Salary Level not found');

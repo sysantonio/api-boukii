@@ -56,14 +56,17 @@ class SportTypeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $sportTypes = $this->sportTypeRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SportTypeResource::collection($sportTypes), 'Sport Types retrieved successfully');
+        return $this->sendResponse($sportTypes, 'Sport Types retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SportTypeAPIController extends AppBaseController
 
         $sportType = $this->sportTypeRepository->create($input);
 
-        return $this->sendResponse(new SportTypeResource($sportType), 'Sport Type saved successfully');
+        return $this->sendResponse($sportType, 'Sport Type saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SportTypeAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var SportType $sportType */
-        $sportType = $this->sportTypeRepository->find($id);
+        $sportType = $this->sportTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($sportType)) {
             return $this->sendError('Sport Type not found');
         }
 
-        return $this->sendResponse(new SportTypeResource($sportType), 'Sport Type retrieved successfully');
+        return $this->sendResponse($sportType, 'Sport Type retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SportTypeAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var SportType $sportType */
-        $sportType = $this->sportTypeRepository->find($id);
+        $sportType = $this->sportTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($sportType)) {
             return $this->sendError('Sport Type not found');
@@ -249,7 +252,7 @@ class SportTypeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SportType $sportType */
-        $sportType = $this->sportTypeRepository->find($id);
+        $sportType = $this->sportTypeRepository->find($id, with: $request->get('with', []));
 
         if (empty($sportType)) {
             return $this->sendError('Sport Type not found');

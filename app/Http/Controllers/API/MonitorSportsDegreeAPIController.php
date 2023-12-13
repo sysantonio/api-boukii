@@ -56,14 +56,17 @@ class MonitorSportsDegreeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitorSportsDegrees = $this->monitorSportsDegreeRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorSportsDegreeResource::collection($monitorSportsDegrees), 'Monitor Sports Degrees retrieved successfully');
+        return $this->sendResponse($monitorSportsDegrees, 'Monitor Sports Degrees retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class MonitorSportsDegreeAPIController extends AppBaseController
 
         $monitorSportsDegree = $this->monitorSportsDegreeRepository->create($input);
 
-        return $this->sendResponse(new MonitorSportsDegreeResource($monitorSportsDegree), 'Monitor Sports Degree saved successfully');
+        return $this->sendResponse($monitorSportsDegree, 'Monitor Sports Degree saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class MonitorSportsDegreeAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var MonitorSportsDegree $monitorSportsDegree */
-        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id);
+        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportsDegree)) {
             return $this->sendError('Monitor Sports Degree not found');
         }
 
-        return $this->sendResponse(new MonitorSportsDegreeResource($monitorSportsDegree), 'Monitor Sports Degree retrieved successfully');
+        return $this->sendResponse($monitorSportsDegree, 'Monitor Sports Degree retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class MonitorSportsDegreeAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var MonitorSportsDegree $monitorSportsDegree */
-        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id);
+        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportsDegree)) {
             return $this->sendError('Monitor Sports Degree not found');
@@ -306,7 +309,7 @@ class MonitorSportsDegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorSportsDegree $monitorSportsDegree */
-        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id);
+        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitorSportsDegree)) {
             return $this->sendError('Monitor Sports Degree not found');

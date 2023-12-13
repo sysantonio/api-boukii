@@ -57,14 +57,17 @@ class SchoolAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $schools = $this->schoolRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SchoolResource::collection($schools), 'Schools retrieved successfully');
+        return $this->sendResponse($schools, 'Schools retrieved successfully');
     }
 
     /**
@@ -104,7 +107,7 @@ class SchoolAPIController extends AppBaseController
 
         $school = $this->schoolRepository->create($input);
 
-        return $this->sendResponse(new SchoolResource($school), 'School saved successfully');
+        return $this->sendResponse($school, 'School saved successfully');
     }
 
     /**
@@ -143,16 +146,16 @@ class SchoolAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var School $school */
-        $school = $this->schoolRepository->find($id);
+        $school = $this->schoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($school)) {
             return $this->sendError('School not found');
         }
 
-        return $this->sendResponse(new SchoolResource($school), 'School retrieved successfully');
+        return $this->sendResponse($school, 'School retrieved successfully');
     }
 
     /**
@@ -200,7 +203,7 @@ class SchoolAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var School $school */
-        $school = $this->schoolRepository->find($id);
+        $school = $this->schoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($school)) {
             return $this->sendError('School not found');
@@ -335,7 +338,7 @@ class SchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var School $school */
-        $school = $this->schoolRepository->find($id);
+        $school = $this->schoolRepository->find($id, with: $request->get('with', []));
 
         if (empty($school)) {
             return $this->sendError('School not found');

@@ -57,14 +57,17 @@ class MonitorAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $monitors = $this->monitorRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MonitorResource::collection($monitors), 'Monitors retrieved successfully');
+        return $this->sendResponse($monitors, 'Monitors retrieved successfully');
     }
 
     /**
@@ -124,7 +127,7 @@ class MonitorAPIController extends AppBaseController
 
         $monitor = $this->monitorRepository->create($input);
 
-        return $this->sendResponse(new MonitorResource($monitor), 'Monitor saved successfully');
+        return $this->sendResponse($monitor, 'Monitor saved successfully');
     }
 
     /**
@@ -163,16 +166,16 @@ class MonitorAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Monitor $monitor */
-        $monitor = $this->monitorRepository->find($id);
+        $monitor = $this->monitorRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitor)) {
             return $this->sendError('Monitor not found');
         }
 
-        return $this->sendResponse(new MonitorResource($monitor), 'Monitor retrieved successfully');
+        return $this->sendResponse($monitor, 'Monitor retrieved successfully');
     }
 
     /**
@@ -220,7 +223,7 @@ class MonitorAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Monitor $monitor */
-        $monitor = $this->monitorRepository->find($id);
+        $monitor = $this->monitorRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitor)) {
             return $this->sendError('Monitor not found');
@@ -292,7 +295,7 @@ class MonitorAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Monitor $monitor */
-        $monitor = $this->monitorRepository->find($id);
+        $monitor = $this->monitorRepository->find($id, with: $request->get('with', []));
 
         if (empty($monitor)) {
             return $this->sendError('Monitor not found');

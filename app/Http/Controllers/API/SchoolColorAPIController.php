@@ -56,14 +56,17 @@ class SchoolColorAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $schoolColors = $this->schoolColorRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(SchoolColorResource::collection($schoolColors), 'School Colors retrieved successfully');
+        return $this->sendResponse($schoolColors, 'School Colors retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class SchoolColorAPIController extends AppBaseController
 
         $schoolColor = $this->schoolColorRepository->create($input);
 
-        return $this->sendResponse(new SchoolColorResource($schoolColor), 'School Color saved successfully');
+        return $this->sendResponse($schoolColor, 'School Color saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class SchoolColorAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var SchoolColor $schoolColor */
-        $schoolColor = $this->schoolColorRepository->find($id);
+        $schoolColor = $this->schoolColorRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolColor)) {
             return $this->sendError('School Color not found');
         }
 
-        return $this->sendResponse(new SchoolColorResource($schoolColor), 'School Color retrieved successfully');
+        return $this->sendResponse($schoolColor, 'School Color retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class SchoolColorAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var SchoolColor $schoolColor */
-        $schoolColor = $this->schoolColorRepository->find($id);
+        $schoolColor = $this->schoolColorRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolColor)) {
             return $this->sendError('School Color not found');
@@ -304,7 +307,7 @@ class SchoolColorAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolColor $schoolColor */
-        $schoolColor = $this->schoolColorRepository->find($id);
+        $schoolColor = $this->schoolColorRepository->find($id, with: $request->get('with', []));
 
         if (empty($schoolColor)) {
             return $this->sendError('School Color not found');

@@ -56,14 +56,17 @@ class EmailLogAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $emailLogs = $this->emailLogRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(EmailLogResource::collection($emailLogs), 'Email Logs retrieved successfully');
+        return $this->sendResponse($emailLogs, 'Email Logs retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class EmailLogAPIController extends AppBaseController
 
         $emailLog = $this->emailLogRepository->create($input);
 
-        return $this->sendResponse(new EmailLogResource($emailLog), 'Email Log saved successfully');
+        return $this->sendResponse($emailLog, 'Email Log saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class EmailLogAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var EmailLog $emailLog */
-        $emailLog = $this->emailLogRepository->find($id);
+        $emailLog = $this->emailLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($emailLog)) {
             return $this->sendError('Email Log not found');
         }
 
-        return $this->sendResponse(new EmailLogResource($emailLog), 'Email Log retrieved successfully');
+        return $this->sendResponse($emailLog, 'Email Log retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class EmailLogAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var EmailLog $emailLog */
-        $emailLog = $this->emailLogRepository->find($id);
+        $emailLog = $this->emailLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($emailLog)) {
             return $this->sendError('Email Log not found');
@@ -249,7 +252,7 @@ class EmailLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EmailLog $emailLog */
-        $emailLog = $this->emailLogRepository->find($id);
+        $emailLog = $this->emailLogRepository->find($id, with: $request->get('with', []));
 
         if (empty($emailLog)) {
             return $this->sendError('Email Log not found');

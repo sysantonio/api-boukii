@@ -56,14 +56,17 @@ class DegreeAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $degrees = $this->degreeRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(DegreeResource::collection($degrees), 'Degrees retrieved successfully');
+        return $this->sendResponse($degrees, 'Degrees retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class DegreeAPIController extends AppBaseController
 
         $degree = $this->degreeRepository->create($input);
 
-        return $this->sendResponse(new DegreeResource($degree), 'Degree saved successfully');
+        return $this->sendResponse($degree, 'Degree saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class DegreeAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Degree $degree */
-        $degree = $this->degreeRepository->find($id);
+        $degree = $this->degreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($degree)) {
             return $this->sendError('Degree not found');
         }
 
-        return $this->sendResponse(new DegreeResource($degree), 'Degree retrieved successfully');
+        return $this->sendResponse($degree, 'Degree retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class DegreeAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Degree $degree */
-        $degree = $this->degreeRepository->find($id);
+        $degree = $this->degreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($degree)) {
             return $this->sendError('Degree not found');
@@ -249,7 +252,7 @@ class DegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Degree $degree */
-        $degree = $this->degreeRepository->find($id);
+        $degree = $this->degreeRepository->find($id, with: $request->get('with', []));
 
         if (empty($degree)) {
             return $this->sendError('Degree not found');

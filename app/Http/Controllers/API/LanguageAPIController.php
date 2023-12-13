@@ -56,14 +56,17 @@ class LanguageAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $languages = $this->languageRepository->all(
-             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page']),
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(LanguageResource::collection($languages), 'Languages retrieved successfully');
+        return $this->sendResponse($languages, 'Languages retrieved successfully');
     }
 
     /**
@@ -103,7 +106,7 @@ class LanguageAPIController extends AppBaseController
 
         $language = $this->languageRepository->create($input);
 
-        return $this->sendResponse(new LanguageResource($language), 'Language saved successfully');
+        return $this->sendResponse($language, 'Language saved successfully');
     }
 
     /**
@@ -142,16 +145,16 @@ class LanguageAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Language $language */
-        $language = $this->languageRepository->find($id);
+        $language = $this->languageRepository->find($id, with: $request->get('with', []));
 
         if (empty($language)) {
             return $this->sendError('Language not found');
         }
 
-        return $this->sendResponse(new LanguageResource($language), 'Language retrieved successfully');
+        return $this->sendResponse($language, 'Language retrieved successfully');
     }
 
     /**
@@ -199,7 +202,7 @@ class LanguageAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Language $language */
-        $language = $this->languageRepository->find($id);
+        $language = $this->languageRepository->find($id, with: $request->get('with', []));
 
         if (empty($language)) {
             return $this->sendError('Language not found');
@@ -249,7 +252,7 @@ class LanguageAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Language $language */
-        $language = $this->languageRepository->find($id);
+        $language = $this->languageRepository->find($id, with: $request->get('with', []));
 
         if (empty($language)) {
             return $this->sendError('Language not found');
