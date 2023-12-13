@@ -335,8 +335,7 @@ class Client extends Model
             'client_id', 'sport_id')
             ->using(ClientSport::class)
             ->withPivot('degree_id')
-            ->withTimestamps()
-            ->with(['degree']);
+            ->withTimestamps();
     }
     public function main()
     {
