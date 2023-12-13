@@ -25,6 +25,9 @@ Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
     Route::get('clients', [\App\Http\Controllers\Teach\ClientsController::class, 'index'])
         ->name('api.teach.clients.index');
 
+    Route::post('clients/transfer', [\App\Http\Controllers\Teach\ClientsController::class, 'transferClients'])
+        ->name('api.teach.clients.transfer');
+
     Route::get('clients/{id}', [\App\Http\Controllers\Teach\ClientsController::class, 'show'])
         ->name('api.teach.clients.index');
 
