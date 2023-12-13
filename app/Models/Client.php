@@ -194,6 +194,7 @@ class Client extends Model
         'language5_id',
         'language6_id',
         'image',
+        'old_id',
         'user_id'
     ];
 
@@ -294,9 +295,26 @@ class Client extends Model
         return $this->hasMany(\App\Models\ClientsSchool::class, 'client_id');
     }
 
+    public function schools(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            \App\Models\School::class, // Modelo final al que quieres llegar
+            \App\Models\ClientsSchool::class, // Modelo intermedio
+            'client_id', // Clave foránea en el modelo intermedio
+            'id', // Clave foránea en el modelo final
+            'id', // Clave local en el modelo inicial
+            'school_id' // Clave local en el modelo intermedio
+        );
+    }
+
     public function clientsUtilizers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\ClientsUtilizer::class, 'main_id');
+    }
+
+    public function clientSports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\ClientSport::class, 'client_id');
     }
 
     public function utilizers(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
@@ -317,7 +335,8 @@ class Client extends Model
             'client_id', 'sport_id')
             ->using(ClientSport::class)
             ->withPivot('degree_id')
-            ->withTimestamps();
+            ->withTimestamps()
+            ->with(['degree']);
     }
     public function main()
     {
@@ -344,10 +363,6 @@ class Client extends Model
     public function vouchers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Voucher::class, 'client_id');
-    }
-
-    public static function checkBookingOverlap() {
-
     }
 
     public function getActivitylogOptions(): LogOptions
