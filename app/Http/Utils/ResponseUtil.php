@@ -20,7 +20,7 @@ class ResponseUtil
             return [
                 'success' => true,
                 'data' => $items,
-                'pagination' => $paginationData,
+                ...$paginationData,
                 'message' => $message,
             ];
         }
