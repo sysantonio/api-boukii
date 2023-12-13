@@ -56,14 +56,8 @@ class CourseAPIController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $school = $this->getSchool($request);
-
-        $search = $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']);
-
-        $search['school_id'] = $school->id;
-
         $courses = $this->courseRepository->all(
-            $search,
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
