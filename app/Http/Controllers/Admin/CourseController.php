@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\Course;
+use App\Repositories\CourseRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,9 +21,11 @@ use Validator;
 class CourseController extends AppBaseController
 {
 
-    public function __construct()
-    {
+    private $courseRepository;
 
+    public function __construct(CourseRepository $courseRepo)
+    {
+        $this->courseRepository = $courseRepo;
     }
 
 
@@ -56,13 +59,24 @@ class CourseController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->input('perPage', 10); // Puedes definir un valor por defecto
-        $school = $this->getSchool($request);
-        $request->merge(["school_id"=> $school->id]);
+        // Define el valor por defecto para 'perPage'
+        $perPage = $request->input('perPage', 10);
 
-        $courses = Course::with('station','sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
-            ->where('school_id', $request->school_id)
-            ->paginate($perPage);
+        // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
+        $school = $this->getSchool($request);
+        $searchParameters = array_merge($request->all(), ['school_id' => $school->id]);
+
+        // Utiliza el CourseRepository para obtener los cursos con los parámetros de búsqueda
+        $courses = $this->courseRepository->all(
+            $searchParameters,
+            $request->get('search'),
+            $request->get('skip'),
+            $request->get('limit'),
+            $perPage,
+            $request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras']),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id')
+        );
 
         // Calcular reservas y plazas disponibles para cada curso
         foreach ($courses as $course) {
