@@ -252,7 +252,7 @@ class ServiceTypeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ServiceType $serviceType */
-        $serviceType = $this->serviceTypeRepository->find($id, with: $request->get('with', []));
+        $serviceType = $this->serviceTypeRepository->find($id);
 
         if (empty($serviceType)) {
             return $this->sendError('Service Type not found');

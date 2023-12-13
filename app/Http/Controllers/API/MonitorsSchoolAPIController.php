@@ -252,7 +252,7 @@ class MonitorsSchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorsSchool $monitorsSchool */
-        $monitorsSchool = $this->monitorsSchoolRepository->find($id, with: $request->get('with', []));
+        $monitorsSchool = $this->monitorsSchoolRepository->find($id);
 
         if (empty($monitorsSchool)) {
             return $this->sendError('Monitors School not found');

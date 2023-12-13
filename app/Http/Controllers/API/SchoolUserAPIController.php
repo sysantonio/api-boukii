@@ -252,7 +252,7 @@ class SchoolUserAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolUser $schoolUser */
-        $schoolUser = $this->schoolUserRepository->find($id, with: $request->get('with', []));
+        $schoolUser = $this->schoolUserRepository->find($id);
 
         if (empty($schoolUser)) {
             return $this->sendError('School User not found');

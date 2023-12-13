@@ -252,7 +252,7 @@ class SeasonAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Season $season */
-        $season = $this->seasonRepository->find($id, with: $request->get('with', []));
+        $season = $this->seasonRepository->find($id);
 
         if (empty($season)) {
             return $this->sendError('Season not found');

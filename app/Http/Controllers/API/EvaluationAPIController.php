@@ -252,7 +252,7 @@ class EvaluationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Evaluation $evaluation */
-        $evaluation = $this->evaluationRepository->find($id, with: $request->get('with', []));
+        $evaluation = $this->evaluationRepository->find($id);
 
         if (empty($evaluation)) {
             return $this->sendError('Evaluation not found');

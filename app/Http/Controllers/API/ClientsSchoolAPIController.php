@@ -252,7 +252,7 @@ class ClientsSchoolAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientsSchool $clientsSchool */
-        $clientsSchool = $this->clientsSchoolRepository->find($id, with: $request->get('with', []));
+        $clientsSchool = $this->clientsSchoolRepository->find($id);
 
         if (empty($clientsSchool)) {
             return $this->sendError('Clients School not found');

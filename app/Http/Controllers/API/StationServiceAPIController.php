@@ -295,7 +295,7 @@ class StationServiceAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var StationService $stationService */
-        $stationService = $this->stationServiceRepository->find($id, with: $request->get('with', []));
+        $stationService = $this->stationServiceRepository->find($id);
 
         if (empty($stationService)) {
             return $this->sendError('Station Service not found');

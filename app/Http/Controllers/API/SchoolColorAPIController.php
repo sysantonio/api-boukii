@@ -307,7 +307,7 @@ class SchoolColorAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolColor $schoolColor */
-        $schoolColor = $this->schoolColorRepository->find($id, with: $request->get('with', []));
+        $schoolColor = $this->schoolColorRepository->find($id);
 
         if (empty($schoolColor)) {
             return $this->sendError('School Color not found');

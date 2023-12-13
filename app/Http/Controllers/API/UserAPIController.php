@@ -313,7 +313,7 @@ class UserAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var User $user */
-        $user = $this->userRepository->find($id, with: $request->get('with', []));
+        $user = $this->userRepository->find($id);
 
         if (empty($user)) {
             return $this->sendError('User not found');

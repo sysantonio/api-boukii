@@ -252,7 +252,7 @@ class MonitorObservationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorObservation $monitorObservation */
-        $monitorObservation = $this->monitorObservationRepository->find($id, with: $request->get('with', []));
+        $monitorObservation = $this->monitorObservationRepository->find($id);
 
         if (empty($monitorObservation)) {
             return $this->sendError('Monitor Observation not found');

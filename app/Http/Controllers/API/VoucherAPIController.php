@@ -252,7 +252,7 @@ class VoucherAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Voucher $voucher */
-        $voucher = $this->voucherRepository->find($id, with: $request->get('with', []));
+        $voucher = $this->voucherRepository->find($id);
 
         if (empty($voucher)) {
             return $this->sendError('Voucher not found');

@@ -252,7 +252,7 @@ class TaskCheckAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var TaskCheck $taskCheck */
-        $taskCheck = $this->taskCheckRepository->find($id, with: $request->get('with', []));
+        $taskCheck = $this->taskCheckRepository->find($id);
 
         if (empty($taskCheck)) {
             return $this->sendError('Task Check not found');

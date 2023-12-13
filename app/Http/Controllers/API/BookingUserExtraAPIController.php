@@ -252,7 +252,7 @@ class BookingUserExtraAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var BookingUserExtra $bookingUserExtra */
-        $bookingUserExtra = $this->bookingUserExtraRepository->find($id, with: $request->get('with', []));
+        $bookingUserExtra = $this->bookingUserExtraRepository->find($id);
 
         if (empty($bookingUserExtra)) {
             return $this->sendError('Booking User Extra not found');

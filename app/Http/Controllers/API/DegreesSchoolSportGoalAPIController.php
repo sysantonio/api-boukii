@@ -252,7 +252,7 @@ class DegreesSchoolSportGoalAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var DegreesSchoolSportGoal $degreesSchoolSportGoal */
-        $degreesSchoolSportGoal = $this->degreesSchoolSportGoalRepository->find($id, with: $request->get('with', []));
+        $degreesSchoolSportGoal = $this->degreesSchoolSportGoalRepository->find($id);
 
         if (empty($degreesSchoolSportGoal)) {
             return $this->sendError('Degrees School Sport Goal not found');

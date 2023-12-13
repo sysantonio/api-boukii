@@ -340,7 +340,7 @@ class EvaluationFileAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EvaluationFile $evaluationFile */
-        $evaluationFile = $this->evaluationFileRepository->find($id, with: $request->get('with', []));
+        $evaluationFile = $this->evaluationFileRepository->find($id);
 
         if (empty($evaluationFile)) {
             return $this->sendError('Evaluation File not found');

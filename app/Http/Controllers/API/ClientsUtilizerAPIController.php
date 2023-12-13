@@ -252,7 +252,7 @@ class ClientsUtilizerAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientsUtilizer $clientsUtilizer */
-        $clientsUtilizer = $this->clientsUtilizerRepository->find($id, with: $request->get('with', []));
+        $clientsUtilizer = $this->clientsUtilizerRepository->find($id);
 
         if (empty($clientsUtilizer)) {
             return $this->sendError('Clients Utilizer not found');

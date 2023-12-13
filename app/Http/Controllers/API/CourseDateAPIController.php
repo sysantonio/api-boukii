@@ -252,7 +252,7 @@ class CourseDateAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseDate $courseDate */
-        $courseDate = $this->courseDateRepository->find($id, with: $request->get('with', []));
+        $courseDate = $this->courseDateRepository->find($id);
 
         if (empty($courseDate)) {
             return $this->sendError('Course Date not found');

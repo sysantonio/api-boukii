@@ -252,7 +252,7 @@ class TaskAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Task $task */
-        $task = $this->taskRepository->find($id, with: $request->get('with', []));
+        $task = $this->taskRepository->find($id);
 
         if (empty($task)) {
             return $this->sendError('Task not found');

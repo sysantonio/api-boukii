@@ -252,7 +252,7 @@ class SchoolSalaryLevelAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SchoolSalaryLevel $schoolSalaryLevel */
-        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id, with: $request->get('with', []));
+        $schoolSalaryLevel = $this->schoolSalaryLevelRepository->find($id);
 
         if (empty($schoolSalaryLevel)) {
             return $this->sendError('School Salary Level not found');

@@ -309,7 +309,7 @@ class MonitorSportsDegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorSportsDegree $monitorSportsDegree */
-        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id, with: $request->get('with', []));
+        $monitorSportsDegree = $this->monitorSportsDegreeRepository->find($id);
 
         if (empty($monitorSportsDegree)) {
             return $this->sendError('Monitor Sports Degree not found');

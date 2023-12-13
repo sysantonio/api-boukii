@@ -252,7 +252,7 @@ class DegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Degree $degree */
-        $degree = $this->degreeRepository->find($id, with: $request->get('with', []));
+        $degree = $this->degreeRepository->find($id);
 
         if (empty($degree)) {
             return $this->sendError('Degree not found');

@@ -252,7 +252,7 @@ class LanguageAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Language $language */
-        $language = $this->languageRepository->find($id, with: $request->get('with', []));
+        $language = $this->languageRepository->find($id);
 
         if (empty($language)) {
             return $this->sendError('Language not found');

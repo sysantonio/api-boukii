@@ -252,7 +252,7 @@ class CourseSubgroupAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseSubgroup $courseSubgroup */
-        $courseSubgroup = $this->courseSubgroupRepository->find($id, with: $request->get('with', []));
+        $courseSubgroup = $this->courseSubgroupRepository->find($id);
 
         if (empty($courseSubgroup)) {
             return $this->sendError('Course Subgroup not found');

@@ -252,7 +252,7 @@ class EmailLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EmailLog $emailLog */
-        $emailLog = $this->emailLogRepository->find($id, with: $request->get('with', []));
+        $emailLog = $this->emailLogRepository->find($id);
 
         if (empty($emailLog)) {
             return $this->sendError('Email Log not found');

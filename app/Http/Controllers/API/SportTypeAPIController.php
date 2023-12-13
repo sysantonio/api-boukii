@@ -252,7 +252,7 @@ class SportTypeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var SportType $sportType */
-        $sportType = $this->sportTypeRepository->find($id, with: $request->get('with', []));
+        $sportType = $this->sportTypeRepository->find($id);
 
         if (empty($sportType)) {
             return $this->sendError('Sport Type not found');

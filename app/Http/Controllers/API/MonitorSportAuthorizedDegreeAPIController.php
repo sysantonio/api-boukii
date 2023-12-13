@@ -305,7 +305,7 @@ class MonitorSportAuthorizedDegreeAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorSportAuthorizedDegree $monitorSportAuthorizedDegree */
-        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id, with: $request->get('with', []));
+        $monitorSportAuthorizedDegree = $this->monitorSportAuthorizedDegreeRepository->find($id);
 
         if (empty($monitorSportAuthorizedDegree)) {
             return $this->sendError('Monitor Sport Authorized Degree not found');

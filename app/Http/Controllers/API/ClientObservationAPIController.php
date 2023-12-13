@@ -252,7 +252,7 @@ class ClientObservationAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var ClientObservation $clientObservation */
-        $clientObservation = $this->clientObservationRepository->find($id, with: $request->get('with', []));
+        $clientObservation = $this->clientObservationRepository->find($id);
 
         if (empty($clientObservation)) {
             return $this->sendError('Client Observation not found');

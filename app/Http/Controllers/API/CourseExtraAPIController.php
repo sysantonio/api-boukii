@@ -252,7 +252,7 @@ class CourseExtraAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var CourseExtra $courseExtra */
-        $courseExtra = $this->courseExtraRepository->find($id, with: $request->get('with', []));
+        $courseExtra = $this->courseExtraRepository->find($id);
 
         if (empty($courseExtra)) {
             return $this->sendError('Course Extra not found');

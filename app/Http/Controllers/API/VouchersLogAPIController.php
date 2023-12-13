@@ -252,7 +252,7 @@ class VouchersLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var VouchersLog $vouchersLog */
-        $vouchersLog = $this->vouchersLogRepository->find($id, with: $request->get('with', []));
+        $vouchersLog = $this->vouchersLogRepository->find($id);
 
         if (empty($vouchersLog)) {
             return $this->sendError('Vouchers Log not found');

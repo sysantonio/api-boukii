@@ -296,7 +296,7 @@ class ClientAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Client $client */
-        $client = $this->clientRepository->find($id, with: $request->get('with', []));
+        $client = $this->clientRepository->find($id);
 
         if (empty($client)) {
             return $this->sendError('Client not found');

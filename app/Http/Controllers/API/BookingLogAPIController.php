@@ -252,7 +252,7 @@ class BookingLogAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var BookingLog $bookingLog */
-        $bookingLog = $this->bookingLogRepository->find($id, with: $request->get('with', []));
+        $bookingLog = $this->bookingLogRepository->find($id);
 
         if (empty($bookingLog)) {
             return $this->sendError('Booking Log not found');

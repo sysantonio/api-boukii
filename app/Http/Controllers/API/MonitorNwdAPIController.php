@@ -252,7 +252,7 @@ class MonitorNwdAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var MonitorNwd $monitorNwd */
-        $monitorNwd = $this->monitorNwdRepository->find($id, with: $request->get('with', []));
+        $monitorNwd = $this->monitorNwdRepository->find($id);
 
         if (empty($monitorNwd)) {
             return $this->sendError('Monitor Nwd not found');

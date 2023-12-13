@@ -295,7 +295,7 @@ class MonitorAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Monitor $monitor */
-        $monitor = $this->monitorRepository->find($id, with: $request->get('with', []));
+        $monitor = $this->monitorRepository->find($id);
 
         if (empty($monitor)) {
             return $this->sendError('Monitor not found');

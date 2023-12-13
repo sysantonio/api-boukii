@@ -252,7 +252,7 @@ class EvaluationFulfilledGoalAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var EvaluationFulfilledGoal $evaluationFulfilledGoal */
-        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id, with: $request->get('with', []));
+        $evaluationFulfilledGoal = $this->evaluationFulfilledGoalRepository->find($id);
 
         if (empty($evaluationFulfilledGoal)) {
             return $this->sendError('Evaluation Fulfilled Goal not found');
