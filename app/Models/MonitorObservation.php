@@ -87,9 +87,9 @@ use Spatie\Activitylog\LogOptions;
     ];
 
     public static array $rules = [
-        'general' => 'required|string|max:5000',
-        'notes' => 'required|string|max:5000',
-        'historical' => 'required|string|max:5000',
+        'general' => 'string|max:5000',
+        'notes' => 'string|max:5000',
+        'historical' => 'string|max:5000',
         'monitor_id' => 'required',
         'school_id' => 'required',
         'created_at' => 'nullable',
