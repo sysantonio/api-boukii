@@ -59,7 +59,7 @@ class ClientsController extends AppBaseController
     {
         $perPage = $request->input('perPage', 15); // Utiliza 'per_page' de la solicitud o 15 como predeterminado
 
-        $clientsWithUtilizers = Client::with('utilizers', 'sports')->paginate($perPage);
+        $clientsWithUtilizers = Client::with('utilizers', 'clientSports.degree', 'clientSports.sport')->paginate($perPage);
 
         return response()->json($clientsWithUtilizers);
     }
@@ -103,7 +103,7 @@ class ClientsController extends AppBaseController
     public function show($id): JsonResponse
     {
         /** @var Client $client */
-        $mainClient = Client::with('utilizers')->find($id);
+        $mainClient = Client::with('utilizers','clientSports.degree', 'clientSports.sport')->find($id);
 
         if (empty($mainClient)) {
             return $this->sendError('Client not found');
