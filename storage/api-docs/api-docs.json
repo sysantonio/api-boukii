@@ -9907,7 +9907,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Booking"
+                                                "$ref": "#/components/schemas/Client"
                                             }
                                         },
                                         "message": {
@@ -10162,6 +10162,42 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/monitor/pastBookings": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getMonitorPastBookings",
+                "description": "Get past Bookings of Monitor",
+                "operationId": "be4928a65939678b1b8c02417f111313",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
                                         },
                                         "message": {
                                             "type": "string"
@@ -11550,8 +11586,6 @@
                     "price",
                     "currency",
                     "max_participants",
-                    "date_start",
-                    "date_end",
                     "confirm_attendance",
                     "active",
                     "online"
@@ -11605,14 +11639,14 @@
                         "type": "string",
                         "format": "date",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "date_end": {
                         "description": "",
                         "type": "string",
                         "format": "date",
                         "readOnly": false,
-                        "nullable": false
+                        "nullable": true
                     },
                     "date_start_res": {
                         "description": "",
@@ -11626,6 +11660,16 @@
                         "type": "string",
                         "format": "date",
                         "readOnly": false,
+                        "nullable": true
+                    },
+                    "age_min": {
+                        "description": "Minimum age for participants",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "age_max": {
+                        "description": "Maximum age for participants",
+                        "type": "integer",
                         "nullable": true
                     },
                     "confirm_attendance": {

@@ -12,7 +12,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="Course",
- *      required={"course_type","is_flexible","sport_id","school_id","name","short_description","description","price","currency","max_participants","date_start","date_end","confirm_attendance","active","online"},
+ *      required={"course_type","is_flexible","sport_id","school_id","name","short_description","description","price","currency","max_participants","confirm_attendance","active","online"},
  *      @OA\Property(
  *          property="course_type",
  *          description="",
@@ -67,7 +67,7 @@ use Spatie\Activitylog\LogOptions;
  *          property="date_start",
  *          description="",
  *          readOnly=false,
- *          nullable=false,
+ *          nullable=true,
  *          type="string",
  *          format="date"
  *      ),
@@ -75,7 +75,7 @@ use Spatie\Activitylog\LogOptions;
  *          property="date_end",
  *          description="",
  *          readOnly=false,
- *          nullable=false,
+ *          nullable=true,
  *          type="string",
  *          format="date"
  *      ),
@@ -95,6 +95,18 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *          format="date"
  *      ),
+ *     @OA\Property(
+ *            property="age_min",
+ *            description="Minimum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *        @OA\Property(
+ *            property="age_max",
+ *            description="Maximum age for participants",
+ *            type="integer",
+ *            nullable=true
+ *        ),
  *      @OA\Property(
  *          property="confirm_attendance",
  *          description="",
@@ -246,6 +258,8 @@ class Course extends Model
         'date_end_res',
         'hour_min',
         'hour_max',
+        'age_min',
+        'age_max',
         'confirm_attendance',
         'active',
         'online',
@@ -293,8 +307,8 @@ class Course extends Model
         'currency' => 'required|string|max:3',
         'max_participants' => 'required',
         'duration' => 'nullable',
-        'date_start' => 'required',
-        'date_end' => 'required',
+        'date_start' => 'nullable',
+        'date_end' => 'nullable',
         'date_start_res' => 'nullable',
         'date_end_res' => 'nullable',
         'hour_min' => 'nullable|string|max:255',
@@ -303,6 +317,8 @@ class Course extends Model
         'active' => 'required|boolean',
         'online' => 'required|boolean',
         'image' => 'nullable|string',
+        'age_min' => 'nullable',
+        'age_max' => 'nullable',
         'translations' => 'nullable|string',
         'price_range' => 'nullable',
         'discounts' => 'nullable|string',
