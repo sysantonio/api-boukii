@@ -143,12 +143,12 @@ use Spatie\Activitylog\LogOptions;
  *       ),
  *     @OA\Property(
  *           property="price_boukii_care",
- *           property="paid_total",
  *           description="",
  *           readOnly=false,
  *           nullable=false,
  *           type="number",
  *           format="number"
+ *      ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",

@@ -109,7 +109,7 @@ class MonitorController extends AppBaseController
     /**
      * @OA\Get(
      *      path="/teach/monitor/pastBookings",
-     *      summary="getMonitorPastBookings",
+     *      summary="getPastBookings",
      *      tags={"Teach"},
      *      description="Get past Bookings of Monitor",
      *      @OA\Response(

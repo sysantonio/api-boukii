@@ -20,7 +20,7 @@ Route::middleware(['auth:sanctum', 'ability:teach:all'])->group(function() {
         ->name('api.teach.home.weatherweek');
 
     Route::get('monitor/pastBookings', [\App\Http\Controllers\Teach\MonitorController::class, 'getPastBookings'])
-        ->name('api.teach.monitor.pastBokkings');
+        ->name('api.teach.monitor.pastBookings');
 
     Route::get('clients', [\App\Http\Controllers\Teach\ClientsController::class, 'index'])
         ->name('api.teach.clients.index');

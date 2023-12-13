@@ -25,8 +25,26 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('migration/data', [\App\Http\Controllers\MigrationController::class, 'migrateInitalData'])
+    ->name('api.migration.data');
 
+Route::get('migration/clients', [\App\Http\Controllers\MigrationController::class, 'migrateClients'])
+    ->name('api.migration.clients');
 
+Route::get('migration/monitors', [\App\Http\Controllers\MigrationController::class, 'migrateMonitors'])
+    ->name('api.migration.monitors');
+
+Route::get('migration/schools', [\App\Http\Controllers\MigrationController::class, 'migrateUsersSchools'])
+    ->name('api.migration.schools');
+
+Route::get('migration/courses', [\App\Http\Controllers\MigrationController::class, 'migrateCourses'])
+    ->name('api.migration.courses');
+
+Route::get('migration/bookings', [\App\Http\Controllers\MigrationController::class, 'migrateBookings'])
+    ->name('api.migration.bookings');
+
+Route::get('migration/all', [\App\Http\Controllers\MigrationController::class, 'migrateAll'])
+    ->name('api.migration.all');
 
 Route::get('/process-images', function () {
     $models = [

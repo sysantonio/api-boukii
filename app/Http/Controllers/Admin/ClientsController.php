@@ -6,6 +6,7 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
 use App\Models\Client;
+use App\Repositories\ClientRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Response;
@@ -17,13 +18,15 @@ use Validator;
  * Class UserController
  * @package App\Http\Controllers\API
  */
-
 class ClientsController extends AppBaseController
 {
 
-    public function __construct()
-    {
+    /** @var  ClientRepository */
+    private $clientRepository;
 
+    public function __construct(ClientRepository $clientRepo)
+    {
+        $this->clientRepository = $clientRepo;
     }
 
 
@@ -45,7 +48,7 @@ class ClientsController extends AppBaseController
      *              @OA\Property(
      *                  property="data",
      *                  type="array",
-     *                  @OA\Items(ref="#/components/schemas/Booking")
+     *                  @OA\Items(ref="#/components/schemas/Client")
      *              ),
      *              @OA\Property(
      *                  property="message",
@@ -57,9 +60,25 @@ class ClientsController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->input('perPage', 15); // Utiliza 'per_page' de la solicitud o 15 como predeterminado
+        // Obtener parámetros del request, como 'perPage', 'search', 'order', etc.
+        $perPage = $request->input('perPage', 15);
+        $search = $request->input('search', null);
+        $order = $request->input('order', 'desc');
+        $orderColumn = $request->input('orderColumn', 'id');
+        $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
 
-        $clientsWithUtilizers = Client::with('utilizers', 'clientSports.degree', 'clientSports.sport')->paginate($perPage);
+        $clientsWithUtilizers =
+            $this->clientRepository->all(
+                searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                    'orderColumn', 'page', 'with']),
+                search: $search,
+                skip: $request->input('skip'),
+                limit: $request->input('limit'),
+                pagination: $perPage,
+                with: $with,
+                order: $order,
+                orderColumn: $orderColumn
+            );
 
         return response()->json($clientsWithUtilizers);
     }
@@ -103,7 +122,7 @@ class ClientsController extends AppBaseController
     public function show($id): JsonResponse
     {
         /** @var Client $client */
-        $mainClient = Client::with('utilizers','clientSports.degree', 'clientSports.sport')->find($id);
+        $mainClient = Client::with('utilizers', 'clientSports.degree', 'clientSports.sport')->find($id);
 
         if (empty($mainClient)) {
             return $this->sendError('Client not found');

@@ -10175,6 +10175,224 @@
                 }
             }
         },
+        "/admin/getPlanner": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get Planner for all monitors",
+                "description": "Get planner",
+                "operationId": "ebcef18cfb04d03c4c8dfe3d5befa2d2",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "bookings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Booking"
+                                                    }
+                                                },
+                                                "nwds": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MonitorNwd"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/login": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "Login",
+                "description": "Login user",
+                "operationId": "773ea6348518d095f5692083a67b78a5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/bookings": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "createCourse",
+                "description": "Create Course",
+                "operationId": "423636ed9cc0ae3d3e2f95b34fad4c89",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Course"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/bookings/checkbooking": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "checkOverlapBooking",
+                "description": "Check overlap booking for a client",
+                "operationId": "bd16c7087666d54daf4149899d2a49b0",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/client/{id}/voucher/{code}": {
+            "get": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getVoucherForClient",
+                "description": "Search by code voucher for a client",
+                "operationId": "83fc5ebd49c6cd921bde0471aa1deea6",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Voucher"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/slug/courses": {
             "get": {
                 "tags": [
@@ -10211,14 +10429,14 @@
                 }
             }
         },
-        "/booking/courses/{id}": {
+        "/slug/courses/{id}": {
             "get": {
                 "tags": [
-                    "Admin"
+                    "BookingPage"
                 ],
                 "summary": "getCourseWithBookings",
                 "description": "Get Course",
-                "operationId": "e4e7961572deb6068ca65da866756412",
+                "operationId": "0e9689fad1a0a1f50eb4117a3a469e5a",
                 "parameters": [
                     {
                         "name": "id",
@@ -10242,6 +10460,42 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/school": {
+            "get": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getSchooldata",
+                "description": "Get school data by slug",
+                "operationId": "6a63efed9eb0962707fd0807f3c57b68",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/School"
+                                            }
                                         },
                                         "message": {
                                             "type": "string"
@@ -10560,7 +10814,7 @@
                 "tags": [
                     "Teach"
                 ],
-                "summary": "getMonitorPastBookings",
+                "summary": "getPastBookings",
                 "description": "Get past Bookings of Monitor",
                 "operationId": "f1e30541f81470be96fba9ac6cdfb58f",
                 "responses": {
@@ -10678,6 +10932,12 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "notes_school": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
                     "school_id": {
                         "description": "School ID",
                         "type": "integer",
@@ -10703,6 +10963,24 @@
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
+                    },
+                    "status": {
+                        "description": "Status of the booking",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "has_boukii_care": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "price_boukii_care": {
+                        "description": "",
+                        "type": "number",
+                        "format": "number",
+                        "readOnly": false,
+                        "nullable": false
                     },
                     "created_at": {
                         "description": "",
@@ -10877,6 +11155,11 @@
                         "type": "string",
                         "readOnly": false,
                         "nullable": true
+                    },
+                    "status": {
+                        "description": "Status of the booking user",
+                        "type": "integer",
+                        "example": 1
                     },
                     "created_at": {
                         "description": "",
@@ -11479,6 +11762,12 @@
                     "hour_end": {
                         "description": "End hour of the course session",
                         "type": "string",
+                        "nullable": false
+                    },
+                    "active": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
                         "nullable": false
                     },
                     "created_at": {
@@ -13095,6 +13384,12 @@
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false
+                    },
+                    "vacation_days": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
                     },
                     "school_id": {
                         "description": "ID of the school associated with the season",

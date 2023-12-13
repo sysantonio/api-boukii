@@ -441,6 +441,10 @@ class School extends Model
     {
         return $this->hasMany(\App\Models\Degree::class, 'school_id');
     }
+    public function sports()
+    {
+        return $this->belongsToMany(Sport::class, 'school_sports', 'school_id');
+    }
 
     public function monitorNwds(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -482,10 +486,7 @@ class School extends Model
         return $this->hasMany(\App\Models\SchoolSport::class, 'school_id');
     }
 
-    public function sports()
-    {
-        return $this->belongsToMany(Sport::class, 'school_sports');
-    }
+
 
 
     public function schoolUsers(): \Illuminate\Database\Eloquent\Relations\HasMany

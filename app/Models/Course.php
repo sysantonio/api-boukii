@@ -5,7 +5,8 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
 
 /**
@@ -217,9 +218,13 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Course extends Model
+ */
+class Course extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'courses';
+    use SoftDeletes;
+    use HasFactory;
+
+    public $table = 'courses';
 
     public $fillable = [
         'course_type',
@@ -271,8 +276,8 @@ use Spatie\Activitylog\LogOptions;
         'image' => 'string',
         'translations' => 'string',
         'price_range' => 'json',
-        'discounts' => 'string',
-        'settings' => 'string'
+        'discounts' => 'json',
+        'settings' => 'json'
     ];
 
     public static array $rules = [
@@ -348,11 +353,13 @@ use Spatie\Activitylog\LogOptions;
     }
 
     public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
-                                                    $clientId = null, $degreeId = null, $getLowerDegrees = false)
+                                                    $clientId = null, $degreeId = null, $getLowerDegrees = false,
+                                                    $degreeOrders = null, $min_age = null, $max_age = null)
     {
 
         $clientAge = null;
         $clientDegreeOrder = null;
+        $clientDegree = null;
 
         $query->where('sport_id', $sportId);
 
@@ -368,37 +375,74 @@ use Spatie\Activitylog\LogOptions;
 
         }
 
-        if($degreeId) {
+        if ($degreeId) {
             $clientDegree = Degree::find($degreeId);
         }
 
         if ($type == 1) {
             // Lógica para cursos de tipo 1
-            $query->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees) {
-                $subQuery->where('date', '>=', $startDate)
-                    ->where('date', '<=', $endDate)
-                    ->whereHas('courseSubgroups', function (Builder $subQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
-                        $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)')
-                            ->whereHas('courseGroup', function (Builder $groupQuery) use ($clientDegree, $clientAge, $getLowerDegrees) {
+            $query->whereHas('courseDates',
+                function (Builder $subQuery) use (
+                    $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                ) {
+                    $subQuery->where('date', '>=', $startDate)
+                        ->where('date', '<=', $endDate)
+                        ->whereHas('courseSubgroups',
+                            function (Builder $subQuery) use (
+                                $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                            ) {
+                                $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
+                                WHERE booking_users.course_date_id = course_dates.id)')
+                                    ->whereHas('courseGroup',
+                                        function (Builder $groupQuery) use (
+                                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                                        ) {
 
-                                // Comprobación de degree_order y rango de edad
-                                if ($clientDegree !== null && $getLowerDegrees) {
+                                            // Comprobación de degree_order y rango de edad
+                                            if ($clientDegree !== null && $getLowerDegrees) {
 
-                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
-                                        $degreeQuery->where('degree_order', '<=', $clientDegree->degree_order);
-                                    });
-                                } else if ($clientDegree !== null && !$getLowerDegrees) {
-                                    $groupQuery->whereHas('degree', function (Builder $degreeQuery) use ($clientDegree) {
-                                        $degreeQuery->where('id',  $clientDegree->id);
-                                    });
-                                }
-                                if ($clientAge !== null) {
-                                    $groupQuery->where('age_min', '<=', $clientAge)
-                                        ->where('age_max', '>=', $clientAge);
-                                }
+                                                $groupQuery->whereHas('degree',
+                                                    function (Builder $degreeQuery) use ($clientDegree) {
+                                                        $degreeQuery->where('degree_order', '<=',
+                                                            $clientDegree->degree_order);
+                                                    });
+                                            } else if ($clientDegree !== null && !$getLowerDegrees) {
+                                                $groupQuery->whereHas('degree',
+                                                    function (Builder $degreeQuery) use ($clientDegree) {
+                                                        $degreeQuery->where('id', $clientDegree->id);
+                                                    });
+                                            }
+                                            if ($clientAge !== null) {
+                                                // Filtrado por la edad del cliente si está disponible
+                                                $groupQuery->where('age_min', '<=', $clientAge)
+                                                    ->where('age_max', '>=', $clientAge);
+                                            } else {
+                                                // Filtrado por min_age y max_age si clientId no está disponible
+                                                if ($min_age !== null) {
+                                                    $groupQuery->where('age_min', '<=', $min_age);
+                                                }
+                                                if ($max_age !== null) {
+                                                    $groupQuery->where('age_max', '>=', $max_age);
+                                                }
+                                            }
+                                            // Comprobación de degree_order y rango de edad
+                                            if (!empty($degreeOrders)) {
+                                                $groupQuery->whereHas('degree',
+                                                    function (Builder $degreeQuery) use ($degreeOrders, $getLowerDegrees
+                                                    ) {
+                                                        if ($getLowerDegrees) {
+                                                            // Si se pide obtener grados inferiores, compara con el menor grado
+                                                            $degreeQuery->where('degree_order', '<=',
+                                                                min($degreeOrders));
+                                                        } else {
+                                                            // En caso contrario, filtra por los grados específicos
+                                                            $degreeQuery->whereIn('degree_order', $degreeOrders);
+                                                        }
+                                                    });
+                                            }
+                                        });
                             });
-                    });
-            });
+                });
         } elseif ($type == 2) {
             // Lógica para cursos de tipo 2
             $query->where('course_type', 2)
@@ -406,11 +450,12 @@ use Spatie\Activitylog\LogOptions;
                 ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
                     $subQuery->where('date', '>=', $startDate)
                         ->where('date', '<=', $endDate)
-                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users WHERE booking_users.course_date_id = course_dates.id)');
+                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
+                        WHERE booking_users.course_date_id = course_dates.id)');
 
                 });
 
-            if($clientAge) {
+            if ($clientAge) {
                 $query->where('age_min', '<=', $clientAge)
                     ->where('age_max', '>=', $clientAge);
             }

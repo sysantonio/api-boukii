@@ -133,6 +133,13 @@ return [
             'level' => 'debug',
             'days' => 7
         ],
+
+        'migration' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/migration.log'),
+            'level' => 'debug',
+            'days' => 7
+        ],
     ],
 
 ];

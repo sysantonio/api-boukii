@@ -106,7 +106,8 @@ class Voucher extends Model
         'client_id',
         'school_id',
         'payrexx_reference',
-        'payrexx_transaction'
+        'payrexx_transaction',
+        'old_id'
     ];
 
     protected $casts = [

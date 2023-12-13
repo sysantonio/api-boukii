@@ -90,6 +90,11 @@ class Sport extends Model
         return $this->hasMany(\App\Models\Course::class, 'sport_id');
     }
 
+    public function schools()
+    {
+        return $this->belongsToMany(School::class, 'school_sports', 'sport_id', 'school_id');
+    }
+
     public function degrees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Degree::class, 'sport_id');

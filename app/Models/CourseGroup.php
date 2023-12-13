@@ -116,6 +116,7 @@ class CourseGroup extends Model
         'teachers_min',
         'teachers_max',
         'observations',
+        'old_id',
         'teacher_min_degree',
         'auto'
     ];

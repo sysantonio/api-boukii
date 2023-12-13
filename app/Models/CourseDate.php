@@ -36,6 +36,13 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false
  *      ),
  *      @OA\Property(
+ *           property="active",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="Creation timestamp",
  *          type="string",
@@ -66,7 +73,8 @@ class CourseDate extends Model
         'course_id',
         'date',
         'hour_start',
-        'hour_end'
+        'hour_end',
+        'active'
     ];
 
     protected $casts = [
@@ -78,6 +86,7 @@ class CourseDate extends Model
         'date' => 'required',
         'hour_start' => 'required',
         'hour_end' => 'required',
+        'active' => 'boolean',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

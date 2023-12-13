@@ -4,6 +4,7 @@ namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\Course;
+use App\Models\Degree;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,6 @@ use Validator;
  * Class UserController
  * @package App\Http\Controllers\API
  */
-
 class CourseController extends SlugAuthController
 {
 
@@ -63,21 +63,25 @@ class CourseController extends SlugAuthController
         $endDate = $endDate->format('Y-m-d');
 
         $type = $request->input('course_type') ?? 1;
-        $sportId = $request->input('sport_id');
+        $sportId = $request->input('sport_id') ?? 1;
         $clientId = $request->input('client_id');
-
+        $degreeOrder = $request->input('degree_order');
+        $getLowerDegrees = 1;
+        // return $this->sendResponse($this->school->id, 'Courses retrieved successfully');
 
         try {
-            $courses = Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId)
-                ->with('courseDates.courseGroups.courseSubgroups.monitor')
-                ->where('school_id', $this->school->id)
-                ->where('online', 1)
-                ->where('active', 1)
-                ->get();
+            $courses =
+                Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees,
+                    $degreeOrder)
+                    ->with('courseDates.courseGroups.courseSubgroups.monitor')
+                    ->where('school_id', $this->school->id)
+                    ->where('online', 1)
+                    ->where('active', 1)
+                    ->get();
 
-            return $this->sendResponse($courses, 'Bookings retrieved successfully');
+            return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving bookings', 500);
+            return $this->sendError($e->getMessage(), 500);
         }
     }
 
@@ -117,9 +121,9 @@ class CourseController extends SlugAuthController
 
     /**
      * @OA\Get(
-     *      path="/booking/courses/{id}",
+     *      path="/slug/courses/{id}",
      *      summary="getCourseWithBookings",
-     *      tags={"Admin"},
+     *      tags={"BookingPage"},
      *      description="Get Course",
      *      @OA\Parameter(
      *          name="id",
@@ -156,15 +160,58 @@ class CourseController extends SlugAuthController
         //$school = $this->getSchool($request);
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
-        $course = Course::with( 'bookingUsers.client.sports',
-            'courseDates.courseGroups.courseSubgroups.monitor')
-            ->where('school_id',1)->find($id);
+        $course = Course::with([
+            'bookingUsers.client.sports',
+            'courseDates.courseGroups' => function ($query) {
+                $query->with(['courseSubgroups' => function ($subQuery) {
+                    $subQuery->withCount('bookingUsers')->with('degree');
+                }]);
+            }
+        ])->where('school_id', $this->school->id)->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
+        } else {
+            $availableDegreeIds = collect();
+            foreach ($course->courseDates as $courseDate) {
+                foreach ($courseDate->courseGroups as $group) {
+                    $group->courseSubgroups = $group->courseSubgroups->filter(function ($subgroup) use ($availableDegreeIds, $group) {
+                        $hasAvailability = $subgroup->booking_users_count < $subgroup->max_participants;
+                        if ($hasAvailability) {
+                            $availableDegreeIds->push([
+                                'degree_id' => $group->degree_id,
+                                'recommended_age' => $group->recommended_age
+                            ]);
+                        }
+                        return $hasAvailability;
+                    });
+
+                    if ($group->courseSubgroups->isEmpty()) {
+                        $courseDate->courseGroups = $courseDate->courseGroups->reject(function ($g) use ($group) {
+                            return $g->id === $group->id;
+                        });
+                    }
+                }
+            }
+
+            $uniqueDegrees = $availableDegreeIds->unique(function ($item) {
+                return $item['degree_id'] . '-' . $item['recommended_age'];
+            });
+
+            $availableDegrees = $uniqueDegrees->map(function ($item) {
+                $degree = Degree::find($item['degree_id']);
+                if ($degree) {
+                    $degree->load('degreesSchoolSportGoals');
+                    $degree->recommended_age = $item['recommended_age'];
+                }
+                return $degree;
+            })->filter();
+
+            $course->availableDegrees = $availableDegrees;
         }
 
-        return $this->sendResponse(new \App\Http\Resources\Admin\CourseResource($course), 'Course retrieved successfully');
+        return $this->sendResponse($course,
+            'Course retrieved successfully');
     }
 
 

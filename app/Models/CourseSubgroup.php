@@ -82,6 +82,7 @@ class CourseSubgroup extends Model
         'degree_id',
         'course_group_id',
         'monitor_id',
+        'old_id',
         'max_participants'
     ];
 

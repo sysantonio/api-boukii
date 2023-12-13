@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
 
 /**
@@ -149,7 +150,10 @@ use Spatie\Activitylog\LogOptions;
  */
 class BookingUser extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'booking_users';
+    use SoftDeletes;
+    use HasFactory;
+
+    public $table = 'booking_users';
 
     public $fillable = [
         'school_id',
@@ -258,6 +262,24 @@ class BookingUser extends Model
     {
         return $query->where('monitor_id', $monitor);
     }
+
+    public static function hasOverlappingBookings($bookingUser)
+    {
+        $clientBookings = BookingUser::where('client_id', $bookingUser['client_id'])
+            ->where('date', $bookingUser['date'])
+            ->get();
+
+        foreach ($clientBookings as $existingBooking) {
+            // Comprobar si hay solapamiento de horarios
+            if ($bookingUser['hour_start'] < $existingBooking->hour_end &&
+                $existingBooking->hour_start < $bookingUser['hour_end']) {
+                return true; // Hay solapamiento
+            }
+        }
+
+        return false; // No hay solapamiento
+    }
+
 
     public function getActivitylogOptions(): LogOptions
     {
