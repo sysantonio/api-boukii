@@ -353,6 +353,13 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseDate::class, 'course_id');
     }
 
+    public function courseDatesActive(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\CourseDate::class, 'course_id')
+            ->where('active', 1);
+    }
+
+
     public function courseExtras(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseExtra::class, 'course_id');
