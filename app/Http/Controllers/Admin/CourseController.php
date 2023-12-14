@@ -87,7 +87,7 @@ class CourseController extends AppBaseController
             $course->total_available_places = $availability['total_available_places'];
         }
 
-        return $this->sendResponse(\App\Http\Resources\Admin\CourseResource::collection($courses),
+        return $this->sendResponse($courses,
             'Courses retrieved successfully');
     }
 
