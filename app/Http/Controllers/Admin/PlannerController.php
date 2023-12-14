@@ -78,6 +78,7 @@ class PlannerController extends AppBaseController
     {
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
+        $monitorId = $request->input('monitor_id');
 
         $schoolId = $this->getSchool($request)->id;
 
@@ -117,12 +118,29 @@ class PlannerController extends AppBaseController
                 ->whereDate('end_date', '>=', $today);
         }
 
+
+        if ($monitorId) {
+            // Filtra solo las reservas y los NWD para el monitor específico
+            $bookingQuery->where('monitor_id', $monitorId);
+            $nwdQuery->where('monitor_id', $monitorId);
+
+            // Obtén solo el monitor específico
+            $monitors = MonitorsSchool::with('monitor.sports')
+                ->where('school_id', $schoolId)
+                ->whereHas('monitor', function ($query) use ($monitorId) {
+                    $query->where('id', $monitorId);
+                })
+                ->get()
+                ->pluck('monitor');
+        } else {
+            // Si no se proporcionó monitor_id, obtén todos los monitores como antes
+            $monitorSchools = MonitorsSchool::with('monitor.sports')->where('school_id', $schoolId)->get();
+            $monitors = $monitorSchools->pluck('monitor');
+        }
+
         // Obtén los resultados para las reservas y los MonitorNwd
         $bookings = $bookingQuery->get();
         $nwd = $nwdQuery->get();
-
-        $monitorSchools = MonitorsSchool::with('monitor.sports')->where('school_id', $schoolId)->get();
-        $monitors = $monitorSchools->pluck('monitor');
         $subgroupsPerGroup = CourseSubgroup::select('course_group_id', DB::raw('COUNT(*) as total'))
             ->groupBy('course_group_id')
             ->pluck('total', 'course_group_id');
