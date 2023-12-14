@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Response;
 use Validator;
 
@@ -14,7 +16,6 @@ use Validator;
  * Class UserController
  * @package App\Http\Controllers\API
  */
-
 class AuthController extends AppBaseController
 {
 
@@ -67,22 +68,29 @@ class AuthController extends AppBaseController
             'password' => ['required'],
         ]);
 
-        if(Auth::attempt($credentials)){
-            $user = Auth::user();
+        // Buscar usuarios por correo electrónico y tipo
+        $users = User::where('email', $credentials['email'])
+            ->get();
 
-            if($user->type == 'superadmin') {
-                $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
-            } else if($user->type == 'admin') {
-                $user->load('schools');
-                $success['token'] =  $user->createToken('Boukii', ['admin:all'])->plainTextToken;
+        foreach ($users as $user) {
+            // Verificar si la contraseña es correcta
+            if (Hash::check($credentials['password'], $user->password)) {
+                // Cargar escuelas relacionadas si las hay
+                if ($user->type == 'superadmin') {
+                    $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
+                } else if ($user->type == '1' || $user->type == 'admin') {
+                    $user->load('schools');
+                    $success['token'] = $user->createToken('Boukii', ['admin:all'])->plainTextToken;
+                } else {
+                    return $this->sendError('Unauthorized.', 401);
+                }
+                $success['user'] = $user;
+                return $this->sendResponse($success, 'User login successfully.');
             }
-            $success['user'] =  $user;
+        }
 
-            return $this->sendResponse($success, 'User login successfully.');
-        }
-        else{
-            return $this->sendError('Unauthorized.', 401);
-        }
+        // Si no se encuentra ningún usuario o la contraseña no coincide
+        return $this->sendError('Unauthorized.', 401);
     }
 
 }
