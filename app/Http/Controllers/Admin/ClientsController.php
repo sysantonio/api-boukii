@@ -60,17 +60,22 @@ class ClientsController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        // Obtener parámetros del request, como 'perPage', 'search', 'order', etc.
+        // Define el valor por defecto para 'perPage'
         $perPage = $request->input('perPage', 15);
-        $search = $request->input('search', null);
+
+        // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
+        $school = $this->getSchool($request);
+        $searchParameters =
+            array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
+        $search = $request->input('search');
         $order = $request->input('order', 'desc');
         $orderColumn = $request->input('orderColumn', 'id');
         $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
 
         $clientsWithUtilizers =
             $this->clientRepository->all(
-                searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
-                    'orderColumn', 'page', 'with']),
+                searchArray: $searchParameters,
                 search: $search,
                 skip: $request->input('skip'),
                 limit: $request->input('limit'),

@@ -64,7 +64,9 @@ class CourseController extends AppBaseController
 
         // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
         $school = $this->getSchool($request);
-        $searchParameters = array_merge($request->all(), ['school_id' => $school->id]);
+        $searchParameters =
+            array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
 
         // Utiliza el CourseRepository para obtener los cursos con los parámetros de búsqueda
         $courses = $this->courseRepository->all(
