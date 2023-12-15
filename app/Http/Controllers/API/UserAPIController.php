@@ -11,6 +11,7 @@ use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class UserController
@@ -109,7 +110,8 @@ class UserAPIController extends AppBaseController
         if(!empty($input['password'])) {
             $input['password'] = bcrypt($input['password']);
         } else {
-            return $this->sendError('User cannot be created without a password');
+            $input['password'] = bcrypt(Str::random(8));
+            //return $this->sendError('User cannot be created without a password');
         }
 
         if(!empty($input['image'])) {

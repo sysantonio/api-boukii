@@ -25,6 +25,20 @@ use Spatie\Permission\Traits\HasRoles;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="first_name",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="string",
+ *       ),
+ *       @OA\Property(
+ *           property="last_name",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="string",
+ *       ),
+ *      @OA\Property(
  *          property="email",
  *          description="",
  *          readOnly=false,
@@ -97,6 +111,8 @@ use Spatie\Permission\Traits\HasRoles;
     public $fillable = [
         'username',
         'email',
+        'first_name',
+        'last_name',
         'password',
         'image',
         'type',
@@ -107,6 +123,8 @@ use Spatie\Permission\Traits\HasRoles;
 
     protected $casts = [
         'username' => 'string',
+        'first_name' => 'string',
+        'last_name' => 'string',
         'email' => 'string',
         'password' => 'string',
         'image' => 'string',
@@ -118,6 +136,8 @@ use Spatie\Permission\Traits\HasRoles;
 
     public static array $rules = [
         'username' => 'nullable|string|max:255',
+        'first_name' => 'nullable|string|max:255',
+        'last_name' => 'nullable|string|max:255',
         'email' => 'nullable|string|max:100',
         'password' => 'string|max:255',
         'image' => 'nullable|string',

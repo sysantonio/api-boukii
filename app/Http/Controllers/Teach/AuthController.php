@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Teach;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Response;
 use Validator;
 
@@ -70,21 +72,28 @@ class AuthController extends AppBaseController
             'password' => ['required'],
         ]);
 
-        if(Auth::attempt($credentials)){
-            $user = Auth::user();
-            if($user->type !== 'monitor') {
-                return $this->sendError('Unauthorized.', 401);
-            }
-            $success['token'] = $user->createToken('Boukii')->plainTextToken;
-            $user->load('monitors');
-            $user->tokenCan('teach:all');
-            $success['user'] =  $user;
+        // Buscar usuarios por correo electrónico y tipo
+        $users = User::where('email', $credentials['email'])
+            ->where('type', 'monitor')
+            ->get();
 
-            return $this->sendResponse($success, 'User login successfully.');
+        foreach ($users as $user) {
+            // Verificar si la contraseña es correcta
+            if (Hash::check($credentials['password'], $user->password)) {
+                // Cargar escuelas relacionadas si las hay
+                if ($user->type == 'monitor') {
+                    $success['token'] = $user->createToken('Boukii')->plainTextToken;
+                    $user->load('monitors');
+                    $user->tokenCan('teach:all');
+                    $success['user'] =  $user;
+                    return $this->sendResponse($success, 'User login successfully.');
+                }
+            }
         }
-        else{
-            return $this->sendError('Unauthorized.', 401);
-        }
+
+        // Si no se encuentra ningún usuario o la contraseña no coincide
+        return $this->sendError('Unauthorized.', 401);
+
     }
 
 }

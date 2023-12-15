@@ -23,6 +23,8 @@ use App\Models\MonitorSportsDegree;
 use App\Models\MonitorsSchool;
 use App\Models\OldModels\Bookings2;
 use App\Models\OldModels\Course2;
+use App\Models\OldModels\CourseGroups2;
+use App\Models\OldModels\CourseGroupsSubgroups2;
 use App\Models\OldModels\DegreeSchoolSport;
 use App\Models\OldModels\DegreeSchoolSportGoals;
 use App\Models\OldModels\Evaluation;
@@ -456,20 +458,107 @@ class MigrationController extends AppBaseController
             ->get()
             ->groupBy('group_id');
 
-        foreach ($oldCoursesCollectives as $collective) {
+        Log::info('Iniciando migración de cursos colectivos');
 
-            $newCourse = new Course($collective[0]->toArray());
-            if ($collective[0]->global_course) {
-                $newCourse->date_start = $collective[0]->global_course->date_start_global;
-                $newCourse->date_end = $collective[0]->global_course->date_end_global;
-                $newCourse->name = $collective[0]->global_course->name_global;
-                $newCourse->short_description = $collective[0]->global_course->short_description_global;
-                $newCourse->description = $collective[0]->global_course->description_global;
-                $newCourse->school_id = $collective[0]->school_id;
-                $newCourse->course_type = $collective[0]->course_type_id;
-                $newCourse->is_flexible = $collective[0]->duration_flexible;
-                $newCourse->old_id = $collective[0]->id;
-                $base64Image = $collective[0]->image;
+        foreach ($oldCoursesCollectives as $collective) {
+            try {
+                $newCourse = new Course($collective[0]->toArray());
+                if ($collective[0]->global_course) {
+                    $newCourse->date_start = $collective[0]->global_course->date_start_global;
+                    $newCourse->date_end = $collective[0]->global_course->date_end_global;
+                    $newCourse->name = $collective[0]->global_course->name_global;
+                    $newCourse->short_description = $collective[0]->global_course->short_description_global;
+                    $newCourse->description = $collective[0]->global_course->description_global;
+                    $newCourse->school_id = $collective[0]->school_id;
+                    $newCourse->course_type = $collective[0]->course_type_id;
+                    $newCourse->is_flexible = $collective[0]->duration_flexible;
+                    $newCourse->old_id = $collective[0]->group_id;
+                    $base64Image = $collective[0]->image;
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                        $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                        $imageData = base64_decode($imageData);
+                        $imageName = 'image_' . time() . '.' . $type[1];
+                        Storage::disk('public')->put($imageName, $imageData);
+                        $newCourse->image = Storage::disk('public')->url($imageName);
+
+                    }
+                    $newCourse->save();
+                    foreach ($collective[0]->global_course->dates_global as $index => $course_date) {
+
+                        $newCourseDate = new CourseDate($course_date);
+                        $startTime =
+                            Carbon::createFromFormat('Y-m-d H:i', $course_date['date'] . ' ' . $course_date['hour']);
+                        $endTime = $startTime->copy()->addSeconds(strtotime($course_date['duration']) - strtotime('TODAY'));
+                        $newCourseDate->hour_end = $endTime->format('H:i');
+                        $newCourseDate->hour_start = $course_date['hour'];
+                        $newCourseDate->course_id = $newCourse->id;
+                        $newCourseDate->save();
+
+                        if (!$collective->has($index)) {
+                            $groups = $collective[0]->groups;
+                        } else {
+                            $groups = $collective[$index]->groups;
+                        }
+
+                        foreach ($groups as $group) {
+                            $newGroup = new CourseGroup($group->toArray());
+                            $newGroup->course_id = $newCourse->id;
+                            $newGroup->course_date_id = $newCourseDate->id;
+                            $oldDegree = $oldDegrees->firstWhere('id', $group->degree_id);
+                            $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
+                                ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
+                                ->first();
+                            $oldTeacherDegree = $oldDegrees->firstWhere('id', $group->teacher_min_degree);
+                            $newTeacherDegree = Degree::where('degree_order', $oldTeacherDegree->degree_order)
+                                ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
+                                ->first();
+                            $newGroup->degree_id = $newDegree->id;
+                            $newGroup->old_id = $group->id;
+                            $newGroup->teacher_min_degree = $newTeacherDegree->id;
+
+                            $newGroup->save();
+                            foreach ($group->subgroups as $subgroup) {
+                                $newSubgroup = new CourseSubgroup($subgroup->toArray());
+                                $newSubgroup->course_id = $newCourse->id;
+                                $newSubgroup->course_date_id = $newCourseDate->id;
+                                $newSubgroup->course_group_id = $newGroup->id;
+                                $newSubgroup->degree_id = $newGroup->degree_id;
+                                $newSubgroup->old_id = $subgroup->id;
+                                $newSubgroup->monitor_id =
+                                    Monitor::where('old_id', $subgroup->monitor_id)->first()->id ?? null;
+                                $newSubgroup->save();
+                            }
+
+
+                        }
+
+                        $newCourseDate->save();
+                        //return $this->sendResponse($newCourseDate, 200);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Error: " . $e->getMessage());
+            }
+        }
+
+        Log::info('Migración de cursos colectivos completada');
+        Log::info('Iniciando migración de cursos privados');
+        $oldCoursesPrive = Course2::where('created_at', '>', $fechaInicio)
+            ->where('deleted_at', null)
+            ->whereNull('group_id')
+            ->with(['priceRanges', 'course_dates'])
+            ->get();
+
+        foreach ($oldCoursesPrive as $prive) {
+            try {
+                $newCourse = new Course($prive->toArray());
+                $newCourse->course_type = $prive->course_type_id;
+                $newCourse->settings =
+                    json_encode(['weekDays' => $this->getWeekDayAvailability($prive->day_start_res, $prive->day_end_res)]);
+                $newCourse->is_flexible = $prive->duration_flexible;
+                $newCourse->price_range = json_encode($prive->priceRanges, true);
+                $newCourse->old_id = $prive->id;
+                $base64Image = $prive->image;
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                     $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
                     $imageData = base64_decode($imageData);
@@ -479,153 +568,106 @@ class MigrationController extends AppBaseController
 
                 }
                 $newCourse->save();
-                foreach ($collective[0]->global_course->dates_global as $index => $course_date) {
-
-                    $newCourseDate = new CourseDate($course_date);
-                    $startTime =
-                        Carbon::createFromFormat('Y-m-d H:i', $course_date['date'] . ' ' . $course_date['hour']);
-                    $endTime = $startTime->copy()->addSeconds(strtotime($course_date['duration']) - strtotime('TODAY'));
-                    $newCourseDate->hour_end = $endTime->format('H:i');
-                    $newCourseDate->hour_start = $course_date['hour'];
-                    $newCourseDate->course_id = $newCourse->id;
-                    $newCourseDate->save();
-
-                    if (!$collective->has($index)) {
-                        $groups = $collective[0]->groups;
-                    } else {
-                        $groups = $collective[$index]->groups;
-                    }
-
-                    foreach ($groups as $group) {
-                        $newGroup = new CourseGroup($group->toArray());
-                        $newGroup->course_id = $newCourse->id;
-                        $newGroup->course_date_id = $newCourseDate->id;
-                        $oldDegree = $oldDegrees->firstWhere('id', $group->degree_id);
-                        $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
-                            ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
-                            ->first();
-                        $oldTeacherDegree = $oldDegrees->firstWhere('id', $group->teacher_min_degree);
-                        $newTeacherDegree = Degree::where('degree_order', $oldTeacherDegree->degree_order)
-                            ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
-                            ->first();
-                        $newGroup->degree_id = $newDegree->id;
-                        $newGroup->old_id = $group->id;
-                        $newGroup->teacher_min_degree = $newTeacherDegree->id;
-
-                        $newGroup->save();
-                        foreach ($group->subgroups as $subgroup) {
-                            $newSubgroup = new CourseSubgroup($subgroup->toArray());
-                            $newSubgroup->course_id = $newCourse->id;
-                            $newSubgroup->course_date_id = $newCourseDate->id;
-                            $newSubgroup->course_group_id = $newGroup->id;
-                            $newSubgroup->degree_id = $newGroup->degree_id;
-                            $newSubgroup->old_id = $subgroup->id;
-                            $newSubgroup->monitor_id =
-                                Monitor::where('old_id', $subgroup->monitor_id)->first()->id ?? null;
-                            $newSubgroup->save();
-                        }
 
 
-                    }
+                $diasSemana = [
+                    "sunday" => Carbon::SUNDAY,
+                    "monday" => Carbon::MONDAY,
+                    "tuesday" => Carbon::TUESDAY,
+                    "wednesday" => Carbon::WEDNESDAY,
+                    "thursday" => Carbon::THURSDAY,
+                    "friday" => Carbon::FRIDAY,
+                    "saturday" => Carbon::SATURDAY,
+                ];
 
-                    $newCourseDate->save();
-                    //return $this->sendResponse($newCourseDate, 200);
+                // Comprobar si day_start_res y day_end_res están definidos y no están vacíos
+                if (isset($prive["day_start_res"], $prive["day_end_res"]) && $prive["day_start_res"] !== "" &&
+                    $prive["day_end_res"] !== "") {
+                    $dayStart = $diasSemana[strtolower($prive["day_start_res"])];
+                    $dayEnd = $diasSemana[strtolower($prive["day_end_res"])];
+                } else {
+                    // Si no están definidos, incluir todos los días de la semana
+                    $dayStart = Carbon::SUNDAY;
+                    $dayEnd = Carbon::SATURDAY;
                 }
+
+                // Crear un rango de días incluidos
+                if ($dayStart <= $dayEnd) {
+                    $includedDays = range($dayStart, $dayEnd);
+                } else {
+                    // Si el rango cruza el fin de semana
+                    $includedDays = range($dayStart, Carbon::SATURDAY);
+                    $includedDays = array_merge($includedDays, range(Carbon::SUNDAY, $dayEnd));
+                }
+
+                $dateStart = Carbon::createFromFormat('Y-m-d', $prive['date_start']);
+                $dateEnd = Carbon::createFromFormat('Y-m-d', $prive['date_end']);
+
+                $period = CarbonPeriod::create($dateStart, $dateEnd);
+
+                foreach ($period as $date) {
+
+                    $isActive = in_array($date->dayOfWeek, $includedDays);
+
+                    $newCourseDate = new CourseDate([
+                        'date' => $date->format('Y-m-d'),
+                        'hour_start' => $prive->hour_min . ':00',
+                        'hour_end' => $prive->hour_max . ':00',
+                        'course_id' => $newCourse->id,
+                        'active' => $isActive
+                    ]);
+                    $newCourseDate->save();
+                }
+            } catch (\Exception $e) {
+                Log::error("Error: " . $e->getMessage());
             }
         }
-
-        $oldCoursesPrive = Course2::where('created_at', '>', $fechaInicio)
-            ->where('deleted_at', null)
-            ->whereNull('group_id')
-            ->with(['priceRanges', 'course_dates'])
-            ->get();
-
-        foreach ($oldCoursesPrive as $prive) {
-
-            $newCourse = new Course($prive->toArray());
-            $newCourse->course_type = $prive->course_type_id;
-            $newCourse->settings = json_encode([
-                'day_start_res' => $prive->day_start_res,
-                'day_end_res' => $prive->day_end_res,
-            ]);
-            $newCourse->is_flexible = $prive->duration_flexible;
-            $newCourse->price_range = json_encode($prive->priceRanges, true);
-            $newCourse->old_id = $prive->id;
-            $base64Image = $prive->image;
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
-                $imageData = base64_decode($imageData);
-                $imageName = 'image_' . time() . '.' . $type[1];
-                Storage::disk('public')->put($imageName, $imageData);
-                $newCourse->image = Storage::disk('public')->url($imageName);
-
-            }
-            $newCourse->save();
-
-
-            $diasSemana = [
-                "sunday" => Carbon::SUNDAY,
-                "monday" => Carbon::MONDAY,
-                "tuesday" => Carbon::TUESDAY,
-                "wednesday" => Carbon::WEDNESDAY,
-                "thursday" => Carbon::THURSDAY,
-                "friday" => Carbon::FRIDAY,
-                "saturday" => Carbon::SATURDAY,
-            ];
-
-            // Comprobar si day_start_res y day_end_res están definidos y no están vacíos
-            if (isset($prive["day_start_res"], $prive["day_end_res"]) && $prive["day_start_res"] !== "" &&
-                $prive["day_end_res"] !== "") {
-                $dayStart = $diasSemana[strtolower($prive["day_start_res"])];
-                $dayEnd = $diasSemana[strtolower($prive["day_end_res"])];
-            } else {
-                // Si no están definidos, incluir todos los días de la semana
-                $dayStart = Carbon::SUNDAY;
-                $dayEnd = Carbon::SATURDAY;
-            }
-
-            // Crear un rango de días incluidos
-            if ($dayStart <= $dayEnd) {
-                $includedDays = range($dayStart, $dayEnd);
-            } else {
-                // Si el rango cruza el fin de semana
-                $includedDays = range($dayStart, Carbon::SATURDAY);
-                $includedDays = array_merge($includedDays, range(Carbon::SUNDAY, $dayEnd));
-            }
-
-            $dateStart = Carbon::createFromFormat('Y-m-d', $prive['date_start']);
-            $dateEnd = Carbon::createFromFormat('Y-m-d', $prive['date_end']);
-
-            $period = CarbonPeriod::create($dateStart, $dateEnd);
-
-            foreach ($period as $date) {
-                $isActive = in_array($date->dayOfWeek, $includedDays);
-
-                $newCourseDate = new CourseDate([
-                    'date' => $date->format('Y-m-d'),
-                    'hour_start' => $prive->hour_min . ':00',
-                    'hour_end' => $prive->hour_max . ':00',
-                    'course_id' => $newCourse->id,
-                    'active' => $isActive
-                ]);
-                $newCourseDate->save();
-            }
-
-        }
+        Log::info('Migración de cursos privados completada');
         return $this->sendResponse('Cursos importados con exito', 200);
     }
+
+    private function getWeekDayAvailability($dayStart, $dayEnd)
+    {
+        $weekDays = [
+            'sunday' => false,
+            'monday' => false,
+            'tuesday' => false,
+            'wednesday' => false,
+            'thursday' => false,
+            'friday' => false,
+            'saturday' => false,
+        ];
+
+        $dayStartIndex = array_search(strtolower($dayStart), array_keys($weekDays));
+        $dayEndIndex = array_search(strtolower($dayEnd), array_keys($weekDays));
+
+        if ($dayStartIndex === false || $dayEndIndex === false) {
+            // Retorna un error o maneja la situación en que los días no son válidos
+            return $weekDays;
+        }
+
+        $currentIndex = $dayStartIndex;
+        do {
+            $currentDay = array_keys($weekDays)[$currentIndex];
+            $weekDays[$currentDay] = true;
+            $currentIndex = ($currentIndex + 1) % count($weekDays);
+        } while ($currentIndex != ($dayEndIndex + 1) % count($weekDays));
+
+        return $weekDays;
+    }
+
 
     public function migrateBookings(Request $request): JsonResponse
     {
 
-        $oldDegrees = \App\Models\OldModels\Degree::all();
+        //$oldDegrees = \App\Models\OldModels\Degree::all();
         $fechaInicio = Carbon::createFromDate(null, 9, 9);
         $oldBookings = Bookings2::withTrashed()->where('created_at', '>', $fechaInicio)
             ->whereHas('booking_users')
             ->with(['booking_users.course', 'booking_users.subgroup.group.course'])
             ->get();
 
-        $bookingsUsersWithoutCourse = [];
+       // $bookingsUsersWithoutCourse = [];
 
         foreach ($oldBookings as $oldBooking) {
             $newBooking = new Booking($oldBooking->toArray());
@@ -657,7 +699,7 @@ class MigrationController extends AppBaseController
                     $newBooking->save();
                 }
 
-                if ($oldBookingUser->subgroup) {
+                if ($oldBookingUser->course_groups_subgroup2_id) {
                     //Collectivos
                     $newBookingUser = new BookingUser($oldBookingUser->toArray());
                     if ($oldBookingUser->deleted_at) {
@@ -667,9 +709,27 @@ class MigrationController extends AppBaseController
                     $course_subgroup = CourseSubgroup::where('old_id', $oldBookingUser->course_groups_subgroup2_id)
                         ->first();
                     if (!$course_subgroup) {
-                        $newBooking->delete();
-                        Log::channel('migration')->info('Reserva sin subgrupo: id', $oldBookingUser->toArray());
-                        continue;
+
+                        $oldCourseSubGroup = CourseGroupsSubgroups2::find($oldBookingUser->course_groups_subgroup2_id);
+                        if(!$oldCourseSubGroup) {
+                            Log::channel('migration')->info('Reserva sin subgrupo: id', $oldBookingUser->toArray());
+                            Log::channel('migration')->info('Id Subgrupo antiguo id:'. $oldBookingUser->course_groups_subgroup2_id);
+                            continue;
+                        }
+                        $oldCourseGroup = CourseGroups2::find($oldCourseSubGroup->course_group2_id);
+                        if(!$oldCourseGroup) {
+                            Log::channel('migration')->info('Reserva sin grupo: id', $oldBookingUser->toArray());
+                            Log::channel('migration')->info('Id Subgrupo antiguo id:'. $oldBookingUser->course_groups_subgroup2_id);
+                            continue;
+                        }
+                        $oldCourse = Course2::find($oldCourseGroup->course2_id);
+                        if(!$oldCourse) {
+                            Log::channel('migration')->info('Reserva sin curso: id', $oldBookingUser->toArray());
+                            Log::channel('migration')->info('Id Subgrupo antiguo id:'. $oldBookingUser->course_groups_subgroup2_id);
+                            Log::channel('migration')->info('Id Grupo antiguo id:'. $oldCourseSubGroup->course_group2_id);
+                            Log::channel('migration')->info('Id Curso antiguo id:'. $oldCourseGroup->course2_id);
+                            continue;
+                        }
                     }
                     $monitor = Monitor::where('old_id', $oldBookingUser->monitor_id)
                         ->first();
@@ -685,32 +745,16 @@ class MigrationController extends AppBaseController
                     $newBookingUser->client_id = Client::where('old_id', $oldBookingUser->user_id)->first()->id;
                     $newBookingUser->save();
                 } else {
+                    //PRIVADOS
 
                     $newBookingUser = new BookingUser($oldBookingUser->toArray());
                     $course = Course::where('old_id', $oldBookingUser->course2_id)
                         ->first();
                     if (!$course) {
-                        $courseSubgroup = CourseSubgroup::where('old_id', $oldBookingUser->course_groups_subgroup2_id)
-                            ->first();
-                        if ($courseSubgroup) {
-                            $course = Course::find($courseSubgroup->course_id);
-                            if (!$course) {
-              /*                  $bookingArray = $oldBooking->toArray();
-                                $camposAEliminar = ['campo1', 'campo2', 'campo3', ...];
-
-                                foreach ($camposAEliminar as $campo) {
-                                    unset($bookingArray[$campo]);
-                                }*/
-                                $newBooking->delete();
-                                Log::channel('migration')->info('Reserva sin curso i: id', $oldBookingUser->toArray());
-                                continue;
-                            }
-                        } else {
-                            $newBooking->delete();
-                            Log::channel('migration')->info('Reserva sin sbugrupo: id', $oldBookingUser->toArray());
-                            continue;
-                        }
+                        $newBooking->delete();
+                        Log::channel('migration')->info('Reserva privada sin course: id', $oldBookingUser->toArray());
                         //return $this->sendResponse($newBookingUser, 200);
+                        continue;
                     }
 
                     if ($oldBookingUser->deleted_at) {
@@ -724,6 +768,7 @@ class MigrationController extends AppBaseController
                         Log::channel('migration')->info('Reserva sin cursedate: id', $oldBookingUser->toArray());
                         continue;
                     }
+
                     $newBookingUser->school_id = $newBooking->school_id;
 
                     $monitor = Monitor::where('old_id', $oldBookingUser->monitor_id)
@@ -742,6 +787,9 @@ class MigrationController extends AppBaseController
                         ->addSeconds(strtotime($oldBookingUser['duration']) - strtotime('TODAY'));
                     $newBookingUser->hour_end = $endTime->format('H:i:s');
                     $newBookingUser->hour_start = $oldBookingUser['hour'];
+
+
+
                     $newBookingUser->save();
 
                     //return $this->sendResponse($oldBookingUser, 200);
