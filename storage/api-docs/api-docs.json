@@ -14006,6 +14006,18 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "first_name": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "last_name": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "email": {
                         "description": "",
                         "type": "string",
