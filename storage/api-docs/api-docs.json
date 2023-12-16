@@ -1167,6 +1167,42 @@
                 }
             }
         },
+        "/clients/transfer": {
+            "post": {
+                "tags": [
+                    "Client"
+                ],
+                "summary": "transferClients",
+                "description": "Transfer clients",
+                "operationId": "f86893b31f3e7ee4279f46b81e4ab00a",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BookingUser"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/client-observations": {
             "get": {
                 "tags": [
@@ -10690,42 +10726,6 @@
                 "summary": "getClientBookingsList",
                 "description": "Get all Client bookings",
                 "operationId": "0fd14795d97a8d439fbf46757a7a9b99",
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/BookingUser"
-                                            }
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/teach/clients/transfer": {
-            "post": {
-                "tags": [
-                    "Teach"
-                ],
-                "summary": "transferClients",
-                "description": "Transfer clients",
-                "operationId": "09cafd4f66508efdd2773543f3af0d2f",
                 "responses": {
                     "200": {
                         "description": "successful operation",

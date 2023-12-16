@@ -344,30 +344,35 @@ class ClientAPIController extends AppBaseController
         $initialSubgroup = CourseSubgroup::with('courseGroup.courseDate')->find($request->initialSubgroupId);
         $targetSubgroup = CourseSubgroup::find($request->targetSubgroupId);
 
+
         if (!$initialSubgroup || !$targetSubgroup) {
             // Manejar error
             return $this->sendError('No existe el subgrupo');
         }
 
         $initialGroup = $initialSubgroup->courseGroup;
-        $initialSubgroupPosition =
-            $initialGroup->courseSubgroups->sortBy('id')->search(function ($subgroup) use ($initialSubgroup) {
-                return $subgroup->id == $initialSubgroup->id;
+        $targetGroup = $targetSubgroup->courseGroup;
+
+        $targetSubgroupPosition =
+            $targetGroup->courseSubgroups->sortBy('id')->search(function ($subgroup) use ($targetSubgroup) {
+                return $subgroup->id == $targetSubgroup->id;
             });
+
         DB::beginTransaction();
         if ($request->moveAllDays) {
             $courseDates = $initialGroup->course->courseDates;
-
             foreach ($courseDates as $courseDate) {
-                $groups = $courseDate->courseGroups->where('degree_id', $initialGroup->degree_id);
+                $groups = $courseDate->courseGroups->where('degree_id', $targetGroup->degree_id);
 
                 foreach ($groups as $group) {
                     if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {
-                        $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$initialSubgroupPosition] ?? null;
+
+                        $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
 
                         if ($newTargetSubgroup) {
-                            $this->moveUsers($initialSubgroup, $newTargetSubgroup, $request->clientIds);
+                            $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
                         } else {
+
                             DB::rollBack();
                             return $this->sendError('Some groups are not identical');
                         }
