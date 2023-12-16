@@ -10,6 +10,7 @@ use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\CourseSubgroup;
 use App\Repositories\ClientRepository;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -357,6 +358,7 @@ class ClientAPIController extends AppBaseController
             $targetGroup->courseSubgroups->sortBy('id')->search(function ($subgroup) use ($targetSubgroup) {
                 return $subgroup->id == $targetSubgroup->id;
             });
+        $today = Carbon::today();
 
         DB::beginTransaction();
         if ($request->moveAllDays) {
@@ -365,21 +367,24 @@ class ClientAPIController extends AppBaseController
                 $groups = $courseDate->courseGroups->where('degree_id', $targetGroup->degree_id);
 
                 foreach ($groups as $group) {
-                    if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {
+                    if (Carbon::parse($courseDate->date)->gte($today)) {
+                        if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {
 
-                        $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
+                            $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
 
-                        if ($newTargetSubgroup) {
-                            $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
+                            if ($newTargetSubgroup) {
+                                $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
+                            } else {
+
+                                DB::rollBack();
+                                return $this->sendError('Some groups are not identical');
+                            }
                         } else {
-
                             DB::rollBack();
                             return $this->sendError('Some groups are not identical');
                         }
-                    } else {
-                        DB::rollBack();
-                        return $this->sendError('Some groups are not identical');
                     }
+
                 }
 
             }
