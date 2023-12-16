@@ -59,13 +59,11 @@ class AuthAPIController extends AppBaseController
     {
         $request->validate([
             'token' => 'required',
-            'email' => 'required|email',
             'password' => 'required|confirmed'
         ]);
 
         // Verificar token
-        $user = User::where('email', $request->email)
-            ->where('recover_token', $request->token)
+        $user = User::where('recover_token', $request->token)
             ->first();
 
         if (!$user) {
