@@ -390,7 +390,9 @@ class ClientAPIController extends AppBaseController
     {
         // Mover los usuarios
         foreach ($clientIds as $clientId) {
-            Log::info('Data update', ['course_subgroup_id' => $targetSubgroup->id,
+            Log::info('Data update', ['client_id'=> $clientId,
+                'course_date_id' => $initialCourseDate->id,
+                'course_subgroup_id' => $targetSubgroup->id,
                 'course_group_id' => $targetSubgroup->course_group_id,
                 'degree_id' => $targetSubgroup->degree_id]);
             BookingUser::where('course_date_id', $initialCourseDate->id)
