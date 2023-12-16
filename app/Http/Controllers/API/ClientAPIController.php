@@ -392,8 +392,8 @@ class ClientAPIController extends AppBaseController
             BookingUser::where('course_date_id', $initialCourseDate->id)
                 ->where('client_id', $clientId)
                 ->update(['course_subgroup_id' => $targetSubgroup->id,
-                    'course_group_id', $targetSubgroup->course_group_id,
-                    'degree_id', $targetSubgroup->degree_id]);
+                    'course_group_id' => $targetSubgroup->course_group_id,
+                    'degree_id' => $targetSubgroup->degree_id]);
         }
     }
 }
