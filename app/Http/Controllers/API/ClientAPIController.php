@@ -354,10 +354,10 @@ class ClientAPIController extends AppBaseController
             $initialGroup->courseSubgroups->sortBy('id')->search(function ($subgroup) use ($initialSubgroup) {
                 return $subgroup->id == $initialSubgroup->id;
             });
-
+        DB::beginTransaction();
         if ($request->moveAllDays) {
             $courseDates = $initialGroup->course->courseDates;
-            DB::beginTransaction();
+
             foreach ($courseDates as $courseDate) {
                 $groups = $courseDate->courseGroups->where('degree_id', $initialGroup->degree_id);
 
