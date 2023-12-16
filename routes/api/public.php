@@ -2,9 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::post('/forgot-password', [App\Http\Controllers\API\AuthAPIController::class, 'sendResetLink'])
+    ->name('password.email');
 
+Route::post('/reset-password', [App\Http\Controllers\API\AuthAPIController::class, 'resetPassword'])
+    ->name('password.reset');
 
-Route::middleware(['guest'])->group(function() {
+Route::middleware(['guest'])->group(function () {
 
     Route::post('availability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
         ->name('api.availability.get');
@@ -129,16 +133,19 @@ Route::middleware(['guest'])->group(function() {
     Route::resource('monitors-schools', App\Http\Controllers\API\MonitorsSchoolAPIController::class)
         ->except(['create', 'edit']);
 
-    Route::put('monitor-sports-degrees/multiple', [App\Http\Controllers\API\MonitorSportsDegreeAPIController::class, 'updateMultiple'])
+    Route::put('monitor-sports-degrees/multiple',
+        [App\Http\Controllers\API\MonitorSportsDegreeAPIController::class, 'updateMultiple'])
         ->name('api.monitor-sports-degrees.updatemultiple');
 
     Route::resource('monitor-sports-degrees', App\Http\Controllers\API\MonitorSportsDegreeAPIController::class)
         ->except(['create', 'edit']);
 
-    Route::put('monitor-sport-authorized-degrees/multiple', [App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class, 'updateMultiple'])
+    Route::put('monitor-sport-authorized-degrees/multiple',
+        [App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class, 'updateMultiple'])
         ->name('api.monitor-sport-authorized-degrees.updatemultiple');
 
-    Route::resource('monitor-sport-authorized-degrees', App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class)
+    Route::resource('monitor-sport-authorized-degrees',
+        App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class)
         ->except(['create', 'edit']);
 
     Route::resource('vouchers', App\Http\Controllers\API\VoucherAPIController::class)
