@@ -13,6 +13,7 @@ use App\Repositories\ClientRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -356,10 +357,10 @@ class ClientAPIController extends AppBaseController
 
         if ($request->moveAllDays) {
             $courseDates = $initialGroup->course->courseDates;
-
+            DB::beginTransaction();
             foreach ($courseDates as $courseDate) {
                 $groups = $courseDate->courseGroups->where('degree_id', $initialGroup->degree_id);
-                DB::beginTransaction();
+
                 foreach ($groups as $group) {
                     if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {
                         $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$initialSubgroupPosition] ?? null;
@@ -375,12 +376,12 @@ class ClientAPIController extends AppBaseController
                         return $this->sendError('Some groups are not identical');
                     }
                 }
-                DB::commit();
+
             }
         } else {
             $this->moveUsers($initialSubgroup, $targetSubgroup, $request->clientIds);
         }
-
+        DB::commit();
         return $this->sendResponse([], 'Bookings returned successfully');
     }
 
@@ -389,6 +390,9 @@ class ClientAPIController extends AppBaseController
     {
         // Mover los usuarios
         foreach ($clientIds as $clientId) {
+            Log::info('Data update', ['course_subgroup_id' => $targetSubgroup->id,
+                'course_group_id' => $targetSubgroup->course_group_id,
+                'degree_id' => $targetSubgroup->degree_id]);
             BookingUser::where('course_date_id', $initialCourseDate->id)
                 ->where('client_id', $clientId)
                 ->update(['course_subgroup_id' => $targetSubgroup->id,
