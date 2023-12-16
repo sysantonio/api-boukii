@@ -75,7 +75,7 @@ class CourseController extends AppBaseController
             $request->get('skip'),
             $request->get('limit'),
             $perPage,
-            $request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras']),
+            $request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']),
             $request->get('order', 'desc'),
             $request->get('orderColumn', 'id')
         );

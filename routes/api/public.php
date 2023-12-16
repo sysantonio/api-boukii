@@ -102,6 +102,9 @@ Route::middleware(['guest'])->group(function() {
     Route::resource('users', App\Http\Controllers\API\UserAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::post('clients/transfer', [\App\Http\Controllers\API\ClientAPIController::class, 'transferClients'])
+        ->name('api.teach.clients.transfer');
+
     Route::resource('clients', App\Http\Controllers\API\ClientAPIController::class)
         ->except(['create', 'edit']);
 
