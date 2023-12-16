@@ -163,12 +163,12 @@ class CourseController extends AppBaseController
      */
     public function show($id, Request $request): JsonResponse
     {
-        //$school = $this->getSchool($request);
+        $school = $this->getSchool($request);
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with( 'station','bookingUsers.client.sports',
-            'courseDates.courseGroups.courseSubgroups.monitor')
-            ->where('school_id',1)->find($id);
+            'courseDates.courseGroups.courseSubgroups.monitor', 'courseDates.courseGroups.courseSubgroups.bookingUsers')
+            ->where('school_id',$school->id)->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
