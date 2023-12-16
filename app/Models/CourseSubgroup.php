@@ -129,7 +129,7 @@ class CourseSubgroup extends Model
 
     public function bookingUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\BookingUser::class, 'course_date_id');
+        return $this->hasMany(\App\Models\BookingUser::class, 'course_subgroup_id');
     }
 
     public function getActivitylogOptions(): LogOptions
