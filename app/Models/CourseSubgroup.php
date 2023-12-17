@@ -75,7 +75,7 @@ use Spatie\Activitylog\LogOptions;
 class CourseSubgroup extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'course_subgroups';
-
+    protected $appends = ['is_full'];
     public $fillable = [
         'course_id',
         'course_date_id',
@@ -101,6 +101,16 @@ class CourseSubgroup extends Model
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
+
+    /**
+     * Accesor para determinar si el subgrupo está lleno.
+     *
+     * @return bool
+     */
+    public function getIsFullAttribute(): bool
+    {
+        return count($this->bookingUsers) >= $this->max_participants;
+    }
 
     public function degree(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
