@@ -27,4 +27,6 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
     Route::get('clients/{id}/utilizers', [\App\Http\Controllers\Admin\ClientsController::class, 'getUtilizers']);
 
+    Route::post('monitors/available', [\App\Http\Controllers\Admin\MonitorController::class, 'getMonitorsAvailable'])
+        ->name('api.admin.monitors.available');
 });
