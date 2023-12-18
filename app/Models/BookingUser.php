@@ -117,6 +117,20 @@ use Spatie\Activitylog\LogOptions;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="notes",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="string",
+ *       ),
+ *      @OA\Property(
+ *            property="notes_school",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=true,
+ *            type="string",
+ *        ),
+ *      @OA\Property(
  *            property="status",
  *            description="Status of the booking user",
  *            type="integer",
@@ -172,6 +186,8 @@ class BookingUser extends Model
         'hour_end',
         'attended',
         'status',
+        'notes',
+        'notes_school',
         'color'
     ];
 
@@ -181,18 +197,20 @@ class BookingUser extends Model
         'date' => 'date',
         'attended' => 'boolean',
         'status' => 'integer',
+        'notes_school' => 'string',
+        'notes' => 'string',
         'color' => 'string'
     ];
 
     public static array $rules = [
-        'school_id' => 'required',
-        'booking_id' => 'required',
-        'client_id' => 'required',
-        'price' => 'required|numeric',
-        'currency' => 'required|string|max:3',
+        'school_id' => 'nullable',
+        'booking_id' => 'nullable',
+        'client_id' => 'nullable',
+        'price' => 'nullable|numeric',
+        'currency' => 'nullable|string|max:3',
         'course_subgroup_id' => 'nullable',
         'course_id' => 'nullable',
-        'course_date_id' => 'required',
+        'course_date_id' => 'nullable',
         'degree_id' => 'nullable',
         'course_group_id' => 'nullable',
         'monitor_id' => 'nullable',
@@ -200,8 +218,10 @@ class BookingUser extends Model
         'hour_start' => 'nullable',
         'hour_end' => 'nullable',
         'attended' => 'nullable',
-        'status' => 'numeric',
+        'status' => 'nullable',
         'color' => 'nullable|string|max:45',
+        'notes' => 'nullable|string|max:500',
+        'notes_school' => 'nullable|string|max:500',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
