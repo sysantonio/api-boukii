@@ -219,6 +219,13 @@ use Spatie\Activitylog\LogOptions;
  *           nullable=true
  *       ),
  *      @OA\Property(
+ *           property="active",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -279,6 +286,7 @@ class Monitor extends Model
         'partner_percentaje',
         'user_id',
         'active_school',
+        'active',
         'old_id',
         'active_station'
     ];
@@ -338,6 +346,7 @@ class Monitor extends Model
         'user_id' => 'nullable',
         'active_school' => 'nullable',
         'active_station' => 'nullable',
+        'active' => 'nullable|boolean',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

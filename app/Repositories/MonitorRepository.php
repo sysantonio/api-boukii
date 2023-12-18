@@ -33,6 +33,7 @@ class MonitorRepository extends BaseRepository
         'partner_works',
         'partner_percentaje',
         'user_id',
+        'active',
         'active_school'
     ];
 
