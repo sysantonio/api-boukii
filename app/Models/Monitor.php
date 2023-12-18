@@ -332,7 +332,7 @@ class Monitor extends Model
         'children' => 'nullable',
         'civil_status' => 'nullable|string',
         'family_allowance' => 'nullable|boolean',
-        'partner_work_license' => 'string|max:255',
+        'partner_work_license' => 'nullable|string|max:255',
         'partner_works' => 'nullable|boolean',
         'partner_percentaje' => 'nullable',
         'user_id' => 'nullable',
