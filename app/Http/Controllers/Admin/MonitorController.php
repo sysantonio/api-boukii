@@ -107,6 +107,8 @@ class MonitorController extends AppBaseController
         // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
         $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);
 
+        $availableMonitors = array_values($availableMonitors->toArray());
+
         // Paso 4: Devolver los monitores disponibles.
         return $this->sendResponse($availableMonitors, 'Monitors returned successfully');
 
