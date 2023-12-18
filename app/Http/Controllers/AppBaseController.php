@@ -20,9 +20,9 @@ use App\Http\Utils\ResponseUtil;
  */
 class AppBaseController extends Controller
 {
-    public function sendResponse($result, $message)
+    public function sendResponse($result, $message, $code = 200)
     {
-        return response()->json(ResponseUtil::makeResponse($message, $result));
+        return response()->json(ResponseUtil::makeResponse($message, $result), $code);
     }
 
     public function sendError($error, $code = 404)

@@ -29,4 +29,9 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
     Route::post('monitors/available', [\App\Http\Controllers\Admin\MonitorController::class, 'getMonitorsAvailable'])
         ->name('api.admin.monitors.available');
+
+    /** Booking **/
+    Route::post('bookings/checkbooking',
+        [\App\Http\Controllers\Admin\BookingController::class, 'checkClientBookingOverlap'])
+        ->name('api.admin.bookings.bookingoverlap');
 });
