@@ -64,21 +64,23 @@ class CourseController extends AppBaseController
 
         // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
         $school = $this->getSchool($request);
-        $searchParameters =
-            array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
-                'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
+        $searchParameters = $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']);
 
-        // Utiliza el CourseRepository para obtener los cursos con los parámetros de búsqueda
-        $courses = $this->courseRepository->all(
-            $searchParameters,
-            $request->get('search'),
-            $request->get('skip'),
-            $request->get('limit'),
-            $perPage,
-            $request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']),
-            $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
-        );
+        $searchParameters['school_id'] = $school->id;
+
+        // Inicia la consulta
+        $query = $this->courseRepository->allQuery($searchParameters);
+
+        // Filtrar por sport_id si está presente y es un array
+        if ($request->has('sport_id') && is_array($request->sport_id)) {
+            $query->whereIn('sport_id', $request->sport_id);
+        }
+
+        // Aplica los demás parámetros de la consulta
+        $courses = $query
+            ->with($request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']))
+            ->orderBy($request->get('orderColumn', 'id'), $request->get('order', 'desc'))
+            ->paginate($perPage);
 
         // Calcular reservas y plazas disponibles para cada curso
         foreach ($courses as $course) {
@@ -87,8 +89,7 @@ class CourseController extends AppBaseController
             $course->total_available_places = $availability['total_available_places'];
         }
 
-        return $this->sendResponse($courses,
-            'Courses retrieved successfully');
+        return $this->sendResponse($courses, 'Courses retrieved successfully');
     }
 
     public function getCourseAvailability($course)

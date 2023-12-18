@@ -55,16 +55,36 @@ class BookingAPIController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $bookings = $this->bookingRepository->all(
+        // Inicia la consulta básica
+        $query = $this->bookingRepository->allQuery(
             $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             $request->get('search'),
             $request->get('skip'),
             $request->get('limit'),
-            $request->perPage,
-            $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            $request->get('with', [])
         );
+
+        // Filtrar por reservas con múltiples bookingUsers con user_id diferentes
+        if ($request->has('isMultiple') && $request->isMultiple == true) {
+            $query->whereHas('bookingUsers', function ($subQuery) {
+                $subQuery->select('booking_id')
+                    ->groupBy('booking_id')
+                    ->havingRaw('COUNT(DISTINCT user_id) > 1');
+            });
+        }
+
+        if ($request->has('courseType')) {
+            $query->whereHas('bookingUsers.course', function ($query) use ($request) {
+                $query->where('course_type', $request->courseType);
+            });
+        }
+
+
+        // Ejecutar la consulta y obtener los resultados
+        $bookings = $query->paginate($request->get('perPage', 10));
+
 
         return $this->sendResponse($bookings, 'Bookings retrieved successfully');
     }
