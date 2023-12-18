@@ -139,7 +139,7 @@ use Spatie\Permission\Traits\HasRoles;
         'first_name' => 'nullable|string|max:255',
         'last_name' => 'nullable|string|max:255',
         'email' => 'nullable|string|max:100',
-        'password' => 'string|max:255',
+        'password' => 'nullable|string|max:255',
         'image' => 'nullable|string',
         'type' => 'required|string|max:100',
         'active' => 'required|boolean',
