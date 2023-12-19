@@ -157,6 +157,7 @@ class BookingController extends AppBaseController
                     PayrexxHelpers::sendPayEmail($school, $booking, $request->bonus, $booking->clientMain,
                         $request->bookingCourses, $request->reduction);
                 })->afterResponse();
+                return $this->sendResponse([], 'Mail send correctly');
             }
         }
     }
