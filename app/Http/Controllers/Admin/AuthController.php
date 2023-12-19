@@ -70,11 +70,18 @@ class AuthController extends AppBaseController
 
         // Buscar usuarios por correo electrónico y tipo
         $users = User::where('email', $credentials['email'])
+            ->where(function ($query) {
+                $query->where('type', 'admin')
+                    ->orWhere('type', 1)
+                    ->orWhere('type', 'superadmin')
+                    ->orWhere('type', 4);
+            })
             ->get();
 
         foreach ($users as $user) {
             // Verificar si la contraseña es correcta
             if (Hash::check($credentials['password'], $user->password)) {
+
                 // Cargar escuelas relacionadas si las hay
                 if ($user->type == 'superadmin' || $user->type == '4') {
                     $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
