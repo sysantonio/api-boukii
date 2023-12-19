@@ -30,31 +30,27 @@ class PayrexxController
         Log::channel('payrexx')->debug(print_r($request->all(), 1));
 
         // Can be Booking or Voucher
-        try
-        {
+        try {
             // 1. Pick their Transaction data
             $data = $request->transaction;
-            if ($data && is_array($data) && isset($data['status']) && $data['status'] === TransactionResponse::CONFIRMED)
-            {
+            if ($data && is_array($data) && isset($data['status']) &&
+                $data['status'] === TransactionResponse::CONFIRMED) {
                 // 2. Pick related Booking from our database:
                 // we sent its ReferenceID when the payment was requested
-                $referenceID = trim( $data['referenceId'] ?? '');
+                $referenceID = trim($data['referenceId'] ?? '');
 
                 $booking = (strlen($referenceID) > 2)
-                                ? Booking::with('school')->where('payrexx_reference', '=', $referenceID)->first()
-                                : null;
+                    ? Booking::with('school')->where('payrexx_reference', '=', $referenceID)->first()
+                    : null;
 
-                if ($booking)
-                {
+                if ($booking) {
 
                     // Continue if still unpaid and user chose Payrexx (i.e. BoukiiPay or Online payment methods) - else ignore
                     if (!$booking->paid &&
-                        ($booking->payment_method_id == 2 || $booking->payment_method_id == 3))
-                    {
+                        ($booking->payment_method_id == 2 || $booking->payment_method_id == 3)) {
                         // 3. Pick its related School and its Payrexx credentials...
                         $schoolData = $booking->school;
-                        if ($schoolData && $schoolData->getPayrexxInstance() && $schoolData->getPayrexxKey())
-                        {
+                        if ($schoolData && $schoolData->getPayrexxInstance() && $schoolData->getPayrexxKey()) {
                             // ...to check that it's a legitimate Transaction:
                             // we can't assert that this Notification really came from Payrexx
                             // (or was faked by someone who just did a POST to our URL)
@@ -67,8 +63,7 @@ class PayrexxController
                                 $transactionID
                             );
 
-                            if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED)
-                            {
+                            if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED) {
                                 // Everything seems to fit, so mark booking as paid,
                                 // storing some Transaction info for future refunds
                                 // N.B: as of 2022-10-08 field $data2->invoice->totalAmount is null
@@ -91,20 +86,18 @@ class PayrexxController
                         }
                     }
 
-                }else{
+                } else {
                     $voucher = (strlen($referenceID) > 2)
-                                    ? Voucher::with('school')->where('payrexx_reference', '=', $referenceID)->first()
-                                    : null;
+                        ? Voucher::with('school')->where('payrexx_reference', '=', $referenceID)->first()
+                        : null;
 
-                    if (!$voucher)
-                    {
+                    if (!$voucher) {
                         throw new \Exception('No Booking or Voucher found with payrexx_reference: ' . $referenceID);
                     }
 
                     if (!$voucher->payed) {
                         $schoolData = $voucher->school;
-                        if ($schoolData && $schoolData->getPayrexxInstance() && $schoolData->getPayrexxKey())
-                        {
+                        if ($schoolData && $schoolData->getPayrexxInstance() && $schoolData->getPayrexxKey()) {
                             $transactionID = intval($data['id'] ?? -1);
                             $data2 = PayrexxHelpers::retrieveTransaction(
                                 $schoolData->getPayrexxInstance(),
@@ -112,26 +105,23 @@ class PayrexxController
                                 $transactionID
                             );
 
-                            if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED)
-                            {
+                            if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED) {
 
                                 $buyerUser = User::find($booking->user_main_id);
-                                if($booking->payment_method_id == PaymentMethod::ID_BOUKIIPAY) {
+                                if ($booking->payment_method_id == 2) {
                                     // As of 2022-10-25 tell buyer user by email at this point, even before payment, and continue
                                     dispatch(function () use ($schoolData, $booking, $buyerUser) {
                                         // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
-                                        try
-                                        {
+                                        try {
                                             \Mail::to($buyerUser->email)
                                                 ->send(new BookingCreateMailer(
                                                     $schoolData,
                                                     $booking,
                                                     $buyerUser
                                                 ));
-                                        }
-                                        catch (\Exception $ex)
-                                        {
-                                            \Illuminate\Support\Facades\Log::debug('BookingController->createBooking BookingCreateMailer: ' . $ex->getMessage());
+                                        } catch (\Exception $ex) {
+                                            \Illuminate\Support\Facades\Log::debug('BookingController->createBooking BookingCreateMailer: ' .
+                                                $ex->getMessage());
                                         }
                                     })->afterResponse();
                                 }
@@ -154,9 +144,7 @@ class PayrexxController
                 }
 
             }
-        }
-        catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             Log::channel('payrexx')->error('processNotification');
             Log::channel('payrexx')->error($e->getMessage());
         }
