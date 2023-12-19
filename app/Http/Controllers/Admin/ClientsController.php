@@ -142,7 +142,7 @@ class ClientsController extends AppBaseController
                 order: $order,
                 orderColumn: $orderColumn,
                 additionalConditions: function($query) {
-                    $query->whereHas('isMain');
+                    $query->whereDoesntHave('main');
                 }
             );
 
