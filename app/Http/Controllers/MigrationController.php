@@ -776,9 +776,12 @@ class MigrationController extends AppBaseController
                             ->first();
                     if (!$courseDate) {
                         Log::channel('migration')->warning('Reserva sin cursedate: id', $oldBookingUser->toArray());
-                        $startTime =
-                            Carbon::createFromFormat('Y-m-d H:i', $oldBookingUser['date'] . ' ' . $oldBookingUser['hour']);
-                        $endTime = $startTime->copy()->addSeconds(strtotime($oldBookingUser['duration']) - strtotime('TODAY'));
+                        $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $oldBookingUser['date'] . ' ' . $oldBookingUser['hour']);
+
+                        list($hours, $minutes, $seconds) = explode(':', $oldBookingUser['duration']);
+                        $durationInSeconds = ($hours * 3600) + ($minutes * 60) + $seconds;
+
+                        $endTime = $startTime->copy()->addSeconds($durationInSeconds);
                         $courseDate = new CourseDate([
                             'course_id' => $course->id,
                             'date' => $oldBookingUser->date,
