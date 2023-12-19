@@ -84,7 +84,7 @@ class AuthController extends AppBaseController
             // Verificar si la contraseña es correcta
             if (Hash::check($credentials['password'], $user->password)) {
                 // Cargar escuelas relacionadas si las hay
-                if ($user->type == 'monitor') {
+                if ($user->type == 'monitor' || $user->type == 3) {
                     $success['token'] = $user->createToken('Boukii')->plainTextToken;
                     $user->load('monitors');
                     $user->tokenCan('teach:all');
