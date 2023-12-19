@@ -78,13 +78,15 @@ class AuthController extends AppBaseController
                 // Cargar escuelas relacionadas si las hay
                 if ($user->type == 'superadmin' || $user->type == '4') {
                     $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
+                    $success['user'] = $user;
                 } else if ($user->type == '1' || $user->type == 'admin') {
                     $user->load('schools');
                     $success['token'] = $user->createToken('Boukii', ['admin:all'])->plainTextToken;
+                    $success['user'] = $user;
                 } else {
                     return $this->sendError('Unauthorized.', 401);
                 }
-                $success['user'] = $user;
+
                 return $this->sendResponse($success, 'User login successfully.');
             }
         }
