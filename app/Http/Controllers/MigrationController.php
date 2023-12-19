@@ -747,12 +747,18 @@ class MigrationController extends AppBaseController
                     if ($monitor) {
                         $newBookingUser->monitor_id = $monitor->id;
                     }
+                    $courseDate =
+                        CourseDate::find($course_subgroup->course_date_id);
                     $newBookingUser->course_subgroup_id = $course_subgroup->id;
                     $newBookingUser->school_id = $newBooking->school_id;
                     $newBookingUser->course_group_id = $course_subgroup->course_group_id;
                     $newBookingUser->course_id = $course_subgroup->course_id;
                     $newBookingUser->degree_id = $course_subgroup->degree_id;
                     $newBookingUser->course_date_id = $course_subgroup->course_date_id;
+                    $newBookingUser->date = $courseDate->date;
+                    $newBookingUser->hour_start = $courseDate->hour_start;
+                    $newBookingUser->hour_end = $courseDate->hour_end;
+
                     $newBookingUser->client_id = Client::where('old_id', $oldBookingUser->user_id)->first()->id;
                     $newBookingUser->save();
                 } else {
