@@ -90,6 +90,67 @@ class ClientsController extends AppBaseController
 
     /**
      * @OA\Get(
+     *      path="/admin/clients/mains",
+     *      summary="getClientList",
+     *      tags={"Admin"},
+     *      description="Get all Clients",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function getMains(Request $request): JsonResponse
+    {
+        // Define el valor por defecto para 'perPage'
+        $perPage = $request->input('perPage', 15);
+
+        // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
+        $school = $this->getSchool($request);
+        $searchParameters =
+            array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
+        $search = $request->input('search');
+        $order = $request->input('order', 'desc');
+        $orderColumn = $request->input('orderColumn', 'id');
+        $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
+
+        $clientsWithUtilizers =
+            $this->clientRepository->all(
+                searchArray: $searchParameters,
+                search: $search,
+                skip: $request->input('skip'),
+                limit: $request->input('limit'),
+                pagination: $perPage,
+                with: $with,
+                order: $order,
+                orderColumn: $orderColumn,
+                additionalConditions: function($query) {
+                    $query->whereHas('isMain');
+                }
+            );
+
+        return response()->json($clientsWithUtilizers);
+    }
+
+    /**
+     * @OA\Get(
      *      path="/admin/clients/{id}",
      *      summary="getClientItem",
      *      tags={"Admin"},

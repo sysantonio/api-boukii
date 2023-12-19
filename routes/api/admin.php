@@ -22,6 +22,8 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('getPlanner', [\App\Http\Controllers\Admin\PlannerController::class, 'getPlanner'])
         ->name('api.admin.planner');
 
+    Route::get('clients/mains', [\App\Http\Controllers\Admin\ClientsController::class, 'getMains']);
+
     Route::resource('clients', App\Http\Controllers\Admin\ClientsController::class)
         ->except(['create', 'edit']);
 

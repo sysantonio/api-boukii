@@ -22,6 +22,13 @@ use Illuminate\Support\Facades\Storage;
 |
 */
 
+Route::any('/users-permisions', function () {
+
+    foreach (User::all() as $user) {
+        $user->setInitialPermissionsByRole();
+    }
+});
+
 Route::any('/mailtest', function () {
 
     $bookingData = \App\Models\Booking::find(85);

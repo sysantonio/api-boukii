@@ -36,9 +36,9 @@ abstract class BaseRepository
     /**
      * Make Model instance
      *
+     * @return Model
      * @throws \Exception
      *
-     * @return Model
      */
     public function makeModel()
     {
@@ -71,8 +71,9 @@ abstract class BaseRepository
      * @param string $orderColumn
      * @return Builder
      */
-    public function allQuery(array $searchArray = [], string $search = null, int $skip = null, int $limit = null,
-                             string $order = 'desc', string $orderColumn = 'id', array $with = []): Builder
+    public function allQuery(array  $searchArray = [], string $search = null, int $skip = null, int $limit = null,
+                             string $order = 'desc', string $orderColumn = 'id', array $with = [],
+                                    $additionalConditions = null): Builder
     {
         $query = $this->model->newQuery();
 
@@ -82,7 +83,7 @@ abstract class BaseRepository
         }
 
         if (count($searchArray)) {
-            foreach($searchArray as $key => $value) {
+            foreach ($searchArray as $key => $value) {
                 if (in_array($key, $this->getFieldsSearchable())) {
                     $query->where($key, $value);
                 }
@@ -91,11 +92,16 @@ abstract class BaseRepository
 
         if ($search) {
             $query->where(function ($query) use ($search) {
-                foreach($this->getFieldsSearchable() as $key => $value) {
+                foreach ($this->getFieldsSearchable() as $key => $value) {
                     $query->orWhere($value, 'like', "%" . $search . "%");
                 }
             });
 
+        }
+
+        // Aplicar condiciones adicionales si se proporcionan
+        if ($additionalConditions && is_callable($additionalConditions)) {
+            $additionalConditions($query);
         }
 
         if (!is_null($skip)) {
@@ -112,10 +118,11 @@ abstract class BaseRepository
     /**
      * Retrieve all records with given filter criteria
      */
-    public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10, array $with = [],
-                        $order = 'desc', $orderColumn = 'id'): Builder|LengthAwarePaginator
+    public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10,
+                        array $with = [],
+        $order = 'desc', $orderColumn = 'id', $additionalConditions = null): Builder|LengthAwarePaginator
     {
-        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with);
+        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with, $additionalConditions);
 
         return $query->paginate($pagination);
     }
@@ -167,9 +174,9 @@ abstract class BaseRepository
     }
 
     /**
+     * @return bool|mixed|null
      * @throws \Exception
      *
-     * @return bool|mixed|null
      */
     public function delete(int $id)
     {

@@ -364,6 +364,11 @@ class Client extends Model
         return $this->hasMany(\App\Models\Voucher::class, 'client_id');
     }
 
+    public function isMain()
+    {
+        return $this->hasOne(\App\Models\ClientsUtilizer::class, 'main_id', 'id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

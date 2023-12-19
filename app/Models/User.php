@@ -210,12 +210,15 @@ use Spatie\Permission\Traits\HasRoles;
 
         // Selecciona el conjunto de tablas basado en el rol
         switch ($this->type) {
+            case 1:
             case 'admin':
                 $tables = $adminTables;
                 break;
+            case 2:
             case 'client':
                 $tables = $clientTables;
                 break;
+            case 3:
             case 'monitor':
                 $tables = $monitorTables;
                 break;
