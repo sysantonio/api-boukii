@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingUser;
@@ -17,7 +18,6 @@ use Validator;
  * Class UserController
  * @package App\Http\Controllers\API
  */
-
 class BookingController extends AppBaseController
 {
 
@@ -95,16 +95,69 @@ class BookingController extends AppBaseController
         $overlapBookingUsers = [];
         foreach ($request->bookingUsers as $bookingUser) {
 
-            if(BookingUser::hasOverlappingBookings($bookingUser)) {
+            if (BookingUser::hasOverlappingBookings($bookingUser)) {
                 $overlapBookingUsers[] = $bookingUser;
             }
         }
 
-        if(count($overlapBookingUsers)) {
-            return $this->sendResponse($overlapBookingUsers,'Client has overlapping bookings', 404);
+        if (count($overlapBookingUsers)) {
+            return $this->sendResponse($overlapBookingUsers, 'Client has overlapping bookings', 404);
         }
 
         return $this->sendResponse([], 'Client has not overlaps bookings');
     }
 
+    /**
+     * @OA\Post(
+     *      path="/admin/bookings/checkbooking",
+     *      summary="checkOverlapBooking",
+     *      tags={"Admin"},
+     *      description="Check overlap booking for a client",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function payBooking(Request $request, $id): JsonResponse
+    {
+        $school = $this->getSchool($request);
+        $booking = Booking::find($id);
+
+        if ($booking->payment_method_id == 2) {
+            $payrexxLink =
+                PayrexxHelpers::createGatewayLink($school, $booking, $request->bonus, $booking->clientMain,
+                    $request->bookingCourses, $request->reduction,
+                    'panel');
+
+            if ($payrexxLink) {
+                return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
+            }
+
+            return $this->sendError('Link could not be created');
+        } else if ($booking->payment_method_id == 3) {
+            {
+                dispatch(function () use ($school, $booking, $request) {
+                    PayrexxHelpers::sendPayEmail($school, $booking, $request->bonus, $booking->clientMain,
+                        $request->bookingCourses, $request->reduction);
+                })->afterResponse();
+            }
+        }
+    }
 }

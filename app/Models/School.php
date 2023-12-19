@@ -486,9 +486,6 @@ class School extends Model
         return $this->hasMany(\App\Models\SchoolSport::class, 'school_id');
     }
 
-
-
-
     public function schoolUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\SchoolUser::class, 'school_id');
@@ -516,6 +513,64 @@ class School extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
+        return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
+    }
 
+    /**
+     * Payrexx
+     */
+
+    // Special for field "payrexx_instance" & "payrexx_key": store encrypted
+    public function setPayrexxInstance($value)
+    {
+        $this->payrexx_instance = encrypt($value);
+    }
+
+    public function getPayrexxInstance()
+    {
+        $decrypted = null;
+        if ($this->payrexx_instance)
+        {
+            try
+            {
+                $decrypted = decrypt($this->payrexx_instance);
+            }
+                // @codeCoverageIgnoreStart
+            catch (\Illuminate\Contracts\Encryption\DecryptException $e)
+            {
+                $decrypted = null;  // Data seems corrupt or tampered
+            }
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $decrypted;
+    }
+
+    public function setPayrexxKey($value)
+    {
+        $this->payrexx_key = encrypt($value);
+    }
+
+    public function getPayrexxKey()
+    {
+        $decrypted = null;
+        if ($this->payrexx_key)
+        {
+            try
+            {
+                $decrypted = decrypt($this->payrexx_key);
+            }
+                // @codeCoverageIgnoreStart
+            catch (\Illuminate\Contracts\Encryption\DecryptException $e)
+            {
+                $decrypted = null;  // Data seems corrupt or tampered
+            }
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $decrypted;
     }
 }

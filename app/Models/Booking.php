@@ -278,4 +278,21 @@ use Spatie\Activitylog\LogOptions;
             ->useLogName('activity');
     }
 
+    /**
+     * Generate an unique reference for Payrexx - only for bookings that wanna pay this way
+     * (i.e. BoukiiPay or Online)
+     */
+    public function getOrGeneratePayrexxReference()
+    {
+        if (!$this->payrexx_reference &&
+            ($this->payment_method_id == 2 || $this->payment_method_id == 3))
+        {
+            $ref = 'Boukii #' . $this->id;
+            $this->payrexx_reference = (env('APP_ENV') == 'production') ? $ref : 'TEST ' . $ref;
+            $this->save();
+        }
+
+        return $this->payrexx_reference;
+    }
+
 }

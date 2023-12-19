@@ -34,4 +34,9 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::post('bookings/checkbooking',
         [\App\Http\Controllers\Admin\BookingController::class, 'checkClientBookingOverlap'])
         ->name('api.admin.bookings.bookingoverlap');
+
+    /** Booking **/
+    Route::post('bookings/payments/{id}',
+        [\App\Http\Controllers\Admin\BookingController::class, 'payBooking'])
+        ->name('api.admin.bookings.pay');
 });
