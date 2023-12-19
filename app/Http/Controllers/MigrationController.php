@@ -77,6 +77,7 @@ class MigrationController extends AppBaseController
 
     public function migrateAll(Request $request): JsonResponse
     {
+
         $this->migrateInitalData($request);
         $this->migrateClients($request);
         $this->migrateMonitors($request);
@@ -84,6 +85,7 @@ class MigrationController extends AppBaseController
         $this->migrateCourses($request);
         $this->migrateBookings($request);
 
+        return $this->sendResponse('Datos totales guardados correctamente', 200);
     }
 
     public function migrateInitalData(Request $request): JsonResponse
@@ -259,7 +261,7 @@ class MigrationController extends AppBaseController
 
         foreach ($oldUsers as $oldUser) {
             // Reemplaza con la obtención real de tu modelo
-            $oldClient = User::find($oldUser->id); // Reemplaza con la obtención real de tu modelo
+            $oldClient = User::withTrashed()->find($oldUser->id); // Reemplaza con la obtención real de tu modelo
             $newClient = new Client($oldClient->toArray());
             $newClient->country = $oldClient->country_id;
             $newClient->old_id = $oldClient->id;
@@ -537,7 +539,7 @@ class MigrationController extends AppBaseController
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Error: " . $e->getMessage());
+                Log::channel('migration')->error("Error: " . $e->getMessage());
             }
         }
 
@@ -608,18 +610,19 @@ class MigrationController extends AppBaseController
                 foreach ($period as $date) {
 
                     $isActive = in_array($date->dayOfWeek, $includedDays);
-
+                    $hour_min = $prive->hour_min !== null && $prive->hour_min != 'null' ? $prive->hour_min : '9:00';
+                    $hour_max = $prive->hour_max !== null && $prive->hour_max != 'null' ? $prive->hour_max : '17:00';
                     $newCourseDate = new CourseDate([
                         'date' => $date->format('Y-m-d'),
-                        'hour_start' => $prive->hour_min . ':00',
-                        'hour_end' => $prive->hour_max . ':00',
+                        'hour_start' => $hour_min . ':00',
+                        'hour_end' => $hour_max . ':00',
                         'course_id' => $newCourse->id,
                         'active' => $isActive
                     ]);
                     $newCourseDate->save();
                 }
             } catch (\Exception $e) {
-                Log::error("Error: " . $e->getMessage());
+                Log::channel('migration')->error("Error: " . $e->getMessage());
             }
         }
         Log::info('Migración de cursos privados completada');
@@ -692,10 +695,12 @@ class MigrationController extends AppBaseController
             }
 
             $newBooking->save();
+            Log::channel('migration')->info('Empezamos con la :'. $oldBooking->id);
 
             foreach ($oldBooking->booking_users as $index => $oldBookingUser) {
                 if (!$oldBooking->deleted_at && $oldBookingUser->deleted_at) {
                     $newBooking->status = 2;
+                    $newBooking->deleted_at = null;
                     $newBooking->save();
                 }
 
@@ -704,17 +709,21 @@ class MigrationController extends AppBaseController
                     $newBookingUser = new BookingUser($oldBookingUser->toArray());
                     if ($oldBookingUser->deleted_at) {
                         $newBookingUser->status = 2;
+                        $newBookingUser->deleted_at = null;
                     }
                     $newBookingUser->booking_id = $newBooking->id;
                     $course_subgroup = CourseSubgroup::where('old_id', $oldBookingUser->course_groups_subgroup2_id)
                         ->first();
                     if (!$course_subgroup) {
-
+                        Log::channel('migration')->warning('Reserva sin subgrupo inicial: id', $oldBookingUser->toArray());
                         $oldCourseSubGroup = CourseGroupsSubgroups2::find($oldBookingUser->course_groups_subgroup2_id);
                         if(!$oldCourseSubGroup) {
                             Log::channel('migration')->info('Reserva sin subgrupo: id', $oldBookingUser->toArray());
                             Log::channel('migration')->info('Id Subgrupo antiguo id:'. $oldBookingUser->course_groups_subgroup2_id);
                             continue;
+                        } else {
+                            $course_subgroup = CourseSubgroup::where('old_id', $oldCourseSubGroup->id)
+                                ->first();
                         }
                         $oldCourseGroup = CourseGroups2::find($oldCourseSubGroup->course_group2_id);
                         if(!$oldCourseGroup) {
@@ -723,6 +732,8 @@ class MigrationController extends AppBaseController
                             continue;
                         }
                         $oldCourse = Course2::find($oldCourseGroup->course2_id);
+                       // Log::channel('migration')->warning('Reserva sin subgrupo inicial: course', $oldCourse->toArray());
+
                         if(!$oldCourse) {
                             Log::channel('migration')->info('Reserva sin curso: id', $oldBookingUser->toArray());
                             Log::channel('migration')->info('Id Subgrupo antiguo id:'. $oldBookingUser->course_groups_subgroup2_id);
@@ -752,7 +763,7 @@ class MigrationController extends AppBaseController
                         ->first();
                     if (!$course) {
                         $newBooking->delete();
-                        Log::channel('migration')->info('Reserva privada sin course: id', $oldBookingUser->toArray());
+                        Log::channel('migration')->warning('Reserva privada sin course: id', $oldBookingUser->toArray());
                         //return $this->sendResponse($newBookingUser, 200);
                         continue;
                     }
@@ -764,9 +775,18 @@ class MigrationController extends AppBaseController
                         CourseDate::where('course_id', $course->id)->where('date', $oldBookingUser->date)
                             ->first();
                     if (!$courseDate) {
-                        $newBooking->delete();
-                        Log::channel('migration')->info('Reserva sin cursedate: id', $oldBookingUser->toArray());
-                        continue;
+                        Log::channel('migration')->warning('Reserva sin cursedate: id', $oldBookingUser->toArray());
+                        $startTime =
+                            Carbon::createFromFormat('Y-m-d H:i', $oldBookingUser['date'] . ' ' . $oldBookingUser['hour']);
+                        $endTime = $startTime->copy()->addSeconds(strtotime($oldBookingUser['duration']) - strtotime('TODAY'));
+                        $courseDate = new CourseDate([
+                            'course_id' => $course->id,
+                            'date' => $oldBookingUser->date,
+                            'hour_start' => $oldBookingUser['hour'],
+                            'hour_end' => $endTime->format('H:i')
+                        ]);
+                        $courseDate->save();
+                        Log::channel('migration')->info('Creada nueva cursedate que no encaja', $courseDate->toArray());
                     }
 
                     $newBookingUser->school_id = $newBooking->school_id;
