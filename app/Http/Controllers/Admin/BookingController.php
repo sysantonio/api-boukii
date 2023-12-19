@@ -140,6 +140,15 @@ class BookingController extends AppBaseController
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
 
+        $payrexxLink =
+            PayrexxHelpers::createGatewayLink($school, $booking, $request->bonus, $booking->clientMain,
+                $request->bookingCourses, $request->reduction,
+                'panel');
+
+        if ($payrexxLink) {
+            return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
+        }
+
         if ($booking->payment_method_id == 2) {
             $payrexxLink =
                 PayrexxHelpers::createGatewayLink($school, $booking, $request->bonus, $booking->clientMain,

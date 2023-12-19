@@ -21,6 +21,13 @@ use Illuminate\Support\Facades\Storage;
 |
 */
 
+Route::post('payrexxNotification',  [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
+    ->name('api.migration.data');
+
+Route::get('payrexx/finish', function(Request $request) {
+    return response()->make('Payrexx close ' . $request->status, 200);
+})->name('api.payrexx.finish');
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
