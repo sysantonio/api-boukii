@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Course;
+use App\Models\Language;
 use App\Models\Monitor;
 use App\Models\Station;
 use App\Models\StationService;
@@ -20,6 +21,59 @@ use Illuminate\Support\Facades\Storage;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+Route::any('/mailtest', function () {
+
+    $bookingData = \App\Models\Booking::find(85);
+    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.courseSubGroup', 'bookingUsers.course']);
+    $schoolData = \App\Models\School::find(1);
+    $userData = Client::find($bookingData->client_main_id);
+    //return response()->json($bookingData);
+    // Apply that user's language - or default
+    $defaultLocale = config('app.fallback_locale');
+    $oldLocale = \App::getLocale();
+    $userLang = Language::find($userData->language_id_1);
+    $userLocale = $userLang ? $userLang->code : $defaultLocale;
+    \App::setLocale($userLocale);
+
+    if ($schoolData->id == 8) {
+        $templateView = \View::exists('mails.bookingInfoCharmey_' . $userLocale)
+            ? 'mails.bookingInfoCharmey_' . $userLocale
+            : 'mails.bookingInfoCharmey_' . 'fr';
+
+    } else {
+        $templateView = \View::exists('mails.bookingInfo_' . $userLocale)
+            ? 'mails.bookingInfo_' . $userLocale
+            : 'mails.bookingInfo_' . 'fr';
+
+    }
+
+    $footerView =
+        \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . 'fr';
+    $groupedCourses = $bookingData->parseBookedGroupedCourses();
+
+    $templateData = [
+        'userName' => trim($userData->first_name . ' ' . $userData->last_name),
+        'schoolName' => $schoolData->name,
+        'schoolLogo' => $schoolData->logo,
+        'schoolEmail' => $schoolData->contact_email,
+        'schoolConditionsURL' => $schoolData->conditions_url,
+        'reference' => '#' . $bookingData->id,
+        'bookingNotes' => $bookingData->notes,
+        'groupedCourses' => $groupedCourses,
+        'hasCancellationInsurance' => $bookingData->has_cancellation_insurance,
+        'actionURL' => null,
+        'amount' => 200,
+        'booking' => $bookingData,
+        'currency' => 'chf',
+        'footerView' => $footerView
+    ];
+
+
+    $subject = __('emails.bookingInfo.subject');
+
+    return view($templateView)->with($templateData);
+});
 
 Route::post('payrexxNotification',  [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
     ->name('api.migration.data');

@@ -74,7 +74,7 @@ class AuthController extends AppBaseController
 
         // Buscar usuarios por correo electrónico y tipo
         $users = User::where('email', $credentials['email'])
-            ->where('type', 'monitor')
+            ->where('type', 'monitor')->orWhere('type', 3)
             ->get();
 
         foreach ($users as $user) {

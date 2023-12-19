@@ -65,7 +65,7 @@ class AuthController extends SlugAuthController
         $school = $this->school;
 
         $user = User::with('clients.schools', 'clients.utilizers')->where('email', $credentials['email'])
-            ->where('type', 'client')
+            ->where('type', 'client')->orWhere('type', '2')
             ->first();
 
         if ($user && Hash::check($credentials['password'], $user->password)) {

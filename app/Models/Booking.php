@@ -321,6 +321,61 @@ use Spatie\Activitylog\LogOptions;
         return $decrypted ? json_decode($decrypted, true) : [];
     }
 
+    public function parseBookedGroupedCourses()
+    {
+        $this->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.course']);
+
+        $groupedCourses = [];
+
+        foreach ($this->bookingUsers as $bookingUser) {
+            $courseId = $bookingUser->course_id;
+
+            if (!isset($groupedCourses[$courseId])) {
+                $groupedCourses[$courseId] = [
+                    'course_name' => $bookingUser->course->name,
+                    'clients' => [],
+                ];
+            }
+
+            $clientName = $bookingUser->client->first_name . ' ' . $bookingUser->client->last_name;
+            $groupedCourses[$courseId]['clients'][] = $clientName;
+        }
+
+        return $groupedCourses;
+    }
+
+    public function getRelatedCourseTitle()
+    {
+        $title = '';
+        $this->loadMissing(['course.global_course', 'subgroup']);
+
+        // If booked a "Loose" Course, just pick its name
+        if ($this->course)
+        {
+            $title = $this->course->name;
+        }
+        // For "Definite" pick root Course name plus Group level
+        else if ($this->subgroup)
+        {
+            $group = $this->subgroup->group;
+            $title = $group->course->global_course->name_global;
+
+            $degreesList = [];
+            foreach (Degree::listBySchoolAndSport($this->booking->school_id, $group->course->sport_id) as $d)
+            {
+                $degreesList[$d->degree_id] = $d;
+            }
+
+            $whichDegree = $degreesList[ $group->degree_id ] ?? null;
+
+            if ($whichDegree)
+            {
+                $title .= ', ' . ($whichDegree->annotation ?? '') . ' ' . ($whichDegree->name ?? '');
+            }
+        }
+
+        return $title;
+    }
 
 
 }

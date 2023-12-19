@@ -211,4 +211,83 @@ class Degree extends Model
             ->dontSubmitEmptyLogs()
             ->useLogName('activity');
     }
+
+    /**
+     * Search methods
+     */
+
+
+    /**
+     * List of default degrees for a certain sport.
+     */
+    public static function listDefaultBySport($sportID, $includeGoals = false)
+    {
+        $relations = ['degree'];
+        if ($includeGoals)
+        {
+            $relations[] = 'goals';
+        }
+
+        return self::with($relations)
+            ->whereNull('school_id')
+            ->where('sport_id', '=', $sportID)
+            ->orderBy('degree_id', 'asc')
+            ->get();
+    }
+
+
+    /**
+     * List of a School's Degrees for a certain sport.
+     */
+    public static function listBySchoolAndSport($schoolID, $sportID, $includeGoals = false)
+    {
+        $relations = ['degree'];
+        if ($includeGoals)
+        {
+            $relations[] = 'goals';
+        }
+
+        $list = self::with($relations)
+            ->where('school_id', '=', $schoolID)
+            ->where('sport_id', '=', $sportID)
+            ->orderBy('degree_id', 'asc')
+            ->get();
+
+        // If that School still hasn't defined his Degrees, clone from Default list and retry
+        // 2022-12-19: clone with EMPTY names and NO goals
+        if (count($list) > 0)
+        {
+            return $list;
+        }
+        else
+        {
+            $defaultList = self::listDefaultBySport($sportID, true);
+            foreach ($defaultList as $d)
+            {
+                $d2 = Degree::firstOrCreate([
+                    'degree_id' => $d->degree_id,
+                    'school_id' => $schoolID,
+                    'sport_id' => $d->sport_id
+                ], [
+                    // 'name' => $d->name
+                    'name' => null
+                ]);
+
+                /*
+                if ($d2->wasRecentlyCreated)
+                {
+                    foreach ($d->goals as $g)
+                    {
+                        DegreeSchoolSportGoals::create([
+                            'degrees_school_sport_id' => $d2->id,
+                            'name' => $g->name
+                        ]);
+                    }
+                }
+                */
+            }
+
+            return self::listBySchoolAndSport($schoolID, $sportID, $includeGoals);
+        }
+    }
 }
