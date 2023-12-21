@@ -6,6 +6,8 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\API\CreateMonitorNwdAPIRequest;
 use App\Http\Requests\API\UpdateMonitorNwdAPIRequest;
 use App\Http\Resources\API\MonitorNwdResource;
+use App\Models\BookingUser;
+use App\Models\CourseSubgroup;
 use App\Models\MonitorNwd;
 use App\Repositories\MonitorNwdRepository;
 use Illuminate\Http\JsonResponse;
@@ -103,6 +105,11 @@ class MonitorNwdAPIController extends AppBaseController
     public function store(CreateMonitorNwdAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        // Verificar si el monitor está ocupado antes de actualizar
+        if ($this->isMonitorBusy($input['monitor_id'], $input['start_date'], $input['start_time'], $input['end_time'])) {
+            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede crear el MonitorNwd');
+        }
 
         $monitorNwd = $this->monitorNwdRepository->create($input);
 
@@ -208,6 +215,11 @@ class MonitorNwdAPIController extends AppBaseController
             return $this->sendError('Monitor Nwd not found');
         }
 
+        // Verificar si el monitor está ocupado antes de actualizar
+        if ($this->isMonitorBusy($monitorNwd->monitor_id, $input['start_date'], $input['start_time'], $input['end_time'])) {
+            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede actualizar el MonitorNwd');
+        }
+
         $monitorNwd = $this->monitorNwdRepository->update($input, $id);
 
         return $this->sendResponse(new MonitorNwdResource($monitorNwd), 'MonitorNwd updated successfully');
@@ -261,5 +273,39 @@ class MonitorNwdAPIController extends AppBaseController
         $monitorNwd->delete();
 
         return $this->sendSuccess('Monitor Nwd deleted successfully');
+    }
+
+    private function isMonitorBusy($monitorId, $date, $startTime, $endTime)
+    {
+        // Verificar si el monitor está ocupado en la fecha y horario especificados
+        $isBooked = BookingUser::where('monitor_id', $monitorId)
+            ->whereDate('date', $date)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->whereTime('hour_start', '<=', $endTime)
+                    ->whereTime('hour_end', '>=', $startTime);
+            })
+            ->exists();
+
+        $isNwd = MonitorNwd::where('monitor_id', $monitorId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->whereTime('start_time', '<=', $endTime)
+                    ->whereTime('end_time', '>=', $startTime);
+            })
+            ->exists();
+
+        $isCourse = CourseSubgroup::whereHas('courseDate', function ($query) use ($date, $startTime, $endTime) {
+            $query->whereDate('date', $date)
+                ->where(function ($query) use ($startTime, $endTime) {
+                    $query->whereTime('hour_start', '<=', $endTime)
+                        ->whereTime('hour_end', '>=', $startTime);
+                });
+        })
+            ->where('monitor_id', $monitorId)
+            ->exists();
+
+        // Si el monitor está ocupado en alguno de los casos, devuelve true; de lo contrario, devuelve false.
+        return $isBooked || $isNwd || $isCourse;
     }
 }
