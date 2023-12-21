@@ -84,21 +84,21 @@ class MonitorController extends AppBaseController
         // Esto incluye monitores con reservas (BookingUser) o no disponibles (MonitorNwd).
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function($query) use ($request) {
-                $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i:s', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i:s', $request->startTime));
+                $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
             })
             ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
                 ->whereDate('end_date', '>=', $request->date)
                 ->where(function($query) use ($request) {
-                    $query->whereTime('start_time', '<=', Carbon::createFromFormat('H:i:s', $request->endTime))
-                        ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i:s', $request->startTime));
+                    $query->whereTime('start_time', '<=', Carbon::createFromFormat('H:i', $request->endTime))
+                        ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i', $request->startTime));
                 })
                 ->pluck('monitor_id'))
             ->merge(CourseSubgroup::whereHas('courseDate', function($query) use ($request) {
                 $query->whereDate('date', $request->date)
-                    ->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i:s', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i:s', $request->startTime));
+                    ->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
             })
                 ->pluck('monitor_id'))
             ->unique();
