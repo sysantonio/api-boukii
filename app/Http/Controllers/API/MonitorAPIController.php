@@ -64,7 +64,12 @@ class MonitorAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) use ($request) {
+                $query->whereHas('monitorsSchools', function ($query) use ($request) {
+                    $query->where('school_id', $request['school_id']);
+                });
+            }
         );
 
         return $this->sendResponse($monitors, 'Monitors retrieved successfully');

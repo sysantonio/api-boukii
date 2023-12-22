@@ -42,6 +42,13 @@ use Spatie\Activitylog\LogOptions;
  *           format="date-time",
  *           nullable=true
  *       ),
+ *       @OA\Property(
+ *           property="active_school",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -76,11 +83,13 @@ class MonitorsSchool extends Model
         'monitor_id',
         'school_id',
         'station_id',
+        'active_school',
         'status_updated_at',
         'accepted_at'
     ];
 
     protected $casts = [
+        'active_school' => 'boolean',
         'status_updated_at' => 'datetime',
         'accepted_at' => 'datetime'
     ];
@@ -89,6 +98,7 @@ class MonitorsSchool extends Model
         'monitor_id' => 'required',
         'school_id' => 'required',
         'station_id' => 'nullable',
+        'active_school' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable',

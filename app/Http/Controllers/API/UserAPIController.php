@@ -65,7 +65,12 @@ class UserAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) use ($request) {
+                $query->whereHas('schoolUsers', function ($query) use ($request) {
+                    $query->where('school_id', $request['school_id']);
+                });
+            }
         );
 
         return $this->sendResponse($users, 'Users retrieved successfully');

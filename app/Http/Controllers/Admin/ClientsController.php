@@ -82,7 +82,12 @@ class ClientsController extends AppBaseController
                 pagination: $perPage,
                 with: $with,
                 order: $order,
-                orderColumn: $orderColumn
+                orderColumn: $orderColumn,
+                additionalConditions: function ($query) use($school) {
+                    $query->whereHas('clientsSchools', function ($query) use($school) {
+                        $query->where('school_id', $school->id);
+                    });
+                }
             );
 
         return response()->json($clientsWithUtilizers);
@@ -141,8 +146,10 @@ class ClientsController extends AppBaseController
                 with: $with,
                 order: $order,
                 orderColumn: $orderColumn,
-                additionalConditions: function($query) {
-                    $query->whereDoesntHave('main');
+                additionalConditions: function($query) use($school) {
+                    $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school) {
+                        $query->where('school_id', $school->id);
+                    });
                 }
             );
 
