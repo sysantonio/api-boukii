@@ -216,7 +216,7 @@ class MonitorNwdAPIController extends AppBaseController
         }
 
         // Verificar si el monitor está ocupado antes de actualizar
-        if ($this->isMonitorBusy($monitorNwd->monitor_id, $input['start_date'], $input['start_time'], $input['end_time'])) {
+        if ($this->isMonitorBusy($monitorNwd->monitor_id, $input['start_date'], $input['start_time'], $input['end_time'], $id)) {
             return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede actualizar el MonitorNwd');
         }
 
@@ -275,31 +275,38 @@ class MonitorNwdAPIController extends AppBaseController
         return $this->sendSuccess('Monitor Nwd deleted successfully');
     }
 
-    private function isMonitorBusy($monitorId, $date, $startTime, $endTime)
+    private function isMonitorBusy($monitorId, $date, $startTime, $endTime, $excludeId = null)
     {
         // Verificar si el monitor está ocupado en la fecha y horario especificados
         $isBooked = BookingUser::where('monitor_id', $monitorId)
             ->whereDate('date', $date)
             ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereTime('hour_start', '<=', $endTime)
-                    ->whereTime('hour_end', '>=', $startTime);
+                $query->whereTime('hour_start', '<', $endTime)
+                    ->whereTime('hour_end', '>', $startTime);
             })
             ->exists();
 
-        $isNwd = MonitorNwd::where('monitor_id', $monitorId)
+        // Verificar si el monitor está ocupado en la fecha y horario especificados
+        $query = MonitorNwd::where('monitor_id', $monitorId)
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereTime('start_time', '<=', $endTime)
-                    ->whereTime('end_time', '>=', $startTime);
-            })
-            ->exists();
+                $query->whereTime('start_time', '<', $endTime)
+                    ->whereTime('end_time', '>', $startTime);
+            });
+
+        // Excluir el MonitorNwd actual si se proporciona su ID
+        if ($excludeId !== null) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $isNwd = $query->exists();
 
         $isCourse = CourseSubgroup::whereHas('courseDate', function ($query) use ($date, $startTime, $endTime) {
             $query->whereDate('date', $date)
                 ->where(function ($query) use ($startTime, $endTime) {
-                    $query->whereTime('hour_start', '<=', $endTime)
-                        ->whereTime('hour_end', '>=', $startTime);
+                    $query->whereTime('hour_start', '<', $endTime)
+                        ->whereTime('hour_end', '>', $startTime);
                 });
         })
             ->where('monitor_id', $monitorId)
