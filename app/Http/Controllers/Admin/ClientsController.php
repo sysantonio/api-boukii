@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
-use App\Http\Resources\API\BookingResource;
-use App\Models\Booking;
 use App\Models\Client;
 use App\Repositories\ClientRepository;
 use Illuminate\Http\JsonResponse;

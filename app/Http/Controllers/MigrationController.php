@@ -37,6 +37,7 @@ use App\Models\OldModels\TaskCheck;
 use App\Models\OldModels\User;
 use App\Models\OldModels\UserGroups;
 use App\Models\OldModels\UserNwd;
+use App\Models\OldModels\UserSchools;
 use App\Models\OldModels\UserSport;
 use App\Models\OldModels\UserSportAuthorizedDegrees;
 use App\Models\OldModels\Voucher;
@@ -369,7 +370,9 @@ class MigrationController extends AppBaseController
             $oldMonitor->load('schools');
 
             foreach ($oldMonitor->schools as $school) {
-                $monitorSchool = new MonitorsSchool(['monitor_id' => $newMonitor->id, 'school_id' => $school->id]);
+                $oldMonitorSchool = UserSchools::where('user_id', $oldMonitor->id)->where('school_id', $school->id)->first();
+                $monitorSchool = new MonitorsSchool(['monitor_id' => $newMonitor->id, 'school_id' => $school->id,
+                    'active_school' => $oldMonitorSchool->active_school]);
                 $monitorSchool->save();
             }
 
