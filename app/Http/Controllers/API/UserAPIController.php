@@ -237,10 +237,9 @@ class UserAPIController extends AppBaseController
     {
         $input = $request->all();
 
-        if(!empty($input['password'])) {
+        // Verificar si se proporciona una nueva contraseña
+        if(isset($input['password']) && !empty($input['password'])) {
             $input['password'] = bcrypt($input['password']);
-        } else {
-            $input = $request->except('password');
         }
 
         if(!empty($input['image'])) {
