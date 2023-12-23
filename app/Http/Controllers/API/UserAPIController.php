@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -67,9 +68,11 @@ class UserAPIController extends AppBaseController
             $request->get('order', 'desc'),
             $request->get('orderColumn', 'id'),
             additionalConditions: function ($query) use ($request) {
-                $query->whereHas('schoolUsers', function ($query) use ($request) {
-                    $query->where('school_id', $request['school_id']);
-                });
+                if (isset($request['school_id'])) {
+                    $query->whereHas('schoolUsers', function ($query) use ($request) {
+                        $query->where('school_id', $request['school_id']);
+                    });
+                }
             }
         );
 
@@ -237,11 +240,6 @@ class UserAPIController extends AppBaseController
     {
         $input = $request->all();
 
-        // Verificar si se proporciona una nueva contraseña
-        if(isset($input['password']) && !empty($input['password'])) {
-            $input['password'] = bcrypt($input['password']);
-        }
-
         if(!empty($input['image'])) {
             $base64Image = $request->input('image');
 
@@ -262,6 +260,11 @@ class UserAPIController extends AppBaseController
             $input['image'] = url(Storage::url($imageName));
         } else {
             $input = $request->except('image');
+        }
+
+        // Verificar si se proporciona una nueva contraseña
+        if(isset($input['password']) && !empty($input['password'])) {
+            $input['password'] = bcrypt($input['password']);
         }
 
         /** @var User $user */
