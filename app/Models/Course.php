@@ -324,7 +324,7 @@ class Course extends Model
         'hour_max' => 'nullable|string|max:255',
         'confirm_attendance' => 'required|boolean',
         'active' => 'required|boolean',
-        'unique' => 'boolean',
+        'unique' => 'nullable',
         'online' => 'required|boolean',
         'image' => 'nullable|string',
         'age_min' => 'nullable',
@@ -416,19 +416,19 @@ class Course extends Model
             // Lógica para cursos de tipo 1
             $query->whereHas('courseDates',
                 function (Builder $subQuery) use (
-                    $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                    $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders
                 ) {
                     $subQuery->where('date', '>=', $startDate)
                         ->where('date', '<=', $endDate)
                         ->whereHas('courseSubgroups',
                             function (Builder $subQuery) use (
-                                $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                                $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders
                             ) {
                                 $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
                                 WHERE booking_users.course_date_id = course_dates.id)')
                                     ->whereHas('courseGroup',
                                         function (Builder $groupQuery) use (
-                                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age
+                                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age,$degreeOrders
                                         ) {
 
                                             // Comprobación de degree_order y rango de edad

@@ -169,13 +169,17 @@ class CourseController extends AppBaseController
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with( 'station','bookingUsers.client.sports',
             'courseDates.courseGroups.courseSubgroups.monitor', 'courseDates.courseGroups.courseSubgroups.bookingUsers')
-            ->where('school_id',$school->id)->find($id);
+            ->where('school_id', $school->id)->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
         }
 
-        return $this->sendResponse(new \App\Http\Resources\Admin\CourseResource($course), 'Course retrieved successfully');
+        $availability = $this->getCourseAvailability($course);
+        $course->total_reservations = $availability['total_reservations'];
+        $course->total_available_places = $availability['total_available_places'];
+
+        return $this->sendResponse($course, 'Course retrieved successfully');
     }
 
     /**
