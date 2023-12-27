@@ -77,7 +77,7 @@ class PlannerController extends AppBaseController
 
     public function getPlanner(Request $request): JsonResponse
     {
-        $cacheKey = 'planner_data_' . md5(serialize($request->all()));
+        /*$cacheKey = 'planner_data_' . md5(serialize($request->all()));
 
         // Intenta obtener los datos desde la caché
         $cachedData = Cache::get($cacheKey);
@@ -91,8 +91,8 @@ class PlannerController extends AppBaseController
         $data = $this->performPlannerQuery($request);
 
         // Guarda los datos en caché durante 10 minutos
-        Cache::put($cacheKey, $data, now()->addMinutes(10));
-
+        Cache::put($cacheKey, $data, now()->addMinutes(10));*/
+        $data = $this->performPlannerQuery($request);
         return $this->sendResponse($data, 'Planner retrieved successfully');
     }
 
