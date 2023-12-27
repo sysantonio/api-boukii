@@ -76,6 +76,16 @@ class CourseController extends AppBaseController
             $query->whereIn('sport_id', $request->sport_id);
         }
 
+        // Filtrar cursos finalizados si se proporciona 'finished' en la solicitud
+        if ($request->has('finished')) {
+            // Obtén la fecha actual
+            $today = now()->format('Y-m-d');
+
+            $query->whereHas('courseDates', function ($subquery) use ($today) {
+                $subquery->where('date', '<', $today);
+            });
+        }
+
         // Aplica los demás parámetros de la consulta
         $courses = $query
             ->with($request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']))

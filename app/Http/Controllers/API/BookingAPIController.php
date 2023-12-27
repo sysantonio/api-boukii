@@ -81,6 +81,21 @@ class BookingAPIController extends AppBaseController
             });
         }
 
+        // Filtrar por reservas que tienen todos los bookingUsers con courseDate anteriores al día de hoy
+        if ($request->has('finished')) {
+
+            $today = now()->format('Y-m-d H:i:s');
+
+            $query->whereDoesntHave('bookingUsers', function ($subQuery) use ($today) {
+                $subQuery->where(function ($dateQuery) use ($today) {
+                    $dateQuery->where('date', '>', $today)
+                        ->orWhere(function ($hourQuery) use ($today) {
+                            $hourQuery->where('date', $today)
+                                ->where('hour_end', '>', $today);
+                        });
+                });
+            });
+        }
 
         // Ejecutar la consulta y obtener los resultados
         $bookings = $query->paginate($request->get('perPage', 10));

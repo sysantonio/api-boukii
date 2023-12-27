@@ -68,10 +68,12 @@ class MonitorAPIController extends AppBaseController
             additionalConditions: function ($query) use ($request) {
                 $query->whereHas('monitorsSchools', function ($query) use ($request) {
                     $query->where('school_id', $request['school_id']);
+                    if ($request->has('school_active')) {
+                        $query->where('active_school', $request['school_active']);
+                    }
                 });
             }
         );
-
         return $this->sendResponse($monitors, 'Monitors retrieved successfully');
     }
 
