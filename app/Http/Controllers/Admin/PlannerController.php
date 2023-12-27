@@ -12,6 +12,7 @@ use App\Models\Station;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Response;
 use Validator;
@@ -75,6 +76,27 @@ class PlannerController extends AppBaseController
      */
 
     public function getPlanner(Request $request): JsonResponse
+    {
+        $cacheKey = 'planner_data_' . md5(serialize($request->all()));
+
+        // Intenta obtener los datos desde la caché
+        $cachedData = Cache::get($cacheKey);
+
+        if ($cachedData) {
+            // Devuelve los datos de la caché si están disponibles
+            return $this->sendResponse($cachedData, 'Planner retrieved successfully from cache');
+        }
+
+        // Si los datos no están en caché, realiza la consulta y guárdala en caché durante 10 minutos
+        $data = $this->performPlannerQuery($request);
+
+        // Guarda los datos en caché durante 10 minutos
+        Cache::put($cacheKey, $data, now()->addMinutes(10));
+
+        return $this->sendResponse($data, 'Planner retrieved successfully');
+    }
+
+    public function performPlannerQuery(Request $request): \Illuminate\Support\Collection
     {
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
@@ -211,7 +233,7 @@ class PlannerController extends AppBaseController
             ];
         }
 
-        return $this->sendResponse($groupedData, 'Planner retrieved successfully');
+        return $groupedData;
     }
 
 
