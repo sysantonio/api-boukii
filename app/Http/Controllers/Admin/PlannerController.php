@@ -134,7 +134,9 @@ class PlannerController extends AppBaseController
                 ->pluck('monitor');
         } else {
             // Si no se proporcionó monitor_id, obtén todos los monitores como antes
-            $monitorSchools = MonitorsSchool::with('monitor.sports')->where('school_id', $schoolId)->get();
+            $monitorSchools = MonitorsSchool::with('monitor.sports')->where('school_id', $schoolId)
+                ->where('active_school', 1)
+                ->get();
             $monitors = $monitorSchools->pluck('monitor');
         }
 
