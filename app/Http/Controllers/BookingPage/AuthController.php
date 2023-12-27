@@ -64,24 +64,34 @@ class AuthController extends SlugAuthController
         ]);
         $school = $this->school;
 
-        $user = User::with('clients.schools', 'clients.utilizers')->where('email', $credentials['email'])
-            ->where('type', 'client')->orWhere('type', '2')
-            ->first();
 
-        if ($user && Hash::check($credentials['password'], $user->password)) {
-                //$user->load('clients.schools');
-                // Comprobar si el school->id está en la lista de escuelas del usuario
-                if ($user->clients[0]->schools->contains('id', $school->id)) {
-                    $success['token'] = $user->createToken('Boukii', ['client:all'])->plainTextToken;
-                    $success['user'] =  $user;
-                    return $this->sendResponse($success, 'User login successfully.');
-                } else {
-                    return $this->sendError('Unauthorized. School not associated with user.', 401);
+        $users = User::with('clients.schools', 'clients.utilizers')
+            ->where('email', $credentials['email'])
+            ->where(function ($query) {
+                $query->where('type', 'client')
+                    ->orWhere('type', '2');
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            // Verificar si la contraseña es correcta
+            if (Hash::check($credentials['password'], $user->password)) {
+                // Cargar escuelas relacionadas si las hay
+                if ($user->type == 'client' || $user->type == 2) {
+                    if ($user->clients[0]->schools->contains('id', $school->id)) {
+                        $success['token'] = $user->createToken('Boukii')->plainTextToken;
+                        $user->load('client');
+                        $user->tokenCan('client:all');
+                        $success['user'] =  $user;
+                        return $this->sendResponse($success, 'User login successfully.');
+                    } else {
+                        return $this->sendError('Unauthorized for this school.', 401);
+                    }
                 }
-
-        } else {
-            return $this->sendError('Unauthorized.', 401);
+            }
         }
-    }
 
+        return $this->sendError('Unauthorized.', 401);
+
+    }
 }
