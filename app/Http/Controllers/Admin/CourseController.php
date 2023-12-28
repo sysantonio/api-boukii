@@ -59,40 +59,34 @@ class CourseController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        // Define el valor por defecto para 'perPage'
-        $perPage = $request->input('perPage', 10);
+        $courses = $this->courseRepository->all(
+            searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
+            search: $request->get('search'),
+            skip: $request->get('skip'),
+            limit: $request->get('limit'),
+            pagination: $request->get('perPage'),
+            with: $request->get('with', []),
+            order: $request->get('order', 'desc'),
+            orderColumn: $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) use ($request) {
+                // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
+                $school = $this->getSchool($request);
+                $query->where('school_id', $school->id);
 
-        // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
-        $school = $this->getSchool($request);
-        $searchParameters = $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']);
+                $query->when($request->has('sport_id') && is_array($request->sport_id), function ($query) use ($request) {
+                    $query->whereIn('sport_id', $request->sport_id);
+                });
 
-        $searchParameters['school_id'] = $school->id;
+                $query->when($request->has('finished'), function ($query) {
+                    $today = now()->format('Y-m-d');
+                    $query->whereHas('courseDates', function ($subquery) use ($today) {
+                        $subquery->where('date', '<', $today);
+                    });
+                });
+            }
+        );
 
-        // Inicia la consulta
-        $query = $this->courseRepository->allQuery($searchParameters);
-
-        // Filtrar por sport_id si está presente y es un array
-        if ($request->has('sport_id') && is_array($request->sport_id)) {
-            $query->whereIn('sport_id', $request->sport_id);
-        }
-
-        // Filtrar cursos finalizados si se proporciona 'finished' en la solicitud
-        if ($request->has('finished')) {
-            // Obtén la fecha actual
-            $today = now()->format('Y-m-d');
-
-            $query->whereHas('courseDates', function ($subquery) use ($today) {
-                $subquery->where('date', '<', $today);
-            });
-        }
-
-        // Aplica los demás parámetros de la consulta
-        $courses = $query
-            ->with($request->get('with', ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']))
-            ->orderBy($request->get('orderColumn', 'id'), $request->get('order', 'desc'))
-            ->paginate($perPage);
-
-        // Calcular reservas y plazas disponibles para cada curso
+        // Calcula reservas y plazas disponibles para cada curso
         foreach ($courses as $course) {
             $availability = $this->getCourseAvailability($course);
             $course->total_reservations = $availability['total_reservations'];
