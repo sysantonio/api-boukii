@@ -104,13 +104,6 @@ class BookingAPIController extends AppBaseController
                         });
                     });
                 }
-
-                // Filtrar por el campo 'name' del curso relacionado si se proporciona 'search'
-                if ($request->has('search')) {
-                    $query->whereHas('bookingUsers.course', function ($subQuery) use ($request) {
-                        $subQuery->where('name', 'like', '%' . $request->search . '%');
-                    });
-                }
             }
         );
 

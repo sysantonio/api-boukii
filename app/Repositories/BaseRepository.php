@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Booking;
 use Illuminate\Container\Container as Application;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -94,6 +95,15 @@ abstract class BaseRepository
             $query->where(function ($query) use ($search) {
                 foreach ($this->getFieldsSearchable() as $key => $value) {
                     $query->orWhere($value, 'like', "%" . $search . "%");
+                }
+
+                if (strpos(get_class($this->model), 'Booking') !== false) {
+                    $query->orWhere(function($q) use($value, $search) {
+                        $q->whereHas('bookingUsers.course', function ($subQuery) use ($search) {
+                            $subQuery->orWhere('name', 'like', "%" . $search . "%");
+                        });
+
+                    });
                 }
             });
 

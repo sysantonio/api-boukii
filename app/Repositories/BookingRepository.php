@@ -17,10 +17,7 @@ class BookingRepository extends BaseRepository
         'payment_method_id',
         'paid_total',
         'paid',
-        'payrexx_reference',
-        'payrexx_transaction',
         'attendance',
-        'payrexx_refund',
         'notes',
         'paxes',
         'color'
