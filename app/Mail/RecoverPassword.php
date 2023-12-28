@@ -21,7 +21,7 @@ class RecoverPassword extends Mailable
     {
         $this->user = $user;
     }
-    
+
 
     public function build()
     {
@@ -32,12 +32,13 @@ class RecoverPassword extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.recoverPassword_' . $userLocale) ? 'mails.recoverPassword_' . $userLocale : 'mails.recoverPassword_' . $defaultLocale;
+        $templateView = \View::exists('mails.recoverPassword_' . $userLocale) ?
+            'mails.recoverPassword_' . $userLocale : 'mails.recoverPassword_' . $defaultLocale;
         $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
-        
+
         $templateData = [
             'userName' => trim($this->user->first_name . ' ' . $this->user->last_name),
-            'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $this->user->recover_token,
+            'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $this->user->id . '/' . $this->user->recover_token,
             'footerView' => $footerView,
 
             //SCHOOL DATA - none
