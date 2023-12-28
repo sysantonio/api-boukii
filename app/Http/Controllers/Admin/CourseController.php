@@ -65,7 +65,7 @@ class CourseController extends AppBaseController
             skip: $request->get('skip'),
             limit: $request->get('limit'),
             pagination: $request->get('perPage'),
-            with: $request->get('with', []),
+            with: $request->get('with',  ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']),
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
             additionalConditions: function ($query) use ($request) {
