@@ -38,7 +38,7 @@ class RecoverPassword extends Mailable
 
         $templateData = [
             'userName' => trim($this->user->first_name . ' ' . $this->user->last_name),
-            'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $this->user->id . '/' . $this->user->recover_token,
+            'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $this->user->recover_token .'?user='. $this->user->id ,
             'footerView' => $footerView,
 
             //SCHOOL DATA - none
