@@ -80,7 +80,7 @@ class AuthController extends SlugAuthController
                 if ($user->type == 'client' || $user->type == 2) {
                     if ($user->clients[0]->schools->contains('id', $school->id)) {
                         $success['token'] = $user->createToken('Boukii')->plainTextToken;
-                        $user->load('client');
+                        $user->load('clients');
                         $user->tokenCan('client:all');
                         $success['user'] =  $user;
                         return $this->sendResponse($success, 'User login successfully.');
