@@ -100,7 +100,7 @@ abstract class BaseRepository
                 if (strpos(get_class($this->model), 'Booking') !== false) {
                     $query->orWhere(function($q) use($value, $search) {
                         $q->whereHas('bookingUsers.course', function ($subQuery) use ($search) {
-                            $subQuery->orWhere('name', 'like', "%" . $search . "%");
+                            $subQuery->where('name', 'like', "%" . $search . "%");
                         });
 
                     });
