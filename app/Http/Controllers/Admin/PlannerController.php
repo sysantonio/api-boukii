@@ -236,6 +236,112 @@ class PlannerController extends AppBaseController
         return $groupedData;
     }
 
+    /**
+     * @OA\Post(
+     *      path="/admin/planner/monitors/transfer",
+     *      summary="Transfer Monitor",
+     *      tags={"Admin"},
+     *      description="Transfer a monitor to multiple booking users and update their course subgroups if applicable.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          description="Request body for transferring a monitor.",
+     *          @OA\JsonContent(
+     *              required={"monitor_id", "booking_users"},
+     *              @OA\Property(property="monitor_id", type="integer", description="The ID of the monitor to transfer."),
+     *              @OA\Property(property="booking_users", type="array", description="Array of booking users to update."),
+     *              @OA\Property(property="booking_users.*.id", type="integer", description="The ID of the booking user."),
+     *              @OA\Property(property="booking_users.*.date", type="string", format="date", description="The date of the booking user."),
+     *              @OA\Property(property="booking_users.*.hour_start", type="string", format="time", description="The start time of the booking user."),
+     *              @OA\Property(property="booking_users.*.hour_end", type="string", format="time", description="The end time of the booking user."),
+     *              @OA\Property(property="booking_users.*.course_subgroup_id", type="integer", description="The ID of the course subgroup if applicable."),
+     *          ),
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="success", type="boolean"),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="string",
+     *                  description="Message indicating a successful transfer.",
+     *              ),
+     *          ),
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad request",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="success", type="boolean"),
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="string",
+     *                  description="Error message if the request is invalid.",
+     *              ),
+     *          ),
+     *      )
+     * )
+     */
+    public function transferMonitor(Request $request)
+    {
+        $monitorId = $request->input('monitor_id');
+        $bookingUserIds  = $request->input('booking_users');
+        $overlapDetected = false;
+
+        $monitor = Monitor::find($monitorId);
+
+        if (!$monitor) {
+            return $this->sendError('Monitor not found');
+        }
+
+        // Iterar sobre los bookingUsers
+        foreach ($bookingUserIds as $bookingUserId) {
+            // Obtener la información del bookingUser
+            $bookingUser = BookingUser::find($bookingUserId);
+
+            if (!$bookingUser) {
+                return $this->sendError("BookingUser with ID $bookingUserId not found");
+            }
+
+            // Verificar si el monitor está ocupado para este bookingUser utilizando isMonitorBusy
+            if (Monitor::isMonitorBusy($monitorId, $bookingUser['date'], $bookingUser['hour_start'],
+                $bookingUser['hour_end'])) {
+                $overlapDetected = true;
+                break; // Se detectó superposición, sal del bucle
+            }
+        }
+
+        if ($overlapDetected) {
+            return $this->sendError('Overlap detected. Monitor cannot be transferred.');
+        }
+
+        // Si no hay superposición, actualizar el monitor_id de todos los bookingUsers y subgrupos si es necesario
+        foreach ($bookingUserIds as $bookingUserId) {
+
+            // Actualizar el monitor_id del bookingUser
+            $bookingUserModel = BookingUser::find($bookingUserId);
+
+            $courseSubgroupId = $bookingUserModel['course_subgroup_id'];
+
+            if ($bookingUserModel) {
+                $bookingUserModel->update(['monitor_id' => $monitorId]);
+            }
+
+            // Si el bookingUser tiene un course_subgroup_id, actualizar el monitor_id del subgrupo
+            if ($courseSubgroupId) {
+                $courseSubgroup = CourseSubgroup::find($courseSubgroupId);
+
+                if ($courseSubgroup) {
+                    $courseSubgroup->update(['monitor_id' => $monitorId]);
+                }
+            }
+        }
+
+        return $this->sendResponse($monitor,'Monitor updated for bookingUsers successfully');
+    }
+
 
 
 }

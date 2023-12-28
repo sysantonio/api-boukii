@@ -32,6 +32,9 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::post('monitors/available', [\App\Http\Controllers\Admin\MonitorController::class, 'getMonitorsAvailable'])
         ->name('api.admin.monitors.available');
 
+    Route::post('planner/monitors/transfer', [\App\Http\Controllers\Admin\PlannerController::class, 'transferMonitor'])
+        ->name('api.admin.planner.transfer');
+
     /** Booking **/
     Route::post('bookings/checkbooking',
         [\App\Http\Controllers\Admin\BookingController::class, 'checkClientBookingOverlap'])

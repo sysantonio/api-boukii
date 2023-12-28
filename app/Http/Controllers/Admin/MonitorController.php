@@ -74,7 +74,7 @@ class MonitorController extends AppBaseController
             ->where('degree_id', '>=', $request->minimumDegreeId)
             ->with(['monitor' => function($query) use ($school) {
                 $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
-                    $subQuery->where('school_id', $school->id);
+                    $subQuery->where('school_id', $school->id)->where('active_school', 1);
                 });
             }])
             ->get()
