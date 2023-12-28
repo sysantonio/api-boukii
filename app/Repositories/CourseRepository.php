@@ -20,7 +20,6 @@ class CourseRepository extends BaseRepository
         'currency',
         'max_participants',
         'duration',
-        'duration_flexible',
         'date_start',
         'date_end',
         'date_start_res',
@@ -29,12 +28,7 @@ class CourseRepository extends BaseRepository
         'hour_max',
         'confirm_attendance',
         'active',
-        'online',
-        'image',
-        'translations',
-        'price_range',
-        'discounts',
-        'settings'
+        'online'
     ];
 
     public function getFieldsSearchable(): array
