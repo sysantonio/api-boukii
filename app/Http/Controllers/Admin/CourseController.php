@@ -297,18 +297,18 @@ class CourseController extends AppBaseController
 
                 $date = $course->courseDates()->create($dateData);
 
-                if (isset($dateData['course_groups'])) {
-                    foreach ($dateData['course_groups'] as $groupData) {
+                if (isset($dateData['groups'])) {
+                    foreach ($dateData['groups'] as $groupData) {
                         $groupData['course_id'] = $course->id;
                         $group = $date->courseGroups()->create($groupData);
 
-                        if (isset($groupData['course_subgroups'])) {
-                            foreach ($groupData['course_subgroups'] as &$subgroup) {
+                        if (isset($groupData['subgroups'])) {
+                            foreach ($groupData['subgroups'] as &$subgroup) {
                                 $subgroup['course_id'] = $course->id;
                                 $subgroup['course_date_id'] = $date->id;
                             }
 
-                            $group->courseSubgroups()->createMany($groupData['course_subgroups']);
+                            $group->courseSubgroups()->createMany($groupData['subgroups']);
                         }
                     }
                 }
@@ -397,16 +397,16 @@ class CourseController extends AppBaseController
                 $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
                 $updatedCourseDates[] = $date->id;
 
-                if (isset($dateData['groups'])) {
+                if (isset($dateData['course_groups'])) {
                     $updatedCourseGroups = [];
-                    foreach ($dateData['groups'] as $groupData) {
+                    foreach ($dateData['course_groups'] as $groupData) {
                         // Verifica si existe 'id' antes de usarlo
                         $groupId = isset($groupData['id']) ? $groupData['id'] : null;
                         $group = $date->courseGroups()->updateOrCreate(['id' => $groupId], $groupData);
                         $updatedCourseGroups[] = $group->id;
 
-                        if (isset($groupData['subgroups'])) {
-                            foreach ($groupData['subgroups'] as $subgroupData) {
+                        if (isset($groupData['course_subgroups'])) {
+                            foreach ($groupData['course_subgroups'] as $subgroupData) {
                                 // Preparar los datos de subgroup
                                 $subgroupData['course_id'] = $course->id;
                                 $subgroupData['course_date_id'] = $date->id;
