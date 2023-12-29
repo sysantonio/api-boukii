@@ -297,18 +297,18 @@ class CourseController extends AppBaseController
 
                 $date = $course->courseDates()->create($dateData);
 
-                if (isset($dateData['groups'])) {
-                    foreach ($dateData['groups'] as $groupData) {
+                if (isset($dateData['course_groups'])) {
+                    foreach ($dateData['course_groups'] as $groupData) {
                         $groupData['course_id'] = $course->id;
                         $group = $date->courseGroups()->create($groupData);
 
-                        if (isset($groupData['subgroups'])) {
-                            foreach ($groupData['subgroups'] as &$subgroup) {
+                        if (isset($groupData['course_subgroups'])) {
+                            foreach ($groupData['course_subgroups'] as &$subgroup) {
                                 $subgroup['course_id'] = $course->id;
                                 $subgroup['course_date_id'] = $date->id;
                             }
 
-                            $group->courseSubgroups()->createMany($groupData['subgroups']);
+                            $group->courseSubgroups()->createMany($groupData['course_subgroups']);
                         }
                     }
                 }
