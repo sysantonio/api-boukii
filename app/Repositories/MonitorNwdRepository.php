@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class MonitorNwdRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'monitor_id',
         'school_id',
         'station_id',

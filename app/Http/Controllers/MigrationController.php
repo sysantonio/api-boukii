@@ -264,6 +264,8 @@ class MigrationController extends AppBaseController
             // Reemplaza con la obtención real de tu modelo
             $oldClient = User::withTrashed()->find($oldUser->id); // Reemplaza con la obtención real de tu modelo
             $newClient = new Client($oldClient->toArray());
+            $newClient->first_name = $oldClient->last_name;
+            $newClient->last_name = $oldClient->first_name;
             $newClient->country = $oldClient->country_id;
             $newClient->old_id = $oldClient->id;
 
@@ -513,6 +515,7 @@ class MigrationController extends AppBaseController
                             $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
                                 ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
                                 ->first();
+                            //TODO: Extrapolar recomended age a min max
                             $oldTeacherDegree = $oldDegrees->firstWhere('id', $group->teacher_min_degree);
                             $newTeacherDegree = Degree::where('degree_order', $oldTeacherDegree->degree_order)
                                 ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)

@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class BookingRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'school_id',
         'client_main_id',
         'price_total',

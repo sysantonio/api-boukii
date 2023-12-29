@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class MonitorObservationRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'general',
         'notes',
         'historical',

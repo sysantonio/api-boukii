@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class CourseSubgroupRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'course_id',
         'course_date_id',
         'degree_id',

@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class SchoolUserRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'school_id',
         'user_id'
     ];

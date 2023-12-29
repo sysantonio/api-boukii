@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class SeasonRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'name',
         'start_date',
         'end_date',

@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class VoucherRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'code',
         'quantity',
         'remaining_balance',

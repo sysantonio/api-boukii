@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class SchoolRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'name',
         'description',
         'contact_email',

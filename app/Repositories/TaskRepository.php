@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class TaskRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'name',
         'date',
         'time',

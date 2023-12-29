@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class ServiceTypeRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'name'
     ];
 

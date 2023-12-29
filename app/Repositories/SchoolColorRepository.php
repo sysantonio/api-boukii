@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class SchoolColorRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'school_id',
         'name',
         'color'

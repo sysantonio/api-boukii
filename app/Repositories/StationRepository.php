@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class StationRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'name',
         'cp',
         'city',

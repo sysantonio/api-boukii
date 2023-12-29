@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class EvaluationFulfilledGoalRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'evaluation_id',
         'degrees_school_sport_goals_id'
     ];

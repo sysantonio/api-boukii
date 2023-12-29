@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class EvaluationFileRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'evaluation_id',
         'name',
         'type',

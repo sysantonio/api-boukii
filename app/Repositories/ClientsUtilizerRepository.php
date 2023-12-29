@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class ClientsUtilizerRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'main_id',
         'client_id'
     ];

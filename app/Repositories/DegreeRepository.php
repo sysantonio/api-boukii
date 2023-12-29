@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class DegreeRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'league',
         'level',
         'name',

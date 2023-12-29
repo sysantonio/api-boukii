@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class SchoolSalaryLevelRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'school_id',
         'name',
         'pay'

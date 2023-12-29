@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class ClientSportRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'client_id',
         'sport_id'
     ];

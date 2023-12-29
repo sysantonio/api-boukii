@@ -8,6 +8,7 @@ use App\Repositories\BaseRepository;
 class LanguageRepository extends BaseRepository
 {
     protected $fieldSearchable = [
+'id',
         'code',
         'name'
     ];
