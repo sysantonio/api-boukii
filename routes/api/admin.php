@@ -44,4 +44,8 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::post('bookings/payments/{id}',
         [\App\Http\Controllers\Admin\BookingController::class, 'payBooking'])
         ->name('api.admin.bookings.pay');
+
+    /** Mailing */
+    Route::post('mails/send', [\App\Http\Controllers\Admin\MailController::class, 'sendMail']);
+
 });

@@ -10534,6 +10534,111 @@
                 }
             }
         },
+        "/admin/mails/send": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Send Mail",
+                "description": "Send emails to clients and/or monitors based on provided criteria.",
+                "operationId": "3b1ea1f91ad6f2bbba9b91b6435341a5",
+                "requestBody": {
+                    "description": "Request body for sending emails.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "start_date",
+                                    "end_date",
+                                    "subject",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "start_date": {
+                                        "description": "Start date for filtering courses.",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "description": "End date for filtering courses.",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "course_ids": {
+                                        "description": "Array of course IDs to filter courses.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "subject": {
+                                        "description": "Subject of the email to send.",
+                                        "type": "string"
+                                    },
+                                    "body": {
+                                        "description": "Body content of the email to send.",
+                                        "type": "string"
+                                    },
+                                    "monitors": {
+                                        "description": "Flag to send emails to monitors (default is false).",
+                                        "type": "boolean"
+                                    },
+                                    "clients": {
+                                        "description": "Flag to send emails to clients (default is false).",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "description": "Array of email addresses that received the email.",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "error": {
+                                            "description": "Error message if the request is invalid.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/monitor/available": {
             "post": {
                 "tags": [

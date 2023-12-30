@@ -18,14 +18,14 @@ class BlankMailer extends Mailable
     private $bodyText;
     private $toEmail;
     private $bccEmails;
-    
-    
+
+
     /**
      * Create a new message instance.
      *
      * @param string $subjectText
      * @param string $bodyText
-     * @param string $toEmail
+     * @param string[] $toEmail
      * @param string[] $bccEmails
      * @return void
      */
