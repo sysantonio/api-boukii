@@ -83,6 +83,16 @@ class CourseController extends AppBaseController
                         $subquery->where('date', '<', $today);
                     });
                 });
+
+                // Agregar condiciones para el rango de fechas
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+
+                if ($startDate && $endDate) {
+                    $query->whereHas('courseDates', function ($subquery) use ($startDate, $endDate) {
+                        $subquery->whereBetween('date', [$startDate, $endDate]);
+                    });
+                }
             }
         );
 
