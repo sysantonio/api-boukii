@@ -109,10 +109,10 @@ class BookingController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/admin/bookings/checkbooking",
-     *      summary="checkOverlapBooking",
+     *      path="/admin/bookings/payments/{id}",
+     *      summary="payBooking",
      *      tags={"Admin"},
-     *      description="Check overlap booking for a client",
+     *      description="Pay specific booking",
      *      @OA\Response(
      *          response=200,
      *          description="successful operation",
@@ -140,34 +140,61 @@ class BookingController extends AppBaseController
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
 
-        $payrexxLink =
-            PayrexxHelpers::createGatewayLink($school, $booking, $request->bonus, $booking->clientMain,
-                $request->bookingCourses, $request->reduction,
-                'panel');
+        if (!$booking) {
+            return $this->sendError('Booking not found', [], 404);
+        }
+
+        if ($booking->payment_method_id == 1) {
+            return $this->sendError('Payment method not supported for this booking');
+        }
+
+        $payrexxLink = PayrexxHelpers::createGatewayLink(
+            $school,
+            $booking,
+            $request->bonus,
+            $booking->clientMain,
+            $request->bookingCourses,
+            $request->reduction,
+            'panel'
+        );
 
         if ($payrexxLink) {
             return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
         }
 
         if ($booking->payment_method_id == 2) {
-            $payrexxLink =
-                PayrexxHelpers::createGatewayLink($school, $booking, $request->bonus, $booking->clientMain,
-                    $request->bookingCourses, $request->reduction,
-                    'panel');
+            $payrexxLink = PayrexxHelpers::createGatewayLink(
+                $school,
+                $booking,
+                $request->bonus,
+                $booking->clientMain,
+                $request->bookingCourses,
+                $request->reduction,
+                'panel'
+            );
 
             if ($payrexxLink) {
                 return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
             }
 
             return $this->sendError('Link could not be created');
-        } else if ($booking->payment_method_id == 3) {
-            {
-                dispatch(function () use ($school, $booking, $request) {
-                    PayrexxHelpers::sendPayEmail($school, $booking, $request->bonus, $booking->clientMain,
-                        $request->bookingCourses, $request->reduction);
-                })->afterResponse();
-                return $this->sendResponse([], 'Mail send correctly');
-            }
         }
+
+        if ($booking->payment_method_id == 3) {
+            dispatch(function () use ($school, $booking, $request) {
+                PayrexxHelpers::sendPayEmail(
+                    $school,
+                    $booking,
+                    $request->bonus,
+                    $booking->clientMain,
+                    $request->bookingCourses,
+                    $request->reduction
+                );
+            })->afterResponse();
+
+            return $this->sendResponse([], 'Mail sent correctly');
+        }
+
+        return $this->sendError('Invalid payment method');
     }
 }

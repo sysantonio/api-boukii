@@ -91,6 +91,9 @@ Route::middleware(['guest'])->group(function () {
     Route::resource('email-logs', App\Http\Controllers\API\EmailLogAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::resource('mails', App\Http\Controllers\API\MailAPIController::class)
+        ->except(['create', 'edit']);
+
     Route::resource('task-checks', App\Http\Controllers\API\TaskCheckAPIController::class)
         ->except(['create', 'edit']);
 

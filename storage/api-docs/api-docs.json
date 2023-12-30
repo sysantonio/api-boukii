@@ -4643,6 +4643,221 @@
                 }
             }
         },
+        "/mails": {
+            "get": {
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "getMailList",
+                "description": "Get all Mails",
+                "operationId": "c4730c258f34c9caba89a988812b9da8",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Mail"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "createMail",
+                "description": "Create Mail",
+                "operationId": "23bd8ddbfccb0e5733baa1ca69fb7849",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Mail"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Mail"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mails/{id}": {
+            "get": {
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "getMailItem",
+                "description": "Get Mail",
+                "operationId": "b9b9c42319d545088a6c5721d4a24df6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Mail",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Mail"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "updateMail",
+                "description": "Update Mail",
+                "operationId": "fe74ab439c1fd2c773748a89889fd45e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Mail",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Mail"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Mail"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "deleteMail",
+                "description": "Delete Mail",
+                "operationId": "88eb2f610c7290bd845fca28a98fa52e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of Mail",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/monitors": {
             "get": {
                 "tags": [
@@ -9922,6 +10137,78 @@
                 }
             }
         },
+        "/admin/bookings/checkbooking": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "checkOverlapBooking",
+                "description": "Check overlap booking for a client",
+                "operationId": "327d0506e1bc53976dbeb02b84a692eb",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bookings/payments/{id}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "payBooking",
+                "description": "Pay specific booking",
+                "operationId": "ed9c345469a9a7aa4f34cf501e149ecf",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/clients": {
             "get": {
                 "tags": [
@@ -9930,6 +10217,42 @@
                 "summary": "getClientList",
                 "description": "Get all Clients",
                 "operationId": "aa42ababd1b3c7806f3238032fcd96d4",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/clients/mains": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getClientList",
+                "description": "Get all Clients",
+                "operationId": "dd5efe8d0cb3dcd27483022af6468e3f",
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -10211,6 +10534,42 @@
                 }
             }
         },
+        "/admin/monitor/available": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "getMonitorsAvailable",
+                "description": "Get monitors available",
+                "operationId": "49c294c4c40295df91ed1c34052b3cd1",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Monitor"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/monitor/pastBookings": {
             "get": {
                 "tags": [
@@ -10283,6 +10642,109 @@
                                             "type": "object"
                                         },
                                         "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/planner/monitors/transfer": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Transfer Monitor",
+                "description": "Transfer a monitor to multiple booking users and update their course subgroups if applicable.",
+                "operationId": "bccf75db4de288e63b5a88b6de82b441",
+                "requestBody": {
+                    "description": "Request body for transferring a monitor.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "monitor_id",
+                                    "booking_users"
+                                ],
+                                "properties": {
+                                    "monitor_id": {
+                                        "description": "The ID of the monitor to transfer.",
+                                        "type": "integer"
+                                    },
+                                    "booking_users": {
+                                        "description": "Array of booking users to update.",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "The ID of the booking user.",
+                                                    "type": "integer"
+                                                },
+                                                "date": {
+                                                    "description": "The date of the booking user.",
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "hour_start": {
+                                                    "description": "The start time of the booking user.",
+                                                    "type": "string",
+                                                    "format": "time"
+                                                },
+                                                "hour_end": {
+                                                    "description": "The end time of the booking user.",
+                                                    "type": "string",
+                                                    "format": "time"
+                                                },
+                                                "course_subgroup_id": {
+                                                    "description": "The ID of the course subgroup if applicable.",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "description": "Message indicating a successful transfer.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "error": {
+                                            "description": "Error message if the request is invalid.",
                                             "type": "string"
                                         }
                                     },
@@ -11223,6 +11685,18 @@
                         "nullable": false
                     },
                     "color": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "notes": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "notes_school": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
@@ -12463,6 +12937,49 @@
                 },
                 "type": "object"
             },
+            "Mail": {
+                "required": [
+                    "type",
+                    "subject",
+                    "body",
+                    "school_id"
+                ],
+                "properties": {
+                    "type": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "subject": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "body": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "created_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Monitor": {
                 "required": [
                     "first_name",
@@ -12650,6 +13167,12 @@
                         "description": "User ID associated with the monitor",
                         "type": "integer",
                         "nullable": true
+                    },
+                    "active": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
                     },
                     "created_at": {
                         "description": "",
@@ -12964,6 +13487,12 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "active_school": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
                     },
                     "updated_at": {
                         "description": "",

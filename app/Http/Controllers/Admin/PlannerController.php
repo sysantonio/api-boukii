@@ -248,12 +248,15 @@ class PlannerController extends AppBaseController
      *          @OA\JsonContent(
      *              required={"monitor_id", "booking_users"},
      *              @OA\Property(property="monitor_id", type="integer", description="The ID of the monitor to transfer."),
-     *              @OA\Property(property="booking_users", type="array", description="Array of booking users to update."),
-     *              @OA\Property(property="booking_users.*.id", type="integer", description="The ID of the booking user."),
-     *              @OA\Property(property="booking_users.*.date", type="string", format="date", description="The date of the booking user."),
-     *              @OA\Property(property="booking_users.*.hour_start", type="string", format="time", description="The start time of the booking user."),
-     *              @OA\Property(property="booking_users.*.hour_end", type="string", format="time", description="The end time of the booking user."),
-     *              @OA\Property(property="booking_users.*.course_subgroup_id", type="integer", description="The ID of the course subgroup if applicable."),
+     *              @OA\Property(property="booking_users", type="array", description="Array of booking users to update.",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", description="The ID of the booking user."),
+     *                      @OA\Property(property="date", type="string", format="date", description="The date of the booking user."),
+     *                      @OA\Property(property="hour_start", type="string", format="time", description="The start time of the booking user."),
+     *                      @OA\Property(property="hour_end", type="string", format="time", description="The end time of the booking user."),
+     *                      @OA\Property(property="course_subgroup_id", type="integer", description="The ID of the course subgroup if applicable."),
+     *                  )
+     *              ),
      *          ),
      *      ),
      *      @OA\Response(
