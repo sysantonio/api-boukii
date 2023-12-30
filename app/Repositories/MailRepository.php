@@ -9,6 +9,7 @@ class MailRepository extends BaseRepository
 {
     protected $fieldSearchable = [
         'type',
+        'lang',
         'subject',
         'body',
         'school_id'

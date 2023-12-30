@@ -66,7 +66,7 @@ class MailAPIController extends AppBaseController
             $request->get('orderColumn', 'id')
         );
 
-        return $this->sendResponse(MailResource::collection($mails), 'Mails retrieved successfully');
+        return $this->sendResponse($mails, 'Mails retrieved successfully');
     }
 
     /**
@@ -106,7 +106,7 @@ class MailAPIController extends AppBaseController
 
         $mail = $this->mailRepository->create($input);
 
-        return $this->sendResponse(new MailResource($mail), 'Mail saved successfully');
+        return $this->sendResponse($mail, 'Mail saved successfully');
     }
 
     /**
@@ -145,16 +145,16 @@ class MailAPIController extends AppBaseController
      *      )
      * )
      */
-    public function show($id): JsonResponse
+    public function show($id, Request $request): JsonResponse
     {
         /** @var Mail $mail */
-        $mail = $this->mailRepository->find($id);
+        $mail = $this->mailRepository->find($id,  with: $request->get('with', []));
 
         if (empty($mail)) {
             return $this->sendError('Mail not found');
         }
 
-        return $this->sendResponse(new MailResource($mail), 'Mail retrieved successfully');
+        return $this->sendResponse($mail, 'Mail retrieved successfully');
     }
 
     /**
@@ -210,7 +210,7 @@ class MailAPIController extends AppBaseController
 
         $mail = $this->mailRepository->update($input, $id);
 
-        return $this->sendResponse(new MailResource($mail), 'Mail updated successfully');
+        return $this->sendResponse($mail, 'Mail updated successfully');
     }
 
     /**

@@ -15,6 +15,13 @@ use Illuminate\Database\Eloquent\Model;
  *          nullable=false,
  *          type="string",
  *      ),
+ *     @OA\Property(
+ *           property="lang",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="string",
+ *       ),
  *      @OA\Property(
  *          property="subject",
  *          description="",
@@ -52,6 +59,7 @@ use Illuminate\Database\Eloquent\Model;
 
     public $fillable = [
         'type',
+        'lang',
         'subject',
         'body',
         'school_id'
@@ -59,12 +67,14 @@ use Illuminate\Database\Eloquent\Model;
 
     protected $casts = [
         'type' => 'string',
+        'lang' => 'string',
         'subject' => 'string',
         'body' => 'string'
     ];
 
     public static array $rules = [
         'type' => 'required|string|max:125',
+        'lang' => 'required|string|max:125',
         'subject' => 'required|string|max:125',
         'body' => 'required|string|max:65535',
         'school_id' => 'required',
