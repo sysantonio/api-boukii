@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @OA\Schema(
  *      schema="Mail",
- *      required={"type","subject","body","school_id"},
+ *      required={"type","school_id"},
  *      @OA\Property(
  *          property="type",
  *          description="",
@@ -73,10 +73,10 @@ use Illuminate\Database\Eloquent\Model;
     ];
 
     public static array $rules = [
-        'type' => 'required|string|max:125',
-        'lang' => 'required|string|max:125',
-        'subject' => 'required|string|max:125',
-        'body' => 'required|string|max:65535',
+        'type' => 'nullable|string|max:125',
+        'lang' => 'nullable|string|max:125',
+        'subject' => 'nullable|string|max:125',
+        'body' => 'nullable|string|max:65535',
         'school_id' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable'

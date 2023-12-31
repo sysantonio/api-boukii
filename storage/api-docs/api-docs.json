@@ -13045,12 +13045,16 @@
             "Mail": {
                 "required": [
                     "type",
-                    "subject",
-                    "body",
                     "school_id"
                 ],
                 "properties": {
                     "type": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "lang": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
