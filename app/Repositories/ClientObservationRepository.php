@@ -9,7 +9,6 @@ class ClientObservationRepository extends BaseRepository
 {
     protected $fieldSearchable = [
         'id',
-        'client_id',
         'general',
         'notes',
         'historical',
