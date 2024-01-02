@@ -63,7 +63,15 @@ class TaskAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) use ($request) {
+                // Agregar condiciones para el rango de fechas
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                if ($startDate && $endDate) {
+                    $query->whereBetween('date', [$startDate, $endDate]);
+                }
+            }
         );
 
         return $this->sendResponse($tasks, 'Tasks retrieved successfully');
