@@ -446,8 +446,17 @@ class Monitor extends Model
         $isBooked = BookingUser::where('monitor_id', $monitorId)
             ->whereDate('date', $date)
             ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereTime('hour_start', '<', $endTime)
-                    ->whereTime('hour_end', '>', $startTime);
+                if ($startTime && $endTime) {
+
+                    $query->whereTime('hour_start', '<', $endTime)
+                        ->whereTime('hour_end', '>', $startTime);
+                } else {
+
+                    $query->whereTime('hour_start', '<', '00:00:01') // The first second of the day
+                    ->whereTime('hour_end', '>', '23:59:59');   // The last second of the day
+
+                }
+
             })
             ->exists();
 
@@ -455,7 +464,9 @@ class Monitor extends Model
         $query = MonitorNwd::where('monitor_id', $monitorId)
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date);
+
         if ($startTime && $endTime) {
+
             // Only consider time constraints if it's not a full day
             $query->where(function ($query) use ($startTime, $endTime) {
                 $query->whereTime('start_time', '<', $endTime)
@@ -477,8 +488,14 @@ class Monitor extends Model
         $isCourse = CourseSubgroup::whereHas('courseDate', function ($query) use ($date, $startTime, $endTime) {
             $query->whereDate('date', $date)
                 ->where(function ($query) use ($startTime, $endTime) {
-                    $query->whereTime('hour_start', '<', $endTime)
-                        ->whereTime('hour_end', '>', $startTime);
+                    if ($startTime && $endTime) {
+                        $query->whereTime('hour_start', '<', $endTime)
+                            ->whereTime('hour_end', '>', $startTime);
+                    } else {
+                        $query->whereTime('hour_start', '<', '00:00:01') // The first second of the day
+                        ->whereTime('hour_end', '>', '23:59:59');   // The last second of the day
+                    }
+
                 });
         })
             ->where('monitor_id', $monitorId)
