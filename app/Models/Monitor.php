@@ -461,6 +461,10 @@ class Monitor extends Model
                 $query->whereTime('start_time', '<', $endTime)
                     ->whereTime('end_time', '>', $startTime);
             });
+        } else {
+            // If it's a full day, set start_time to the beginning of the day and end_time to the end of the day
+            $query->whereTime('start_time', '<', '00:00:01') // The first second of the day
+            ->whereTime('end_time', '>', '23:59:59');   // The last second of the day
         }
 
         // Excluir el MonitorNwd actual si se proporciona su ID
