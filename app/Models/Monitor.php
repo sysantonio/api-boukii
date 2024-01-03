@@ -454,11 +454,14 @@ class Monitor extends Model
         // Verificar si el monitor está ocupado en la fecha y horario especificados
         $query = MonitorNwd::where('monitor_id', $monitorId)
             ->whereDate('start_date', '<=', $date)
-            ->whereDate('end_date', '>=', $date)
-            ->where(function ($query) use ($startTime, $endTime) {
+            ->whereDate('end_date', '>=', $date);
+        if ($startTime && $endTime) {
+            // Only consider time constraints if it's not a full day
+            $query->where(function ($query) use ($startTime, $endTime) {
                 $query->whereTime('start_time', '<', $endTime)
                     ->whereTime('end_time', '>', $startTime);
             });
+        }
 
         // Excluir el MonitorNwd actual si se proporciona su ID
         if ($excludeId !== null) {
