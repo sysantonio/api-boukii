@@ -455,6 +455,12 @@ class Monitor extends Model
             })
             ->exists();
 
+        $hasFullDayNwd = MonitorNwd::where('monitor_id', $monitorId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->where('full_day', true)
+            ->exists();
+
         // Verificar si el monitor está ocupado en la fecha y horario especificados
         $query = MonitorNwd::where('monitor_id', $monitorId)
             ->whereDate('start_date', '<=', $date)
@@ -490,7 +496,7 @@ class Monitor extends Model
             ->exists();
 
         // Si el monitor está ocupado en alguno de los casos, devuelve true; de lo contrario, devuelve false.
-        return $isBooked || $isNwd || $isCourse;
+        return $isBooked || $isNwd || $isCourse || $hasFullDayNwd;
     }
 
     public function getActivitylogOptions(): LogOptions
