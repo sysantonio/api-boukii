@@ -293,10 +293,37 @@ class PlannerController extends AppBaseController
         $bookingUserIds  = $request->input('booking_users');
         $overlapDetected = false;
 
-        $monitor = Monitor::find($monitorId);
+        if ($monitorId !== null) {
+            // Check if the monitor exists (only if monitor_id is provided)
+            $monitor = Monitor::find($monitorId);
 
-        if (!$monitor) {
-            return $this->sendError('Monitor not found');
+            if (!$monitor) {
+                return $this->sendError('Monitor not found');
+            }
+        }
+
+        // If monitor_id is null, set all monitors to null
+        if ($monitorId === null) {
+            foreach ($bookingUserIds as $bookingUserId) {
+                $bookingUserModel = BookingUser::find($bookingUserId);
+
+                if ($bookingUserModel) {
+                    $bookingUserModel->update(['monitor_id' => null]);
+                }
+
+                $courseSubgroupId = $bookingUserModel['course_subgroup_id'];
+
+                // If the bookingUser has a course_subgroup_id, update the monitor_id of the subgroup
+                if ($courseSubgroupId) {
+                    $courseSubgroup = CourseSubgroup::find($courseSubgroupId);
+
+                    if ($courseSubgroup) {
+                        $courseSubgroup->update(['monitor_id' => null]);
+                    }
+                }
+            }
+
+            return $this->sendResponse(null, 'Monitor set to null for all bookingUsers successfully');
         }
 
         // Iterar sobre los bookingUsers
@@ -308,9 +335,8 @@ class PlannerController extends AppBaseController
                 return $this->sendError("BookingUser with ID $bookingUserId not found");
             }
 
-            // Verificar si el monitor está ocupado para este bookingUser utilizando isMonitorBusy
-            if (Monitor::isMonitorBusy($monitorId, $bookingUser['date'], $bookingUser['hour_start'],
-                $bookingUser['hour_end'])) {
+            // If monitor_id is not null, check for monitor availability using isMonitorBusy
+            if (Monitor::isMonitorBusy($monitorId, $bookingUser['date'], $bookingUser['hour_start'], $bookingUser['hour_end'])) {
                 $overlapDetected = true;
                 break; // Se detectó superposición, sal del bucle
             }
@@ -320,9 +346,8 @@ class PlannerController extends AppBaseController
             return $this->sendError('Overlap detected. Monitor cannot be transferred.');
         }
 
-        // Si no hay superposición, actualizar el monitor_id de todos los bookingUsers y subgrupos si es necesario
+        // Si no hay superposición y monitor_id is not null, update the monitor_id of all bookingUsers and subgroups if necessary
         foreach ($bookingUserIds as $bookingUserId) {
-
             // Actualizar el monitor_id del bookingUser
             $bookingUserModel = BookingUser::find($bookingUserId);
 
@@ -342,7 +367,7 @@ class PlannerController extends AppBaseController
             }
         }
 
-        return $this->sendResponse($monitor,'Monitor updated for bookingUsers successfully');
+        return $this->sendResponse($monitor, 'Monitor updated for bookingUsers successfully');
     }
 
 
