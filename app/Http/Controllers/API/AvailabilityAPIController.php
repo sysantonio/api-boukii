@@ -46,6 +46,7 @@ class AvailabilityAPIController extends AppBaseController
      *              @OA\Property(property="course_type", type="integer", example=1),
      *              @OA\Property(property="sport_id", type="integer", example=1),
      *              @OA\Property(property="client_id", type="integer", example=1),
+     *              @OA\Property(property="school_id", type="integer", example=1),
      *              @OA\Property(property="degree_id", type="integer", example=1),
      *              @OA\Property(property="get_lower_degrees", type="boolean", example=false)
      *          )
@@ -91,15 +92,22 @@ class AvailabilityAPIController extends AppBaseController
         $degreeId = $request->input('degree_id');
         $getLowerDegrees = $request->input('get_lower_degrees');
 
+        // Check if 'school_id' is provided in the request, if not, set it to null.
+        $schoolId = $request->input('school_id', null);
 
         try {
-            $courses = Course::with('station','sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
-                ->withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees)
-                ->get();
+            // Build the query based on the presence of 'school_id'
+            $query = Course::with('station', 'sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
+                ->withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
+
+            if ($schoolId !== null) {
+                $query->where('school_id', $schoolId);
+            }
+
+            $courses = $query->get();
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
-            dd($e);
             return $this->sendError('Error retrieving courses', 500);
         }
     }
