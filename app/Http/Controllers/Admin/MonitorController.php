@@ -67,6 +67,7 @@ class MonitorController extends AppBaseController
     {
         $school = $this->getSchool($request);
 
+        $isAdultClient = false;
         if ($request->has('clientId')) {
             $client = Client::find($request->clientId);
             $clientAge = Carbon::parse($client->birth_date)->age;
