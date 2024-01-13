@@ -98,16 +98,8 @@ class AvailabilityAPIController extends AppBaseController
 
         try {
             // Build the query based on the presence of 'school_id'
-            $query = Course::with('station', 'sport', 'courseExtras')
-                ->where('school_id', $schoolId);
-
-            if ($type == 1) {
-                $query->with(['courseDates.courseGroups.courseSubgroups' => function($subgroupQuery) use ($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees) {
-                    $subgroupQuery->whereHasAvailableSubgroups($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
-                }])->where('course_type', 1);
-            } else {
-                $query->withAvailableDates($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
-            }
+            $query = Course::with('station', 'sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
+                ->withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
 
             if ($schoolId !== null) {
                 $query->where('school_id', $schoolId);

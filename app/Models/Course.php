@@ -385,7 +385,7 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    public function scopeWithAvailableDates(Builder $query, $startDate, $endDate, $sportId = 1,
+    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
                                                     $clientId = null, $degreeId = null, $getLowerDegrees = false,
                                                     $degreeOrders = null, $min_age = null, $max_age = null)
     {
@@ -420,7 +420,7 @@ class Course extends Model
             $clientDegree = Degree::find($degreeId);
         }
 
-        /*if ($type == 1) {
+        if ($type == 1) {
             // Lógica para cursos de tipo 1
             $query->whereHas('courseDates', function (Builder $subQuery) use (
                 $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
@@ -511,7 +511,7 @@ class Course extends Model
                             });
                         });
             });
-        } elseif ($type == 2) {*/
+        } elseif ($type == 2) {
             // Lógica para cursos de tipo 2
             $query->where('course_type', 2)
                 ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
@@ -527,7 +527,7 @@ class Course extends Model
                 $query->where('age_min', '<=', $clientAge)
                     ->where('age_max', '>=', $clientAge);
             }
-       /* }*/
+        }
 
         return $query;
     }
