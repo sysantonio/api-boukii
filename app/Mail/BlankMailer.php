@@ -46,7 +46,7 @@ class BlankMailer extends Mailable
     public function build()
     {
         $templateView = 'mails.blank';
-        $footerView = 'mails.footer_fr';
+        $footerView = 'mails.footer';
 
         $templateData = [
             'bodyContent' => $this->bodyText,

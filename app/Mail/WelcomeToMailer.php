@@ -20,7 +20,7 @@ class WelcomeToMailer extends Mailable
     {
         $this->user = $user;
     }
-    
+
 
     public function build()
     {
@@ -31,14 +31,14 @@ class WelcomeToMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.welcomeTo_' . $userLocale) ? 'mails.welcomeTo_' . $userLocale : 'mails.welcomeTo_' . $defaultLocale;
-        $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
-        
+        $templateView = \View::exists('mails.welcomeTo');
+        $footerView = \View::exists('mails.footer');
+
         $templateData = [
             'userName' => trim($this->user->first_name . ' ' . $this->user->last_name),
             'actionURL' => null,
             'footerView' => $footerView,
-            
+
             //SCHOOL DATA - none
             'schoolName' => '',
             'schoolLogo' => '',

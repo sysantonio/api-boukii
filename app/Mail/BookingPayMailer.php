@@ -55,7 +55,7 @@ class BookingPayMailer extends Mailable
         \App::setLocale($userLocale);
 
         $templateView = \View::exists('mails.bookingPay_' . $userLocale) ? 'mails.bookingPay_' . $userLocale : 'mails.bookingPay_' . $defaultLocale;
-        $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
+        $footerView = \View::exists('mails.footer');
 
         $templateData = [
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),

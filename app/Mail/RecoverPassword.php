@@ -32,9 +32,8 @@ class RecoverPassword extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.recoverPassword_' . $userLocale) ?
-            'mails.recoverPassword_' . $userLocale : 'mails.recoverPassword_' . $defaultLocale;
-        $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
+        $templateView = \View::exists('mails.recoverPassword');
+        $footerView = \View::exists('mails.footer');
 
         $templateData = [
             'userName' => trim($this->user->first_name . ' ' . $this->user->last_name),

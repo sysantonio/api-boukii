@@ -21,15 +21,15 @@ class BookingCancelMailer extends Mailable
     private $cancelledLines;
     private $userData;
     private $voucherData;
-    
-    
+
+
     /**
      * Create a new message instance.
      *
      * @param \App\Models\School $schoolData Where it was bought
      * @param \App\Models\Booking2 $bookingData That was cancelled
      * @param mixed[] $cancelledLines Alike Bookings2->parseBookedCourses()
-     * @param \App\Models\User $userData Who 
+     * @param \App\Models\User $userData Who
      * @return void
      */
     public function __construct($schoolData, $bookingData, $cancelledLines, $userData, $voucherData)
@@ -55,8 +55,8 @@ class BookingCancelMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.bookingCancel_' . $userLocale) ? 'mails.bookingCancel_' . $userLocale : 'mails.bookingCancel_' . $defaultLocale;
-        $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
+        $templateView = \View::exists('mails.bookingCancel');
+        $footerView = \View::exists('mails.footer');
 
         $voucherCode = "";
         if(isset($this->voucherData->code)) $voucherCode = $this->voucherData->code;

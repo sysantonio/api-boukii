@@ -63,7 +63,7 @@ class BookingCreateMailer extends Mailable
 
         }
 
-        $footerView = \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . $defaultLocale;
+        $footerView = \View::exists('mails.footer');
 
         $templateData = [
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),

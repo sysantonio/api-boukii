@@ -710,7 +710,7 @@ class PayrexxHelpers
                 $gr->addField('street', $buyerUser->address);
                 $gr->addField('postcode', $buyerUser->cp);
 
-                $province = $buyerUser->province_id ? Province::find($buyerUser->province_id) : null;
+                $province = $buyerUser->province_id ?: null;
                 $gr->addField('place', $province ? $province->name : '');
                 $gr->addField('country', $province ? $province->country_iso : '');
             }
