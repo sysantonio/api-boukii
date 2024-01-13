@@ -109,13 +109,13 @@ class MonitorController extends AppBaseController
                     // Añadir filtro de idiomas si clientIds está presente
                     if (!empty($clientLanguages)) {
                         $query->where(function ($query) use ($clientLanguages) {
-                            foreach ($clientLanguages as $languageId) {
-                                $query->orWhereIn('language1_id', $clientLanguages)
-                                    ->orWhereIn('language2_id', $clientLanguages)
-                                    // Repetir para los demás campos de idioma
-                                    // ...
-                                    ->orWhereIn('language6_id', $clientLanguages);
-                            }
+                            $query->orWhereIn('language1_id', $clientLanguages)
+                                ->orWhereIn('language2_id', $clientLanguages)
+                                ->orWhereIn('language3_id', $clientLanguages)
+                                ->orWhereIn('language4_id', $clientLanguages)
+                                ->orWhereIn('language5_id', $clientLanguages)
+                                ->orWhereIn('language6_id', $clientLanguages);
+
                         });
                     }
                 }])
