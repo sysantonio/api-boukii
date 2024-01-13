@@ -8,6 +8,7 @@ use App\Models\Degree;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
 
@@ -87,6 +88,7 @@ class CourseController extends SlugAuthController
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
+            Log::error($e->getMessage(), $e->getTrace());
             return $this->sendError($e->getMessage(), 500);
         }
     }
