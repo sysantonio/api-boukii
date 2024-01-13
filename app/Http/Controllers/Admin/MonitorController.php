@@ -67,12 +67,30 @@ class MonitorController extends AppBaseController
     {
         $school = $this->getSchool($request);
 
-        $isAdultClient = false;
-        if ($request->has('clientId')) {
-            $client = Client::find($request->clientId);
-            $clientAge = Carbon::parse($client->birth_date)->age;
-            $isAdultClient = $clientAge >= 18;
+        $isAnyAdultClient = false;
+        $clientLanguages = [];
+
+        if ($request->has('clientIds') && is_array($request->clientIds)) {
+            foreach ($request->clientIds as $clientId) {
+                $client = Client::find($clientId);
+                if ($client) {
+                    $clientAge = Carbon::parse($client->birth_date)->age;
+                    if ($clientAge >= 18) {
+                        $isAnyAdultClient = true;
+                    }
+
+                    // Agregar idiomas del cliente al array de idiomas
+                    for ($i = 1; $i <= 6; $i++) {
+                        $languageField = 'language' . $i . '_id';
+                        if (!empty($client->$languageField)) {
+                            $clientLanguages[] = $client->$languageField;
+                        }
+                    }
+                }
+            }
         }
+
+        $clientLanguages = array_unique($clientLanguages);
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school) {
@@ -80,28 +98,30 @@ class MonitorController extends AppBaseController
             })
                 ->where('sport_id', $request->sportId)
                 ->where('degree_id', '>=', $request->minimumDegreeId)
-                ->when($isAdultClient, function ($query) {
+                // Comprobación adicional para allow_adults si hay algún cliente adulto
+                ->when($isAnyAdultClient, function ($query) {
                     return $query->where('allow_adults', true);
                 })
-                ->with(['monitor' => function ($query) use ($school, $isAdultClient, $request) {
+                ->with(['monitor' => function ($query) use ($school, $clientLanguages) {
                     $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
                         $subQuery->where('school_id', $school->id)->where('active_school', 1);
                     });
-                    // Añadir filtro de idiomas si clientId está presente
-                    if ($request->has('clientId')) {
-                        $client = Client::find($request->clientId);
-                        $query->where(function ($query) use ($client) {
-                            for ($i = 1; $i <= 6; $i++) {
-                                $languageField = 'language' . $i . '_id';
-                                if (!empty($client->$languageField)) {
-                                    $query->orWhere($languageField, $client->$languageField);
-                                }
+                    // Añadir filtro de idiomas si clientIds está presente
+                    if (!empty($clientLanguages)) {
+                        $query->where(function ($query) use ($clientLanguages) {
+                            foreach ($clientLanguages as $languageId) {
+                                $query->orWhereIn('language1_id', $clientLanguages)
+                                    ->orWhereIn('language2_id', $clientLanguages)
+                                    // Repetir para los demás campos de idioma
+                                    // ...
+                                    ->orWhereIn('language6_id', $clientLanguages);
                             }
                         });
                     }
                 }])
                 ->get()
                 ->pluck('monitor');
+
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function ($query) use ($request) {
                 $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
