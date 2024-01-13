@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
@@ -140,6 +142,99 @@ class CourseSubgroup extends Model
     public function bookingUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\BookingUser::class, 'course_subgroup_id');
+    }
+
+    /**
+     * Filtra los subgrupos según la disponibilidad y otros criterios.
+     */
+    public function scopeWhereHasAvailableSubgroups(Builder $query, $startDate, $endDate, $sportId = 1,
+                                                            $clientId = null, $degreeId = null, $getLowerDegrees = false,
+                                                            $degreeOrders = null, $min_age = null, $max_age = null)
+    {
+        $client = $clientId ? Client::find($clientId) : null;
+        $clientAge = $client ? Carbon::parse($client->birth_date)->age : null;
+        $isAdultClient = $clientAge >= 18;
+
+        $clientLanguages = [];
+        if ($client) {
+            for ($i = 1; $i <= 6; $i++) {
+                $languageField = 'language' . $i . '_id';
+                if (!empty($client->$languageField)) {
+                    $clientLanguages[] = $client->$languageField;
+                }
+            }
+        }
+
+        // Obtener grado del cliente si se proporcionó degreeId
+        $clientDegree = $degreeId ? Degree::find($degreeId) : null;
+
+        // Filtro por fecha
+        $query->whereHas('courseDate', function ($dateQuery) use ($startDate, $endDate) {
+            $dateQuery->where('date', '>=', $startDate)
+                ->where('date', '<=', $endDate);
+        });
+
+        $query->whereHas('course', function ($groupQuery) use ($sportId, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders) {
+            $groupQuery->where('sport_id', $sportId);
+        });
+
+        $query->whereHas('courseGroup', function ($groupQuery) use ($clientDegree, $clientAge, $getLowerDegrees,
+            $min_age, $max_age, $degreeOrders) {
+            if ($clientDegree) {
+                $degreeOrder = $clientDegree->degree_order;
+                if ($getLowerDegrees) {
+                    $groupQuery->whereHas('degree', function ($degreeQuery) use ($degreeOrder) {
+                        $degreeQuery->where
+                        ('degree_order', '<=', $degreeOrder);
+                    });
+                } else {
+                    $groupQuery->where('degree_id', $clientDegree->id);
+                }
+            }
+            if ($clientAge !== null) {
+                $groupQuery->where('age_min', '<=', $clientAge)
+                    ->where('age_max', '>=', $clientAge);
+            } elseif ($min_age !== null || $max_age !== null) {
+                if ($min_age !== null) {
+                    $groupQuery->where('age_min', '<=', $min_age);
+                }
+                if ($max_age !== null) {
+                    $groupQuery->where('age_max', '>=', $max_age);
+                }
+            }
+
+            if (!empty($degreeOrders)) {
+                $groupQuery->whereHas('degree', function ($degreeQuery) use ($degreeOrders, $getLowerDegrees) {
+                    if ($getLowerDegrees) {
+                        $degreeQuery->whereIn('degree_order', array_map('min', $degreeOrders));
+                    } else {
+                        $degreeQuery->whereIn('degree_order', $degreeOrders);
+                    }
+                });
+            }
+        });
+
+        $query->where(function ($query) use ($isAdultClient, $clientLanguages) {
+            $query->doesntHave('monitor') // Subgrupo sin monitor asignado es válido automáticamente
+            ->orWhereHas('monitor', function ($monitorQuery) use ($isAdultClient, $clientLanguages) {
+                // Si el subgrupo tiene monitor, realizar comprobaciones adicionales
+                if ($isAdultClient) {
+                    $monitorQuery->whereHas('monitorSportsDegrees', function ($query) {
+                        $query->where('allow_adults', true);
+                    });
+                }
+
+                if (!empty($clientLanguages)) {
+                    $monitorQuery->where(function ($query) use ($clientLanguages) {
+                        for ($i = 1; $i <= 6; $i++) {
+                            $query->orWhereIn("language{$i}_id", $clientLanguages);
+                        }
+                    });
+                }
+            });
+        });
+
+        return $query;
     }
 
     public function getActivitylogOptions(): LogOptions

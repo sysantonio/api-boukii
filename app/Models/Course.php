@@ -385,7 +385,7 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
+    public function scopeWithAvailableDates(Builder $query, $startDate, $endDate, $sportId = 1,
                                                     $clientId = null, $degreeId = null, $getLowerDegrees = false,
                                                     $degreeOrders = null, $min_age = null, $max_age = null)
     {
@@ -420,98 +420,98 @@ class Course extends Model
             $clientDegree = Degree::find($degreeId);
         }
 
-        if ($type == 1) {
+        /*if ($type == 1) {
             // Lógica para cursos de tipo 1
             $query->whereHas('courseDates', function (Builder $subQuery) use (
                 $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                 $isAdultClient, $clientLanguages
             ) {
-                    $subQuery->where('date', '>=', $startDate)
-                        ->where('date', '<=', $endDate)
-                        ->whereHas('courseSubgroups',
-                            function (Builder $subQuery) use (
-                                $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
-                                $isAdultClient, $clientLanguages
-                            ) {
-                                $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
+                $subQuery->where('date', '>=', $startDate)
+                    ->where('date', '<=', $endDate)
+                    ->whereHas('courseSubgroups',
+                        function (Builder $subQuery) use (
+                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                            $isAdultClient, $clientLanguages
+                        ) {
+                            $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
                                 WHERE booking_users.course_date_id = course_dates.id)')
-                                    ->whereHas('courseGroup',
-                                        function (Builder $groupQuery) use (
-                                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
-                                            $isAdultClient, $clientLanguages
-                                        ) {
+                                ->whereHas('courseGroup',
+                                    function (Builder $groupQuery) use (
+                                        $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                                        $isAdultClient, $clientLanguages
+                                    ) {
 
-                                            // Comprobación de degree_order y rango de edad
-                                            if ($clientDegree !== null && $getLowerDegrees) {
+                                        // Comprobación de degree_order y rango de edad
+                                        if ($clientDegree !== null && $getLowerDegrees) {
 
-                                                $groupQuery->whereHas('degree',
-                                                    function (Builder $degreeQuery) use ($clientDegree) {
+                                            $groupQuery->whereHas('degree',
+                                                function (Builder $degreeQuery) use ($clientDegree) {
+                                                    $degreeQuery->where('degree_order', '<=',
+                                                        $clientDegree->degree_order);
+                                                });
+                                        } else if ($clientDegree !== null && !$getLowerDegrees) {
+                                            $groupQuery->whereHas('degree',
+                                                function (Builder $degreeQuery) use ($clientDegree) {
+                                                    $degreeQuery->where('id', $clientDegree->id);
+                                                });
+                                        }
+                                        if ($clientAge !== null) {
+                                            // Filtrado por la edad del cliente si está disponible
+                                            $groupQuery->where('age_min', '<=', $clientAge)
+                                                ->where('age_max', '>=', $clientAge);
+                                        } else {
+                                            // Filtrado por min_age y max_age si clientId no está disponible
+                                            if ($min_age !== null) {
+                                                $groupQuery->where('age_min', '<=', $min_age);
+                                            }
+                                            if ($max_age !== null) {
+                                                $groupQuery->where('age_max', '>=', $max_age);
+                                            }
+                                        }
+                                        // Comprobación de degree_order y rango de edad
+                                        if (!empty($degreeOrders)) {
+                                            $groupQuery->whereHas('degree',
+                                                function (Builder $degreeQuery) use ($degreeOrders, $getLowerDegrees
+                                                ) {
+                                                    if ($getLowerDegrees) {
+                                                        // Si se pide obtener grados inferiores, compara con el menor grado
                                                         $degreeQuery->where('degree_order', '<=',
-                                                            $clientDegree->degree_order);
-                                                    });
-                                            } else if ($clientDegree !== null && !$getLowerDegrees) {
-                                                $groupQuery->whereHas('degree',
-                                                    function (Builder $degreeQuery) use ($clientDegree) {
-                                                        $degreeQuery->where('id', $clientDegree->id);
-                                                    });
-                                            }
-                                            if ($clientAge !== null) {
-                                                // Filtrado por la edad del cliente si está disponible
-                                                $groupQuery->where('age_min', '<=', $clientAge)
-                                                    ->where('age_max', '>=', $clientAge);
-                                            } else {
-                                                // Filtrado por min_age y max_age si clientId no está disponible
-                                                if ($min_age !== null) {
-                                                    $groupQuery->where('age_min', '<=', $min_age);
-                                                }
-                                                if ($max_age !== null) {
-                                                    $groupQuery->where('age_max', '>=', $max_age);
-                                                }
-                                            }
-                                            // Comprobación de degree_order y rango de edad
-                                            if (!empty($degreeOrders)) {
-                                                $groupQuery->whereHas('degree',
-                                                    function (Builder $degreeQuery) use ($degreeOrders, $getLowerDegrees
-                                                    ) {
-                                                        if ($getLowerDegrees) {
-                                                            // Si se pide obtener grados inferiores, compara con el menor grado
-                                                            $degreeQuery->where('degree_order', '<=',
-                                                                min($degreeOrders));
-                                                        } else {
-                                                            // En caso contrario, filtra por los grados específicos
-                                                            $degreeQuery->whereIn('degree_order', $degreeOrders);
-                                                        }
-                                                    });
-                                            }
-
-
-                                        });
-                                $subQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
-                                    $query->doesntHave('monitor') // Subgrupo sin monitor asignado
-                                    ->orWhereHas('monitor', function (Builder $monitorQuery) use ($isAdultClient, $clientLanguages) {
-                                        // Si el subgrupo tiene monitor, comprobar si permite adultos y los idiomas
-                                        if ($isAdultClient) {
-                                            $monitorQuery->whereHas('monitorSportsDegrees', function ($query) {
-                                                $query->where('allow_adults', true);
-                                            });
+                                                            min($degreeOrders));
+                                                    } else {
+                                                        // En caso contrario, filtra por los grados específicos
+                                                        $degreeQuery->whereIn('degree_order', $degreeOrders);
+                                                    }
+                                                });
                                         }
 
-                                        // Verificación de idiomas
-                                        if (!empty($clientLanguages)) {
-                                            $monitorQuery->where(function ($query) use ($clientLanguages) {
-                                                $query->whereIn('language1_id', $clientLanguages)
-                                                    ->orWhereIn('language2_id', $clientLanguages)
-                                                    ->orWhereIn('language3_id', $clientLanguages)
-                                                    ->orWhereIn('language4_id', $clientLanguages)
-                                                    ->orWhereIn('language5_id', $clientLanguages)
-                                                    ->orWhereIn('language6_id', $clientLanguages);
-                                            });
-                                        }
+
                                     });
+                            $subQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
+                                $query->doesntHave('monitor') // Subgrupo sin monitor asignado
+                                ->orWhereHas('monitor', function (Builder $monitorQuery) use ($isAdultClient, $clientLanguages) {
+                                    // Si el subgrupo tiene monitor, comprobar si permite adultos y los idiomas
+                                    if ($isAdultClient) {
+                                        $monitorQuery->whereHas('monitorSportsDegrees', function ($query) {
+                                            $query->where('allow_adults', true);
+                                        });
+                                    }
+
+                                    // Verificación de idiomas
+                                    if (!empty($clientLanguages)) {
+                                        $monitorQuery->where(function ($query) use ($clientLanguages) {
+                                            $query->whereIn('language1_id', $clientLanguages)
+                                                ->orWhereIn('language2_id', $clientLanguages)
+                                                ->orWhereIn('language3_id', $clientLanguages)
+                                                ->orWhereIn('language4_id', $clientLanguages)
+                                                ->orWhereIn('language5_id', $clientLanguages)
+                                                ->orWhereIn('language6_id', $clientLanguages);
+                                        });
+                                    }
                                 });
                             });
-                });
-        } elseif ($type == 2) {
+                        });
+            });
+        } elseif ($type == 2) {*/
             // Lógica para cursos de tipo 2
             $query->where('course_type', 2)
                 ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
@@ -527,7 +527,7 @@ class Course extends Model
                 $query->where('age_min', '<=', $clientAge)
                     ->where('age_max', '>=', $clientAge);
             }
-        }
+       /* }*/
 
         return $query;
     }

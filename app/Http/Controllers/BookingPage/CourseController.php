@@ -70,14 +70,20 @@ class CourseController extends SlugAuthController
         // return $this->sendResponse($this->school->id, 'Courses retrieved successfully');
 
         try {
-            $courses =
-                Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees,
-                    $degreeOrder)
-                    ->with('courseDates.courseGroups.courseSubgroups.monitor')
-                    ->where('school_id', $this->school->id)
-                    ->where('online', 1)
-                    ->where('active', 1)
-                    ->get();
+            $query = Course::where('school_id', $this->school->id)
+                ->where('online', 1)
+                ->where('active', 1);
+
+            if ($type == 1) {
+                $query->with(['courseDates.courseGroups.courseSubgroups' => function($subgroupQuery) use ($startDate, $endDate, $sportId, $clientId, $degreeOrder, $getLowerDegrees) {
+                    $subgroupQuery->whereHasAvailableSubgroups($startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees, $degreeOrder);
+                }]);
+            } else {
+                $query->with('courseDates.courseGroups.courseSubgroups.monitor')
+                    ->withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees, $degreeOrder);
+            }
+
+            $courses = $query->get();
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
