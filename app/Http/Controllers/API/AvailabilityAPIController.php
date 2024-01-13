@@ -104,7 +104,7 @@ class AvailabilityAPIController extends AppBaseController
             if ($type == 1) {
                 $query->with(['courseDates.courseGroups.courseSubgroups' => function($subgroupQuery) use ($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees) {
                     $subgroupQuery->whereHasAvailableSubgroups($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
-                }]);
+                }])->where('course_type', 1);
             } else {
                 $query->withAvailableDates($startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
             }
