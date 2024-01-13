@@ -484,30 +484,31 @@ class Course extends Model
                                                     });
                                             }
 
-                                            $groupQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
-                                                $query->doesntHave('monitor') // Subgrupo sin monitor asignado
-                                                ->orWhereHas('monitor', function (Builder $monitorQuery) use ($isAdultClient, $clientLanguages) {
-                                                    // Si el subgrupo tiene monitor, comprobar si permite adultos y los idiomas
-                                                    if ($isAdultClient) {
-                                                        $monitorQuery->whereHas('monitorSportsDegrees', function ($query) {
-                                                            $query->where('allow_adults', true);
-                                                        });
-                                                    }
 
-                                                    // Verificación de idiomas
-                                                    if (!empty($clientLanguages)) {
-                                                        $monitorQuery->where(function ($query) use ($clientLanguages) {
-                                                            $query->whereIn('language1_id', $clientLanguages)
-                                                                ->orWhereIn('language2_id', $clientLanguages)
-                                                                ->orWhereIn('language3_id', $clientLanguages)
-                                                                ->orWhereIn('language4_id', $clientLanguages)
-                                                                ->orWhereIn('language5_id', $clientLanguages)
-                                                                ->orWhereIn('language6_id', $clientLanguages);
-                                                        });
-                                                    }
-                                                });
-                                            });
                                         });
+                                $subQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
+                                    $query->doesntHave('monitor') // Subgrupo sin monitor asignado
+                                    ->orWhereHas('monitor', function (Builder $monitorQuery) use ($isAdultClient, $clientLanguages) {
+                                        // Si el subgrupo tiene monitor, comprobar si permite adultos y los idiomas
+                                        if ($isAdultClient) {
+                                            $monitorQuery->whereHas('monitorSportsDegrees', function ($query) {
+                                                $query->where('allow_adults', true);
+                                            });
+                                        }
+
+                                        // Verificación de idiomas
+                                        if (!empty($clientLanguages)) {
+                                            $monitorQuery->where(function ($query) use ($clientLanguages) {
+                                                $query->whereIn('language1_id', $clientLanguages)
+                                                    ->orWhereIn('language2_id', $clientLanguages)
+                                                    ->orWhereIn('language3_id', $clientLanguages)
+                                                    ->orWhereIn('language4_id', $clientLanguages)
+                                                    ->orWhereIn('language5_id', $clientLanguages)
+                                                    ->orWhereIn('language6_id', $clientLanguages);
+                                            });
+                                        }
+                                    });
+                                });
                             });
                 });
         } elseif ($type == 2) {
