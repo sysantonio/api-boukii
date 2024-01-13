@@ -93,11 +93,11 @@ class MonitorController extends AppBaseController
         $clientLanguages = array_unique($clientLanguages);
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
-            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school) {
-                $query->where('school_id', $school->id);
+            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {
+                $query->where('school_id', $school->id)
+                    ->where('degree_id', '>=', $request->minimumDegreeId);
             })
                 ->where('sport_id', $request->sportId)
-                ->where('degree_id', '>=', $request->minimumDegreeId)
                 // Comprobación adicional para allow_adults si hay algún cliente adulto
                 ->when($isAnyAdultClient, function ($query) {
                     return $query->where('allow_adults', true);
