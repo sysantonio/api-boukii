@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingController
@@ -108,6 +109,7 @@ class AvailabilityAPIController extends AppBaseController
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
         } catch (\Exception $e) {
+            Log::error($e->getMessage(), $e->getTrace());
             return $this->sendError('Error retrieving courses', 500);
         }
     }
