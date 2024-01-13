@@ -79,13 +79,13 @@ class MonitorController extends AppBaseController
             })
                 ->where('sport_id', $request->sportId)
                 ->where('degree_id', '>=', $request->minimumDegreeId)
+                ->when($isAdultClient, function ($query) {
+                    return $query->where('allow_adults', true);
+                })
                 ->with(['monitor' => function ($query) use ($school, $isAdultClient, $request) {
                     $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
                         $subQuery->where('school_id', $school->id)->where('active_school', 1);
                     });
-                    if ($isAdultClient) {
-                        $query->where('allow_adults', true);
-                    }
                     // Añadir filtro de idiomas si clientId está presente
                     if ($request->has('clientId')) {
                         $client = Client::find($request->clientId);
