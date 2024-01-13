@@ -8,6 +8,7 @@ use App\Http\Resources\API\BookingUserResource;
 use App\Http\Resources\Teach\HomeAgendaResource;
 use App\Models\Booking;
 use App\Models\BookingUser;
+use App\Models\Client;
 use App\Models\CourseSubgroup;
 use App\Models\MonitorNwd;
 use App\Models\MonitorObservation;
@@ -26,7 +27,6 @@ use Validator;
  * Class HomeController
  * @package App\Http\Controllers\Teach
  */
-
 class MonitorController extends AppBaseController
 {
 
@@ -66,36 +66,60 @@ class MonitorController extends AppBaseController
     public function getMonitorsAvailable(Request $request): JsonResponse
     {
         $school = $this->getSchool($request);
-        // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
-        $eligibleMonitors = MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school) {
-            $query->where('school_id', $school->id);
-        })
-            ->where('sport_id', $request->sportId)
-            ->where('degree_id', '>=', $request->minimumDegreeId)
-            ->with(['monitor' => function($query) use ($school) {
-                $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
-                    $subQuery->where('school_id', $school->id)->where('active_school', 1);
-                });
-            }])
-            ->get()
-            ->pluck('monitor');
 
-        // Paso 2: Excluir monitores que tienen compromisos durante ese tiempo.
-        // Esto incluye monitores con reservas (BookingUser) o no disponibles (MonitorNwd).
+        if ($request->has('clientId')) {
+            $client = Client::find($request->clientId);
+            $clientAge = Carbon::parse($client->birth_date)->age;
+            $isAdultClient = $clientAge >= 18;
+        }
+        // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
+        $eligibleMonitors =
+            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school) {
+                $query->where('school_id', $school->id);
+            })
+                ->where('sport_id', $request->sportId)
+                ->where('degree_id', '>=', $request->minimumDegreeId)
+                ->with(['monitor' => function ($query) use ($school, $isAdultClient, $request) {
+                    $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
+                        $subQuery->where('school_id', $school->id)->where('active_school', 1);
+                    });
+                    if ($isAdultClient) {
+                        $query->where('allow_adults', true);
+                    }
+                    // Añadir filtro de idiomas si clientId está presente
+                    if ($request->has('clientId')) {
+                        $client = Client::find($request->clientId);
+                        $query->where(function ($query) use ($client) {
+                            for ($i = 1; $i <= 6; $i++) {
+                                $languageField = 'language' . $i . '_id';
+                                if (!empty($client->$languageField)) {
+                                    $query->orWhere($languageField, $client->$languageField);
+                                }
+                            }
+                        });
+                    }
+                }])
+                ->get()
+                ->pluck('monitor');
         $busyMonitors = BookingUser::whereDate('date', $request->date)
-            ->where(function($query) use ($request) {
+            ->where(function ($query) use ($request) {
                 $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
                     ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
             })
             ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
                 ->whereDate('end_date', '>=', $request->date)
-                ->where(function($query) use ($request) {
-                    $query->whereTime('start_time', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                        ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                ->where(function ($query) use ($request) {
+                    // Aquí incluimos la lógica para verificar si es un día entero
+                    $query->where('full_day', true)
+                        ->orWhere(function ($timeQuery) use ($request) {
+                            $timeQuery->whereTime('start_time', '<=',
+                                Carbon::createFromFormat('H:i', $request->endTime))
+                                ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                        });
                 })
                 ->pluck('monitor_id'))
-            ->merge(CourseSubgroup::whereHas('courseDate', function($query) use ($request) {
+            ->merge(CourseSubgroup::whereHas('courseDate', function ($query) use ($request) {
                 $query->whereDate('date', $request->date)
                     ->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
                     ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
@@ -117,7 +141,6 @@ class MonitorController extends AppBaseController
         return $this->sendResponse($availableMonitors, 'Monitors returned successfully');
 
     }
-
 
 
     /**
@@ -153,7 +176,8 @@ class MonitorController extends AppBaseController
     {
         $monitor = $this->getMonitor($request);
 
-        $seasonStart = Season::where('school_id', $request->school_id)->where('is_active', 1)->select('start_date')->first();
+        $seasonStart =
+            Season::where('school_id', $request->school_id)->where('is_active', 1)->select('start_date')->first();
 
 
         $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client')
