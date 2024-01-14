@@ -236,6 +236,9 @@ class MonitorAPIController extends AppBaseController
             return $this->sendError('Monitor not found');
         }
 
+        $activeSchool = $request->get('school_active');
+        $schoolId = $request->get('school_id');
+
         if(!empty($input['image'])) {
             $base64Image = $request->input('image');
 
@@ -259,6 +262,14 @@ class MonitorAPIController extends AppBaseController
         }
 
         $monitor = $this->monitorRepository->update($input, $id);
+
+        if (isset($activeSchool) && isset($schoolId)) {
+
+            $monitorSchoolRelation = $monitor->monitorsSchools()->where('school_id', $schoolId)->first();
+            if ($monitorSchoolRelation) {
+                $monitorSchoolRelation->update(['active_school' => $activeSchool]);
+            }
+        }
 
         return $this->sendResponse(new MonitorResource($monitor), 'Monitor updated successfully');
     }

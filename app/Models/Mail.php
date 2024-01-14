@@ -30,6 +30,13 @@ use Illuminate\Database\Eloquent\Model;
  *          type="string",
  *      ),
  *      @OA\Property(
+ *           property="title",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="string",
+ *       ),
+ *      @OA\Property(
  *          property="body",
  *          description="",
  *          readOnly=false,
@@ -61,6 +68,7 @@ use Illuminate\Database\Eloquent\Model;
         'type',
         'lang',
         'subject',
+        'title',
         'body',
         'school_id'
     ];
@@ -69,6 +77,7 @@ use Illuminate\Database\Eloquent\Model;
         'type' => 'string',
         'lang' => 'string',
         'subject' => 'string',
+        'title' => 'string',
         'body' => 'string'
     ];
 
@@ -76,6 +85,7 @@ use Illuminate\Database\Eloquent\Model;
         'type' => 'nullable|string|max:125',
         'lang' => 'nullable|string|max:125',
         'subject' => 'nullable|string|max:125',
+        'title' => 'nullable|string|max:125',
         'body' => 'nullable|string|max:65535',
         'school_id' => 'required',
         'created_at' => 'nullable',
