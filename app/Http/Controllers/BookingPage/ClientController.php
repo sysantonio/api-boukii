@@ -64,4 +64,105 @@ class ClientController extends SlugAuthController
         return $this->sendResponse($voucher, 'Voucher returned successfully');
     }
 
+    /**
+     * @OA\Get(
+     *      path="/slug/clients/{id}/utilizers",
+     *      summary="getClientUtilizersList",
+     *      tags={"BookingPage"},
+     *      description="Get all Clients utilizers from id",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function getUtilizers($id, Request $request): JsonResponse
+    {
+        $mainClient = Client::with('utilizers')->find($id);
+
+        $utilizers = $mainClient->utilizers;
+
+        return $this->sendResponse($utilizers, 'Utilizers returned successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/slug/clients/mains",
+     *      summary="getClientListMains",
+     *      tags={"BookingPage"},
+     *      description="Get all Clients Mains",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function getMains(Request $request): JsonResponse
+    {
+        // Define el valor por defecto para 'perPage'
+        $perPage = $request->input('perPage', 15);
+
+        // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
+        $school = $this->getSchool($request);
+        $searchParameters =
+            array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
+        $search = $request->input('search');
+        $order = $request->input('order', 'desc');
+        $orderColumn = $request->input('orderColumn', 'id');
+        $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
+
+        $clientsWithUtilizers =
+            $this->clientRepository->all(
+                searchArray: $searchParameters,
+                search: $search,
+                skip: $request->input('skip'),
+                limit: $request->input('limit'),
+                pagination: $perPage,
+                with: $with,
+                order: $order,
+                orderColumn: $orderColumn,
+                additionalConditions: function($query) use($school) {
+                    $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school) {
+                        $query->where('school_id', $school->id);
+                    });
+                }
+            );
+
+        return response()->json($clientsWithUtilizers);
+    }
+
+
 }

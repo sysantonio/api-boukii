@@ -33,6 +33,10 @@ Route::middleware(['bookingPage'])->group(function () {
         [\App\Http\Controllers\BookingPage\ClientController::class, 'getVoucherByCode'])
         ->name('api.bookings.client.voucher');
 
+    Route::get('clients/{id}/utilizers', [\App\Http\Controllers\BookingPage\ClientController::class, 'getUtilizers'])
+        ->name('api.bookings.client.utilizers');
+
+    Route::get('clients/mains', [\App\Http\Controllers\BookingPage\ClientController::class, 'getMains']);
 
 
     /** Booking **/

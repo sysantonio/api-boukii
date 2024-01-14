@@ -50,6 +50,10 @@
                                         "type": "integer",
                                         "example": 1
                                     },
+                                    "school_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
                                     "degree_id": {
                                         "type": "integer",
                                         "example": 1
@@ -11032,6 +11036,78 @@
                 }
             }
         },
+        "/slug/clients/{id}/utilizers": {
+            "get": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getClientUtilizersList",
+                "description": "Get all Clients utilizers from id",
+                "operationId": "aab4486cb2129b925129f5c061ba8a5d",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/clients/mains": {
+            "get": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getClientListMains",
+                "description": "Get all Clients Mains",
+                "operationId": "3a64b02c81f8617c37f54c53d3062ca5",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/slug/courses": {
             "get": {
                 "tags": [
@@ -13061,6 +13137,12 @@
                         "nullable": false
                     },
                     "subject": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "title": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
