@@ -419,10 +419,28 @@ class MigrationController extends AppBaseController
 
         foreach ($oldMonitorNwds as $oldMonitorNwd) {
             $newMonitor = Monitor::where('old_id', $oldMonitorNwd->user_id)->first();
-            $newMonitorNwd = new MonitorNwd($oldMonitorNwd->toArray());
-            $newMonitorNwd->monitor_id = $newMonitor->id;
-            $newMonitorNwd->save();
 
+            // Check if start_date is not equal to end_date
+            if ($oldMonitorNwd->start_date != $oldMonitorNwd->end_date) {
+                // Calculate the number of days between start_date and end_date
+                $startDate = \Carbon\Carbon::parse($oldMonitorNwd->start_date);
+                $endDate = \Carbon\Carbon::parse($oldMonitorNwd->end_date);
+                $numberOfDays = $startDate->diffInDays($endDate);
+
+                // Create a record for each day within the date range
+                for ($i = 0; $i <= $numberOfDays; $i++) {
+                    $newMonitorNwd = new MonitorNwd($oldMonitorNwd->toArray());
+                    $newMonitorNwd->monitor_id = $newMonitor->id;
+                    $newMonitorNwd->start_date = $startDate->addDays($i)->toDateString();
+                    $newMonitorNwd->end_date = $newMonitorNwd->start_date;
+                    $newMonitorNwd->save();
+                }
+            } else {
+                // If start_date is equal to end_date, create a single record
+                $newMonitorNwd = new MonitorNwd($oldMonitorNwd->toArray());
+                $newMonitorNwd->monitor_id = $newMonitor->id;
+                $newMonitorNwd->save();
+            }
         }
         return $this->sendResponse('Imported monitors correctly', 200);
     }

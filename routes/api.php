@@ -4,6 +4,7 @@ use App\Models\Client;
 use App\Models\Course;
 use App\Models\Language;
 use App\Models\Monitor;
+use App\Models\MonitorNwd;
 use App\Models\Station;
 use App\Models\StationService;
 use App\Models\User;
@@ -113,6 +114,31 @@ Route::get('migration/bookings', [\App\Http\Controllers\MigrationController::cla
 
 Route::get('migration/all', [\App\Http\Controllers\MigrationController::class, 'migrateAll'])
     ->name('api.migration.all');
+
+Route::get('/fix-nwds', function () {
+    // Obtener todos los MonitorNwds
+    $monitorNwds = MonitorNwd::all();
+
+    foreach ($monitorNwds as $monitorNwd) {
+        // Verificar si start_date es diferente de end_date
+        if ($monitorNwd->start_date != $monitorNwd->end_date) {
+            $startDate = \Carbon\Carbon::parse($monitorNwd->start_date);
+            $endDate = \Carbon\Carbon::parse($monitorNwd->end_date);
+
+            // Eliminar el registro antiguo
+            $monitorNwd->delete();
+
+            // Crear nuevos registros para cada día dentro del rango
+            while ($startDate->lte($endDate)) {
+                $newMonitorNwd = new MonitorNwd($monitorNwd->toArray());
+                $newMonitorNwd->start_date = $startDate->toDateString();
+                $newMonitorNwd->end_date = $startDate->toDateString();
+                $newMonitorNwd->save();
+                $startDate->addDay(); // Avanzar al siguiente día
+            }
+        }
+    }
+});
 
 Route::get('/process-images', function () {
     $models = [
