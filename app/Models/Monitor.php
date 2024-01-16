@@ -459,6 +459,11 @@ class Monitor extends Model
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->where('full_day', true)
+            ->where(function ($query) use ($excludeId) {
+                if ($excludeId !== null) {
+                    $query->where('id', '!=', $excludeId);
+                }
+            })
             ->exists();
 
         // Verificar si el monitor está ocupado en la fecha y horario especificados
