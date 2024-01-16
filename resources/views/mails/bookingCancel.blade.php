@@ -2,6 +2,9 @@
 
 @section('body')
     <p>
+        {!! $titleTemplate !!}
+    </p>
+    <p>
         {{ trans('emails.bookingCancel.cancellation_greeting', ['userName' => $userName]) }},
         <br>
         {{ trans('emails.bookingCancel.cancellation_intro', ['reference' => $reference]) }}
@@ -45,6 +48,10 @@
     </p>
 
     <br>
+
+    <p>
+        {!! $bodyTemplate !!}
+    </p>
 
     <p>
         {{ trans('emails.bookingCancel.cancellation_regards', ['schoolName' => $schoolName]) }}

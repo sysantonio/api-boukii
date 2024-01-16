@@ -6,6 +6,7 @@
 
 namespace App\Mail;
 
+use App\Models\Mail;
 use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
@@ -48,10 +49,15 @@ class BookingNoticePayMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.bookingPayNotice_' . $userLocale) ? 'mails.bookingPayNotice_' . $userLocale : 'mails.bookingPayNotice_' . $defaultLocale;
+        $templateView = \View::exists('mails.bookingPayNotice');
         $footerView = \View::exists('mails.footer');
 
+        $templateMail = Mail::where('type', 'payment_reminder')->where('school_id', $this->schoolData->id)
+            ->where('lang', $userLocale);
+
         $templateData = [
+            'titleTemplate' => $templateMail->title,
+            'bodyTemplate' => $templateMail->body,
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,

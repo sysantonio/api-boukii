@@ -2,6 +2,9 @@
 
 @section('body')
     <p>
+        {!! $titleTemplate !!}
+    </p>
+    <p>
         {{ __('emails.bookingCreate.greeting', ['userName' => $userName]) }},
         <br>
         {{ __('emails.bookingCreate.reservation_request', ['reference' => $reference]) }}
@@ -50,6 +53,10 @@
     </p>
 
     <br>
+
+    <p>
+        {!! $bodyTemplate !!}
+    </p>
 
     <p>
         {{ __('emails.bookingCreate.sincerely') }},

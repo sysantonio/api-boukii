@@ -6,6 +6,7 @@
 
 namespace App\Mail;
 
+use App\Models\Mail;
 use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
@@ -51,21 +52,15 @@ class BookingCreateMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        if ($this->schoolData->id == 8) {
-            $templateView = \View::exists('mails.bookingCreateCharmey_' . $userLocale)
-                ? 'mails.bookingCreateCharmey_' . $userLocale
-                : 'mails.bookingCreateCharmey_' . $defaultLocale;
-
-        } else {
-            $templateView = \View::exists('mails.bookingCreate_' . $userLocale)
-                ? 'mails.bookingCreate_' . $userLocale
-                : 'mails.bookingCreate_' . $defaultLocale;
-
-        }
-
+        $templateView = \View::exists('mails.bookingCreate');
         $footerView = \View::exists('mails.footer');
 
+        $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
+            ->where('lang', $userLocale);
+
         $templateData = [
+            'titleTemplate' => $templateMail->title,
+            'bodyTemplate' => $templateMail->body,
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,

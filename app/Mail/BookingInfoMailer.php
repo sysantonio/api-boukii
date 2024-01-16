@@ -6,6 +6,7 @@
 
 namespace App\Mail;
 
+use App\Models\Mail;
 use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
@@ -59,6 +60,9 @@ class BookingInfoMailer extends Mailable
         }
 
         $footerView = \View::exists('mails.footer');
+
+        $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
+            ->where('lang', $userLocale);
 
         $templateData = [
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),

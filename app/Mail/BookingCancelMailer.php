@@ -6,6 +6,7 @@
 
 namespace App\Mail;
 
+use App\Models\Mail;
 use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
@@ -58,12 +59,17 @@ class BookingCancelMailer extends Mailable
         $templateView = \View::exists('mails.bookingCancel');
         $footerView = \View::exists('mails.footer');
 
+        $templateMail = Mail::where('type', 'booking_cancel')->where('school_id', $this->schoolData->id)
+            ->where('lang', $userLocale);
+
         $voucherCode = "";
         if(isset($this->voucherData->code)) $voucherCode = $this->voucherData->code;
         $voucherAmount = "";
         if(isset($this->voucherData->quantity)) $voucherAmount = number_format($this->voucherData->quantity, 2);
 
         $templateData = [
+            'titleTemplate' => $templateMail->title,
+            'bodyTemplate' => $templateMail->body,
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,

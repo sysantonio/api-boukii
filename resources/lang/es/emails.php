@@ -1,18 +1,110 @@
+
+Aquí tienes la traducción al español de las claves que proporcionaste:
+
+php
+Copy code
 <?php
 
 return [
-    'bookingCreate' =>
-        ['subject' => 'Tu reserva en Boukii'],
-    'bookingPay' =>
-        ['subject' => 'Paga tu reserva en Boukii'],
-    'bookingCancel' =>
-        ['subject' => 'Anulada reserva en Boukii'],
-    'recoverPassword' =>
-        ['subject' => 'Cambia tu contraseña en Boukii'],
-    'welcomeTo' =>
-        ['subject' => 'Registro en Boukii completado'],
-    'bookingNoticePay' =>
-        ['subject' => 'Paga tu reserva en Boukii'],
-    'bookingCreate' =>
-        ['subject' => 'Tu reserva en Boukii']
+    'bookingCreate' => [
+        'subject' => 'Tu reserva en Boukii',
+        'greeting' => 'Hola :userName,',
+        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia :reference, para',
+        'singular_course' => 'el siguiente curso:',
+        'plural_courses' => 'los siguientes cursos:',
+        'course_count' => ':countx :name',
+        'singular_date' => 'Fecha:',
+        'plural_dates' => 'Fechas:',
+        'singular_participant' => 'Participante:',
+        'plural_participants' => 'Participantes:',
+        'instructor' => 'Instructor: :monitor',
+        'refund_guarantee' => '+ Garantía de reembolso',
+        'booking_notes' => ':bookingNotes',
+        'sincerely' => 'Atentamente,',
+        'school_name' => 'La escuela :schoolName',
+    ],
+    'bookingPay' => [
+        'subject' => 'Paga tu reserva en Boukii',
+        'greeting' => 'Hola :userName,',
+        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia :reference, para',
+        'singular_course' => 'el siguiente curso:',
+        'plural_courses' => 'los siguientes cursos:',
+        'course_count' => ':countx :name',
+        'singular_date' => 'Fecha:',
+        'plural_dates' => 'Fechas:',
+        'singular_participant' => 'Participante:',
+        'plural_participants' => 'Participantes:',
+        'instructor' => 'Instructor: :monitor',
+        'refund_guarantee' => '+ Garantía de reembolso',
+        'payment_notice' => 'Para completar esta reserva, debes pagar :amount :currency.',
+        'payment_instructions' => 'Para ello escanea o pulsa este QR.',
+        'sincerely' => 'Atentamente,',
+        'school_name' => 'La escuela :schoolName',
+    ],
+    'bookingCancel' => [
+        'subject' => 'Reserva cancelada en Boukii',
+        'cancellation_subject' => 'Cancelación de reserva en Boukii',
+        'cancellation_greeting' => 'Hola :userName,',
+        'cancellation_intro' => 'La reserva con referencia <strong>:reference</strong> ha sido cancelada para',
+        'single_course' => 'el siguiente curso:',
+        'multiple_courses' => 'los siguientes cursos:',
+        'course_count' => ':countx :name',
+        'single_date' => 'Fecha:',
+        'multiple_dates' => 'Fechas:',
+        'single_user' => 'Participante:',
+        'multiple_users' => 'Participantes:',
+        'booking_notes' => ':bookingNotes',
+        'cancellation_regards' => 'Atentamente, Escuela :schoolName',
+    ],
+    'recoverPassword' => [
+        'subject' => 'Cambia tu contraseña en Boukii',
+        'reset_password_subject' => 'Restablecer contraseña en Boukii',
+        'reset_password_greeting' => 'Hola :userName,',
+        'reset_password_intro' => 'Para restablecer tu contraseña en Boukii, sigue el enlace a continuación:',
+        'reset_password_button' => 'Restablecer mi contraseña',
+        'reset_password_outro' => 'Si no deseas restablecer tu contraseña, puedes ignorar este correo electrónico. Tu contraseña no se cambiará.',
+        'reset_password_regards' => 'Atentamente, El equipo de Boukii',
+    ],
+    'welcomeTo' => [
+        'subject' => 'Registro en Boukii completado',
+        'welcome' => 'Hola :userName, Bienvenido a Boukii, ahora puedes iniciar sesión con tu cuenta.',
+        'regards' => 'Atentamente, El equipo de Boukii',
+    ],
+    'bookingNoticePay' => [
+        'subject' => 'Paga tu reserva en Boukii',
+        'greeting' => 'Hola :userName,',
+        'payment_deadline' => 'Tienes 24 horas para realizar el pago de la reserva con referencia :reference.',
+        'payment_notice' => 'Para completar esta reserva, debes pagar :amount :currency.',
+        'payment_instructions' => 'Para hacerlo, escanea o haz clic en este código QR.',
+        'regards' => 'Atentamente, Escuela :schoolName',
+    ],
+    'bookingInfo' => [
+        'subject' => 'Tu reserva en Boukii',
+        'greeting' => 'Hola :userName,',
+        'reservation_request' => 'Te enviamos este correo electrónico para recordarte tu reserva con referencia :reference, para',
+        'singular_course' => 'el siguiente curso:',
+        'plural_courses' => 'los siguientes cursos:',
+        'course_count' => ':countx :name',
+        'singular_date' => 'Fecha:',
+        'plural_dates' => 'Fechas:',
+        'singular_participant' => 'Participante:',
+        'plural_participants' => 'Participantes:',
+        'collective_courses' => 'Cursos colectivos',
+        'private_courses' => 'Cursos privados',
+        'refund_guarantee' => '+ Garantía de reembolso',
+        'booking_notes' => ':bookingNotes',
+        'thank_you' => 'Gracias por tu inscripción y esperamos darte la bienvenida.',
+        'school_team' => 'El equipo de la Escuela Suiza de Esquí Charmey',
+        'email' => 'ess@charmey.ch',
+        'phone' => '+41 (0)26 927 55 25',
+    ],
+    'footer' => [
+        'button_copy_url' => 'Botón Copiar URL',
+        'automatic_email' => 'Este correo electrónico ha sido generado automáticamente y no puede recibir respuestas.',
+        'contact_school' => 'Para obtener más información, contacta con la escuela :schoolName.',
+        'contact_boukii' => 'Para obtener más información, visita el Centro de Contacto de Boukii.',
+        'copyright' => 'Boukii © 2024',
+        'school_conditions' => 'Condiciones Generales de Ventas de la Escuela',
+        'boukii_conditions' => 'Términos de Uso',
+    ],
 ];

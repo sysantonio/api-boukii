@@ -361,6 +361,7 @@ class ClientAPIController extends AppBaseController
         $today = Carbon::today();
 
         DB::beginTransaction();
+        $subgroupsChanged = [];
         if ($request->moveAllDays) {
             $courseDates = $initialGroup->course->courseDates;
             foreach ($courseDates as $courseDate) {
@@ -373,6 +374,7 @@ class ClientAPIController extends AppBaseController
                             $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
 
                             if ($newTargetSubgroup) {
+                                $subgroupsChanged[] = $newTargetSubgroup;
                                 $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
                             } else {
 
@@ -392,7 +394,7 @@ class ClientAPIController extends AppBaseController
             $this->moveUsers($initialSubgroup, $targetSubgroup, $request->clientIds);
         }
         DB::commit();
-        return $this->sendResponse([], 'Bookings returned successfully');
+        return $this->sendResponse($subgroupsChanged, 'Clients transfer successfully');
     }
 
 
