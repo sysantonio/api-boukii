@@ -29,6 +29,12 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=true
  *      ),
  *      @OA\Property(
+ *            property="default",
+ *            description="Indicates if the school color is default",
+ *            type="boolean",
+ *            nullable=false
+ *        ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -61,18 +67,21 @@ class SchoolColor extends Model
     public $fillable = [
         'school_id',
         'name',
-        'color'
+        'color',
+        'default'
     ];
 
     protected $casts = [
         'name' => 'string',
-        'color' => 'string'
+        'color' => 'string',
+        'default' => 'boolean'
     ];
 
     public static array $rules = [
         'school_id' => 'required',
         'name' => 'required|string|max:100',
         'color' => 'nullable|string|max:45',
+        'default' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
