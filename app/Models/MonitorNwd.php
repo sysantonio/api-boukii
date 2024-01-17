@@ -63,6 +63,12 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false
  *      ),
  *      @OA\Property(
+ *           property="default",
+ *           description="Indicates if the non-working is default",
+ *           type="boolean",
+ *           nullable=false
+ *       ),
+ *      @OA\Property(
  *          property="description",
  *          description="Description of the non-working duration",
  *          type="string",
@@ -116,6 +122,7 @@ class MonitorNwd extends Model
         'start_time',
         'end_time',
         'full_day',
+        'default',
         'description',
         'color',
         'user_nwd_subtype_id'
@@ -125,6 +132,7 @@ class MonitorNwd extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'full_day' => 'boolean',
+        'default' => 'boolean',
         'description' => 'string',
         'color' => 'string',
     ];
@@ -138,6 +146,7 @@ class MonitorNwd extends Model
         'start_time' => 'nullable',
         'end_time' => 'nullable',
         'full_day' => 'required|boolean',
+        'default' => 'nullable',
         'description' => 'nullable|string|max:65535',
         'color' => 'nullable|string|max:45',
         'user_nwd_subtype_id' => 'nullable',
