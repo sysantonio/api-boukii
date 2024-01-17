@@ -8,6 +8,7 @@ use App\Models\Degree;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
 
@@ -173,15 +174,22 @@ class CourseController extends SlugAuthController
             return $this->sendError('Course does not exist in this school');
         } else {
             $availableDegreeIds = collect();
+            $unAvailableDegreeIds = collect();
             foreach ($course->courseDates as $courseDate) {
                 foreach ($courseDate->courseGroups as $group) {
-                    $group->courseSubgroups = $group->courseSubgroups->filter(function ($subgroup) use ($availableDegreeIds, $group) {
+                    $group->courseSubgroups = $group->courseSubgroups->filter(function ($subgroup)
+                    use ($availableDegreeIds, $group, $unAvailableDegreeIds) {
                         $hasAvailability = $subgroup->booking_users_count < $subgroup->max_participants;
+                        $availableDegree = [
+                            'degree_id' => $group->degree_id,
+                            'recommended_age' => $group->recommended_age
+                        ];
                         if ($hasAvailability) {
-                            $availableDegreeIds->push([
-                                'degree_id' => $group->degree_id,
-                                'recommended_age' => $group->recommended_age
-                            ]);
+                            if(!$unAvailableDegreeIds->contains($availableDegree)) {
+                                $availableDegreeIds->push($availableDegree);
+                            }
+                        } else {
+                            $unAvailableDegreeIds->push($availableDegree);
                         }
                         return $hasAvailability;
                     });
