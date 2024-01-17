@@ -8,10 +8,11 @@ use App\Repositories\BaseRepository;
 class SchoolColorRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-'id',
+        'id',
         'school_id',
         'name',
-        'color'
+        'color',
+        'default'
     ];
 
     public function getFieldsSearchable(): array
