@@ -7,6 +7,7 @@ use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
+use App\Models\ClientsUtilizer;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -99,6 +100,125 @@ class ClientController extends SlugAuthController
         $utilizers = $mainClient->utilizers;
 
         return $this->sendResponse($utilizers, 'Utilizers returned successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/slug/clients/{id}/utilizers",
+     *      summary="createUtilizer",
+     *      tags={"BookingPage"},
+     *      description="Create utilizer for a client",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function storeUtilizers($id, Request $request): JsonResponse
+    {
+        // Valida los datos de la solicitud, asegúrate de que contenga al menos los campos necesarios
+        $request->validate([
+            'name' => 'required|string',
+            'last_name' => 'required|string',
+            'birth_date' => 'required',
+            'language1_id' => 'required'
+        ]);
+
+        // Encuentra al cliente principal con la ID proporcionada
+        $mainClient = Client::find($id);
+
+        if (!$mainClient) {
+            return $this->sendError('Main client not found', [], 404);
+        }
+
+        // Crea un nuevo cliente con los datos de la solicitud
+        $newClient = new Client([
+            'name' => $request->input('name'),
+            'last_name' => $request->input('last_name'),
+            'birth_date' => $request->input('birth_date'),
+            'language1_id' => $request->input('language1_id')
+        ]);
+
+        // Guarda el nuevo cliente en la base de datos
+        $newClient->save();
+
+        // Crea un registro en ClientsUtilizer con la main_id y client_id
+        $clientsUtilizer = new ClientsUtilizer([
+            'main_id' => $mainClient->id,
+            'client_id' => $newClient->id,
+        ]);
+
+        $clientsUtilizer->save();
+
+        return $this->sendResponse($newClient, 'Utilizer created successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/slug/clients/{id}/utilizers",
+     *      summary="createUtilizer",
+     *      tags={"BookingPage"},
+     *      description="Create utilizer for a client",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function store(Request $request): JsonResponse
+    {
+        // Valida los datos de la solicitud, asegúrate de que contenga al menos los campos necesarios
+        $request->validate([
+            'name' => 'required|string',
+            'last_name' => 'required|string',
+            'birth_date' => 'required',
+            'language1_id' => 'required'
+        ]);
+
+        // Crea un nuevo cliente con los datos de la solicitud
+        $newClient = new Client([
+            'name' => $request->input('name'),
+            'last_name' => $request->input('last_name'),
+            'birth_date' => $request->input('birth_date'),
+            'language1_id' => $request->input('language1_id')
+        ]);
+
+        // Guarda el nuevo cliente en la base de datos
+        $newClient->save();
+
+        return $this->sendResponse($newClient, 'Client created successfully');
     }
 
     /**

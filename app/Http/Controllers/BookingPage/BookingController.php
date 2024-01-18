@@ -7,7 +7,10 @@ use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingLog;
 use App\Models\BookingUser;
+use App\Models\BookingUserExtra;
 use App\Models\Client;
+use App\Models\Course;
+use App\Models\CourseExtra;
 use App\Models\Voucher;
 use App\Models\VouchersLog;
 use Illuminate\Http\JsonResponse;
@@ -77,7 +80,7 @@ class BookingController extends SlugAuthController
         // Crear BookingUser para cada detalle
         foreach ($data['cart'] as $cartItem) {
             foreach ($cartItem['details'] as $detail) {
-                BookingUser::create([
+                $bookingUser = new BookingUser([
                     'school_id' => $detail['school_id'],
                     'booking_id' => $booking->id,
                     'client_id' => $detail['client_id'],
@@ -92,6 +95,30 @@ class BookingController extends SlugAuthController
                     'hour_end' => $detail['hour_end'],
                     // Puedes añadir campos adicionales según necesites
                 ]);
+
+                $bookingUser->save();
+
+                if(isset($detail['extra'])){
+                    $tva = isset($detail['extra']['tva']) ? $detail['extra']['tva'] : 0;
+                    $price = isset($detail['extra']['price']) ? $detail['extra']['price'] : 0;
+
+                    // Calcular el precio con el TVA
+                    $priceWithTva = $price + ($price * ($tva / 100));
+
+                    $courseExtra = new CourseExtra([
+                        'course_id' => $detail['course_id'],
+                        'name' => $detail['extra']['id'],
+                        'description' => $detail['extra']['id'],
+                        'price' => $priceWithTva
+                    ]);
+
+                    $courseExtra->save();
+
+                    BookingUserExtra::create([
+                        'booking_user_id' => $bookingUser->id,
+                        'course_extra_id' => $courseExtra->id
+                    ]);
+                }
             }
         }
 
