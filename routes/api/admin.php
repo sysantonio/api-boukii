@@ -48,4 +48,11 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     /** Mailing */
     Route::post('mails/send', [\App\Http\Controllers\Admin\MailController::class, 'sendMail']);
 
+    /** Weather */
+    Route::get('weather', [\App\Http\Controllers\Admin\HomeController::class, 'get12HourlyForecastByStation'])
+        ->name('api.admin.weather');
+
+    Route::get('weather/week', [\App\Http\Controllers\Admin\HomeController::class, 'get5DaysForecastByStation'])
+        ->name('api.admin.weatherweek');
+
 });

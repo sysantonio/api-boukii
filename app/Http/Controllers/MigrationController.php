@@ -197,6 +197,7 @@ class MigrationController extends AppBaseController
             foreach ($oldSchoolColors as $oldSchoolColor) {
                 $newSchoolColor = new \App\Models\SchoolColor($oldSchoolColor);
                 $newSchoolColor->school_id = $newSchool['id'];
+                $newSchoolColor->default = 1;
                 $newSchoolColor->save();
                 //  return $this->sendResponse($newSchoolColor, 200);
             }
@@ -533,7 +534,33 @@ class MigrationController extends AppBaseController
                             $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
                                 ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
                                 ->first();
-                            //TODO: Extrapolar recomended age a min max
+
+                            $recommendedAge = $group->recommended_age;
+                            switch ($recommendedAge) {
+                                case 2:
+                                    $minAge = 2;
+                                    $maxAge = 3;
+                                    break;
+                                case 3:
+                                    $minAge = 3;
+                                    $maxAge = 5;
+                                    break;
+                                case 4:
+                                    $minAge = 5;
+                                    $maxAge = 17;
+                                    break;
+                                case 5:
+                                    $minAge = 18;
+                                    $maxAge = 99;
+                                    break;
+                                default:
+                                    $minAge = 0;
+                                    $maxAge = 99;
+                                    break;
+                            }
+
+                            $newGroup->min_age = $minAge;
+                            $newGroup->max_age = $maxAge;
                             $oldTeacherDegree = $oldDegrees->firstWhere('id', $group->teacher_min_degree);
                             $newTeacherDegree = Degree::where('degree_order', $oldTeacherDegree->degree_order)
                                 ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
@@ -699,6 +726,7 @@ class MigrationController extends AppBaseController
         foreach ($oldBookings as $oldBooking) {
             $newBooking = new Booking($oldBooking->toArray());
             $newBooking->old_id = $oldBooking->id;
+            $newBooking->client_main_id = Client::where('old_id', $newBooking->user_main_id)->first()->id;
             if ($oldBooking->deleted_at) {
                 $newBooking->status = 3;
             }
