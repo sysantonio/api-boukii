@@ -42,8 +42,6 @@ Route::middleware(['bookingPage'])->group(function () {
     Route::post('clients', [\App\Http\Controllers\BookingPage\ClientController::class, 'store'])
         ->name('api.bookings.client.create');
 
-
-
     Route::get('clients/mains', [\App\Http\Controllers\BookingPage\ClientController::class, 'getMains']);
 
 
