@@ -422,6 +422,7 @@ class CourseController extends AppBaseController
                         }
                     }
                     if (isset($dateData['date']) && isset($dateData['id'])) {
+                        $date = CourseDate::find($dateData['id']);
                         if ($date) {
                             $providedDate = $dateData['date'];
 
