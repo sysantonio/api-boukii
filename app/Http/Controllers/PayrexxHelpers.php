@@ -6,6 +6,7 @@ use App\Http\Booking2;
 use App\Http\User;
 use App\Models\Bookings2;
 use App\Models\Client;
+use App\Models\Course;
 use App\Models\UserSchools;
 use Illuminate\Support\Facades\Log;
 
@@ -49,6 +50,7 @@ class PayrexxHelpers
 
         try {
             // Check that School has Payrexx credentials
+            //dd($schoolData->getPayrexxInstance());
             if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
                 throw new \Exception('No credentials for School ID=' . $schoolData->id);
             }
@@ -71,14 +73,17 @@ class PayrexxHelpers
             // Product basket i.e. courses booked plus maybe cancellation insurance
             $basket = [];
 
-
-
             foreach ($bookingCourses as $c) {
-                $basket[] = [
-                    'name' => [1 => $c['courseDates'][0]['course']['name']],
-                    'quantity' => $c['paxes'], // Asumiendo que 'paxes' es la cantidad
-                    'amount' => $c['price_total'] * 100 // Asegúrate de que el precio esté en centavos
-                ];
+               // dd($c);
+                $course = Course::find($c['courseDates'][0]['course_id']);
+
+                if ($course) {
+                    $basket[] = [
+                        'name' => [1 => $course->name],
+                        'quantity' => $c['paxes'], // Asumiendo que 'paxes' es la cantidad
+                        'amount' => $c['price_total'] * 100 // Asegúrate de que el precio esté en centavos
+                    ];
+                }
             }
 
             // Aplicar Bonos
