@@ -70,7 +70,14 @@ class ClientAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            function ($query) use ($request) {
+                if ($request->has('school_id')) {
+                    $query->whereHas('clientsSchools', function ($subQuery) use ($request) {
+                        $subQuery->where('school_id', $request->get('school_id'));
+                    });
+                }
+            }
         );
 
         return $this->sendResponse($clients, 'Clients retrieved successfully');
