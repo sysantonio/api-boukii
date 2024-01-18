@@ -422,25 +422,40 @@ class CourseController extends AppBaseController
                         }
                     }
                     if (isset($dateData['date']) && isset($dateData['id'])) {
-                        $date = CourseDate::find($dateData['id']);
-                        if($date->date != $dateData['date']) {
-                            $bookingUsers = $date->bookingUsers;
+                        if ($date) {
+                            $providedDate = $dateData['date'];
 
-                            foreach ($bookingUsers as $bookingUser) {
-                                $clientEmail = $bookingUser->booking->clientMain->email;
-                                $bookingId = $bookingUser->booking_id;
+                            // Verificar si la fecha ya está en el formato 'Y-m-d'
+                            if (strpos($providedDate, 'T') !== false) {
+                                // Convierte la fecha del formato 'Y-m-d\TH:i:s.u\Z' a 'Y-m-d'
+                                $providedDate = date_create_from_format('Y-m-d\TH:i:s.u\Z', $providedDate);
 
-                                $bookingUser->update(['date' => $date->date]);
+                                if ($providedDate) {
+                                    $providedDate = $providedDate->format('Y-m-d');
+                                }
+                            }
 
-                                if (array_key_exists($clientEmail, $emailGroups)) {
-                                    // Verificar si el booking ID ya está en el grupo del correo electrónico
-                                    if (!in_array($bookingId, $emailGroups[$clientEmail])) {
-                                        // Si no está, agregarlo al grupo del correo electrónico
-                                        $emailGroups[$clientEmail][] = $bookingId;
+                            $modelDate = $date->date->format('Y-m-d');
+
+                            if ($providedDate && $providedDate !== $modelDate) {
+                                $bookingUsers = $date->bookingUsers;
+
+                                foreach ($bookingUsers as $bookingUser) {
+                                    $clientEmail = $bookingUser->booking->clientMain->email;
+                                    $bookingId = $bookingUser->booking_id;
+
+                                    $bookingUser->update(['date' => $modelDate]);
+
+                                    if (array_key_exists($clientEmail, $emailGroups)) {
+                                        // Verificar si el booking ID ya está en el grupo del correo electrónico
+                                        if (!in_array($bookingId, $emailGroups[$clientEmail])) {
+                                            // Si no está, agregarlo al grupo del correo electrónico
+                                            $emailGroups[$clientEmail][] = $bookingId;
+                                        }
+                                    } else {
+                                        // Si el correo electrónico no está en el array, crear un nuevo grupo
+                                        $emailGroups[$clientEmail] = [$bookingId];
                                     }
-                                } else {
-                                    // Si el correo electrónico no está en el array, crear un nuevo grupo
-                                    $emailGroups[$clientEmail] = [$bookingId];
                                 }
                             }
                         }
