@@ -287,6 +287,7 @@ class BookingUser extends Model
     {
         $clientBookings = BookingUser::where('client_id', $bookingUser['client_id'])
             ->where('date', $bookingUser['date'])
+            ->where('status', 1)
             ->get();
 
         foreach ($clientBookings as $existingBooking) {
