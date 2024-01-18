@@ -7,7 +7,7 @@
     <p>
         {{ __('emails.bookingInfo.greeting', ['userName' => $userName]) }},
         <br>
-        {{ __('emails.bookingInfo.reservation_request', ['reference' => $reference]) }}
+        {{ __('emails.bookingInfoChange.reservation_request', ['reference' => $reference]) }}
         @if (count($courses) == 1)
             {{ __('emails.bookingInfo.singular_course') }}
         @else
@@ -60,8 +60,6 @@
     <p>
         {!! $bodyTemplate !!}
     </p>
-
-
 
 
 @endsection

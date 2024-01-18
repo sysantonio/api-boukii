@@ -163,6 +163,7 @@ class CourseController extends SlugAuthController
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with([
             'bookingUsers.client.sports',
+            'courseExtras',
             'courseDates.courseGroups' => function ($query) {
                 $query->with(['courseSubgroups' => function ($subQuery) {
                     $subQuery->withCount('bookingUsers')->with('degree');

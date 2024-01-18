@@ -22,7 +22,7 @@ class BookingInfoMailer extends Mailable
      * Create a new message instance.
      *
      * @param \App\Models\School $schoolData Where it was bought
-     * @param \App\Models\Booking2 $bookingData What
+     * @param \App\Models\Booking $bookingData What
      * @param \App\Models\User $userData Who
      * @return void
      */
@@ -47,24 +47,16 @@ class BookingInfoMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        if ($this->schoolData->id == 8) {
-            $templateView = \View::exists('mails.bookingInfo_' . $userLocale)
-                ? 'mails.bookingInfo_' . $userLocale
-                : 'mails.bookingInfo_' . $defaultLocale;
-
-        } else {
-            $templateView = \View::exists('mails.bookingInfo_' . $userLocale)
-                ? 'mails.bookingInfo_' . $userLocale
-                : 'mails.bookingInfo_' . $defaultLocale;
-
-        }
-
+        $templateView = \View::exists('mails.bookingInfo');
         $footerView = \View::exists('mails.footer');
+
 
         $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale);
 
         $templateData = [
+            'titleTemplate' => $templateMail->title,
+            'bodyTemplate' => $templateMail->body,
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,

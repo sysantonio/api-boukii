@@ -12,7 +12,11 @@ class HomeController extends AppBaseController
     {
         $forecast = [];
 
-        $station = Station::find($request->station_id);
+        $school = $this->getSchool($request);
+
+        $id = $school->stationsSchools[0]->station_id ?? null;
+
+        $station = Station::find($id);
 
         if ($station)
         {
@@ -31,7 +35,11 @@ class HomeController extends AppBaseController
     {
         $forecast = [];
 
-        $station = Station::find($request->station_id);
+        $school = $this->getSchool($request);
+
+        $id = $school->stationsSchools[0]->station_id ?? null;
+
+        $station = Station::find($id);
 
         if ($station)
         {

@@ -89,6 +89,26 @@ return [
         'email' => 'ess@charmey.ch',
         'phone' => '+41 (0)26 927 55 25'
     ],
+    'bookingInfoChange' => [
+        'subject' => 'Your reservation at Boukii has changed',
+        'greeting' => 'Hello :userName,',
+        'reservation_request' => 'We are sending you this email to alert you of your booking with reference :reference has changed, for',
+        'singular_course' => 'the following course:',
+        'plural_courses' => 'the following courses:',
+        'course_count' => ':countx :name',
+        'singular_date' => 'Date',
+        'plural_dates' => 'Dates',
+        'singular_participant' => 'Participant',
+        'plural_participants' => 'Participants',
+        'collective_courses' => 'Collective Courses',
+        'private_courses' => 'Private Courses',
+        'refund_guarantee' => '+ Refund Guarantee',
+        'booking_notes' => ':bookingNotes',
+        'thank_you' => 'Thank you for your registration, and we look forward to welcoming you!',
+        'school_team' => 'The Swiss Ski School Charmey Team',
+        'email' => 'ess@charmey.ch',
+        'phone' => '+41 (0)26 927 55 25'
+    ],
     'footer' => [
         'button_copy_url' => 'Button Copy URL',
         'automatic_email' => 'This email has been generated automatically and cannot receive replies.',

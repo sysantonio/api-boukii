@@ -28,7 +28,7 @@ class BookingPayMailer extends Mailable
      * Create a new message instance.
      *
      * @param \App\Models\School $schoolData Where it was bought
-     * @param \App\Models\Booking2 $bookingData What
+     * @param \App\Models\Booking $bookingData What
      * @param \App\Models\User $userData Who
      * @param string $payLink How
      * @return void

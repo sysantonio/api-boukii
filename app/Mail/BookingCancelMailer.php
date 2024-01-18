@@ -28,7 +28,7 @@ class BookingCancelMailer extends Mailable
      * Create a new message instance.
      *
      * @param \App\Models\School $schoolData Where it was bought
-     * @param \App\Models\Booking2 $bookingData That was cancelled
+     * @param \App\Models\Booking $bookingData That was cancelled
      * @param mixed[] $cancelledLines Alike Bookings2->parseBookedCourses()
      * @param \App\Models\User $userData Who
      * @return void

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Class BookingNoticePayMailer
+ * Class BookingCreateMailer
  */
 
 namespace App\Mail;
@@ -11,12 +11,12 @@ use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
 
-class BookingNoticePayMailer extends Mailable
+class BookingInfoUpdateMailer extends Mailable
 {
     private $schoolData;
     private $bookingData;
     private $userData;
-    private $payLink;
+
 
     /**
      * Create a new message instance.
@@ -24,15 +24,13 @@ class BookingNoticePayMailer extends Mailable
      * @param \App\Models\School $schoolData Where it was bought
      * @param \App\Models\Booking $bookingData What
      * @param \App\Models\User $userData Who
-     * @param string $payLink How
      * @return void
      */
-    public function __construct($schoolData, $bookingData, $userData, $payLink)
+    public function __construct($schoolData, $bookingData, $userData)
     {
         $this->schoolData = $schoolData;
         $this->bookingData = $bookingData;
         $this->userData = $userData;
-        $this->payLink = $payLink;
     }
 
     /**
@@ -49,10 +47,11 @@ class BookingNoticePayMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.bookingPayNotice');
+        $templateView = \View::exists('mails.bookingInfoChange');
         $footerView = \View::exists('mails.footer');
 
-        $templateMail = Mail::where('type', 'payment_reminder')->where('school_id', $this->schoolData->id)
+
+        $templateMail = Mail::where('type', 'booking_change')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale);
 
         $templateData = [
@@ -63,22 +62,19 @@ class BookingNoticePayMailer extends Mailable
             'schoolLogo' => $this->schoolData->logo,
             'schoolEmail' => $this->schoolData->contact_email,
             'schoolConditionsURL' => $this->schoolData->conditions_url,
-            'reference' => $this->bookingData->payrexx_reference,
+            'reference' => '#' . $this->bookingData->id,
             'bookingNotes' => $this->bookingData->notes,
-            // 'courses' => $this->bookingData->parseBookedCourses(),
+            'courses' => $this->bookingData->parseBookedGroupedCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
-            'amount' => number_format($this->bookingData->price_total, 2),
-            'currency' => $this->bookingData->currency,
-            'actionURL' => $this->payLink,
+            'actionURL' => null,
             'footerView' => $footerView
         ];
 
-        $subject = __('emails.bookingNoticePay.subject');
+        $subject = __('emails.bookingInfo.subject');
         \App::setLocale($oldLocale);
 
         return $this->to($this->userData->email)
                     ->subject($subject)
                     ->view($templateView)->with($templateData);
-
     }
 }

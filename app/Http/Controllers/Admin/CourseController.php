@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
+use App\Mail\BookingInfoUpdateMailer;
+use App\Models\Booking;
 use App\Models\Course;
+use App\Models\CourseDate;
 use App\Repositories\CourseRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Response;
 use Validator;
@@ -370,75 +375,139 @@ class CourseController extends AppBaseController
      */
     public function update($id, Request $request): JsonResponse
     {
-        $courseData = $request->all();
-        $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
+        $school = $this->getSchool($request);
+        try {
+            $emailGroups = [];
+            $courseData = $request->all();
+            $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
 
-        if(!empty($courseData['image'])) {
-            $base64Image = $request->input('image');
+            if(!empty($courseData['image'])) {
+                $base64Image = $request->input('image');
 
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
-                $type = strtolower($type[1]);
-                $imageData = base64_decode($imageData);
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $type = strtolower($type[1]);
+                    $imageData = base64_decode($imageData);
 
-                if ($imageData === false) {
-                    $this->sendError('base64_decode failed');
+                    if ($imageData === false) {
+                        $this->sendError('base64_decode failed');
+                    }
+                } else {
+                    $this->sendError('did not match data URI with image data');
                 }
+
+                $imageName = 'course/image_'.time().'.'.$type;
+                Storage::disk('public')->put($imageName, $imageData);
+                $courseData['image'] = url(url(Storage::url($imageName)));
             } else {
-                $this->sendError('did not match data URI with image data');
+                $courseData = $request->except('image');
             }
 
-            $imageName = 'course/image_'.time().'.'.$type;
-            Storage::disk('public')->put($imageName, $imageData);
-            $courseData['image'] = url(url(Storage::url($imageName)));
-        } else {
-            $courseData = $request->except('image');
-        }
+            DB::beginTransaction();
+            // Actualiza los campos principales del curso
+            $course->update($courseData);
 
-        // Actualiza los campos principales del curso
-        $course->update($courseData);
+            // Sincroniza las fechas
+            if (isset($courseData['course_dates'])) {
+                $updatedCourseDates = [];
+                foreach ($courseData['course_dates'] as $dateData) {
+                    // Verifica si existe 'id' antes de usarlo
+                    if (isset($dateData['active']) && $dateData['active'] === false && isset($dateData['id'])) {
+                        $date = CourseDate::findOrFail($dateData['id']);
+                        $bookingUsersCount = $date->bookingUsers()->count();
 
-        // Sincroniza las fechas
-        if (isset($courseData['course_dates'])) {
-            $updatedCourseDates = [];
-            foreach ($courseData['course_dates'] as $dateData) {
-                // Verifica si existe 'id' antes de usarlo
-                $dateId = isset($dateData['id']) ? $dateData['id'] : null;
-                $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
-                $updatedCourseDates[] = $date->id;
-
-                if (isset($dateData['course_groups'])) {
-                    $updatedCourseGroups = [];
-                    foreach ($dateData['course_groups'] as $groupData) {
-                        // Verifica si existe 'id' antes de usarlo
-                        $groupId = isset($groupData['id']) ? $groupData['id'] : null;
-                        $group = $date->courseGroups()->updateOrCreate(['id' => $groupId], $groupData);
-                        $updatedCourseGroups[] = $group->id;
-
-                        if (isset($groupData['course_subgroups'])) {
-                            foreach ($groupData['course_subgroups'] as $subgroupData) {
-                                // Preparar los datos de subgroup
-                                $subgroupData['course_id'] = $course->id;
-                                $subgroupData['course_date_id'] = $date->id;
-
-                                // Verifica si existe 'id' antes de usarlo
-                                $subgroupId = isset($subgroupData['id']) ? $subgroupData['id'] : null;
-                                if ($subgroupId) {
-                                    $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
-                                } else {
-                                    $group->courseSubgroups()->create($subgroupData);
-                                }
-                            }
-                            // Considera si necesitas borrar subgrupos aquí
+                        if ($bookingUsersCount > 0) {
+                            DB::rollback();
+                            return $this->sendError('Date has bookings and cannot be deactivated');
                         }
                     }
-                    $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete();
+                    if (isset($dateData['date']) && isset($dateData['id'])) {
+                        $date = CourseDate::find($dateData['id']);
+                        if($date->date != $dateData['date']) {
+                            $bookingUsers = $date->bookingUsers;
+
+                            foreach ($bookingUsers as $bookingUser) {
+                                $clientEmail = $bookingUser->booking->clientMain->email;
+                                $bookingId = $bookingUser->booking_id;
+
+                                $bookingUser->update(['date' => $date->date]);
+
+                                if (array_key_exists($clientEmail, $emailGroups)) {
+                                    // Verificar si el booking ID ya está en el grupo del correo electrónico
+                                    if (!in_array($bookingId, $emailGroups[$clientEmail])) {
+                                        // Si no está, agregarlo al grupo del correo electrónico
+                                        $emailGroups[$clientEmail][] = $bookingId;
+                                    }
+                                } else {
+                                    // Si el correo electrónico no está en el array, crear un nuevo grupo
+                                    $emailGroups[$clientEmail] = [$bookingId];
+                                }
+                            }
+                        }
+                    }
+                    $dateId = isset($dateData['id']) ? $dateData['id'] : null;
+                    $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
+                    $updatedCourseDates[] = $date->id;
+
+                    if (isset($dateData['course_groups'])) {
+                        $updatedCourseGroups = [];
+                        foreach ($dateData['course_groups'] as $groupData) {
+                            // Verifica si existe 'id' antes de usarlo
+                            $groupId = isset($groupData['id']) ? $groupData['id'] : null;
+                            $group = $date->courseGroups()->updateOrCreate(['id' => $groupId], $groupData);
+                            $updatedCourseGroups[] = $group->id;
+
+                            if (isset($groupData['course_subgroups'])) {
+                                foreach ($groupData['course_subgroups'] as $subgroupData) {
+                                    // Preparar los datos de subgroup
+                                    $subgroupData['course_id'] = $course->id;
+                                    $subgroupData['course_date_id'] = $date->id;
+
+                                    // Verifica si existe 'id' antes de usarlo
+                                    $subgroupId = isset($subgroupData['id']) ? $subgroupData['id'] : null;
+                                    if ($subgroupId) {
+                                        $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
+                                    } else {
+                                        $group->courseSubgroups()->create($subgroupData);
+                                    }
+                                }
+                                // Considera si necesitas borrar subgrupos aquí
+                            }
+                        }
+                        $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete();
+                    }
+                }
+                $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
+            }
+            DB::commit();
+
+            // Ahora, recorre el array de grupos de correo electrónico y envía correos
+            foreach ($emailGroups as $clientEmail => $bookingIds) {
+                foreach ($bookingIds as $bookingId) {
+                    // Obtener el booking asociado a este correo electrónico y booking ID
+                    $booking = Booking::with('clientMain')->find($bookingId);
+
+                    // Envía el correo electrónico aquí usando Laravel Mail
+
+
+                    dispatch(function () use ($school, $booking, $clientEmail) {
+                        // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                        try {
+                            Mail::to($clientEmail)->send(new BookingInfoUpdateMailer($school, $booking, $booking->clientMain));
+                        } catch (\Exception $ex) {
+                            \Illuminate\Support\Facades\Log::debug('Admin/COurseController BookingInfoUpdateMailer: ' .
+                                $ex->getMessage());
+                        }
+                    })->afterResponse();
                 }
             }
-            $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
+
+            return $this->sendResponse($course, 'Course updated successfully');
+        }  catch (\Exception $e) {
+            DB::rollback();
+            return $this->sendError('An error occurred while updating the course: ' . $e->getMessage());
         }
 
-        return $this->sendResponse($course, 'Course updated successfully');
     }
 
 }
