@@ -22,6 +22,7 @@ class BookingUserRepository extends BaseRepository
         'date',
         'hour_start',
         'hour_end',
+        'status',
         'attended',
         'color'
     ];
