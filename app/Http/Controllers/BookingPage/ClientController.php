@@ -7,10 +7,13 @@ use App\Http\Resources\API\BookingResource;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
+use App\Models\ClientsSchool;
 use App\Models\ClientsUtilizer;
+use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Response;
 use Validator;
 
@@ -201,18 +204,60 @@ class ClientController extends SlugAuthController
     {
         // Valida los datos de la solicitud, asegúrate de que contenga al menos los campos necesarios
         $request->validate([
-            'name' => 'required|string',
+            'first_name' => 'required|string',
             'last_name' => 'required|string',
             'birth_date' => 'required',
-            'language1_id' => 'required'
+            'phone' => 'required',
+            'email' => 'required',
+            'password' => 'required',
+            'language1_id' => 'required',
+            'language2_id' => 'nullable',
+            'language3_id' => 'nullable'
         ]);
 
         $input = $request->all();
+
+        if(!empty($input['password'])) {
+            $input['password'] = bcrypt($input['password']);
+        } else {
+            //$input['password'] = bcrypt(Str::random(8));
+            return $this->sendError('User cannot be created without a password');
+        }
+
+        $client = Client::where('email', $input['email'])->whereHas('clientsSchools', function ($q) {
+            $q->where('school_id', $this->school->id);
+        })->first();
+
+
+        if ($client) {
+            // Verifica si el cliente tiene un usuario asociado
+            if (!$client->user) {
+                // Si no tiene usuario, crea uno
+                $newUser = new User($input);
+                $newUser->type = 'client';
+                $newUser->save();
+                $client->user_id = $newUser->id;
+                $client->save();
+                return $this->sendResponse($client, 'Client created successfully');
+            }
+            return $this->sendError('User already exists');
+        }
 
         // Crea un nuevo cliente con los datos de la solicitud
         $newClient = new Client($input);
 
         // Guarda el nuevo cliente en la base de datos
+        $newClient->save();
+
+        ClientsSchool::create([
+           'client_id' => $newClient->id,
+           'school_id' => $this->school->id
+        ]);
+
+        $newUser = new User($input);
+        $newUser->type = 'client';
+        $newUser->save();
+        $newClient->user_id = $newUser->id;
         $newClient->save();
 
         return $this->sendResponse($newClient, 'Client created successfully');
