@@ -201,7 +201,7 @@ class ClientController extends SlugAuthController
     {
         // Valida los datos de la solicitud, asegúrate de que contenga al menos los campos necesarios
         $request->validate([
-            'name' => 'required|string',
+            'first_name' => 'required|string',
             'last_name' => 'required|string',
             'birth_date' => 'required',
             'language1_id' => 'required'
