@@ -439,13 +439,13 @@ class CourseController extends AppBaseController
                             $modelDate = $date->date->format('Y-m-d');
 
                             if ($providedDate && $providedDate !== $modelDate) {
-                                $bookingUsers = $date->bookingUsers;
 
+                                $bookingUsers = $date->bookingUsers;
                                 foreach ($bookingUsers as $bookingUser) {
                                     $clientEmail = $bookingUser->booking->clientMain->email;
                                     $bookingId = $bookingUser->booking_id;
 
-                                    $bookingUser->update(['date' => $modelDate]);
+                                    $bookingUser->update(['date' => $providedDate]);
 
                                     if (array_key_exists($clientEmail, $emailGroups)) {
                                         // Verificar si el booking ID ya está en el grupo del correo electrónico
@@ -461,6 +461,7 @@ class CourseController extends AppBaseController
                             }
                         }
                     }
+
                     $dateId = isset($dateData['id']) ? $dateData['id'] : null;
                     $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
                     $updatedCourseDates[] = $date->id;
