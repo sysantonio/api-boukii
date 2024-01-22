@@ -240,7 +240,7 @@ class ClientController extends SlugAuthController
                 $client->save();
                 return $this->sendResponse($client, 'Client created successfully');
             }
-            return $this->sendError('User already exists');
+            return $this->sendError('Client already exists');
         }
 
         // Crea un nuevo cliente con los datos de la solicitud
