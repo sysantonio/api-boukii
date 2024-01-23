@@ -317,6 +317,18 @@ class PlannerController extends AppBaseController
                 return [$nomenclature => $item];
             });
 
+            $combinedData->each(function ($item, $key) {
+                if (isset($item['bookingUsers'])) {
+
+                    // Si es un array de BookingUser, cargar relaciones para cada BookingUser
+                    foreach ($item['bookingUsers'] as $bookingUser) {
+                        $bookingUser->load(['client.sports',
+                            'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals']);
+                    }
+                }
+            });
+
+
 
 
             $monitorNwd = $nwd->where('monitor_id', $monitor->id);
@@ -393,15 +405,14 @@ class PlannerController extends AppBaseController
 
         $allBookings = $bookingsWithoutMonitor->concat($subgroupsArray);
 
+
         // Crear un nuevo array asociativo con los índices deseados
         $combinedData = $allBookings->mapWithKeys(function ($item) {
             if (isset($item[0])){
+
                 $nomenclature = $item[0]->course_id . '-' . $item[0]->course_date_id .
                     '-' . ($item[0]->course_subgroup_id ?? $item[0]->id);
-                foreach ($item as $bookingUser) {
-                    $bookingUser->load(['booking', 'course.courseDates', 'client.sports',
-                        'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals']);
-                }
+
 
             } else {
                 // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
@@ -410,6 +421,17 @@ class PlannerController extends AppBaseController
             }
 
             return [$nomenclature => $item];
+        });
+
+        $combinedData->each(function ($item, $key) {
+            if (isset($item['bookingUsers'])) {
+
+                // Si es un array de BookingUser, cargar relaciones para cada BookingUser
+                foreach ($item['bookingUsers'] as $bookingUser) {
+                    $bookingUser->load(['client.sports',
+                        'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals']);
+                }
+            }
         });
 
 
