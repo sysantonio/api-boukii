@@ -271,6 +271,38 @@ class PlannerController extends AppBaseController
 
             $availableSubgroups = $availableSubgroups->concat($availableSubgroupsForDate);
 
+            $subgroupsMonitorArray = [];
+
+            $availableSubgroups->each(function ($subgroup) use (&$subgroupsMonitorArray, $subgroupsPerGroup) {
+                $subgroupId = $subgroup->id;
+                $courseDateId = $subgroup->course_date_id;
+                $courseId = $subgroup->course_id;
+
+                $subgroup->subgroup_number = 1; // Establece el número de subgrupo (puedes ajustarlo según tus necesidades)
+                $subgroup->total_subgroups = $subgroupsPerGroup[$courseId] ?? 1;
+
+                // Define la misma nomenclatura que en los bookings
+                $nomenclature = $courseId . '-' . $courseDateId . '-' . $subgroupId;
+
+                // Agrega el subgrupo al array con la nomenclatura como índice
+                $subgroupsMonitorArray[$nomenclature] = $subgroup;
+            });
+
+
+
+            $allBookings = $monitorBookings->concat($subgroupsMonitorArray);
+
+
+            // Crear un nuevo array asociativo con los índices deseados
+            $combinedData = $allBookings->mapWithKeys(function ($item) {
+                if (isset($item[0])){
+                    $item = $item[0];
+                }
+                // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
+                $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
+
+                return [$nomenclature => $item];
+            });
 
 
 
@@ -278,9 +310,9 @@ class PlannerController extends AppBaseController
 
             $groupedData[$monitor->id] = [
                 'monitor' => $monitor,
-                'bookings' => $monitorBookings,
+                'bookings' => $combinedData,
                 'nwds' => $monitorNwd,
-                'subgroups' => $availableSubgroups,
+                /*'subgroups' => $availableSubgroups,*/
             ];
         }
 
@@ -321,14 +353,41 @@ class PlannerController extends AppBaseController
             }
         })->get();
 
+        $subgroupsArray = [];
+
+        $subgroupsWithoutMonitor->each(function ($subgroup) use (&$subgroupsArray, $subgroupsPerGroup) {
+            $subgroupId = $subgroup->id;
+            $courseDateId = $subgroup->course_date_id;
+            $courseId = $subgroup->course_id;
+
+            $subgroup->subgroup_number = 1; // Establece el número de subgrupo (puedes ajustarlo según tus necesidades)
+            $subgroup->total_subgroups = $subgroupsPerGroup[$courseId] ?? 1;
+
+            // Define la misma nomenclatura que en los bookings
+            $nomenclature = $courseId . '-' . $courseDateId . '-' . $subgroupId;
+
+            // Agrega el subgrupo al array con la nomenclatura como índice
+            $subgroupsArray[$nomenclature] = $subgroup;
+        });
+
+
+        $allBookings = $bookingsWithoutMonitor->concat($subgroupsArray);
+
+        // Crear un nuevo array asociativo con los índices deseados
+        $combinedData = $allBookings->mapWithKeys(function ($item) {
+            // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
+            $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
+
+            return [$nomenclature => $item];
+        });
 
 
         if ($bookingsWithoutMonitor->isNotEmpty() || $subgroupsWithoutMonitor->isNotEmpty()) {
             $groupedData['no_monitor'] = [
                 'monitor' => null,
-                'bookings' => $bookingsWithoutMonitor,
+                'bookings' => $combinedData,
                 'nwds' => collect([]),
-                'subgroups' => $subgroupsWithoutMonitor,
+               /* 'subgroups' => $subgroupsWithoutMonitor,*/
             ];
         }
 
