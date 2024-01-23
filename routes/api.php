@@ -35,7 +35,8 @@ Route::any('/mailtest', function () {
 
     $bookingData = \App\Models\Booking::find(5561);
     $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
-        'bookingUsers.courseSubGroup', 'bookingUsers.course', 'bookingUsers.courseDate']);
+        'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+        'bookingUsers.courseDate']);
     $schoolData = \App\Models\School::find(1);
     $userData = Client::find($bookingData->client_main_id);
     //return response()->json($bookingData);

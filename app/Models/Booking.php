@@ -324,7 +324,8 @@ use Spatie\Activitylog\LogOptions;
     public function parseBookedGroupedCourses()
     {
         $this->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
-            'bookingUsers.courseSubGroup', 'bookingUsers.course', 'bookingUsers.courseDate']);
+            'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+            'bookingUsers.courseDate']);
 
         $bookingUsers = $this->bookingUsers;
 

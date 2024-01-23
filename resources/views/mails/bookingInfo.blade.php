@@ -31,6 +31,10 @@
                 {{ __('emails.bookingInfo.singular_participant') }}
                 {{ $client->first()->first()->first()->first()['client']['full_name'] }}.
             </li>
+            <li>
+                {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
+                {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
+            </li>
             @if($key == 1 && count($type))
                 <li>  {{ __('emails.bookingInfo.degree') }}
                     : {{ $client->first()->first()->first()->first()['degree']['name'] }}</li>
@@ -52,7 +56,6 @@
                                $courseDate[0]['monitor']['full_name'] : __('emails.bookingInfo.unknown')]) }}
                             .
                         </li>
-
                     @endforeach
 
                 @endforeach

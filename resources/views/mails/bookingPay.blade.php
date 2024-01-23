@@ -15,7 +15,7 @@
         @endif
     </p>
 
-    @foreach ($courses as $key=>$type)
+        @foreach ($courses as $key=>$type)
         @if($key == 1 && count($type))
             <h1>{{ __('emails.bookingInfo.collective_courses') }}</h1>
         @endif
@@ -30,6 +30,10 @@
             <li>
                 {{ __('emails.bookingInfo.singular_participant') }}
                 {{ $client->first()->first()->first()->first()['client']['full_name'] }}.
+            </li>
+            <li>
+                {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
+                {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
             </li>
             @if($key == 1 && count($type))
                 <li>  {{ __('emails.bookingInfo.degree') }}
@@ -52,7 +56,6 @@
                                $courseDate[0]['monitor']['full_name'] : __('emails.bookingInfo.unknown')]) }}
                             .
                         </li>
-
                     @endforeach
 
                 @endforeach

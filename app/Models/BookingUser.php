@@ -278,6 +278,18 @@ class BookingUser extends Model
         return $this->hasMany(\App\Models\BookingUserExtra::class, 'booking_user_id');
     }
 
+    public function courseExtras()
+    {
+        return $this->hasManyThrough(
+            \App\Models\CourseExtra::class,
+            \App\Models\BookingUserExtra::class,
+            'booking_user_id',
+            'id',
+            'id',
+            'course_extra_id'
+        );
+    }
+
     public function scopeByMonitor($query, $monitor)
     {
         return $query->where('monitor_id', $monitor);
