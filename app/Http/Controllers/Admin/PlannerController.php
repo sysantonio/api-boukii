@@ -278,6 +278,14 @@ class PlannerController extends AppBaseController
                 $courseDateId = $subgroup->course_date_id;
                 $courseId = $subgroup->course_id;
 
+                $totalSubgroups = $subgroupsPerGroup[$subgroup->course_group_id] ?? 1;
+                $subgroupPosition = CourseSubgroup::where('course_group_id', $subgroup->course_group_id)
+                    ->where('id', '<=', $subgroupId)
+                    ->count();
+
+                $subgroup->subgroup_number = $subgroupPosition;
+                $subgroup->total_subgroups = $totalSubgroups;
+
                 // Define la misma nomenclatura que en los bookings
                 $nomenclature = $courseId . '-' . $courseDateId . '-' . $subgroupId;
 
@@ -360,6 +368,14 @@ class PlannerController extends AppBaseController
             $subgroupId = $subgroup->id;
             $courseDateId = $subgroup->course_date_id;
             $courseId = $subgroup->course_id;
+
+            $totalSubgroups = $subgroupsPerGroup[$subgroup->course_group_id] ?? 1;
+            $subgroupPosition = CourseSubgroup::where('course_group_id', $subgroup->course_group_id)
+                ->where('id', '<=', $subgroupId)
+                ->count();
+
+            $subgroup->subgroup_number = $subgroupPosition;
+            $subgroup->total_subgroups = $totalSubgroups;
 
             $subgroup->loadMissing(['course.courseDates', 'courseGroup']);
 
