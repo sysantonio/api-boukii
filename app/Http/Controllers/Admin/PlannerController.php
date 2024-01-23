@@ -296,10 +296,14 @@ class PlannerController extends AppBaseController
             // Crear un nuevo array asociativo con los índices deseados
             $combinedData = $allBookings->mapWithKeys(function ($item) {
                 if (isset($item[0])){
-                    $item = $item[0];
+                    $nomenclature = $item[0]->course_id . '-' . $item[0]->course_date_id .
+                        '-' . ($item[0]->course_subgroup_id ?? $item[0]->id);
+
+                } else {
+                    // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
+                    $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
+
                 }
-                // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
-                $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
 
                 return [$nomenclature => $item];
             });
@@ -376,10 +380,14 @@ class PlannerController extends AppBaseController
         // Crear un nuevo array asociativo con los índices deseados
         $combinedData = $allBookings->mapWithKeys(function ($item) {
             if (isset($item[0])){
-                $item = $item[0];
+                $nomenclature = $item[0]->course_id . '-' . $item[0]->course_date_id .
+                    '-' . ($item[0]->course_subgroup_id ?? $item[0]->id);
+
+            } else {
+                // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
+                $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
+
             }
-            // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
-            $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
 
             return [$nomenclature => $item];
         });
