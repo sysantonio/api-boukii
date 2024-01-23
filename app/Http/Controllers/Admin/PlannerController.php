@@ -10,6 +10,7 @@ use App\Models\MonitorNwd;
 use App\Models\MonitorsSchool;
 use App\Models\Station;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -161,6 +162,30 @@ class PlannerController extends AppBaseController
                 ->get();
             $monitors = $monitorSchools->pluck('monitor');
         }
+
+        // Agregar un flag a los monitores si TODOS los días cumplen con los criterios
+        $monitors->each(function ($monitor) use ($schoolId, $dateStart, $dateEnd) {
+            $daysWithinRange = CarbonPeriod::create($dateStart, $dateEnd)->toArray();
+
+            $allDaysMeetCriteria = true;
+
+            foreach ($daysWithinRange as $day) {
+                $hasFullDayNwd = MonitorNwd::where('school_id', $schoolId)
+                        ->where('monitor_id', $monitor->id)
+                        ->where('full_day', true)
+                        ->where('user_nwd_subtype_id', 1)
+                        ->whereDate('start_date', '<=', $day)
+                        ->whereDate('end_date', '>=', $day)
+                        ->count() > 0;
+
+                if (!$hasFullDayNwd) {
+                    $allDaysMeetCriteria = false;
+                    break;
+                }
+            }
+
+            $monitor->hasFullDayNwd = $allDaysMeetCriteria;
+        });
 
         // Obtén los resultados para las reservas y los MonitorNwd
         $bookings = $bookingQuery->get();
