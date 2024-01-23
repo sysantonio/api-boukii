@@ -51,7 +51,7 @@ class BookingPayMailer extends Mailable
         // Apply that user's language - or default
         $defaultLocale = config('app.fallback_locale');
         $oldLocale = \App::getLocale();
-        $userLang = Language::find( $this->userData->language_id_1 );
+        $userLang = Language::find( $this->userData->language1_id );
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 

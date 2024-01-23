@@ -112,7 +112,7 @@ class PayrexxHelpers
                 // Apply buyer user's language - or default
                 $defaultLocale = config('app.fallback_locale');
                 $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language_id_1) : null;
+                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
                 $userLocale = $userLang ? $userLang->code : $defaultLocale;
                 \App::setLocale($userLocale);
 
@@ -327,7 +327,7 @@ class PayrexxHelpers
                 // Apply buyer user's language - or default
                 $defaultLocale = config('app.fallback_locale');
                 $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language_id_1) : null;
+                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
                 $userLocale = $userLang ? $userLang->code : $defaultLocale;
                 \App::setLocale($userLocale);
 
@@ -566,7 +566,7 @@ class PayrexxHelpers
                 // Apply buyer user's language - or default
                 $defaultLocale = config('app.fallback_locale');
                 $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language_id_1) : null;
+                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
                 $userLocale = $userLang ? $userLang->code : $defaultLocale;
                 \App::setLocale($userLocale);
 

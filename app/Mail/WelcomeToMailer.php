@@ -27,7 +27,7 @@ class WelcomeToMailer extends Mailable
         // Apply that user's language - or default
         $defaultLocale = config('app.fallback_locale');
         $oldLocale = \App::getLocale();
-        $userLang = Language::find( $this->user->language_id_1 );
+        $userLang = Language::find( $this->user->language1_id );
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
