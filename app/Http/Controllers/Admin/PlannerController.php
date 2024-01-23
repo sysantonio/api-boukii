@@ -375,6 +375,9 @@ class PlannerController extends AppBaseController
 
         // Crear un nuevo array asociativo con los índices deseados
         $combinedData = $allBookings->mapWithKeys(function ($item) {
+            if (isset($item[0])){
+                $item = $item[0];
+            }
             // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
             $nomenclature = $item->course_id . '-' . $item->course_date_id . '-' . ($item->course_subgroup_id ?? $item->id);
 
