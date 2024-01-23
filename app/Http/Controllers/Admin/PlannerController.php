@@ -258,7 +258,7 @@ class PlannerController extends AppBaseController
             $availableSubgroupsForDate = $monitor->courseSubgroups->filter(function ($subgroup)
             use ($monitorBookings) {
 
-                $subgroup->loadMissing(['courseGroup.course']);
+                $subgroup->loadMissing(['course.courseDates', 'courseGroup']);
                 // Verificar si el subgrupo tiene reservas en esa fecha
                 $hasReservations = $monitorBookings->contains(function ($booking)
                 {
@@ -277,9 +277,6 @@ class PlannerController extends AppBaseController
                 $subgroupId = $subgroup->id;
                 $courseDateId = $subgroup->course_date_id;
                 $courseId = $subgroup->course_id;
-
-                $subgroup->subgroup_number = 1; // Establece el número de subgrupo (puedes ajustarlo según tus necesidades)
-                $subgroup->total_subgroups = $subgroupsPerGroup[$courseId] ?? 1;
 
                 // Define la misma nomenclatura que en los bookings
                 $nomenclature = $courseId . '-' . $courseDateId . '-' . $subgroupId;
@@ -364,8 +361,7 @@ class PlannerController extends AppBaseController
             $courseDateId = $subgroup->course_date_id;
             $courseId = $subgroup->course_id;
 
-            $subgroup->subgroup_number = 1; // Establece el número de subgrupo (puedes ajustarlo según tus necesidades)
-            $subgroup->total_subgroups = $subgroupsPerGroup[$courseId] ?? 1;
+            $subgroup->loadMissing(['course.courseDates', 'courseGroup']);
 
             // Define la misma nomenclatura que en los bookings
             $nomenclature = $courseId . '-' . $courseDateId . '-' . $subgroupId;
