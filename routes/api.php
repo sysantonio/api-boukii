@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Course;
 use App\Models\Language;
+use App\Models\Mail;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\Station;
@@ -32,8 +33,9 @@ Route::any('/users-permisions', function () {
 
 Route::any('/mailtest', function () {
 
-    $bookingData = \App\Models\Booking::find(85);
-    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.courseSubGroup', 'bookingUsers.course']);
+    $bookingData = \App\Models\Booking::find(5561);
+    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
+        'bookingUsers.courseSubGroup', 'bookingUsers.course', 'bookingUsers.courseDate']);
     $schoolData = \App\Models\School::find(1);
     $userData = Client::find($bookingData->client_main_id);
     //return response()->json($bookingData);
@@ -44,23 +46,23 @@ Route::any('/mailtest', function () {
     $userLocale = $userLang ? $userLang->code : $defaultLocale;
     \App::setLocale($userLocale);
 
-    if ($schoolData->id == 8) {
-        $templateView = \View::exists('mails.bookingInfoCharmey_' . $userLocale)
-            ? 'mails.bookingInfoCharmey_' . $userLocale
-            : 'mails.bookingInfoCharmey_' . 'fr';
 
-    } else {
-        $templateView = \View::exists('mails.bookingInfo_' . $userLocale)
-            ? 'mails.bookingInfo_' . $userLocale
-            : 'mails.bookingInfo_' . 'fr';
+    $templateView = 'mails.bookingInfo';
 
-    }
+    $footerView = 'mails.footer';
 
-    $footerView =
-        \View::exists('mails.footer_' . $userLocale) ? 'mails.footer_' . $userLocale : 'mails.footer_' . 'fr';
-    $groupedCourses = $bookingData->parseBookedGroupedCourses();
+    $templateMail = Mail::where('type', 'booking_cancel')->where('school_id', $schoolData->id)
+        ->where('lang', $userLocale)->first();
+
+    $voucherCode = "";
+    if (isset($voucherData->code)) $voucherCode = $voucherData->code;
+    $voucherAmount = "";
+    if (isset($voucherData->quantity)) $voucherAmount = number_format($voucherData->quantity, 2);
+
 
     $templateData = [
+        'titleTemplate' => $templateMail->title ?? '',
+        'bodyTemplate' => $templateMail->body ?? '',
         'userName' => trim($userData->first_name . ' ' . $userData->last_name),
         'schoolName' => $schoolData->name,
         'schoolLogo' => $schoolData->logo,
@@ -68,12 +70,11 @@ Route::any('/mailtest', function () {
         'schoolConditionsURL' => $schoolData->conditions_url,
         'reference' => '#' . $bookingData->id,
         'bookingNotes' => $bookingData->notes,
-        'groupedCourses' => $groupedCourses,
-        'hasCancellationInsurance' => $bookingData->has_cancellation_insurance,
+        'courses' => $bookingData->parseBookedGroupedCourses(),
+        'voucherCode' => $voucherCode,
+        'voucherAmount' => $voucherAmount,
+        'hasCancellationInsurance' => false,
         'actionURL' => null,
-        'amount' => 200,
-        'booking' => $bookingData,
-        'currency' => 'chf',
         'footerView' => $footerView
     ];
 
@@ -83,10 +84,10 @@ Route::any('/mailtest', function () {
     return view($templateView)->with($templateData);
 });
 
-Route::post('payrexxNotification',  [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
+Route::post('payrexxNotification', [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
     ->name('api.migration.data');
 
-Route::get('payrexx/finish', function(Request $request) {
+Route::get('payrexx/finish', function (Request $request) {
     return response()->make('Payrexx close ' . $request->status, 200);
 })->name('api.payrexx.finish');
 
@@ -156,7 +157,7 @@ Route::get('/process-images', function () {
             if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                 $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
                 $imageData = base64_decode($imageData);
-                $imageName = 'image_' .time().  '.' . $type[1];
+                $imageName = 'image_' . time() . '.' . $type[1];
                 Storage::disk('public')->put($imageName, $imageData);
                 $model->image = Storage::disk('public')->url($imageName);
                 $model->save();

@@ -255,7 +255,7 @@ class BookingUser extends Model
 
     public function courseSubGroup(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(\App\Models\CourseSubgroup::class, 'course_group_id');
+        return $this->belongsTo(\App\Models\CourseSubgroup::class, 'course_subgroup_id');
     }
 
     public function booking(): \Illuminate\Database\Eloquent\Relations\BelongsTo

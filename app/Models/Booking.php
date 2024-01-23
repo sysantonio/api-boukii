@@ -323,23 +323,13 @@ use Spatie\Activitylog\LogOptions;
 
     public function parseBookedGroupedCourses()
     {
-        $this->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.course']);
+        $this->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
+            'bookingUsers.courseSubGroup', 'bookingUsers.course', 'bookingUsers.courseDate']);
 
-        $groupedCourses = [];
+        $bookingUsers = $this->bookingUsers;
 
-        foreach ($this->bookingUsers as $bookingUser) {
-            $courseId = $bookingUser->course_id;
-
-            if (!isset($groupedCourses[$courseId])) {
-                $groupedCourses[$courseId] = [
-                    'course_name' => $bookingUser->course->name,
-                    'clients' => [],
-                ];
-            }
-
-            $clientName = $bookingUser->client->first_name . ' ' . $bookingUser->client->last_name;
-            $groupedCourses[$courseId]['clients'][] = $clientName;
-        }
+        $groupedCourses = $bookingUsers->groupBy(['course.course_type', 'client_id',
+            'course_id', 'degree_id', 'course_date_id']);
 
         return $groupedCourses;
     }

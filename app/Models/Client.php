@@ -369,6 +369,12 @@ class Client extends Model
         return $this->hasOne(\App\Models\ClientsUtilizer::class, 'main_id', 'id');
     }
 
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
