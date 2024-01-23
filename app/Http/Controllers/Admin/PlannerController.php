@@ -106,8 +106,8 @@ class PlannerController extends AppBaseController
         $schoolId = $this->getSchool($request)->id;
 
         // Consulta para las reservas (BookingUser)
-        $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client.sports',
-            'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals')
+        $bookingQuery = BookingUser::with(['booking', 'course.courseDates', 'client.sports',
+            'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals'])
             ->where('school_id', $schoolId)
             ->where('status', 1)// Filtra por school_id
             ->orderBy('hour_start');
@@ -303,6 +303,10 @@ class PlannerController extends AppBaseController
                 if (isset($item[0])){
                     $nomenclature = $item[0]->course_id . '-' . $item[0]->course_date_id .
                         '-' . ($item[0]->course_subgroup_id ?? $item[0]->id);
+                    foreach ($item as $bookingUser) {
+                        $bookingUser->load(['booking', 'course.courseDates', 'client.sports',
+                            'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals']);
+                    }
 
                 } else {
                     // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
@@ -394,6 +398,10 @@ class PlannerController extends AppBaseController
             if (isset($item[0])){
                 $nomenclature = $item[0]->course_id . '-' . $item[0]->course_date_id .
                     '-' . ($item[0]->course_subgroup_id ?? $item[0]->id);
+                foreach ($item as $bookingUser) {
+                    $bookingUser->load(['booking', 'course.courseDates', 'client.sports',
+                        'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals']);
+                }
 
             } else {
                 // Utiliza la misma lógica de nomenclatura que se utiliza en los bookings
