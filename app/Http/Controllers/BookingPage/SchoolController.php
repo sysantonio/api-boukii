@@ -53,16 +53,8 @@ class SchoolController extends SlugAuthController
     {
         try {
             $school = $this->school;
-            $schoolId = $school->id;
-            //$school->load('degrees');
-            $sports = Sport::with(['degrees', 'schools' => function($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            }])->whereHas('schools', function($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            })->whereHas('courses', function($query) {
-                $query->where('active', 1)->where('online', 1);
-            })->get();
-            $school->sports = $sports;
+            $school->load('sports');
+
             return $this->sendResponse($school, 'School retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage(), 500);

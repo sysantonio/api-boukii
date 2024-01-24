@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\BookingPage;
 
-use App\Http\Controllers\ApiController;
-
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 

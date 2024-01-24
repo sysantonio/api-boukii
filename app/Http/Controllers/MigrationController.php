@@ -475,7 +475,8 @@ class MigrationController extends AppBaseController
     {
 
         $oldDegrees = \App\Models\OldModels\Degree::all();
-        $fechaInicio = Carbon::createFromDate(null, 9, 1);
+        $fechaInicio = Carbon::createFromDate(2023, 9, 1);
+
 
         $oldCoursesCollectives = Course2::where('created_at', '>', $fechaInicio)
             ->where('deleted_at', null)
@@ -559,8 +560,8 @@ class MigrationController extends AppBaseController
                                     break;
                             }
 
-                            $newGroup->min_age = $minAge;
-                            $newGroup->max_age = $maxAge;
+                            $newGroup->age_min = $minAge;
+                            $newGroup->age_max = $maxAge;
                             $oldTeacherDegree = $oldDegrees->firstWhere('id', $group->teacher_min_degree);
                             $newTeacherDegree = Degree::where('degree_order', $oldTeacherDegree->degree_order)
                                 ->where('school_id', $newCourse->school_id)->where('sport_id', $newCourse->sport_id)
@@ -715,7 +716,7 @@ class MigrationController extends AppBaseController
     {
 
         //$oldDegrees = \App\Models\OldModels\Degree::all();
-        $fechaInicio = Carbon::createFromDate(null, 9, 9);
+        $fechaInicio = Carbon::createFromDate(2023, 9, 9);
         $oldBookings = Bookings2::withTrashed()->where('created_at', '>', $fechaInicio)
             ->whereHas('booking_users')
             ->with(['booking_users.course', 'booking_users.subgroup.group.course'])
@@ -726,7 +727,8 @@ class MigrationController extends AppBaseController
         foreach ($oldBookings as $oldBooking) {
             $newBooking = new Booking($oldBooking->toArray());
             $newBooking->old_id = $oldBooking->id;
-            $newBooking->client_main_id = Client::where('old_id', $newBooking->user_main_id)->first()->id;
+
+            $newBooking->client_main_id = Client::where('old_id', $oldBooking->user_main_id)->first()->id;
             if ($oldBooking->deleted_at) {
                 $newBooking->status = 3;
             }
