@@ -374,6 +374,14 @@ class PlannerController extends AppBaseController
     {
         $monitorId = $request->input('monitor_id');
         $bookingUserIds  = $request->input('booking_users');
+        $courseSubgroupId  = $request->input('subgroup_id');
+        if ($courseSubgroupId) {
+            $courseSubgroup = CourseSubgroup::find($courseSubgroupId);
+
+            if ($courseSubgroup) {
+                $courseSubgroup->update(['monitor_id' => $monitorId]);
+            }
+        }
         $overlapDetected = false;
 
         if ($monitorId !== null) {
