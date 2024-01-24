@@ -385,7 +385,7 @@ class School extends Model
         'contact_cp' => 'nullable',
         'contact_city' => 'nullable',
         'contact_province' => 'nullable',
-        'contact_country' => 'nullable0',
+        'contact_country' => 'nullable',
         'fiscal_name' => 'nullable',
         'fiscal_id' => 'nullable',
         'fiscal_address' => 'nullable',
