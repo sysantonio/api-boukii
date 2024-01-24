@@ -376,7 +376,7 @@ class School extends Model
     ];
 
     public static array $rules = [
-        'name' => 'required|string|max:255',
+        'name' => 'nullable',
         'description' => 'nullable',
         'contact_email' => 'nullable',
         'contact_phone' => 'nullable',
