@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\BookingUser;
 use App\Models\Client;
 use App\Repositories\ClientRepository;
 use Illuminate\Http\JsonResponse;
@@ -237,6 +238,74 @@ class ClientsController extends AppBaseController
         $utilizers = $mainClient->utilizers;
 
         return $this->sendResponse($utilizers, 'Utilizers returned successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/admin/clients/course/{id}",
+     *      summary="getClientsByCourse",
+     *      tags={"Admin"},
+     *      description="Get Clients by course",
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="id of Course",
+     *           @OA\Schema(
+     *             type="integer"
+     *          ),
+     *          required=true,
+     *          in="path"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/Client"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function getClientsByCourse($id): JsonResponse
+    {
+        // Busca todos los BookingUser con el course_id proporcionado
+        $bookingUsers = BookingUser::where('course_id', $id)
+            ->with(['client', 'degree', 'course', 'monitor'])
+            ->get();
+
+        // Crea una colección para almacenar clientes únicos
+        $uniqueClients = collect([]);
+
+        foreach ($bookingUsers as $bookingUser) {
+            // Obtiene el ID del cliente asociado al BookingUser
+            $clientId = $bookingUser->client_id;
+
+            // Verifica si el cliente aún no se ha agregado a la colección
+            if (!$uniqueClients->has($clientId)) {
+                // Agrega el cliente a la colección
+                $uniqueClients->put($clientId, [
+                    'client' => $bookingUser->client,
+                    'course' => $bookingUser->course,
+                    'degree' => $bookingUser->degree,
+                    'monitor' => $bookingUser->monitor
+                ]);
+            }
+        }
+
+        // Convierte la colección en una matriz de clientes únicos
+        $uniqueClients = $uniqueClients->values();
+
+        return $this->sendResponse($uniqueClients, 'Clients retrieved successfully for the course');
     }
 
 }
