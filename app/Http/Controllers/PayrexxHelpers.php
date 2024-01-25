@@ -518,7 +518,7 @@ class PayrexxHelpers
             $ir->setReferenceId($bookingData->getOrGeneratePayrexxReference());
             $ir->setAmount($bookingData->price_total * 100);
             $ir->setCurrency($bookingData->currency);
-            $ir->setVatRate(null);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
+            $ir->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
 
 
             // Product data i.e. courses booked plus maybe cancellation insurance
@@ -526,13 +526,9 @@ class PayrexxHelpers
 
             $basket = [];
 
-            $basket[] = [
-                'name' => [1 => $basketData['price_base']['name']],
-                'quantity' => $basketData['price_base']['quantity'],
-                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
-            ];
+            $basket[] = $basketData['price_base']['name'];
 
-            // Agregar bonos al "basket"
+/*            // Agregar bonos al "basket"
             if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
                 foreach ($basketData['bonus']['bonuses'] as $bonus) {
                     $basket[] = [
@@ -573,12 +569,12 @@ class PayrexxHelpers
                         'amount' => $extra['price'] * 100, // Convertir el precio a centavos
                     ];
                 }
-            }
+            }*/
 
             // Calcular el precio total del "basket"
             $totalAmount = $basketData['price_total'] * 100;
-            
-            $ir->setAmount($totalAmount);
+
+            //$ir->setAmount($totalAmount);
             $ir->setDescription(implode(', ', $basket));
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
             $ir->setPurpose(implode(', ', $basket));
@@ -596,10 +592,8 @@ class PayrexxHelpers
             $ir->addField('email', true, $buyerUser ? $buyerUser->email : '');
             $ir->addField('street', false, $buyerUser ? $buyerUser->address : '');
             $ir->addField('postcode', false, $buyerUser ? $buyerUser->cp : '');
-
-            $province = $buyerUser->province_id ? Province::find($buyerUser->province_id) : null;
-            $ir->addField('place', false, $province ? $province->name : '');
-            $ir->addField('country', false, $province ? $province->country_iso : '');
+            $ir->addField('place', $buyerUser ? $buyerUser->province : '');
+            $ir->addField('country', $buyerUser ? $buyerUser->country : '');
 
 
             // Launch it
