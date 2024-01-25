@@ -270,6 +270,11 @@ use Spatie\Activitylog\LogOptions;
         return $this->hasMany(\App\Models\VouchersLog::class, 'booking_id');
     }
 
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'booking_id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -144,9 +144,13 @@ class BookingController extends AppBaseController
         $booking = Booking::find($id);
         $paymentMethod = $request->get('payment_method') ?? $booking->payment_method;
 
+
         if (!$booking) {
             return $this->sendError('Booking not found', [], 404);
         }
+
+        $booking->payment_method_id = $paymentMethod;
+        $booking->save();
 
         if ($paymentMethod == 1) {
             return $this->sendError('Payment method not supported for this booking');
@@ -185,10 +189,8 @@ class BookingController extends AppBaseController
                 PayrexxHelpers::sendPayEmail(
                     $school,
                     $booking,
-                    $request->bonus,
-                    $booking->clientMain,
-                    $request->bookingCourses,
-                    $request->reduction
+                    $request,
+                    $booking->clientMain
                 );
             })->afterResponse();
 

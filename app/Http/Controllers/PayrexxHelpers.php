@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Booking2;
-use App\Http\User;
-use App\Models\Bookings2;
 use App\Models\Client;
 use App\Models\Course;
-use App\Models\UserSchools;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\Mail;
@@ -20,7 +17,6 @@ use Payrexx\PayrexxException;
 
 use App\Mail\BookingPayMailer;
 use App\Models\Language;
-use App\Models\Province;
 use App\Models\School;
 
 
@@ -505,8 +501,7 @@ class PayrexxHelpers
      *
      * @return string empty if something failed
      */
-    public static function createPayLink($schoolData, $bookingData, $voucherDiscount, Client $buyerUser = null, $bookingCourses,
-                                         $discounts)
+    public static function createPayLink($schoolData, $bookingData, $basketData, Client $buyerUser = null)
     {
         $link = '';
 
@@ -530,52 +525,60 @@ class PayrexxHelpers
 
             $basket = [];
 
+            $basket[] = [
+                'name' => [1 => $basketData['price_base']['name']],
+                'quantity' => $basketData['price_base']['quantity'],
+                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
+            ];
 
-
-            foreach ($bookingCourses as $c) {
-                $basket[] = [
-                    'name' => [1 => $c['courseDates'][0]['course']['name']],
-                    'quantity' => $c['paxes'], // Asumiendo que 'paxes' es la cantidad
-                    'amount' => $c['price_total'] * 100 // Asegúrate de que el precio esté en centavos
-                ];
+            // Agregar bonos al "basket"
+            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
+                foreach ($basketData['bonus']['bonuses'] as $bonus) {
+                    $basket[] = [
+                        'name' => [1 => $bonus['name']],
+                        'quantity' => $bonus['quantity'],
+                        'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
+                    ];
+                }
             }
 
-            // Aplicar Bonos
-            if (isset($voucherDiscount) && $voucherDiscount['reducePrice'] > 0) {
-                $amount = ($voucherDiscount['reducePrice'] * 100) * -1; // En centavos
+            // Agregar el campo "reduction" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['reduction']['name']],
+                'quantity' => $basketData['reduction']['quantity'],
+                'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
+            ];
 
-                $basket[] = [
-                    'name' => [1 => 'Bonus Discount'],
-                    'quantity' => 1,
-                    'amount' => $amount
-                ];
+            // Agregar "Boukii Care" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['boukii_care']['name']],
+                'quantity' => $basketData['boukii_care']['quantity'],
+                'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar "Cancellation Insurance" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['cancellation_insurance']['name']],
+                'quantity' => $basketData['cancellation_insurance']['quantity'],
+                'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar extras al "basket"
+            if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
+                foreach ($basketData['extras']['extras'] as $extra) {
+                    $basket[] = [
+                        'name' => [1 => $extra['name']],
+                        'quantity' => $extra['quantity'],
+                        'amount' => $extra['price'] * 100, // Convertir el precio a centavos
+                    ];
+                }
             }
 
-            // Aplicar Reducciones
-            if (isset($discounts) && $discounts['appliedPrice'] > 0) {
-                $amount = $discounts['appliedPrice'] * 100; // En centavos
-
-                $basket[] = [
-                    'name' => [1 => 'Reduction Discount'],
-                    'quantity' => 1,
-                    'amount' => -$amount // Negativo porque es un descuento
-                ];
-            }
-
-            if ($bookingData->has_cancellation_insurance) {
-                // Apply buyer user's language - or default
-                $defaultLocale = config('app.fallback_locale');
-                $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
-                $userLocale = $userLang ? $userLang->code : $defaultLocale;
-                \App::setLocale($userLocale);
-
-                $basket[] = __('bookings.cancellationInsurance');
-
-                \App::setLocale($oldLocale);
-            }
+            // Calcular el precio total del "basket"
+            $totalAmount = $basketData['price_total'] * 100;
 
             $ir->setBasket($basket);
+            $ir->setAmount($totalAmount);
             $ir->setDescription(implode(', ', $basket));
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
             $ir->setPurpose(implode(', ', $basket));
@@ -631,8 +634,7 @@ class PayrexxHelpers
      *
      * @return boolean telling if it was OK
      */
-    public static function sendPayEmail($schoolData, $bookingData, $voucherDiscount, $buyerUser, $bookingCourses,
-                                        $discounts)
+    public static function sendPayEmail($schoolData, $bookingData, $request, $buyerUser)
     {
         $sentOK = false;
 
@@ -645,8 +647,7 @@ class PayrexxHelpers
 
 
                 // Create pay link
-                $link = self::createPayLink($schoolData, $bookingData, $voucherDiscount, $buyerUser, $bookingCourses,
-                                         $discounts);
+                $link = self::createPayLink($schoolData, $bookingData, $request, $buyerUser);
                 if (strlen($link) < 1) {
                     throw new \Exception('Cant create Payrexx Direct Link for School ID=' . $schoolData->id);
                 }
