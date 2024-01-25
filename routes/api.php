@@ -33,7 +33,7 @@ Route::any('/users-permisions', function () {
 
 Route::any('/mailtest', function () {
 
-    $bookingData = \App\Models\Booking::find(5561);
+    $bookingData = \App\Models\Booking::find(2107);
     $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
         'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
         'bookingUsers.courseDate']);
@@ -48,7 +48,7 @@ Route::any('/mailtest', function () {
     \App::setLocale($userLocale);
 
 
-    $templateView = 'mails.bookingInfo';
+    $templateView = 'mails.bookingPay';
 
     $footerView = 'mails.footer';
 
@@ -75,7 +75,7 @@ Route::any('/mailtest', function () {
         'voucherCode' => $voucherCode,
         'voucherAmount' => $voucherAmount,
         'hasCancellationInsurance' => false,
-        'actionURL' => null,
+        'actionURL' => 'test',
         'footerView' => $footerView
     ];
 
