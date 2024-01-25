@@ -56,8 +56,8 @@ class BookingNoticePayMailer extends Mailable
             ->where('lang', $userLocale)->first();
 
         $templateData = [
-            'titleTemplate' => $templateMail->title,
-            'bodyTemplate' => $templateMail->body,
+            'titleTemplate' => $templateMail ? $templateMail->title : '',
+            'bodyTemplate' => $templateMail ? $templateMail->body: '',
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,

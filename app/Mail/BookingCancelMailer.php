@@ -68,8 +68,8 @@ class BookingCancelMailer extends Mailable
         if(isset($this->voucherData->quantity)) $voucherAmount = number_format($this->voucherData->quantity, 2);
 
         $templateData = [
-            'titleTemplate' => $templateMail->title,
-            'bodyTemplate' => $templateMail->body,
+            'titleTemplate' => $templateMail ? $templateMail->title : '',
+            'bodyTemplate' => $templateMail ? $templateMail->body: '',
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
             'schoolLogo' => $this->schoolData->logo,
