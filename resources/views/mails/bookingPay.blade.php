@@ -31,7 +31,7 @@
                 {{ __('emails.bookingInfo.singular_participant') }}
                 {{ $client->first()->first()->first()->first()['client']['full_name'] }}.
             </li>
-            @if(isset($client->first()->first()->first()->first()['courseExtras']))
+            @if(isset($client->first()->first()->first()->first()['courseExtras'][0]))
                 <li>
                     {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
                     {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
