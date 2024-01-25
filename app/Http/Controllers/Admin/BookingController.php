@@ -12,6 +12,7 @@ use App\Models\BookingUsers2;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
 
@@ -142,6 +143,7 @@ class BookingController extends AppBaseController
     {
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
+        Log::info('Payment method request:' . $request->get('payment_method_id'));
         $paymentMethod = $request->get('payment_method_id') ?? $booking->payment_method_id;
 
 
@@ -151,6 +153,8 @@ class BookingController extends AppBaseController
 
         $booking->payment_method_id = $paymentMethod;
         $booking->save();
+
+        Log::info('Payment method post request:' . $paymentMethod);
 
         if ($paymentMethod == 1) {
             return $this->sendError('Payment method not supported for this booking');
