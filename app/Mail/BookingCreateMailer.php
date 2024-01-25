@@ -56,7 +56,7 @@ class BookingCreateMailer extends Mailable
         $footerView = \View::exists('mails.footer');
 
         $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
-            ->where('lang', $userLocale);
+            ->where('lang', $userLocale)->first();
 
         $templateData = [
             'titleTemplate' => $templateMail->title,

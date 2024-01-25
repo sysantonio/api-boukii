@@ -60,7 +60,7 @@ class BookingCancelMailer extends Mailable
         $footerView = \View::exists('mails.footer');
 
         $templateMail = Mail::where('type', 'booking_cancel')->where('school_id', $this->schoolData->id)
-            ->where('lang', $userLocale);
+            ->where('lang', $userLocale)->first();
 
         $voucherCode = "";
         if(isset($this->voucherData->code)) $voucherCode = $this->voucherData->code;

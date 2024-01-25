@@ -52,7 +52,7 @@ class BookingInfoUpdateMailer extends Mailable
 
 
         $templateMail = Mail::where('type', 'booking_change')->where('school_id', $this->schoolData->id)
-            ->where('lang', $userLocale);
+            ->where('lang', $userLocale)->first();
 
         $templateData = [
             'titleTemplate' => $templateMail->title,
