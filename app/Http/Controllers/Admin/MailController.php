@@ -161,7 +161,7 @@ class MailController extends AppBaseController
                 'from' => 'booking@boukii.ch',
                 'to' =>  implode(', ', $uniqueEmails),
                 'subject' => $subject,
-                'body', $body
+                'body' => $body
             ]);
             return $this->sendResponse($uniqueEmails, 'Correo enviado correctamente');
         }
