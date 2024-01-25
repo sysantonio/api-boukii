@@ -50,6 +50,7 @@ class BookingPayMailer extends Mailable
     public function build()
     {
         try {
+            Log::channel('payrexx')->info('Llego aqui 2');
             // Apply that user's language - or default
             $defaultLocale = config('app.fallback_locale');
             $oldLocale = \App::getLocale();
