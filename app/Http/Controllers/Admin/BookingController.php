@@ -143,7 +143,6 @@ class BookingController extends AppBaseController
     {
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
-        Log::info('Payment method request:' . $request->get('payment_method_id'));
         $paymentMethod = $request->get('payment_method_id') ?? $booking->payment_method_id;
 
 
@@ -154,24 +153,11 @@ class BookingController extends AppBaseController
         $booking->payment_method_id = $paymentMethod;
         $booking->save();
 
-        Log::info('Payment method post request:' . $paymentMethod);
 
         if ($paymentMethod == 1) {
             return $this->sendError('Payment method not supported for this booking');
         }
-
-        $payrexxLink = PayrexxHelpers::createGatewayLink(
-            $school,
-            $booking,
-            $request,
-            $booking->clientMain,
-            'panel'
-        );
-
-        if ($payrexxLink) {
-            return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
-        }
-
+        
         if ($paymentMethod == 2) {
             $payrexxLink = PayrexxHelpers::createGatewayLink(
                 $school,
