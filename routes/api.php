@@ -33,7 +33,7 @@ Route::any('/users-permisions', function () {
 
 Route::any('/mailtest', function () {
 
-    $bookingData = \App\Models\Booking::find(2107);
+    $bookingData = \App\Models\Booking::find(2115);
     $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
         'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
         'bookingUsers.courseDate']);
@@ -75,9 +75,13 @@ Route::any('/mailtest', function () {
         'voucherCode' => $voucherCode,
         'voucherAmount' => $voucherAmount,
         'hasCancellationInsurance' => false,
+        'amount' => number_format($bookingData->price_total, 2),
+        'currency' => $bookingData->currency,
         'actionURL' => 'test',
         'footerView' => $footerView
     ];
+
+    //dd($templateData['courses']);
 
 
     $subject = __('emails.bookingInfo.subject');
