@@ -8,7 +8,9 @@ use App\Mail\BlankMailer;
 use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\Course;
+use App\Models\EmailLog;
 use App\Models\Monitor;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 
@@ -153,7 +155,14 @@ class MailController extends AppBaseController
         // Enviar el correo a los correos únicos
         if (!empty($uniqueEmails)) {
             $blankMailer = new BlankMailer($subject, $body, $uniqueEmails, [], $school);
-            //Mail::to($uniqueEmails)->send($blankMailer);
+            Mail::to($uniqueEmails)->send($blankMailer);
+            EmailLog::create([
+                'date' => Carbon::today(),
+                'from' => 'booking@boukii.ch',
+                'to' =>  implode(', ', $uniqueEmails),
+                'subject' => $subject,
+                'body', $body
+            ]);
             return $this->sendResponse($uniqueEmails, 'Correo enviado correctamente');
         }
 

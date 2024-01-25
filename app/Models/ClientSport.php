@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
 /**
  * @OA\Schema(
  *      schema="ClientSport",
- *      required={"client_id","sport_id"},
+ *      required={"client_id","sport_id", "school_id"},
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -41,6 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
     public $fillable = [
         'client_id',
         'sport_id',
+        'school_id',
         'degree_id'
     ];
 
@@ -51,6 +52,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
     public static array $rules = [
         'client_id' => 'required',
         'sport_id' => 'required',
+        'school_id' => 'required',
         'degree_id' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
@@ -60,6 +62,11 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
+    }
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
     public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
