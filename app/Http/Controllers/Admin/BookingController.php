@@ -142,7 +142,7 @@ class BookingController extends AppBaseController
     {
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
-        $paymentMethod = $request->get('payment_method') ?? $booking->payment_method;
+        $paymentMethod = $request->get('payment_method') ?? $booking->payment_method_id;
 
 
         if (!$booking) {
