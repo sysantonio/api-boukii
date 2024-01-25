@@ -72,8 +72,7 @@ class MailController extends AppBaseController
 
         $validator = Validator::make($request->all(), [
             'subject' => 'required',
-            'body' => 'required',
-            'course_ids' => 'required|array',
+            'body' => 'required'
         ]);
 
         if ($validator->fails()) {
