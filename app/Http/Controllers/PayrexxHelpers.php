@@ -634,7 +634,7 @@ class PayrexxHelpers
     public static function sendPayEmail($schoolData, $bookingData, $request, $buyerUser)
     {
         $sentOK = false;
-
+        Log::info('Senpay 1'. 'Llego aqui...');
         if ($buyerUser && $buyerUser->email) {
             try {
                 // Check that School has Payrexx credentials

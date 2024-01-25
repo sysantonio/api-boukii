@@ -175,7 +175,9 @@ class BookingController extends AppBaseController
         }
 
         if ($paymentMethod == 3) {
+            Log::info('Payment 1'. 'Llego aqui...');
             dispatch(function () use ($school, $booking, $request) {
+                Log::info('Payment 2'. 'Llego aqui...');
                 PayrexxHelpers::sendPayEmail(
                     $school,
                     $booking,
