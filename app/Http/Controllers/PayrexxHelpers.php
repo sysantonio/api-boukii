@@ -70,8 +70,8 @@ class PayrexxHelpers
             $basket = [];
 
         // Agregar bonos al "basket"
-            if (isset($bookingData['bonus']['bonuses']) && count($bookingData['bonus']['bonuses']) > 0) {
-                foreach ($bookingData['bonus']['bonuses'] as $bonus) {
+            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
+                foreach ($basketData['bonus']['bonuses'] as $bonus) {
                     $basket[] = [
                         'name' => [1 => $bonus['name']],
                         'quantity' => $bonus['quantity'],
@@ -82,28 +82,28 @@ class PayrexxHelpers
 
         // Agregar el campo "reduction" al "basket"
             $basket[] = [
-                'name' => [1 => $bookingData['reduction']['name']],
-                'quantity' => $bookingData['reduction']['quantity'],
-                'amount' => $bookingData['reduction']['price'] * 100, // Convertir el precio a centavos
+                'name' => [1 => $basketData['reduction']['name']],
+                'quantity' => $basketData['reduction']['quantity'],
+                'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
             ];
 
         // Agregar "Boukii Care" al "basket"
             $basket[] = [
-                'name' => [1 => $bookingData['boukii_care']['name']],
-                'quantity' => $bookingData['boukii_care']['quantity'],
-                'amount' => $bookingData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+                'name' => [1 => $basketData['boukii_care']['name']],
+                'quantity' => $basketData['boukii_care']['quantity'],
+                'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
             ];
 
         // Agregar "Cancellation Insurance" al "basket"
             $basket[] = [
-                'name' => [1 => $bookingData['cancellation_insurance']['name']],
-                'quantity' => $bookingData['cancellation_insurance']['quantity'],
-                'amount' => $bookingData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+                'name' => [1 => $basketData['cancellation_insurance']['name']],
+                'quantity' => $basketData['cancellation_insurance']['quantity'],
+                'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
             ];
 
         // Agregar extras al "basket"
-            if (isset($bookingData['extras']['extras']) && count($bookingData['extras']['extras']) > 0) {
-                foreach ($bookingData['extras']['extras'] as $extra) {
+            if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
+                foreach ($basketData['extras']['extras'] as $extra) {
                     $basket[] = [
                         'name' => [1 => $extra['name']],
                         'quantity' => $extra['quantity'],
@@ -113,7 +113,7 @@ class PayrexxHelpers
             }
 
         // Calcular el precio total del "basket"
-            $totalAmount = $bookingData['price_base']['price'] * 100;
+            $totalAmount = $basketData['price_base']['price'] * 100;
 
             $gr->setBasket($basket);
             $gr->setAmount($totalAmount);
