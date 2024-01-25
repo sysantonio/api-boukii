@@ -184,8 +184,7 @@ class BookingController extends AppBaseController
                 $booking->clientMain
             );
 
-            Log::channel('controller')->info($payrexxLink);
-            if (strlen($payrexxLink) < 1) {
+            if (strlen($payrexxLink) > 1) {
                 dispatch(function () use ($school, $booking, $payrexxLink) {
                     // Send by email
                     try {
