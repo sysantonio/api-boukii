@@ -69,6 +69,12 @@ class PayrexxHelpers
             // Product basket i.e. courses booked plus maybe cancellation insurance
             $basket = [];
 
+            $basket[] = [
+                'name' => [1 => $basketData['price_base']['name']],
+                'quantity' => $basketData['price_base']['quantity'],
+                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
+            ];
+
         // Agregar bonos al "basket"
             if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
                 foreach ($basketData['bonus']['bonuses'] as $bonus) {
@@ -113,7 +119,7 @@ class PayrexxHelpers
             }
 
         // Calcular el precio total del "basket"
-            $totalAmount = $basketData['price_base']['price'] * 100;
+            $totalAmount = $basketData['price_total'] * 100;
 
             $gr->setBasket($basket);
             $gr->setAmount($totalAmount);
