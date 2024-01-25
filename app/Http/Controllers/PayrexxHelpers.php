@@ -166,6 +166,7 @@ class PayrexxHelpers
             // missing or wrong params will throw an Exception, plus other connection etc issues
             Log::error('PayrexxHelpers createGatewayLink Booking ID=' . $bookingData->id);
             Log::error($e->getMessage());
+            Log::error('Error:', $e->getTrace());
             $link = '';
         }
 
