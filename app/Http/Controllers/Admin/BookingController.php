@@ -177,19 +177,19 @@ class BookingController extends AppBaseController
 
         if ($paymentMethod == 3) {
 
-            $payrexxLink =  PayrexxHelpers::sendPayEmail(
+            $payrexxLink =  PayrexxHelpers::createPayLink(
                 $school,
                 $booking,
                 $request,
                 $booking->clientMain
             );
-            if ($payrexxLink) {
+            if (strlen($payrexxLink) < 1) {
                 dispatch(function () use ($school, $booking, $payrexxLink) {
                     // Send by email
                     $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
                     \Mail::to($booking->clientMain->email)
                         ->send(new BookingPayMailer(
-                            $booking->clientMain,
+                            $school,
                             $bookingData,
                             $booking->clientMain,
                             $payrexxLink
