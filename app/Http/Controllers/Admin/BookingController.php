@@ -186,6 +186,7 @@ class BookingController extends AppBaseController
 
             if (strlen($payrexxLink) > 1) {
                 dispatch(function () use ($school, $booking, $payrexxLink) {
+                    Log::channel('payrexx')->info('Llego aqui?');
                     // Send by email
                     try {
                         $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
