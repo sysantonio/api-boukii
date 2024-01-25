@@ -604,6 +604,8 @@ class PayrexxHelpers
                 env('PAYREXX_API_BASE_DOMAIN')
             );
             $invoice = $payrexx->create($ir);
+            Log::channel('payrexx')->info('Info', $invoice);
+            Log::channel('payrexx')->info($invoice->getLink());
             if ($invoice) {
                 $link = $invoice->getLink();
             }
