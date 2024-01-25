@@ -134,6 +134,13 @@ return [
             'days' => 7
         ],
 
+        'payrexx' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payrexx.log'),
+            'level' => 'debug',
+            'days' => 7
+        ],
+
         'migration' => [
             'driver' => 'daily',
             'path' => storage_path('logs/migration.log'),
