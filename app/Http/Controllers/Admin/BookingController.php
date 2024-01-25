@@ -12,6 +12,7 @@ use App\Models\BookingUsers2;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
@@ -176,8 +177,18 @@ class BookingController extends AppBaseController
 
         if ($paymentMethod == 3) {
             Log::info('Payment 1'. 'Llego aqui...');
-            dispatch(function () use ($school, $booking, $request) {
-                Log::info('Payment 2'. 'Llego aqui...');
+            // Guarda el objeto PDO actual en una variable temporal
+            $currentPdo = DB::getConnection()->getPdo();
+
+            // Establece el objeto PDO en null para evitar la serialización
+            DB::disconnect();
+
+            dispatch(function () use ($school, $booking, $request, $currentPdo) {
+                Log::info('Payment 2 - Llego aquí...');
+
+                // Restaura el objeto PDO antes de utilizarlo
+                DB::setConnection('mysql', $currentPdo);
+
                 PayrexxHelpers::sendPayEmail(
                     $school,
                     $booking,
