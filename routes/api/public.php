@@ -52,6 +52,9 @@ Route::middleware(['guest'])->group(function () {
     Route::resource('school-sports', App\Http\Controllers\API\SchoolSportAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::resource('payments', App\Http\Controllers\API\PaymentAPIController::class)
+        ->except(['create', 'edit']);
+
     Route::resource('bookings', App\Http\Controllers\API\BookingAPIController::class)
         ->except(['create', 'edit']);
 

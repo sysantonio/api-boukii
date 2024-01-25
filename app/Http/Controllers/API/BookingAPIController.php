@@ -251,7 +251,7 @@ class BookingAPIController extends AppBaseController
 
         $booking = $this->bookingRepository->update($input, $id);
 
-        return $this->sendResponse(new BookingResource($booking), 'Booking updated successfully');
+        return $this->sendResponse($booking, 'Booking updated successfully');
     }
 
     /**

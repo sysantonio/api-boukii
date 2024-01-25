@@ -174,10 +174,10 @@ class ClientController extends SlugAuthController
 
     /**
      * @OA\Post(
-     *      path="/slug/clients/{id}/utilizers",
-     *      summary="createUtilizer",
+     *      path="/slug/clients",
+     *      summary="createClient",
      *      tags={"BookingPage"},
-     *      description="Create utilizer for a client",
+     *      description="Create client",
      *      @OA\Response(
      *          response=200,
      *          description="successful operation",
