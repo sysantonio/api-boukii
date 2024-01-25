@@ -186,23 +186,23 @@ class BookingController extends AppBaseController
 
             if (strlen($payrexxLink) > 1) {
                 dispatch(function () use ($school, $booking, $payrexxLink) {
-                    Log::channel('payrexx')->info('Llego aqui?');
                     // Send by email
                     try {
-                     //  $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
+                        $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
                         \Mail::to($booking->clientMain->email)
                             ->send(new BookingPayMailer(
                                 $school,
-                                $booking,
+                                $bookingData,
                                 $booking->clientMain,
                                 $payrexxLink
                             ));
                     } catch (\Exception $e) {
                         Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $booking->id);
-                        Log::channel('payrexx')->error($e->getTraceAsString());
+                        Log::channel('payrexx')->error($e->getMessage());
                     }
 
                 })->afterResponse();
+
                 return $this->sendResponse([], 'Mail sent correctly');
 
             }

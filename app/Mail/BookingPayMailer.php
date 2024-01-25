@@ -49,50 +49,44 @@ class BookingPayMailer extends Mailable
      */
     public function build()
     {
-        try {
-            Log::channel('payrexx')->info('Llego aqui 2');
-            // Apply that user's language - or default
-            $defaultLocale = config('app.fallback_locale');
-            $oldLocale = \App::getLocale();
-            $userLang = Language::find( $this->userData->language1_id );
-            $userLocale = $userLang ? $userLang->code : $defaultLocale;
-            \App::setLocale($userLocale);
 
-            $templateView = \View::exists('mails.bookingPay');
-            $footerView = \View::exists('mails.footer');
+        // Apply that user's language - or default
+        $defaultLocale = config('app.fallback_locale');
+        $oldLocale = \App::getLocale();
+        $userLang = Language::find( $this->userData->language1_id );
+        $userLocale = $userLang ? $userLang->code : $defaultLocale;
+        \App::setLocale($userLocale);
 
-            $templateMail = Mail::where('type', 'payment_link')->where('school_id', $this->schoolData->id)
-                ->where('lang', $userLocale)->first();
+        $templateView = 'mails.bookingPay';
+        $footerView = 'mails.footer';
 
+        $templateMail = Mail::where('type', 'payment_link')->where('school_id', $this->schoolData->id)
+            ->where('lang', $userLocale)->first();
+        
+        $templateData = [
+            'titleTemplate' => $templateMail ? $templateMail->title : '',
+            'bodyTemplate' => $templateMail ? $templateMail->body: '',
+            'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
+            'schoolName' => $this->schoolData->name,
+            'schoolLogo' => $this->schoolData->logo,
+            'schoolEmail' => $this->schoolData->contact_email,
+            'schoolConditionsURL' => $this->schoolData->conditions_url,
+            'reference' => $this->bookingData->payrexx_reference,
+            'bookingNotes' => $this->bookingData->notes,
+            'courses' => $this->bookingData->parseBookedGroupedCourses(),
+            'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
+            'amount' => number_format($this->bookingData->price_total, 2),
+            'currency' => $this->bookingData->currency,
+            'actionURL' => $this->payLink,
+            'footerView' => $footerView
+        ];
 
-            $templateData = [
-                'titleTemplate' => $templateMail ? $templateMail->title : '',
-                'bodyTemplate' => $templateMail ? $templateMail->body: '',
-                'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
-                'schoolName' => $this->schoolData->name,
-                'schoolLogo' => $this->schoolData->logo,
-                'schoolEmail' => $this->schoolData->contact_email,
-                'schoolConditionsURL' => $this->schoolData->conditions_url,
-                'reference' => $this->bookingData->payrexx_reference,
-                'bookingNotes' => $this->bookingData->notes,
-                'courses' => $this->bookingData->parseBookedGroupedCourses(),
-                'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
-                'amount' => number_format($this->bookingData->price_total, 2),
-                'currency' => $this->bookingData->currency,
-                'actionURL' => $this->payLink,
-                'footerView' => $footerView
-            ];
+        $subject = __('emails.bookingPay.subject');
+        \App::setLocale($oldLocale);
 
-            $subject = __('emails.bookingPay.subject');
-            \App::setLocale($oldLocale);
-
-            return $this->to($this->userData->email)
-                ->subject($subject)
-                ->view($templateView)->with($templateData);
-        }  catch (\Exception $e) {
-            Log::channel('payrexx')->error('PayrexxHelpers sendPayEmailView Booking ID=' . $this->bookingData->id);
-            Log::channel('payrexx')->error($e->getTraceAsString());
-        }
+        return $this->to($this->userData->email)
+            ->subject($subject)
+            ->view($templateView)->with($templateData);
 
     }
 }
