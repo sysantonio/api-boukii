@@ -9,7 +9,7 @@ use Spatie\Activitylog\LogOptions;
 /**
  * @OA\Schema(
  *      schema="EmailLog",
- *      required={"date","subject","body"},
+ *      required={"date","subject","body", "school_id"},
  *      @OA\Property(
  *          property="date",
  *          description="",
@@ -105,6 +105,7 @@ class EmailLog extends Model
     use SoftDeletes;    use HasFactory;    public $table = 'email_log';
 
     public $fillable = [
+        'school_id',
         'date',
         'from',
         'to',
@@ -129,6 +130,7 @@ class EmailLog extends Model
     ];
 
     public static array $rules = [
+        'school_id' => 'required',
         'date' => 'required',
         'from' => 'nullable|string|max:255',
         'to' => 'nullable|string|max:255',
@@ -142,5 +144,10 @@ class EmailLog extends Model
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
     ];
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\School::class, 'school_id');
+    }
 
 }

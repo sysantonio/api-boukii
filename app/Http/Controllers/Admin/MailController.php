@@ -157,6 +157,7 @@ class MailController extends AppBaseController
             $blankMailer = new BlankMailer($subject, $body, $uniqueEmails, [], $school);
             Mail::to($uniqueEmails)->send($blankMailer);
             EmailLog::create([
+                'school_id' => $school->id,
                 'date' => Carbon::today(),
                 'from' => 'booking@boukii.ch',
                 'to' =>  implode(', ', $uniqueEmails),

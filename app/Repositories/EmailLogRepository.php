@@ -8,7 +8,8 @@ use App\Repositories\BaseRepository;
 class EmailLogRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-'id',
+        'id',
+        'school_id',
         'date',
         'from',
         'to',
