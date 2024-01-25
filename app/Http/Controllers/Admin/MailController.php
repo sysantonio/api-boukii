@@ -178,7 +178,15 @@ class MailController extends AppBaseController
 
             foreach ($chunks as $recipientChunk) {
                 $blankMailer = new BlankMailer($subject, $body, $recipientChunk, [], $school);
-                Mail::to($recipientChunk)->send($blankMailer);
+                dispatch(function () use ($school, $recipientChunk, $blankMailer) {
+                    // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                    try {
+                        Mail::to($recipientChunk)->send($blankMailer);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::debug('Admin/MailController SenMailer: ' .
+                            $ex->getMessage());
+                    }
+                })->afterResponse();
             }
 
             EmailLog::create([
@@ -189,6 +197,7 @@ class MailController extends AppBaseController
                 'subject' => $subject,
                 'body' => $body
             ]);
+
             return $this->sendResponse($uniqueEmails, 'Correo enviado correctamente');
         }
 
