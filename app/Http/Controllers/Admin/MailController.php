@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
-use App\Http\Controllers\Controller;
 use App\Mail\BlankMailer;
 use App\Models\BookingUser;
 use App\Models\Client;
@@ -13,6 +12,7 @@ use App\Models\Monitor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class MailController extends AppBaseController
 {
@@ -69,6 +69,18 @@ class MailController extends AppBaseController
      */
     public function sendMail(Request $request): \Illuminate\Http\JsonResponse
     {
+
+        $validator = Validator::make($request->all(), [
+            'subject' => 'required',
+            'body' => 'required',
+            'course_ids' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation failed', $validator->errors(), 400);
+        }
+
+
         $school = $this->getSchool($request);
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
