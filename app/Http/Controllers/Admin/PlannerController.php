@@ -121,6 +121,10 @@ class PlannerController extends AppBaseController
                     // Busca en el día de hoy para las reservas
                     $query->whereDate('date', $today)->where('active', 1);
                 }
+            })
+            ->whereHas('bookingUsers', function ($query) {
+                // Agregar la restricción para traer solo las booking_users con status = 1
+                $query->where('status', 1);
             });
 
         // Consulta para las reservas (BookingUser)
