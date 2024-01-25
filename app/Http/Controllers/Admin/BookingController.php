@@ -198,7 +198,7 @@ class BookingController extends AppBaseController
                                 $payrexxLink
                             ));
                     } catch (\Exception $e) {
-                        Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $bookingData->id);
+                        Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $booking->id);
                         Log::channel('payrexx')->error($e->getTraceAsString());
                     }
 
