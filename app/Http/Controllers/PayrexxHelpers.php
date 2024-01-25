@@ -42,9 +42,8 @@ class PayrexxHelpers
      *
      * @return string empty if something failed
      */
-    public static function createGatewayLink($schoolData, $bookingData, $voucherDiscount, Client $buyerUser = null, $bookingCourses,
-                                             $discounts,
-                                             $redirectTo = null)
+    public static function createGatewayLink($schoolData, $bookingData,
+                                             $basketData, Client $buyerUser = null, $redirectTo = null)
     {
         $link = '';
 
@@ -54,9 +53,6 @@ class PayrexxHelpers
             if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
                 throw new \Exception('No credentials for School ID=' . $schoolData->id);
             }
-
-
-
 
             // Prepare gateway: basic data
             $gr = new GatewayRequest();
@@ -73,56 +69,54 @@ class PayrexxHelpers
             // Product basket i.e. courses booked plus maybe cancellation insurance
             $basket = [];
 
-            foreach ($bookingCourses as $c) {
-               // dd($c);
-                $course = Course::find($c['courseDates'][0]['course_id']);
-
-                if ($course) {
+        // Agregar bonos al "basket"
+            if (isset($bookingData['bonus']['bonuses']) && count($bookingData['bonus']['bonuses']) > 0) {
+                foreach ($bookingData['bonus']['bonuses'] as $bonus) {
                     $basket[] = [
-                        'name' => [1 => $course->name],
-                        'quantity' => $c['paxes'], // Asumiendo que 'paxes' es la cantidad
-                        'amount' => $c['price_total'] * 100 // Asegúrate de que el precio esté en centavos
+                        'name' => [1 => $bonus['name']],
+                        'quantity' => $bonus['quantity'],
+                        'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
                     ];
                 }
             }
 
-            // Aplicar Bonos
-            if (isset($voucherDiscount) && $voucherDiscount['reducePrice'] > 0) {
-                $amount = ($voucherDiscount['reducePrice'] * 100) * -1; // En centavos
+        // Agregar el campo "reduction" al "basket"
+            $basket[] = [
+                'name' => [1 => $bookingData['reduction']['name']],
+                'quantity' => $bookingData['reduction']['quantity'],
+                'amount' => $bookingData['reduction']['price'] * 100, // Convertir el precio a centavos
+            ];
 
-                $basket[] = [
-                    'name' => [1 => 'Bonus Discount'],
-                    'quantity' => 1,
-                    'amount' => $amount
-                ];
+        // Agregar "Boukii Care" al "basket"
+            $basket[] = [
+                'name' => [1 => $bookingData['boukii_care']['name']],
+                'quantity' => $bookingData['boukii_care']['quantity'],
+                'amount' => $bookingData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+        // Agregar "Cancellation Insurance" al "basket"
+            $basket[] = [
+                'name' => [1 => $bookingData['cancellation_insurance']['name']],
+                'quantity' => $bookingData['cancellation_insurance']['quantity'],
+                'amount' => $bookingData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+        // Agregar extras al "basket"
+            if (isset($bookingData['extras']['extras']) && count($bookingData['extras']['extras']) > 0) {
+                foreach ($bookingData['extras']['extras'] as $extra) {
+                    $basket[] = [
+                        'name' => [1 => $extra['name']],
+                        'quantity' => $extra['quantity'],
+                        'amount' => $extra['price'] * 100, // Convertir el precio a centavos
+                    ];
+                }
             }
 
-            // Aplicar Reducciones
-            if (isset($discounts) && $discounts['appliedPrice'] > 0) {
-                $amount = $discounts['appliedPrice'] * 100; // En centavos
-
-                $basket[] = [
-                    'name' => [1 => 'Reduction Discount'],
-                    'quantity' => 1,
-                    'amount' => -$amount // Negativo porque es un descuento
-                ];
-            }
-
-            if ($bookingData->has_cancellation_insurance) {
-                // Apply buyer user's language - or default
-                $defaultLocale = config('app.fallback_locale');
-                $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
-                $userLocale = $userLang ? $userLang->code : $defaultLocale;
-                \App::setLocale($userLocale);
-
-                $basket[] = __('bookings.cancellationInsurance');
-
-                \App::setLocale($oldLocale);
-            }
+        // Calcular el precio total del "basket"
+            $totalAmount = $bookingData['price_base']['price'] * 100;
 
             $gr->setBasket($basket);
-
+            $gr->setAmount($totalAmount);
 
             // Buyer data
             if ($buyerUser) {
@@ -133,16 +127,15 @@ class PayrexxHelpers
                 $gr->addField('street', $buyerUser->address);
                 $gr->addField('postcode', $buyerUser->cp);
 
-                $province = $buyerUser->province_id ? Province::find($buyerUser->province_id) : null;
-                $gr->addField('place', $province ? $province->name : '');
-                $gr->addField('country', $province ? $province->country_iso : '');
+                $gr->addField('place', $buyerUser->province);
+                $gr->addField('country',  $buyerUser->country);
             }
 
             // OK/error pages to redirect user after payment
             if ($redirectTo == 'panel') {
-                $gr->setSuccessRedirectUrl(env('APP_URL') . '/bookings?status=success');
-                $gr->setFailedRedirectUrl(env('APP_URL') . '/bookings?status=failed');
-                $gr->setCancelRedirectUrl(env('APP_URL') . '/bookings?status=cancel');
+                $gr->setSuccessRedirectUrl(env('ADMIM_URL') . '/bookings?status=success');
+                $gr->setFailedRedirectUrl(env('ADMIM_URL') . '/bookings?status=failed');
+                $gr->setCancelRedirectUrl(env('ADMIM_URL') . '/bookings?status=cancel');
             } else if ($redirectTo == 'app') {
                 $gr->setSuccessRedirectUrl(route('api.payrexx.finish', ['status' => 'success']));
                 $gr->setFailedRedirectUrl(route('api.payrexx.finish', ['status' => 'failed']));
