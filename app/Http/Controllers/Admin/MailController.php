@@ -136,9 +136,10 @@ class MailController extends AppBaseController
 
                 // Buscar monitores en los booking users dentro del rango de fechas
                 $monitorBookingUsers = BookingUser::whereIn('booking_id', function ($query)
-                use ($startDate, $endDate) {
+                use ($startDate, $endDate, $course) {
                     $query->select('booking_id')
                         ->from('bookings')
+                        ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate]);
                 })->whereNotNull('monitor_id')->distinct('monitor_id')->get();
 
