@@ -187,7 +187,7 @@ class BookingController extends AppBaseController
                 Log::info('Payment 2 - Llego aquí...');
 
                 // Restaura el objeto PDO antes de utilizarlo
-                DB::setConnection('mysql', $currentPdo);
+                DB::connection()->setPdo($currentPdo);
 
                 PayrexxHelpers::sendPayEmail(
                     $school,
