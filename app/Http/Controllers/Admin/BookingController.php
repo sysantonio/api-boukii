@@ -154,10 +154,8 @@ class BookingController extends AppBaseController
         $payrexxLink = PayrexxHelpers::createGatewayLink(
             $school,
             $booking,
-            $request->bonus,
+            $request,
             $booking->clientMain,
-            $request->bookingCourses,
-            $request->reduction,
             'panel'
         );
 
