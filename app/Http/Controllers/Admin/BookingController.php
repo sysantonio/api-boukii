@@ -6,13 +6,13 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
 use App\Mail\BookingCancelMailer;
+use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\BookingUsers2;
 use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
@@ -176,28 +176,30 @@ class BookingController extends AppBaseController
         }
 
         if ($paymentMethod == 3) {
-            Log::info('Payment 1'. 'Llego aqui...');
-            // Guarda el objeto PDO actual en una variable temporal
-            $currentPdo = DB::getConnection()->getPdo();
 
-            // Establece el objeto PDO en null para evitar la serialización
-            DB::disconnect();
+            $payrexxLink =  PayrexxHelpers::sendPayEmail(
+                $school,
+                $booking,
+                $request,
+                $booking->clientMain
+            );
+            if ($payrexxLink) {
+                dispatch(function () use ($school, $booking, $payrexxLink) {
+                    // Send by email
+                    $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
+                    \Mail::to($booking->clientMain->email)
+                        ->send(new BookingPayMailer(
+                            $booking->clientMain,
+                            $bookingData,
+                            $booking->clientMain,
+                            $payrexxLink
+                        ));
+                })->afterResponse();
+                return $this->sendResponse([], 'Mail sent correctly');
 
-            dispatch(function () use ($school, $booking, $request, $currentPdo) {
-                Log::info('Payment 2 - Llego aquí...');
+            }
+            return $this->sendError('Link could not be created');
 
-                // Restaura el objeto PDO antes de utilizarlo
-                DB::connection()->setPdo($currentPdo);
-
-                PayrexxHelpers::sendPayEmail(
-                    $school,
-                    $booking,
-                    $request,
-                    $booking->clientMain
-                );
-            })->afterResponse();
-
-            return $this->sendResponse([], 'Mail sent correctly');
         }
 
         return $this->sendError('Invalid payment method');

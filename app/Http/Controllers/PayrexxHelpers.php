@@ -528,9 +528,6 @@ class PayrexxHelpers
 
             $basket[] = $basketData['price_base']['name'];
 
-            Log::info('Basket', $basket);
-
-
 /*            // Agregar bonos al "basket"
             if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
                 foreach ($basketData['bonus']['bonuses'] as $bonus) {
@@ -581,13 +578,13 @@ class PayrexxHelpers
             $ir->setDescription(implode(', ', $basket));
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
             $ir->setPurpose(implode(', ', $basket));
-            Log::info('Ir 1'. 'Llego aqui...');
+
             // Add School's legal terms, if set
             // (InvoiceRequest DOES accept "terms" as a valid field)
             if ($schoolData->conditions_url) {
                 $ir->addField('terms', true, $schoolData->conditions_url);
             }
-            Log::info('Ir 2'. 'Llego aqui...');
+
             // Buyer data
             $ir->addField('forename', true, $buyerUser ? $buyerUser->first_name : '');
             $ir->addField('surname', true, $buyerUser ? $buyerUser->last_name : '');
@@ -598,7 +595,7 @@ class PayrexxHelpers
             $ir->addField('place', $buyerUser ? $buyerUser->province : '');
             $ir->addField('country', $buyerUser ? $buyerUser->country : '');
 
-            Log::info('Ir 3'. 'Llego aqui...');
+
             // Launch it
             $payrexx = new Payrexx(
                 $schoolData->getPayrexxInstance(),
@@ -626,7 +623,7 @@ class PayrexxHelpers
      * Send an email with payment data: a Payrexx direct pay link both as text and as QR
      *
      * @param School $schoolData i.e. who wants the money
-     * @param Booking $bookingData i.e. the Booking ID this payment is for
+     * @param Booking2 $bookingData i.e. the Booking ID this payment is for
      * @param User $buyerUser to get his payment & contact details
      *
      * @return boolean telling if it was OK
@@ -634,7 +631,7 @@ class PayrexxHelpers
     public static function sendPayEmail($schoolData, $bookingData, $request, $buyerUser)
     {
         $sentOK = false;
-        Log::info('Senpay 1'. 'Llego aqui...');
+
         if ($buyerUser && $buyerUser->email) {
             try {
                 // Check that School has Payrexx credentials
