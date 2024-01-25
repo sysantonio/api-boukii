@@ -119,7 +119,9 @@ class MailController extends AppBaseController
                     $client = Client::find($bookingUser->client_id);
                     if ($client && !in_array($client->email, $uniqueEmails)) {
                         // Agregar el correo del cliente a la lista
-                        $uniqueEmails[] = $client->email;
+                        if ($client->email) {
+                            $uniqueEmails[] = $client->email;
+                        }
                     }
                 }
             }
@@ -141,7 +143,9 @@ class MailController extends AppBaseController
                 foreach ($monitors as $monitor) {
                     if (!in_array($monitor->email, $uniqueEmails)) {
                         // Agregar el correo del monitor a la lista
-                        $uniqueEmails[] = $monitor->email;
+                        if ($monitor->email) {
+                            $uniqueEmails[] = $monitor->email;
+                        }
                     }
                 }
 
@@ -158,7 +162,9 @@ class MailController extends AppBaseController
                     $monitor = Monitor::find($monitorUser->monitor_id);
                     if ($monitor && !in_array($monitor->email, $uniqueEmails)) {
                         // Agregar el correo del monitor a la lista
-                        $uniqueEmails[] = $monitor->email;
+                        if ($monitor->email) {
+                            $uniqueEmails[] = $monitor->email;
+                        }
                     }
                 }
             }
