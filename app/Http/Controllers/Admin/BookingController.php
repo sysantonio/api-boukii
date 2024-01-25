@@ -157,7 +157,7 @@ class BookingController extends AppBaseController
         if ($paymentMethod == 1) {
             return $this->sendError('Payment method not supported for this booking');
         }
-        
+
         if ($paymentMethod == 2) {
             $payrexxLink = PayrexxHelpers::createGatewayLink(
                 $school,

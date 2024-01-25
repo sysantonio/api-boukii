@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Client;
 use App\Models\Course;
 use App\Models\User;
@@ -496,7 +497,7 @@ class PayrexxHelpers
      * @see https://developers.payrexx.com/reference/create-a-paylink
      *
      * @param School $schoolData i.e. who wants the money
-     * @param Booking2 $bookingData i.e. the Booking ID this payment is for
+     * @param Booking $bookingData i.e. the Booking ID this payment is for
      * @param User $buyerUser to get his payment & contact details
      *
      * @return string empty if something failed
@@ -576,8 +577,7 @@ class PayrexxHelpers
 
             // Calcular el precio total del "basket"
             $totalAmount = $basketData['price_total'] * 100;
-
-            $ir->setBasket($basket);
+            
             $ir->setAmount($totalAmount);
             $ir->setDescription(implode(', ', $basket));
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
