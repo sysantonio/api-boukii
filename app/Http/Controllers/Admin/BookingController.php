@@ -189,11 +189,11 @@ class BookingController extends AppBaseController
                     Log::channel('payrexx')->info('Llego aqui?');
                     // Send by email
                     try {
-                        $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
+                     //  $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
                         \Mail::to($booking->clientMain->email)
                             ->send(new BookingPayMailer(
                                 $school,
-                                $bookingData,
+                                $booking,
                                 $booking->clientMain,
                                 $payrexxLink
                             ));
