@@ -142,12 +142,13 @@ class BookingController extends AppBaseController
     {
         $school = $this->getSchool($request);
         $booking = Booking::find($id);
+        $paymentMethod = $request->get('payment_method') ?? $booking->payment_method;
 
         if (!$booking) {
             return $this->sendError('Booking not found', [], 404);
         }
 
-        if ($booking->payment_method_id == 1) {
+        if ($paymentMethod == 1) {
             return $this->sendError('Payment method not supported for this booking');
         }
 
@@ -163,7 +164,7 @@ class BookingController extends AppBaseController
             return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
         }
 
-        if ($booking->payment_method_id == 2) {
+        if ($paymentMethod == 2) {
             $payrexxLink = PayrexxHelpers::createGatewayLink(
                 $school,
                 $booking,
@@ -179,7 +180,7 @@ class BookingController extends AppBaseController
             return $this->sendError('Link could not be created');
         }
 
-        if ($booking->payment_method_id == 3) {
+        if ($paymentMethod == 3) {
             dispatch(function () use ($school, $booking, $request) {
                 PayrexxHelpers::sendPayEmail(
                     $school,
