@@ -172,8 +172,15 @@ class MailController extends AppBaseController
 
         // Enviar el correo a los correos únicos
         if (!empty($uniqueEmails)) {
-            $blankMailer = new BlankMailer($subject, $body, $uniqueEmails, [], $school);
-            Mail::to($uniqueEmails)->send($blankMailer);
+            $maxRecipientsPerEmail = 50; // Puedes ajustar este valor según tus necesidades
+
+            $chunks = array_chunk($uniqueEmails, $maxRecipientsPerEmail);
+
+            foreach ($chunks as $recipientChunk) {
+                $blankMailer = new BlankMailer($subject, $body, $recipientChunk, [], $school);
+                Mail::to($recipientChunk)->send($blankMailer);
+            }
+
             EmailLog::create([
                 'school_id' => $school->id,
                 'date' => Carbon::today(),
