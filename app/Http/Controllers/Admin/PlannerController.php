@@ -128,19 +128,19 @@ class PlannerController extends AppBaseController
             });
 
         // Consulta para las reservas (BookingUser)
-      /*  $bookingQuery = BookingUser::with(['booking', 'course.courseDates', 'client.sports',
+      $bookingQuery = BookingUser::with(['booking', 'course.courseDates', 'client.sports',
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals'])
             ->where('school_id', $schoolId)
             ->where('course_subgroup_id', null)
-            ->where('status', 1)// Filtra por school_id
-            ->orderBy('hour_start');*/
+            ->where('status', 1)
+            ->orderBy('hour_start');
 
         // Consulta para los MonitorNwd
         $nwdQuery = MonitorNwd::where('school_id', $schoolId) // Filtra por school_id
         ->orderBy('start_time');
 
         if($schoolId) {
-           // $bookingQuery->where('school_id', $schoolId);
+            $bookingQuery->where('school_id', $schoolId);
 
             $nwdQuery->where('school_id', $schoolId);
         }
@@ -148,7 +148,7 @@ class PlannerController extends AppBaseController
         // Si se proporcionaron date_start y date_end, busca en el rango de fechas
         if ($dateStart && $dateEnd) {
             // Busca en el rango de fechas proporcionado para las reservas
-            //$bookingQuery->whereBetween('date', [$dateStart, $dateEnd]);
+            $bookingQuery->whereBetween('date', [$dateStart, $dateEnd]);
 
             // Busca en el rango de fechas proporcionado para los MonitorNwd
             $nwdQuery->whereBetween('start_date', [$dateStart, $dateEnd])
@@ -158,7 +158,7 @@ class PlannerController extends AppBaseController
             $today = Carbon::today();
 
             // Busca en el día de hoy para las reservas
-         //   $bookingQuery->whereDate('date', $today);
+            $bookingQuery->whereDate('date', $today);
 
             // Busca en el día de hoy para los MonitorNwd
             $nwdQuery->whereDate('start_date', '<=', $today)
@@ -168,7 +168,7 @@ class PlannerController extends AppBaseController
 
         if ($monitorId) {
             // Filtra solo las reservas y los NWD para el monitor específico
-           // $bookingQuery->where('monitor_id', $monitorId);
+            $bookingQuery->where('monitor_id', $monitorId);
             $nwdQuery->where('monitor_id', $monitorId);
             $subgroupsQuery->where('monitor_id', $monitorId);
 
@@ -220,6 +220,7 @@ class PlannerController extends AppBaseController
         // Obtén los resultados para las reservas y los MonitorNwd
         $nwd = $nwdQuery->get();
         $subgroups = $subgroupsQuery->get();
+        $bookings = $bookingQuery->get();
         $subgroupsPerGroup = CourseSubgroup::select('course_group_id', DB::raw('COUNT(*) as total'))
             ->groupBy('course_group_id')
             ->pluck('total', 'course_group_id');
@@ -245,6 +246,15 @@ class PlannerController extends AppBaseController
                     break;
                 }
             }
+
+            $monitorBookings = $bookings->where('monitor_id', $monitor->id)
+                ->groupBy(function ($booking) use($subgroupsPerGroup) {
+                    // Diferencia la agrupación basada en el course_type
+                    if ($booking->course->course_type == 2) {
+                        // Agrupa por booking.course_id y booking.course_date_id para el tipo 2
+                        return $booking->course_id . '-' . $booking->course_date_id;
+                    }
+                });
 
             $monitor->hasFullDayNwd = $allDaysMeetCriteria;
 
@@ -274,16 +284,24 @@ class PlannerController extends AppBaseController
                 $subgroupsArray[$nomenclature] = $subgroup;
             });
 
+            $allBookings = $monitorBookings->concat($subgroupsArray);
+
 
             $monitorNwd = $nwd->where('monitor_id', $monitor->id);
 
             $groupedData[$monitor->id] = [
                 'monitor' => $monitor,
-                'bookings' => $subgroupsArray,
+                'bookings' => $allBookings,
                 'nwds' => $monitorNwd,
                 /*'subgroups' => $availableSubgroups,*/
             ];
         }
+        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) use($subgroupsPerGroup) {
+            if ($booking->course->course_type == 2) {
+                return $booking->course_id . '-' . $booking->course_date_id;
+            }
+        });
+
 
         $subgroupsWithoutMonitor = $subgroups->where('monitor_id', null);
 
@@ -311,10 +329,12 @@ class PlannerController extends AppBaseController
             $subgroupsArray[$nomenclature] = $subgroup;
         });
 
+        $allBookings = $bookingsWithoutMonitor->concat($subgroupsArray);
+
         if ($subgroupsWithoutMonitor->isNotEmpty()) {
             $groupedData['no_monitor'] = [
                 'monitor' => null,
-                'bookings' => $subgroupsArray,
+                'bookings' => $allBookings,
                 'nwds' => collect([]),
                /* 'subgroups' => $subgroupsWithoutMonitor,*/
             ];
