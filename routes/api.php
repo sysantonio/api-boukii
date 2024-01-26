@@ -41,11 +41,11 @@ Route::any('/update-clients-schools', function () {
         $client = Client::where('old_id', $oldUserSport->user_id)->first();
         if($client) {
             // Encuentra el registro correspondiente en ClientSport
-            $clientSport = ClientSport::where('client_id', $client->id)
+            $clientSports = ClientSport::where('client_id', $client->id)
                 ->where('sport_id', $oldUserSport->sport_id)
-                ->first();
+                ->get();
 
-            if ($clientSport) {
+            foreach ($clientSports as $clientSport) {
                 // Actualiza el campo school_id en ClientSport con el valor de UserSport
                 $clientSport->update(['school_id' => $oldUserSport->school_id ?? 1]);
             }
