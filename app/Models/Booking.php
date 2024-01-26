@@ -150,6 +150,36 @@ use Spatie\Activitylog\LogOptions;
  *           format="number"
  *      ),
  *      @OA\Property(
+ *            property="has_tva",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=false,
+ *            type="boolean",
+ *        ),
+ *      @OA\Property(
+ *            property="price_tva",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=false,
+ *            type="number",
+ *            format="number"
+ *       ),
+ *      @OA\Property(
+ *            property="has_reduction",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=false,
+ *            type="boolean",
+ *        ),
+ *      @OA\Property(
+ *            property="price_reduction",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=false,
+ *            type="number",
+ *            format="number"
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -199,13 +229,21 @@ use Spatie\Activitylog\LogOptions;
         'old_id',
         'has_boukii_care',
         'price_boukii_care',
+        'has_tva',
+        'price_tva',
+        'has_reduction',
+        'price_reduction',
         'color'
     ];
 
     protected $casts = [
         'price_total' => 'decimal:2',
         'has_cancellation_insurance' => 'boolean',
+        'has_tva' => 'boolean',
+        'has_reduction' => 'boolean',
         'price_cancellation_insurance' => 'decimal:2',
+        'price_reduction' => 'decimal:2',
+        'price_tva' => 'decimal:2',
         'currency' => 'string',
         'paid_total' => 'decimal:2',
         'price_boukii_care' => 'decimal:2',

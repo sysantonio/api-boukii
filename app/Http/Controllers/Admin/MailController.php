@@ -107,16 +107,17 @@ class MailController extends AppBaseController
         foreach ($courses as $course) {
             if ($sendToClients) {
                 // Buscar booking_users únicos relacionados con el curso y dentro del rango de fechas
-                $bookingUsers = BookingUser::whereIn('booking_id', function ($query) use ($course,
+                $bookingUsers = BookingUser::with('booking.clientMain')
+                    ->whereIn('booking_id', function ($query) use ($course,
                     $startDate, $endDate) {
                     $query->select('id')
                         ->from('bookings')
                         ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate]);
-                })->distinct('client_id')->get();
+                })->distinct('booking.client_main_id')->get();
 
                 foreach ($bookingUsers as $bookingUser) {
-                    $client = Client::find($bookingUser->client_id);
+                    $client = Client::find($bookingUser->booking->client_main_id);
                     if ($client && !in_array($client->email, $uniqueEmails)) {
                         // Agregar el correo del cliente a la lista
                         if ($client->email) {
