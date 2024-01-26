@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\ClientSport;
 use App\Models\Course;
+use App\Models\Degree;
 use App\Models\Language;
 use App\Models\Mail;
 use App\Models\Monitor;
@@ -35,15 +36,24 @@ Route::any('/users-permisions', function () {
 
 Route::any('/update-clients-schools', function () {
 
-    $oldUserSports = UserSport::all();
+    $oldUserSports = UserSport::whereNotNull('school_id')->get();
+    $oldDegrees = \App\Models\OldModels\Degree::all();
 
     foreach ($oldUserSports as $oldUserSport) {
         $client = Client::where('old_id', $oldUserSport->user_id)->first();
+        $oldDegree = $oldDegrees->firstWhere('id', $oldUserSport->degree_id);
+        $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
+            ->where('school_id', $oldUserSport->school_id)->where('sport_id', $oldUserSport->sport_id)
+            ->first();
+
         if($client) {
             // Encuentra el registro correspondiente en ClientSport
             $clientSports = ClientSport::where('client_id', $client->id)
                 ->where('sport_id', $oldUserSport->sport_id)
+                ->where('degree_id', $newDegree->id)
                 ->get();
+
+
 
             foreach ($clientSports as $clientSport) {
                 // Actualiza el campo school_id en ClientSport con el valor de UserSport
