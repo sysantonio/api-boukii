@@ -1,11 +1,13 @@
 <?php
 
 use App\Models\Client;
+use App\Models\ClientSport;
 use App\Models\Course;
 use App\Models\Language;
 use App\Models\Mail;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
+use App\Models\OldModels\UserSport;
 use App\Models\Station;
 use App\Models\StationService;
 use App\Models\User;
@@ -29,6 +31,29 @@ Route::any('/users-permisions', function () {
     foreach (User::all() as $user) {
         $user->setInitialPermissionsByRole();
     }
+});
+
+Route::any('/update-clients-schools', function () {
+
+    $oldUserSports = UserSport::all();
+
+    foreach ($oldUserSports as $oldUserSport) {
+        $client = Client::where('old_id', $oldUserSport->user_id)->first();
+        if($client) {
+            // Encuentra el registro correspondiente en ClientSport
+            $clientSport = ClientSport::where('client_id', $client->id)
+                ->where('sport_id', $oldUserSport->sport_id)
+                ->first();
+
+            if ($clientSport) {
+                // Actualiza el campo school_id en ClientSport con el valor de UserSport
+                $clientSport->update(['school_id' => $oldUserSport->school_id ?? 1]);
+            }
+        }
+
+    }
+
+    return response()->json(['message' => 'School IDs updated successfully']);
 });
 
 Route::any('/mailtest', function () {
