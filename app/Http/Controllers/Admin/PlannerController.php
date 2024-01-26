@@ -331,7 +331,7 @@ class PlannerController extends AppBaseController
 
         $allBookings = $bookingsWithoutMonitor->concat($subgroupsArray);
 
-        if ($subgroupsWithoutMonitor->isNotEmpty()) {
+        if ($allBookings->isNotEmpty()) {
             $groupedData['no_monitor'] = [
                 'monitor' => null,
                 'bookings' => $allBookings,
