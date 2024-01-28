@@ -444,7 +444,8 @@ class Course extends Model
                             $isAdultClient, $clientLanguages
                         ) {
                             $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
-                                WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1)')
+                                WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
+                                AND booking_users.deleted_at IS NULL)')
                                 ->whereHas('courseGroup',
                                     function (Builder $groupQuery) use (
                                         $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
@@ -529,7 +530,8 @@ class Course extends Model
                     $subQuery->where('date', '>=', $startDate)
                         ->where('date', '<=', $endDate)
                         ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
-                        WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1)');
+                        WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
+                        AND booking_users.deleted_at IS NULL)');
 
                 });
 
