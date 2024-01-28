@@ -180,6 +180,13 @@ use Spatie\Activitylog\LogOptions;
  *            format="number"
  *       ),
  *      @OA\Property(
+ *           property="basket",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=true,
+ *           type="string",
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="",
  *          readOnly=true,
@@ -233,7 +240,8 @@ use Spatie\Activitylog\LogOptions;
         'price_tva',
         'has_reduction',
         'price_reduction',
-        'color'
+        'color',
+        'basket'
     ];
 
     protected $casts = [
@@ -256,7 +264,8 @@ use Spatie\Activitylog\LogOptions;
         'notes' => 'string',
         'status' => 'integer',
         'notes_school' => 'string',
-        'color' => 'string'
+        'color' => 'string',
+        'basket' => 'string'
     ];
 
     public static array $rules = [
@@ -277,6 +286,7 @@ use Spatie\Activitylog\LogOptions;
         'notes_school' => 'nullable|string|max:500',
         'paxes' => 'nullable',
         'status' => 'nullable',
+        'basket' => 'nullable',
         'color' => 'nullable|string|max:45',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
