@@ -173,7 +173,10 @@ class PlannerController extends AppBaseController
             $subgroupsQuery->where('monitor_id', $monitorId);
 
             // Obtén solo el monitor específico
-            $monitors = MonitorsSchool::with(['monitor.sports', 'monitor.courseSubgroups'
+            $monitors = MonitorsSchool::with(['monitor.sports'=> function ($query) use ($schoolId) {
+                $query->where('monitor_sports_degrees.school_id', $schoolId);
+            },
+                'monitor.courseSubgroups'
             => function ($query) use ($dateStart, $dateEnd) {
                     $query->whereHas('courseDate', function ($query)  use ($dateStart, $dateEnd) {
                         if ($dateStart && $dateEnd) {
