@@ -259,8 +259,8 @@ class BookingAPIController extends AppBaseController
                 try {
                     Mail::to($booking->clientMain->email)->send(new BookingInfoUpdateMailer($booking->school, $booking, $booking->clientMain));
                 } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::debug('Admin/COurseController BookingInfoUpdateMailer: ' .
-                        $ex->getMessage());
+                    \Illuminate\Support\Facades\Log::debug('Admin/COurseController BookingInfoUpdateMailer: ',
+                        $ex->getTrace());
                 }
             })->afterResponse();
         }
