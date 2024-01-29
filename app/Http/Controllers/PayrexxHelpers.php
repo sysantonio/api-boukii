@@ -123,7 +123,7 @@ class PayrexxHelpers
             }
 
         // Calcular el precio total del "basket"
-            $totalAmount = $basketData['price_total'] * 100;
+            $totalAmount = $basketData['pending_amount'] * 100;
 
             $gr->setBasket($basket);
             $gr->setAmount($totalAmount);
