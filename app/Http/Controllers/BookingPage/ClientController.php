@@ -11,6 +11,7 @@ use App\Models\ClientsSchool;
 use App\Models\ClientsUtilizer;
 use App\Models\User;
 use App\Models\Voucher;
+use App\Repositories\ClientRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -26,6 +27,13 @@ use Validator;
 class ClientController extends SlugAuthController
 {
 
+    /** @var  ClientRepository */
+    private $clientRepository;
+
+    public function __construct(ClientRepository $clientRepo)
+    {
+        $this->clientRepository = $clientRepo;
+    }
 
     /**
      * @OA\Get(
