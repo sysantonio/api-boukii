@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\BookingCreateMailer;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -80,6 +81,17 @@ class PayrexxController
                                     'brand' => $data2->getPayment()['brand'],
                                     'referenceId' => $referenceID
                                 ]);
+
+                                $booking->paid_total = $booking->paid_total + $data2->getInvoice()['totalAmount'] ?? $data['amount'];
+
+                                $payment = new Payment();
+                                $payment->booking_id = $booking->id;
+                                $payment->school_id = $booking->school_id;
+                                $payment->amount = $data2->getInvoice()['totalAmount'] ?? $data['amount'];
+                                $payment->status = 'paid';
+                                $payment->payrexx_reference = $referenceID;
+                                $payment->payrexx_transaction = $booking->payrexx_transaction;
+                                $payment->save();
 
                                 $booking->save();
                             }
