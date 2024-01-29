@@ -305,7 +305,7 @@ class PlannerController extends AppBaseController
         }
         $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) use($subgroupsPerGroup) {
             if ($booking->course->course_type == 2) {
-                return $booking->course_id . '-' . $booking->course_date_id . '-' .  $booking->id;
+                return $booking->course_id . '-' . $booking->course_date_id . '-' .  $booking->booking_id;
             }
         });
 
