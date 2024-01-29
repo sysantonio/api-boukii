@@ -198,7 +198,7 @@ class PlannerController extends AppBaseController
             // Si no se proporcionó monitor_id, obtén todos los monitores como antes
             $monitorSchools = MonitorsSchool::with(['monitor.sports'
             => function ($query) use ($schoolId) {
-                    $query->where('monitors_sports_degrees.school_id', $schoolId);
+                    $query->where('monitor_sports_degrees.school_id', $schoolId);
                 },
                 'monitor.courseSubgroups'
                 => function ($query) use ($dateStart, $dateEnd) {
