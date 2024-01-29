@@ -27,14 +27,6 @@ use Validator;
 class ClientController extends SlugAuthController
 {
 
-    /** @var  ClientRepository */
-    private $clientRepository;
-
-    public function __construct(ClientRepository $clientRepo)
-    {
-        $this->clientRepository = $clientRepo;
-    }
-
     /**
      * @OA\Get(
      *      path="/slug/client/{id}/voucher/{code}",
@@ -301,6 +293,7 @@ class ClientController extends SlugAuthController
      */
     public function getMains(Request $request): JsonResponse
     {
+
         // Define el valor por defecto para 'perPage'
         $perPage = $request->input('perPage', 15);
 
@@ -314,8 +307,9 @@ class ClientController extends SlugAuthController
         $orderColumn = $request->input('orderColumn', 'id');
         $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
 
+        $clientRepository = new ClientRepository();
         $clientsWithUtilizers =
-            $this->clientRepository->all(
+            $clientRepository->all(
                 searchArray: $searchParameters,
                 search: $search,
                 skip: $request->input('skip'),
