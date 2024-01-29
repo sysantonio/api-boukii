@@ -384,13 +384,16 @@ class ClientAPIController extends AppBaseController
                                 $subgroupsChanged[] = $newTargetSubgroup;
                                 $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
                             } else {
-
+                                Log::error('Initial gorup'. $newTargetSubgroup->toArray() );
+                                Log::error('Date gorup '. $group->courseSubgroups->toArray() );
                                 DB::rollBack();
                                 return $this->sendError('Some groups are not identical');
                             }
                         } else {
                             DB::rollBack();
-                            return $this->sendError('Some groups are not identical');
+                            Log::error('Initial count'. $initialGroup->courseSubgroups->count() );
+                            Log::error('Sned count '. $group->courseSubgroups->count() );
+                            return $this->sendError('Some groups are not identical length');
                         }
                     }
 
