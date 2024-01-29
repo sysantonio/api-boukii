@@ -128,7 +128,7 @@ class PlannerController extends AppBaseController
             });
 
         // Consulta para las reservas (BookingUser)
-      $bookingQuery = BookingUser::with(['booking', 'course.courseDates', 'client.sports',
+        $bookingQuery = BookingUser::with(['booking', 'course.courseDates', 'client.sports',
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals'])
             ->where('school_id', $schoolId)
             ->where('course_subgroup_id', null)
@@ -173,9 +173,9 @@ class PlannerController extends AppBaseController
             $subgroupsQuery->where('monitor_id', $monitorId);
 
             // Obtén solo el monitor específico
-            $monitors = MonitorsSchool::with(['monitor.sports', 'monitor.courseSubgroups'
+            $monitors = MonitorsSchool::with(['monitor', 'monitor.courseSubgroups'
             => function ($query) use ($dateStart, $dateEnd) {
-                    $query->whereHas('courseDate', function ($query)  use ($dateStart, $dateEnd) {
+                    $query->whereHas('courseDate', function ($query) use ($dateStart, $dateEnd) {
                         if ($dateStart && $dateEnd) {
                             // Filtra las fechas del subgrupo en el rango proporcionado
                             $query->whereBetween('date', [$dateStart, $dateEnd]);
@@ -189,28 +189,30 @@ class PlannerController extends AppBaseController
                     });
                 }])
                 ->where('school_id', $schoolId)
-                ->whereHas('monitor', function ($query) use ($monitorId) {
-                    $query->where('id', $monitorId);
+                ->whereHas('monitor', function ($query) use ($monitorId, $schoolId) {
+                    $query->where('id', $monitorId)->sportsBySchool($schoolId);
                 })
                 ->get()
                 ->pluck('monitor');
         } else {
             // Si no se proporcionó monitor_id, obtén todos los monitores como antes
-            $monitorSchools = MonitorsSchool::with(['monitor.sports', 'monitor.courseSubgroups'
-            => function ($query) use ($dateStart, $dateEnd) {
-                    $query->whereHas('courseDate', function ($query)  use ($dateStart, $dateEnd) {
-                        if ($dateStart && $dateEnd) {
-                            // Filtra las fechas del subgrupo en el rango proporcionado
-                            $query->whereBetween('date', [$dateStart, $dateEnd]);
-                        } else {
-                            $today = Carbon::today();
+            $monitorSchools = MonitorsSchool::with(['monitor' => function ($query) use ($dateStart, $dateEnd, $schoolId) {
+                $query->sportsBySchool($schoolId)
+                    ->with(['courseSubgroups'=> function ($subquery) use ($dateStart, $dateEnd) {
+                        $subquery->whereHas('courseDate', function ($query) use ($dateStart, $dateEnd) {
+                            if ($dateStart && $dateEnd) {
+                                // Filtra las fechas del subgrupo en el rango proporcionado
+                                $query->whereBetween('date', [$dateStart, $dateEnd]);
+                            } else {
+                                $today = Carbon::today();
 
-                            // Busca en el día de hoy para las reservas
-                            $query->whereDate('date', $today);
-
-                        }
-                    });
-                }])
+                                // Busca en el día de hoy para las reservas
+                                $query->whereDate('date', $today);
+                            }
+                        });
+                    }])
+                    ->where('active_school', 1);
+            }])
                 ->where('school_id', $schoolId)
                 ->where('active_school', 1)
                 ->get();
@@ -336,7 +338,7 @@ class PlannerController extends AppBaseController
                 'monitor' => null,
                 'bookings' => $allBookings,
                 'nwds' => collect([]),
-               /* 'subgroups' => $subgroupsWithoutMonitor,*/
+                /* 'subgroups' => $subgroupsWithoutMonitor,*/
             ];
         }
 
