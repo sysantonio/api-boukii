@@ -297,7 +297,7 @@ class ClientController extends SlugAuthController
         $perPage = $request->input('perPage', 15);
 
         // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
-        $school = $this->getSchool($request);
+        $school = $this->school;
         $searchParameters =
             array_merge($request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
                 'orderColumn', 'page', 'with']), ['school_id' => $school->id]);
