@@ -6,10 +6,12 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\API\CreateBookingAPIRequest;
 use App\Http\Requests\API\UpdateBookingAPIRequest;
 use App\Http\Resources\API\BookingResource;
+use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Class BookingController
@@ -250,6 +252,17 @@ class BookingAPIController extends AppBaseController
         }
 
         $booking = $this->bookingRepository->update($input, $id);
+
+        if($request->has('send_mail') && $request->input('send_mail'))
+        dispatch(function () use ($booking) {
+            // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+            try {
+                Mail::to($booking->clientMain->email)->send(new BookingInfoUpdateMailer($booking->school, $booking, $booking->clientMain));
+            } catch (\Exception $ex) {
+                \Illuminate\Support\Facades\Log::debug('Admin/COurseController BookingInfoUpdateMailer: ' .
+                    $ex->getMessage());
+            }
+        })->afterResponse();
 
         return $this->sendResponse($booking, 'Booking updated successfully');
     }
