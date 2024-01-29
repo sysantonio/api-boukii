@@ -31,10 +31,12 @@
                 {{ __('emails.bookingInfo.singular_participant') }}
                 {{ $client->first()->first()->first()->first()['client']['full_name'] }}.
             </li>
-            <li>
-                {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
-                {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
-            </li>
+            @if(isset($client->first()->first()->first()->first()['courseExtras'][0]))
+                <li>
+                    {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
+                    {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
+                </li>
+            @endif
             @if($key == 1 && count($type))
                 <li>  {{ __('emails.bookingInfo.degree') }}
                     : {{ $client->first()->first()->first()->first()['degree']['name'] }}</li>
