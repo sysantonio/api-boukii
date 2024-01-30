@@ -10974,6 +10974,42 @@
                 }
             }
         },
+        "/admin/monitor/available/{id}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "checkIfMonitorIsAvailable",
+                "description": "Get monitor availability",
+                "operationId": "8cdf734882d5dc130cc47279658157bb",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Monitor"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/monitor/pastBookings": {
             "get": {
                 "tags": [
@@ -12044,6 +12080,12 @@
                         "readOnly": false,
                         "nullable": true
                     },
+                    "source": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
                     "status": {
                         "description": "Status of the booking",
                         "type": "integer",
@@ -12061,6 +12103,38 @@
                         "format": "number",
                         "readOnly": false,
                         "nullable": false
+                    },
+                    "has_tva": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "price_tva": {
+                        "description": "",
+                        "type": "number",
+                        "format": "number",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "has_reduction": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "price_reduction": {
+                        "description": "",
+                        "type": "number",
+                        "format": "number",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "basket": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
                     },
                     "created_at": {
                         "description": "",
@@ -12517,7 +12591,8 @@
             "ClientSport": {
                 "required": [
                     "client_id",
-                    "sport_id"
+                    "sport_id",
+                    "school_id"
                 ],
                 "properties": {
                     "updated_at": {
@@ -13239,7 +13314,8 @@
                 "required": [
                     "date",
                     "subject",
-                    "body"
+                    "body",
+                    "school_id"
                 ],
                 "properties": {
                     "date": {

@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\CourseSubgroup;
+use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\MonitorObservation;
 use App\Models\MonitorSportsDegree;
@@ -18,6 +19,7 @@ use App\Models\Season;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Response;
 use Validator;
 
@@ -162,6 +164,59 @@ class MonitorController extends AppBaseController
         return $this->sendResponse($availableMonitors, 'Monitors returned successfully');
 
     }
+
+    /**
+     * @OA\Post(
+     *      path="/admin/monitor/available/{id}",
+     *      summary="checkIfMonitorIsAvailable",
+     *      tags={"Admin"},
+     *      description="Get monitor availability",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Monitor")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function checkIfMonitorIsAvailable(Request $request, $id): JsonResponse
+    {
+        try {
+            // Validar los parámetros
+            $validatedData = $request->validate([
+                'date' => 'required|date',
+                'hour_start' => 'required|date_format:H:i:s',
+                'hour_end' => 'required|date_format:H:i:s',
+            ]);
+
+            // Comprobar si el monitor está ocupado
+            $isBusy = Monitor::isMonitorBusy($id, $validatedData['date'],
+                $validatedData['hour_start'], $validatedData['hour_end']);
+
+            return $this->sendResponse(['available' => !$isBusy], 'Bookings returned successfully');
+
+        } catch (ValidationException $e) {
+            // Manejar errores de validación
+             return $this->sendError($e->getMessage(), 400);
+        }
+
+
+    }
+
 
 
     /**

@@ -34,6 +34,10 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::post('monitors/available', [\App\Http\Controllers\Admin\MonitorController::class, 'getMonitorsAvailable'])
         ->name('api.admin.monitors.available');
 
+    Route::post('monitors/available/{id}', [\App\Http\Controllers\Admin\MonitorController::class,
+        'checkIfMonitorIsAvailable'])
+        ->name('api.admin.monitor.availability');
+
     Route::post('planner/monitors/transfer', [\App\Http\Controllers\Admin\PlannerController::class, 'transferMonitor'])
         ->name('api.admin.planner.transfer');
 

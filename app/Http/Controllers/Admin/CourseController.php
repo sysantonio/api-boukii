@@ -510,7 +510,8 @@ class CourseController extends AppBaseController
                     dispatch(function () use ($school, $booking, $clientEmail) {
                         // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
                         try {
-                            Mail::to($clientEmail)->send(new BookingInfoUpdateMailer($school, $booking, $booking->clientMain));
+                            Mail::to($clientEmail)->send(new BookingInfoUpdateMailer($school,
+                                $booking, $booking->clientMain));
                         } catch (\Exception $ex) {
                             \Illuminate\Support\Facades\Log::debug('Admin/COurseController BookingInfoUpdateMailer: ' .
                                 $ex->getMessage());
