@@ -523,9 +523,9 @@ class PayrexxHelpers
 
         // Update payment notes based on whether it's a full or partial refund
         if ($response->getStatus() == TransactionResponse::REFUNDED) {
-            $payment->update(['notes' => 'refund', 'amount' => $payment->amount - $refundAmount]);
+            $payment->update(['status' => 'refund', 'amount' => $payment->amount - $refundAmount]);
         } elseif ($response->getStatus() == TransactionResponse::PARTIALLY_REFUNDED) {
-            $payment->update(['notes' => 'partial_refund', 'amount' => $payment->amount - $refundAmount]);
+            $payment->update(['status' => 'partial_refund', 'amount' => $payment->amount - $refundAmount]);
             // Update the payment amount after the refund
         }
 
