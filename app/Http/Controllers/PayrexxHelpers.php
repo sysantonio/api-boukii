@@ -506,7 +506,8 @@ class PayrexxHelpers
     private static function performRefund($payment, $refundAmount)
     {
         // Perform the actual refund using Payrexx
-        $transactionID = $payment->transaction_id;
+        $transactionData = $payment->getPayrexxTransaction();
+        $transactionID = $transactionData['id'] ?? '';
 
         $tr = new TransactionRequest();
         $tr->setId($transactionID);
