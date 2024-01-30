@@ -409,9 +409,25 @@ class PlannerController extends AppBaseController
         if ($courseSubgroupId) {
             $courseSubgroup = CourseSubgroup::find($courseSubgroupId);
 
-            if ($courseSubgroup) {
+            if ($courseSubgroup && $monitorId !== null) {
+                // Comprobación de superposición usando la información de courseDate
+                $date = $courseSubgroup->courseDate->date;
+                $hourStart = $courseSubgroup->courseDate->hour_start;
+                $hourEnd = $courseSubgroup->courseDate->hour_end;
+
+                if (Monitor::isMonitorBusy($monitorId, $date, $hourStart, $hourEnd)) {
+                    return $this->sendError('Overlap detected for subgroup. Monitor cannot be transferred.');
+                }
+
+                // Actualizar el monitor_id del subgrupo
                 $courseSubgroup->update(['monitor_id' => $monitorId]);
+
+            } else {
+                return $this->sendError('Subgroup cannot be found.');
             }
+
+            // Actualizar el monitor_id del subgrupo
+            $courseSubgroup->update(['monitor_id' => null]);
         }
         $overlapDetected = false;
 
