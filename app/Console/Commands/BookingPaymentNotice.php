@@ -38,6 +38,6 @@ class BookingPaymentNotice extends Command
      */
     public function handle()
     {
-        \App\Models\Bookings2::sendPaymentNotice();
+        \App\Models\Booking::sendPaymentNotice();
     }
 }

@@ -37,7 +37,8 @@ class MarkPastBookings extends Command
      */
     public function handle()
     {
-        \App\Models\Bookings2::markPastBookings();
+        //TODO: Check if needed.
+        //\App\Models\Bookings2::markPastBookings();
     }
 
 }

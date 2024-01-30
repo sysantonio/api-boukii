@@ -37,6 +37,6 @@ class BookingCancel extends Command
      */
     public function handle()
     {
-        \App\Models\Bookings2::cancelUnpaids48h();
+        \App\Models\Booking::cancelUnpaids48h();
     }
 }

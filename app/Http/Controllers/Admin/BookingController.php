@@ -216,7 +216,7 @@ class BookingController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/admin/bookings/refund/{id}",
+     *      path="/admin/bookings/refunds/{id}",
      *      summary="refundBooking",
      *      tags={"Admin"},
      *      description="Refund specific booking",

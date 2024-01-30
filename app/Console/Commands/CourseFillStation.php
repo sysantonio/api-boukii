@@ -37,6 +37,7 @@ class CourseFillStation extends Command
      */
     public function handle()
     {
-        \App\Models\Course2::fillStationID();
+        //TODO: Check if need it
+        //\App\Models\Course2::fillStationID();
     }
 }

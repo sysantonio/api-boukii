@@ -37,7 +37,7 @@ class BookingInfo extends Command
      */
     public function handle()
     {
-        \App\Models\Bookings2::bookingInfo24h();
+        \App\Models\Booking::bookingInfo24h();
     }
 
 }

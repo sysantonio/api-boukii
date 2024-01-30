@@ -37,6 +37,7 @@ class EmailLogPurgeAncient extends Command
      */
     public function handle()
     {
+        //TODO: Check if need
         \DB::delete('DELETE FROM email_log WHERE TIMESTAMPDIFF(DAY, date, CURRENT_DATE) > 30');
     }
 }
