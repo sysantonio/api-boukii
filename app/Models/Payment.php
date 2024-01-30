@@ -123,4 +123,30 @@ use Spatie\Activitylog\LogOptions;
             ->dontSubmitEmptyLogs()
             ->useLogName('activity');
     }
+
+    // Special for field "payrexx_transaction": store encrypted
+    public function setPayrexxTransaction($value)
+    {
+        $this->payrexx_transaction = encrypt( json_encode($value) );
+    }
+
+    public function getPayrexxTransaction()
+    {
+        $decrypted = null;
+        if ($this->payrexx_transaction)
+        {
+            try
+            {
+                $decrypted = decrypt($this->payrexx_transaction);
+            }
+                // @codeCoverageIgnoreStart
+            catch (\Illuminate\Contracts\Encryption\DecryptException $e)
+            {
+                $decrypted = null;  // Data seems corrupt or tampered
+            }
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $decrypted ? json_decode($decrypted, true) : [];
+    }
 }
