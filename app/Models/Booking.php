@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+use App\Mail\BookingCancelMailer;
+use App\Mail\BookingInfoMailer;
+use App\Models\OldModels\BookingUsers2;
+use App\Models\OldModels\School;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
@@ -128,6 +133,13 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=true,
  *          type="string",
  *      ),
+ *     @OA\Property(
+ *           property="source",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=true,
+ *           type="string",
+ *       ),
  *      @OA\Property(
  *           property="status",
  *           description="Status of the booking",
@@ -221,6 +233,7 @@ use Spatie\Activitylog\LogOptions;
         'price_total',
         'has_cancellation_insurance',
         'price_cancellation_insurance',
+        'source',
         'currency',
         'payment_method_id',
         'paid_total',
@@ -252,6 +265,7 @@ use Spatie\Activitylog\LogOptions;
         'price_cancellation_insurance' => 'decimal:2',
         'price_reduction' => 'decimal:2',
         'price_tva' => 'decimal:2',
+        'source' => 'string',
         'currency' => 'string',
         'paid_total' => 'decimal:2',
         'price_boukii_care' => 'decimal:2',
@@ -288,6 +302,7 @@ use Spatie\Activitylog\LogOptions;
         'status' => 'nullable',
         'basket' => 'nullable',
         'color' => 'nullable|string|max:45',
+        'source' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -421,5 +436,214 @@ use Spatie\Activitylog\LogOptions;
         return $title;
     }
 
+    public static function bookingInfo24h()
+    {
+        /*
+            We send reservation information 24 hours before the course starts
+        */
+        \Illuminate\Support\Facades\Log::debug('Inicio cron bookingInfo24h');
+
+        $bookings = self::with('clientMain')->where('paid', 1)
+            ->get();
+
+        foreach($bookings as $booking)
+        {
+            $closestBookingUser = null;
+            $closestTimeDiff = null;
+            $currentDateTime = Carbon::now();
+
+            // the booking can have different courses/classes
+            $lines = BookingUser::with('course')->where('booking_id', $booking->id)->get();
+
+            foreach ($lines as $line) {
+                // Calcular la fecha y hora de inicio de este booking user
+                $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $line->date . ' ' . $line->hour);
+
+                // Calcular la diferencia en horas entre la fecha actual y la fecha del booking
+                $timeDiff = $currentDateTime->diffInHours($bookingDateTime);
+
+                // Comprobar si este booking user es el más cercano hasta ahora
+                if ($closestBookingUser === null || $timeDiff < $closestTimeDiff) {
+                    $closestBookingUser = $line;
+                    $closestTimeDiff = $timeDiff;
+                }
+            }
+
+            // Verificar si el booking user más cercano cumple con la condición de las 24 horas
+            if ($closestBookingUser !== null && $closestTimeDiff < 24) {
+                $bookingType = $closestBookingUser->course->type == 2 ? 'Privado' : 'Colectivo';
+                \Illuminate\Support\Facades\Log::debug('bookingInfo24h: '
+                    . $bookingType . ' ID ' . $booking->id
+                    . ' - Enviamos info de la reserva: '
+                    . $closestBookingUser->id . " : Fecha de inicio "
+                    . $closestBookingUser->date . ' '
+                    . $closestBookingUser->hour . ' - Dif in hours: '
+                    . $closestTimeDiff);
+
+
+                // Envía el email aquí
+                $mySchool = School::find($closestBookingUser->booking->school_id);
+                dispatch(function () use ($mySchool, $closestBookingUser) {
+                    // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                    try {
+                        \Mail::to($closestBookingUser->booking->clientMain->email)
+                            ->send(new BookingInfoMailer(
+                                $mySchool,
+                                $closestBookingUser->booking,
+                                $closestBookingUser->booking->clientMain->email
+                            ));
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::debug('Cron bookingInfo24h: ', $ex->getTrace());
+                    }
+                })->afterResponse();
+            }
+        }
+
+        \Illuminate\Support\Facades\Log::debug('Fin cron bookingInfo24h');
+    }
+
+    public static function sendPaymentNotice()
+    {
+        /*
+            We send reservation information 24 hours before the course starts
+        */
+        \Illuminate\Support\Facades\Log::debug('Inicio cron sendPaymentNotice');
+
+        $bookings = self::with('clientMain')->where('payment_method_id', 3)
+            ->where('paid', 0)
+            ->get();
+
+        foreach($bookings as $booking)
+        {
+            $closestBookingUser = null;
+            $closestTimeDiff = null;
+            $currentDateTime = Carbon::now();
+
+            // the booking can have different courses/classes
+            $lines = BookingUser::with('course')->where('booking_id', $booking->id)->get();
+
+            foreach ($lines as $line) {
+                // Calcular la fecha y hora de inicio de este booking user
+                $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $line->date . ' ' . $line->hour);
+
+                // Calcular la diferencia en horas entre la fecha actual y la fecha del booking
+                $timeDiff = $currentDateTime->diffInHours($bookingDateTime);
+
+                // Comprobar si este booking user es el más cercano hasta ahora
+                if ($closestBookingUser === null || $timeDiff < $closestTimeDiff) {
+                    $closestBookingUser = $line;
+                    $closestTimeDiff = $timeDiff;
+                }
+            }
+
+            // Verificar si el booking user más cercano cumple con la condición de las 24 horas
+            if ($closestBookingUser !== null && $closestTimeDiff > 48 && $closestTimeDiff < 72
+                && BookingPaymentNoticeLog::checkToNotify($closestBookingUser)) {
+
+                \Illuminate\Support\Facades\Log::debug('sendPaymentNotice: ID '.
+                    $booking->id.' - Enviamos aviso para '. $closestBookingUser->id." : Fecha de inicio ".$currentDateTime);
+
+
+
+                // Envía el email aquí
+                $mySchool = School::find($closestBookingUser->booking->school_id);
+                dispatch(function () use ($mySchool, $closestBookingUser) {
+                    // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                    try {
+                        \Mail::to($closestBookingUser->booking->clientMain->email)
+                            ->send(new BookingInfoMailer(
+                                $mySchool,
+                                $closestBookingUser->booking,
+                                $closestBookingUser->booking->clientMain->email
+                            ));
+
+                        BookingPaymentNoticeLog::create([
+                            'booking_id' => $closestBookingUser->booking->id,
+                            'booking_user_id' => $closestBookingUser->id,
+                            'date' => date('Y-m-d H:i:s')
+                        ]);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::debug('Cron bookingInfo24h: ', $ex->getTrace());
+                    }
+                })->afterResponse();
+            }
+        }
+
+        \Illuminate\Support\Facades\Log::debug('Fin cron sendPaymentNotice');
+    }
+
+    public static function cancelUnpaids15m()
+    {
+        /*
+            We send reservation information 24 hours before the course starts
+        */
+        \Illuminate\Support\Facades\Log::debug('Inicio cron cancelUnpaids15m');
+
+        $bookings = self::with('clientMain')->where('payment_method_id', 2)
+            ->where('paid', 0)
+            ->get();
+
+        foreach($bookings as $booking)
+        {
+            {
+                $fecha_actual = Carbon::createFromFormat('Y-m-d H:i:s', date("Y-m-d H:i:s"));
+                $fecha_creacion = Carbon::createFromFormat('Y-m-d H:i:s', $booking->created_at);
+
+                if( $fecha_actual < $fecha_creacion->addMinutes(15) ) {
+                    continue;
+                }
+
+                $tipo = 'completa';
+                self::cancelBookingFull($booking->id);
+
+                \Illuminate\Support\Facades\Log::debug('cancelUnpaids15m: ID '.$booking->id.' - Eliminamos reserva '.$tipo.'. '." Fecha de creación ".$fecha_creacion.' - Diferencia de tiempo: '.$fecha_actual->diffInMinutes($fecha_creacion));
+            }
+
+        }
+
+        \Illuminate\Support\Facades\Log::debug('Fin cron bookingInfo24h');
+    }
+
+    public static function cancelBookingFull($bookingID)
+    {
+        $bookingData = self::with('clientMain')->where('id', '=', intval($bookingID))->first();
+        if(isset($bookingData->id)) {
+            $cancelledLines = $bookingData->parseBookedGroupedCourses();
+            BookingUser::where('booking_id', $bookingData->id)->update(['status' => 2]);
+
+            //TODO: que pasa si hacen una reserva con cancellation insurance y no la pagan.
+        /*    if ($bookingData->has_cancellation_insurance)
+            {
+                $bookingData->price_total = $bookingData->price_cancellation_insurance;
+                $bookingData->save();
+            }*/
+
+            $bookingData->status = 3;
+
+            $mySchool = School::find($bookingData->school_id);
+            $voucherData = array();
+
+            dispatch(function () use ($mySchool, $bookingData, $cancelledLines, $voucherData) {
+                $buyerUser = $bookingData->clientMain;
+
+                // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                try
+                {
+                    \Mail::to($bookingData->email)
+                        ->send(new BookingCancelMailer(
+                            $mySchool,
+                            $bookingData,
+                            $cancelledLines,
+                            $buyerUser,
+                            $voucherData
+                        ));
+                }
+                catch (\Exception $ex)
+                {
+                    \Illuminate\Support\Facades\Log::debug('BookingController->cancelBookingFull BookingCancelMailer: ' . $ex->getMessage());
+                }
+            })->afterResponse();
+        }
+    }
 
 }

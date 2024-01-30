@@ -82,7 +82,8 @@ class PayrexxController
                                     'referenceId' => $referenceID
                                 ]);
 
-                                $booking->paid_total = $booking->paid_total + $data2->getInvoice()['totalAmount'] ?? $data['amount'];
+                                $booking->paid_total = $booking->paid_total +
+                                    ($data2->getInvoice()['totalAmount'] ?? $data['amount']) / 100;
 
                                 $payment = new Payment();
                                 $payment->booking_id = $booking->id;

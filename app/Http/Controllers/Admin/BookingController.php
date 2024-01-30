@@ -14,6 +14,7 @@ use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Payrexx\Payrexx;
 use Response;
 use Validator;
 
@@ -211,6 +212,107 @@ class BookingController extends AppBaseController
         }
 
         return $this->sendError('Invalid payment method');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/admin/bookings/refund/{id}",
+     *      summary="refundBooking",
+     *      tags={"Admin"},
+     *      description="Refund specific booking",
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ID of the booking to refund",
+     *          required=true,
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="amount",
+     *          in="query",
+     *          description="Amount to refund",
+     *          required=true,
+     *          @OA\Schema(type="number", format="float")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful refund",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=true
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  example={"refund": true}
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string",
+     *                  example="Refund completed successfully"
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Booking not found",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=false
+     *              ),
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="array",
+     *                  example={"message": "Booking not found"}
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Invalid request",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=false
+     *              ),
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="array",
+     *                  example={"message": "Invalid amount"}
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function refundBooking(Request $request, $id): JsonResponse
+    {
+        $school = $this->getSchool($request);
+        $booking = Booking::with('payments')->find($id);
+        $amountToRefund = $request->get('amount');
+
+        if (!$booking) {
+            return $this->sendError('Booking not found', 404);
+        }
+
+        if (!is_numeric($amountToRefund) || $amountToRefund <= 0) {
+            return $this->sendError('Invalid amount', 400);
+        }
+
+        $refund = PayrexxHelpers::refundTransaction($booking, $amountToRefund);
+
+        if ($refund) {
+            return $this->sendResponse(['refund' => $refund], 'Refund completed successfully');
+        }
+
+        return $this->sendError('Refund failed', 500);
     }
 
     /**

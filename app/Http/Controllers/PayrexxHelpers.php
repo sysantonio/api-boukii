@@ -455,47 +455,78 @@ class PayrexxHelpers
     public static function refundTransaction($bookingData, $amountToRefund)
     {
         try {
-            // Check it was paid via a Payrexx Transaction
-            $transactionData = $bookingData->getPayrexxTransaction();
-            $transactionID = $transactionData['id'] ?? '';
-            if (empty($transactionID)) {
-                throw new \Exception('No payrexx_transaction for Booking ID=' . $bookingData->id);
+            // Check if the total booking price is greater than or equal to the amount to refund
+            $totalBookingPrice = $bookingData->price_total;
+            if ($totalBookingPrice < $amountToRefund) {
+                throw new \Exception('Amount to refund exceeds total booking price');
             }
 
-            // Check related School has Payrexx credentials
-            $schoolData = $bookingData->school;
-            if (!$schoolData || !$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
-                throw new \Exception('No credentials for School ID=' . $schoolData->id);
+            // Check if any payment is greater than or equal to the amount to refund
+            $paymentToUse = null;
+            foreach ($bookingData->payments as $payment) {
+                if ($payment->amount >= $amountToRefund) {
+                    $paymentToUse = $payment;
+                    break;
+                }
             }
 
+            if (!$paymentToUse) {
+                // If no single payment covers the refund amount, perform partial refunds
+                $remainingAmountToRefund = $amountToRefund;
+                foreach ($bookingData->payments as $payment) {
+                    if ($payment->amount > 0) {
+                        $refundAmount = min($payment->amount, $remainingAmountToRefund);
+                        $refundSuccess = self::performRefund($payment, $refundAmount);
+                        if ($refundSuccess) {
+                            $remainingAmountToRefund -= $refundAmount;
+                            if ($remainingAmountToRefund <= 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Use the payment that covers the full refund amount
+                $refundSuccess = self::performRefund($paymentToUse, $amountToRefund);
+            }
 
-            // Trigger refund
-            $tr = new TransactionRequest();
-            $tr->setId($transactionID);
-            $tr->setAmount($amountToRefund * 100);
-
-            $payrexx = new Payrexx(
-                $schoolData->getPayrexxInstance(),
-                $schoolData->getPayrexxKey(),
-                '',
-                env('PAYREXX_API_BASE_DOMAIN')
-            );
-            $response = $payrexx->refund($tr);
-
-            // Status will be "refunded" if the amount was the whole Booking price,
-            // or "partially refunded" if just some of its BookingUsers
-            $responseStatus = $response->getStatus() ?? '';
-
-            return ($responseStatus == TransactionResponse::REFUNDED ||
-                $responseStatus == TransactionResponse::PARTIALLY_REFUNDED);
+            if ($refundSuccess) {
+                return true;
+            } else {
+                throw new \Exception('Refund failed');
+            }
         } catch (\Exception $e) {
-            // Altough not stated by API documentation (as of 2022-10),
-            // if it had no enough amount will throw an Exception "could not be refunded".
-            // Plus other connection etc issues
             Log::channel('payrexx')->error('PayrexxHelpers refundTransaction Booking ID=' . $bookingData->id);
             Log::channel('payrexx')->error($e->getMessage());
             return false;
         }
+    }
+
+    private static function performRefund($payment, $refundAmount)
+    {
+        // Perform the actual refund using Payrexx
+        $transactionID = $payment->transaction_id;
+
+        $tr = new TransactionRequest();
+        $tr->setId($transactionID);
+        $tr->setAmount($refundAmount * 100);
+
+        $payrexx = new Payrexx(
+            $payment->school->getPayrexxInstance(),
+            $payment->school->getPayrexxKey(),
+            '',
+            env('PAYREXX_API_BASE_DOMAIN')
+        );
+        $response = $payrexx->refund($tr);
+
+        // Update payment notes based on whether it's a full or partial refund
+        if ($response->getStatus() == TransactionResponse::REFUNDED) {
+            $payment->update(['notes' => 'refund']);
+        } elseif ($response->getStatus() == TransactionResponse::PARTIALLY_REFUNDED) {
+            $payment->update(['notes' => 'partial_refund']);
+        }
+
+        return ($response->getStatus() == TransactionResponse::REFUNDED || $response->getStatus() == TransactionResponse::PARTIALLY_REFUNDED);
     }
 
 
