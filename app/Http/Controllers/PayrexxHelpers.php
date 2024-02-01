@@ -336,6 +336,8 @@ class PayrexxHelpers
             '',
             env('PAYREXX_API_BASE_DOMAIN')
         );
+        Log::channel('payrexx')->debug('PayrexxHelpers refundTransaction: ' . $transactionID);
+        Log::channel('payrexx')->debug('PayrexxHelpers refund amount: ' . $refundAmount);
         $response = $payrexx->refund($tr);
         $newPayment = new Payment($payment->toArray());
         // Update payment notes based on whether it's a full or partial refund
