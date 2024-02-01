@@ -272,26 +272,26 @@ class PayrexxHelpers
                 $remainingAmountToRefund = $amountToRefund;
                 foreach ($bookingData->payments as $payment) {
                     if ($payment->amount > 0 && $payment->payrexx_transaction != null) {
-                        // Calculate the remaining refund amount for this payment
-                        $refundAmount = min($payment->amount, $remainingAmountToRefund);
-
                         // Find other payments with the same payrexx_transaction
                         $relatedPayments = $bookingData->payments->filter(function ($relatedPayment) use ($payment) {
                             return $relatedPayment->payrexx_transaction == $payment->payrexx_transaction;
                         });
 
                         // Calculate the total refund amount for related payments
-                        $totalRefundAmount = $refundAmount;
+                        $totalRefundAmount = 0;
                         foreach ($relatedPayments as $relatedPayment) {
                             if ($relatedPayment->status == 'refund') {
                                 continue; // Skip payments that are fully refunded
                             } elseif ($relatedPayment->status == 'partial_refund') {
-                                // Subtract the amount of partial refunds
-                                $totalRefundAmount -= $relatedPayment->amount;
+                                // Add the amount of partial refunds
+                                $totalRefundAmount += $relatedPayment->amount;
                             }
                         }
 
-                        if ($totalRefundAmount >= $refundAmount) {
+                        // Calculate the remaining refund amount for this payment
+                        $refundAmount = min($payment->amount - $totalRefundAmount, $remainingAmountToRefund);
+
+                        if ($refundAmount > 0) {
                             $refundSuccess = self::performRefund($payment, $refundAmount);
                             if ($refundSuccess) {
                                 $remainingAmountToRefund -= $refundAmount;
