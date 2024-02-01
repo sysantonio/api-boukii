@@ -111,7 +111,12 @@ class CourseSubgroup extends Model
      */
     public function getIsFullAttribute(): bool
     {
-        return count($this->bookingUsers) >= $this->max_participants;
+        // Filtrar los bookingUsers con status = 1
+        $activeBookingUsers = $this->bookingUsers->filter(function ($user) {
+            return $user->status == 1;
+        });
+
+        return $activeBookingUsers->count() >= $this->max_participants;
     }
 
     public function degree(): \Illuminate\Database\Eloquent\Relations\BelongsTo
