@@ -337,7 +337,7 @@ class PayrexxHelpers
             env('PAYREXX_API_BASE_DOMAIN')
         );
         $response = $payrexx->refund($tr);
-        $newPayment = new Payment($payment);
+        $newPayment = new Payment($payment->toArray());
         // Update payment notes based on whether it's a full or partial refund
         if ($response->getStatus() == TransactionResponse::REFUNDED) {
             $newPayment->status = 'refund';
