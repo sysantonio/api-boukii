@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Client;
 use App\Models\Course;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
@@ -156,6 +157,8 @@ class PayrexxHelpers
                 $gr->setCancelRedirectUrl($redirectTo . '?status=cancel');
             }
 
+            $gr->setValidity(5);
+
 
             // Launch it
             $payrexx = new Payrexx(
@@ -182,234 +185,6 @@ class PayrexxHelpers
 
         return $link;
     }
-
-    public static function test2()
-    {
-        $link = '';
-
-        try {
-
-            // Prepare gateway: basic data
-            $gr = new GatewayRequest();
-            $gr->setReferenceId('Boukii #');
-            $gr->setAmount(13000);
-            $gr->setCurrency('CHF');
-            $gr->setVatRate(null);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
-
-
-            // Product basket i.e. courses booked plus maybe cancellation insurance
-            $basket = [];
-
-
-            $basket[] = [
-                'name' => [1 => 'TEST'],
-                'quantity' => 1,
-                'amount' => 43.33 * 100
-            ];
-            $basket[] = [
-                'name' => [1 => 'TEST'],
-                'quantity' => 1,
-                'amount' => 43.33 * 100
-            ];
-            $basket[] = [
-                'name' => [1 => 'TEST'],
-                'quantity' => 1,
-                'amount' => 43.33 * 100
-            ];
-
-            // Suma los amounts del basket
-            $basketTotal = array_reduce($basket, function ($carry, $item) {
-                return $carry + $item['amount'];
-            }, 0);
-
-
-            if ($basketTotal !== 130 * 100) {
-                // Calcula la diferencia
-                $difference = (130 * 100) - $basketTotal;
-
-                // Encuentra un elemento en el basket para ajustar
-                $basket[0]['amount'] += $difference;
-            }
-
-
-            $gr->setBasket($basket);
-
-
-            $gr->addField('forename', 'Antoine');
-            $gr->addField('surname', 'GRiezman');
-            $gr->addField('phone', '6000450505');
-            $gr->addField('email', 'a@a.com');
-            $gr->addField('street', 'plaza serralta');
-            $gr->addField('postcode', '07013');
-
-            // $province = $buyerUser->province_id ? Province::find($buyerUser->province_id) : null;
-            $gr->addField('place', 'Baleares');
-            $gr->addField('country', 'España');
-
-
-            $gr->setSuccessRedirectUrl(env('APP_URL') . '/bookings?status=success');
-            $gr->setFailedRedirectUrl(env('APP_URL') . '/bookings?status=failed');
-            $gr->setCancelRedirectUrl(env('APP_URL') . '/bookings?status=cancel');
-
-
-            // Launch it
-            $payrexx = new Payrexx(
-                'swissmountainsports',
-                't5WxWJWqOvigxG8cOTSEBhdwW5rIgO',
-                '',
-                'pay.boukii.com'
-            );
-            $gateway = $payrexx->create($gr);
-            if ($gateway) {
-                $link = $gateway->getLink();
-            }
-        } catch (\Exception $e) {
-            // Altought not stated by API documentation (as of 2022-10),
-            // missing or wrong params will throw an Exception, plus other connection etc issues
-            Log::channel('payrexx')->error('PayrexxHelpers createGatewayLink Booking ID=' . 'TYEST');
-            Log::channel('payrexx')->error($e->getTraceAsString());
-            Log::channel('payrexx')->error($e->getMessage());
-            $link = '';
-        }
-
-        return $link;
-    }
-
-    public static function test()
-    {
-        $mySchool = UserSchools::getAdminSchoolById(2);
-        if (!$mySchool) {
-            $mySchool = UserSchools::getAdminSchoolById(8);
-        }
-        $schoolData = $mySchool;
-        $booking = $mySchool
-            ? Bookings2::where('id', '=', intval(4851))->where('school_id', '=', $mySchool->id)->first()
-            : null;
-        $booking->paid = false;
-        $booking->save();
-        $bookingData = $booking;
-        $buyerUser = $booking->main_user;
-
-        $voucherAmount = 0;
-        try {
-            // Check that School has Payrexx credentials
-            /*      if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey())
-                  {
-                      throw new \Exception('No credentials for School ID=' . $schoolData->id);
-                  }*/
-
-
-            // Prepare gateway: basic data
-            $gr = new GatewayRequest();
-            $gr->setReferenceId($bookingData->getOrGeneratePayrexxReference());
-            $gr->setAmount($bookingData->price_total * 100);
-            $gr->setCurrency($bookingData->currency);
-            $gr->setVatRate(null);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
-
-            // Add School's legal terms, if set
-            if ($schoolData->conditions_url) {
-                $gr->addField('terms', $schoolData->conditions_url);
-            }
-
-            // Product basket i.e. courses booked plus maybe cancellation insurance
-            $basket = [];
-
-            foreach ($bookingData->parseBookedCourses() as $c) {
-
-                $basket[] = [
-                    'name' => [1 => $c['name']],
-                    'quantity' => count($c['users']),
-                    'amount' => $c['unit_price'] * 100 * count($c['users'])
-                ];
-                /* if(count($c['users']) > 1) {
-                     dd($c['unit_price'] );
-                 }*/
-            }
-
-
-            if ($bookingData->has_cancellation_insurance) {
-                // Apply buyer user's language - or default
-                $defaultLocale = config('app.fallback_locale');
-                $oldLocale = \App::getLocale();
-                $userLang = $buyerUser ? Language::find($buyerUser->language1_id) : null;
-                $userLocale = $userLang ? $userLang->code : $defaultLocale;
-                \App::setLocale($userLocale);
-
-                $basket[] = [
-                    'name' => [1 => __('bookings.cancellationInsurance')],
-                    'quantity' => 1,
-                    'amount' => $bookingData->price_cancellation_insurance * 100
-                ];
-
-                \App::setLocale($oldLocale);
-            }
-
-            $basketTotal = array_reduce($basket, function ($carry, $item) {
-                return $carry + $item['amount'];
-            }, 0);
-
-            // Compara con el total_price
-            $difference = ($bookingData->price_total * 100) - $basketTotal;
-            dd($basketTotal);
-            // Compara con el total_price
-            if ($basketTotal !== $bookingData->price_total * 100 && $difference <= 10 && $difference >= 1) {
-                // Calcula la diferencia
-
-                $basket[0]['amount'] += $difference;
-            } else if ($difference != 0) {
-                Log::channel('payrexx')->error('PayrexxHelpers createGatewayLink Booking ID=' . $bookingData->id);
-                Log::channel('payrexx')->error('Price diff' . $difference);
-                Log::channel('payrexx')->error('Basket', $basket);
-                throw new \Exception('Problem with calculated payment for Booking ID=' . $bookingData->id);
-            }
-
-            $gr->setBasket($basket);
-
-
-            // Buyer data
-            if ($buyerUser) {
-                $gr->addField('forename', $buyerUser->first_name);
-                $gr->addField('surname', $buyerUser->last_name);
-                $gr->addField('phone', $buyerUser->phone);
-                $gr->addField('email', $buyerUser->email);
-                $gr->addField('street', $buyerUser->address);
-                $gr->addField('postcode', $buyerUser->cp);
-
-                $province = $buyerUser->province_id ? Province::find($buyerUser->province_id) : null;
-                $gr->addField('place', $province ? $province->name : '');
-                $gr->addField('country', $province ? $province->country_iso : '');
-            }
-
-
-            $gr->setSuccessRedirectUrl('?status=success');
-            $gr->setFailedRedirectUrl('?status=failed');
-            $gr->setCancelRedirectUrl('?status=cancel');
-
-
-            // Launch it
-            $payrexx = new Payrexx(
-                'swissmountainsports',
-                't5WxWJWqOvigxG8cOTSEBhdwW5rIgO',
-                '',
-                'pay.boukii.com'
-            );
-            $gateway = $payrexx->create($gr);
-
-            if ($gateway) {
-                $link = $gateway->getLink();
-            }
-        } catch (\Exception $e) {
-            // Altought not stated by API documentation (as of 2022-10),
-            // missing or wrong params will throw an Exception, plus other connection etc issues
-            Log::channel('payrexx')->error('PayrexxHelpers createGatewayLink Booking ID=' . $bookingData->id);
-            Log::channel('payrexx')->error($e->getMessage());
-            $link = '';
-        }
-
-
-        return $link;
-    }
-
 
     /**
      * Download from Payrexx the details of a Transaction.
@@ -464,9 +239,31 @@ class PayrexxHelpers
             // Check if any payment is greater than or equal to the amount to refund
             $paymentToUse = null;
             foreach ($bookingData->payments as $payment) {
-                if ($payment->amount >= $amountToRefund) {
-                    $paymentToUse = $payment;
-                    break;
+                if ($payment->amount >= $amountToRefund
+                    && $payment->payrexx_transaction != null
+                    && $payment->status == 'paid') {
+
+                    // Find other payments with the same payrexx_transaction
+                    $relatedPayments = $bookingData->payments->filter(function ($relatedPayment) use ($payment) {
+                        return $relatedPayment->payrexx_transaction == $payment->payrexx_transaction;
+                    });
+
+                    $refundAmount = $payment->amount;
+
+                    // Check the status of related payments
+                    foreach ($relatedPayments as $relatedPayment) {
+                        if ($relatedPayment->status == 'refund') {
+                            continue; // Skip payments that are fully refunded
+                        } elseif ($relatedPayment->status == 'partial_refund') {
+                            // Subtract the amount of partial refunds
+                            $refundAmount -= $relatedPayment->amount;
+                        }
+                    }
+
+                    if ($refundAmount >= $amountToRefund) {
+                        $paymentToUse = $payment;
+                        break;
+                    }
                 }
             }
 
@@ -474,14 +271,34 @@ class PayrexxHelpers
                 // If no single payment covers the refund amount, perform partial refunds
                 $remainingAmountToRefund = $amountToRefund;
                 foreach ($bookingData->payments as $payment) {
-                    if ($payment->amount > 0) {
+                    if ($payment->amount > 0 && $payment->payrexx_transaction != null) {
+                        // Calculate the remaining refund amount for this payment
                         $refundAmount = min($payment->amount, $remainingAmountToRefund);
-                        $refundSuccess = self::performRefund($payment, $refundAmount);
-                        if ($refundSuccess) {
-                            $remainingAmountToRefund -= $refundAmount;
 
-                            if ($remainingAmountToRefund <= 0) {
-                                break;
+                        // Find other payments with the same payrexx_transaction
+                        $relatedPayments = $bookingData->payments->filter(function ($relatedPayment) use ($payment) {
+                            return $relatedPayment->payrexx_transaction == $payment->payrexx_transaction;
+                        });
+
+                        // Calculate the total refund amount for related payments
+                        $totalRefundAmount = $refundAmount;
+                        foreach ($relatedPayments as $relatedPayment) {
+                            if ($relatedPayment->status == 'refund') {
+                                continue; // Skip payments that are fully refunded
+                            } elseif ($relatedPayment->status == 'partial_refund') {
+                                // Subtract the amount of partial refunds
+                                $totalRefundAmount -= $relatedPayment->amount;
+                            }
+                        }
+
+                        if ($totalRefundAmount >= $refundAmount) {
+                            $refundSuccess = self::performRefund($payment, $refundAmount);
+                            if ($refundSuccess) {
+                                $remainingAmountToRefund -= $refundAmount;
+
+                                if ($remainingAmountToRefund <= 0) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -520,13 +337,16 @@ class PayrexxHelpers
             env('PAYREXX_API_BASE_DOMAIN')
         );
         $response = $payrexx->refund($tr);
-
+        $newPayment = new Payment($payment);
         // Update payment notes based on whether it's a full or partial refund
         if ($response->getStatus() == TransactionResponse::REFUNDED) {
-            $payment->update(['status' => 'refund', 'amount' => $payment->amount - $refundAmount]);
+            $newPayment->status = 'refund';
+            $newPayment->amount = $refundAmount;
+            $newPayment->save();
         } elseif ($response->getStatus() == TransactionResponse::PARTIALLY_REFUNDED) {
-            $payment->update(['status' => 'partial_refund', 'amount' => $payment->amount - $refundAmount]);
-            // Update the payment amount after the refund
+            $newPayment->status = 'partial_refund';
+            $newPayment->amount = $refundAmount;
+            $newPayment->save();
         }
 
 
