@@ -15,6 +15,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Payrexx\Models\Request\Transaction as TransactionRequest;
+use Payrexx\Models\Response\Transaction as TransactionResponse;
+use Payrexx\Payrexx;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,10 +31,51 @@ use Illuminate\Support\Facades\Storage;
 */
 
 Route::any('/users-permisions', function () {
-
+    $output = shell_exec('php artisan permission:cache-reset');
     foreach (User::all() as $user) {
         $user->setInitialPermissionsByRole();
     }
+});
+
+Route::any('/monitors-active', function () {
+    $monitors = Monitor::with('monitorsSchools.school.stationsSchools')
+        ->get();
+    foreach ($monitors as $monitor) {
+        if(isset($monitor->monitorsSchools[0])) {
+            $monitor->active_school =  $monitor->monitorsSchools[0]->school->id;
+        }
+        if(isset($monitor->monitorsSchools[0]->school->stationsSchools[0])) {
+            $monitor->active_station =  $monitor->monitorsSchools[0]->school->stationsSchools[0]->station_id;
+        }
+        $monitor->save();
+
+    }
+});
+
+Route::get('/refund', function () {
+
+    $transactionID = '13023439';
+    $bookingData = \App\Models\Booking::with('school')->find(2103);
+    $schoolData = $bookingData->school;
+    $tr = new TransactionRequest();
+    $tr->setId($transactionID);
+    $tr->setAmount(500 * 100);
+    $tr->setCurrency($bookingData->currency);
+
+    $payrexx = new Payrexx(
+        'pruebas',
+        'vgJrvQ7AYKzpiqmreocpeGYtjFTX39',
+        '',
+        env('PAYREXX_API_BASE_DOMAIN')
+    );
+    $response = $payrexx->refund($tr);
+
+    // Status will be "refunded" if the amount was the whole Booking price,
+    // or "partially refunded" if just some of its BookingUsers
+    $responseStatus = $response->getStatus() ?? '';
+
+    return ($responseStatus == TransactionResponse::REFUNDED ||
+        $responseStatus == TransactionResponse::PARTIALLY_REFUNDED);
 });
 
 Route::any('/update-clients-schools', function () {
