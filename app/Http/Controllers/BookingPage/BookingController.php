@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
+use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingLog;
 use App\Models\BookingUser;
@@ -15,6 +17,7 @@ use App\Models\Voucher;
 use App\Models\VouchersLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
 
@@ -187,6 +190,63 @@ class BookingController extends SlugAuthController
         }
 
         return $this->sendResponse([], 'Client has not overlaps bookings');
+    }
+
+
+    /**
+     * @OA\Post(
+     *      path="/slug/bookings/payments/{id}",
+     *      summary="payBooking",
+     *      tags={"BookingPage"},
+     *      description="Pay specific booking",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Client")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function payBooking(Request $request, $id): JsonResponse
+    {
+        $school = $this->school;
+        $booking = Booking::find($id);
+        $paymentMethod = 2;
+
+        if (!$booking) {
+            return $this->sendError('Booking not found');
+        }
+
+        $booking->payment_method_id = $paymentMethod;
+        $booking->save();
+
+        $payrexxLink = PayrexxHelpers::createGatewayLink(
+            $school,
+            $booking,
+            $request,
+            $booking->clientMain,
+            $request->redirectUrl
+        );
+
+        if ($payrexxLink) {
+            return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
+        }
+
+        return $this->sendError('Link could not be created');
     }
 
 }

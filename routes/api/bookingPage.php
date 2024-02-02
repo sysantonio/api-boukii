@@ -52,4 +52,8 @@ Route::middleware(['bookingPage'])->group(function () {
 
     Route::post('bookings', [\App\Http\Controllers\BookingPage\BookingController::class, 'store'])
         ->name('api.bookings.bookings.store');
+
+    Route::post('bookings/payments/{id}',
+        [\App\Http\Controllers\BookingPage\BookingController::class, 'payBooking'])
+        ->name('api.bookings.bookings.pay');
 });

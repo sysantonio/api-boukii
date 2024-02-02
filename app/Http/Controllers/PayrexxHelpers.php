@@ -157,7 +157,10 @@ class PayrexxHelpers
                 $gr->setCancelRedirectUrl($redirectTo . '?status=cancel');
             }
 
-            $gr->setValidity(5);
+            if($bookingData->source == 'web') {
+                $gr->setValidity(15);
+            }
+
 
 
             // Launch it
