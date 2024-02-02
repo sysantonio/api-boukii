@@ -409,14 +409,15 @@ class PlannerController extends AppBaseController
         if ($courseSubgroupId) {
             $courseSubgroup = CourseSubgroup::find($courseSubgroupId);
 
-            if ($courseSubgroup && $monitorId !== null) {
+            if ($courseSubgroup) {
                 // Comprobación de superposición usando la información de courseDate
                 $date = $courseSubgroup->courseDate->date;
                 $hourStart = $courseSubgroup->courseDate->hour_start;
                 $hourEnd = $courseSubgroup->courseDate->hour_end;
-
-                if (Monitor::isMonitorBusy($monitorId, $date, $hourStart, $hourEnd)) {
-                    return $this->sendError('Overlap detected for subgroup. Monitor cannot be transferred.');
+                if($monitorId !== null) {
+                    if (Monitor::isMonitorBusy($monitorId, $date, $hourStart, $hourEnd)) {
+                        return $this->sendError('Overlap detected for subgroup. Monitor cannot be transferred.');
+                    }
                 }
 
                 // Actualizar el monitor_id del subgrupo
@@ -427,7 +428,7 @@ class PlannerController extends AppBaseController
             }
 
             // Actualizar el monitor_id del subgrupo
-            $courseSubgroup->update(['monitor_id' => null]);
+
         }
         $overlapDetected = false;
 
