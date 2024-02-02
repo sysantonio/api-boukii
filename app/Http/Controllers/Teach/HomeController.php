@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teach;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\BookingUser;
+use App\Models\CourseSubgroup;
 use App\Models\MonitorNwd;
 use App\Models\Station;
 use Carbon\Carbon;
@@ -89,6 +90,30 @@ class HomeController extends AppBaseController
         $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
             ->orderBy('start_time');
 
+        $subgroupsQuery = CourseSubgroup::with(['courseGroup.course', 'bookingUsers.client.sports',
+            'bookingUsers.client.evaluations.degree', 'bookingUsers.client.evaluations.evaluationFulfilledGoals'])
+            ->whereHas('courseGroup.course', function ($query) use ($schoolId) {
+                // Agrega la comprobación de la escuela aquí
+                if($schoolId) {
+                    $query->where('school_id', $schoolId);
+                }
+            })
+            ->whereHas('courseDate', function ($query) use ($dateStart, $dateEnd) {
+                if ($dateStart && $dateEnd) {
+                    // Filtra las fechas del subgrupo en el rango proporcionado
+                    $query->whereBetween('date', [$dateStart, $dateEnd])->where('active', 1);
+                } else {
+                    $today = Carbon::today();
+
+                    // Busca en el día de hoy para las reservas
+                    $query->whereDate('date', $today)->where('active', 1);
+                }
+            })
+            ->with('bookingUsers', function ($query) {
+                // Agregar la restricción para traer solo las booking_users con status = 1
+                $query->where('status', 1);
+            })->where('monitor_id', $monitor->id);
+
         if($schoolId) {
             $bookingQuery->where('school_id', $schoolId);
 
@@ -118,8 +143,9 @@ class HomeController extends AppBaseController
         // Obtén los resultados para las reservas y los MonitorNwd
         $bookings = $bookingQuery->get();
         $nwd = $nwdQuery->get();
+        $subgroups = $subgroupsQuery->get();
 
-        $data = ['bookings' => $bookings, 'nwd' => $nwd];
+        $data = ['bookings' => $bookings, 'nwd' => $nwd, 'subgroups' => $subgroups];
 
 
         return $this->sendResponse($data, 'Agenda retrieved successfully');
