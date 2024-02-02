@@ -90,29 +90,33 @@ class HomeController extends AppBaseController
         $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
             ->orderBy('start_time');
 
-        $subgroupsQuery = CourseSubgroup::with(['courseGroup.course', 'bookingUsers.client.sports',
-            'bookingUsers.client.evaluations.degree', 'bookingUsers.client.evaluations.evaluationFulfilledGoals'])
+        $subgroupsQuery = CourseSubgroup::with([
+            'courseGroup.course',
+            'bookingUsers.client.sports',
+            'course.courseDates',
+            'bookingUsers.client.evaluations.degree',
+            'bookingUsers.client.evaluations.evaluationFulfilledGoals'
+        ])
             ->whereHas('courseGroup.course', function ($query) use ($schoolId) {
-                // Agrega la comprobación de la escuela aquí
-                if($schoolId) {
+                if ($schoolId) {
                     $query->where('school_id', $schoolId);
                 }
             })
             ->whereHas('courseDate', function ($query) use ($dateStart, $dateEnd) {
                 if ($dateStart && $dateEnd) {
-                    // Filtra las fechas del subgrupo en el rango proporcionado
                     $query->whereBetween('date', [$dateStart, $dateEnd])->where('active', 1);
                 } else {
                     $today = Carbon::today();
-
-                    // Busca en el día de hoy para las reservas
                     $query->whereDate('date', $today)->where('active', 1);
                 }
             })
-            ->with('bookingUsers', function ($query) {
-                // Agregar la restricción para traer solo las booking_users con status = 1
-                $query->where('status', 1);
-            })->where('monitor_id', $monitor->id);
+            ->where('monitor_id', $monitor->id)
+            ->where(function ($query) {
+                $query->doesntHave('bookingUsers')
+                    ->orWhereHas('bookingUsers', function ($subQuery) {
+                        $subQuery->where('status', '!=', 1);
+                    });
+            });
 
         if($schoolId) {
             $bookingQuery->where('school_id', $schoolId);
