@@ -124,7 +124,7 @@ class CourseController extends AppBaseController
             // Cursos de tipo 1
             foreach ($course->courseDates as $courseDate) {
                 foreach ($courseDate->courseSubgroups as $subgroup) {
-                    $bookings = $subgroup->bookingUsers()->count();
+                    $bookings = $subgroup->bookingUsers()->where('status', 1)->count();
                     $totalBookings += $bookings;
                     $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
                 }
@@ -132,7 +132,7 @@ class CourseController extends AppBaseController
         } else {
             // Cursos de tipo 2
             foreach ($course->courseDates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->count();
+                $bookings = $courseDate->bookingUsers()->where('status', 1)->count();
                 $totalBookings += $bookings;
             }
             $totalAvailablePlaces = max(0, $course->max_participants - $totalBookings);
