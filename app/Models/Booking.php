@@ -115,6 +115,12 @@ use Spatie\Activitylog\LogOptions;
  *           nullable=true
  *       ),
  *       @OA\Property(
+ *           property="user_id",
+ *           description="User ID who performed the action",
+ *           type="integer",
+ *           nullable=false
+ *       ),
+ *       @OA\Property(
  *           property="payment_method_id",
  *           description="Payment Method ID",
  *           type="integer",
@@ -230,6 +236,7 @@ use Spatie\Activitylog\LogOptions;
     public $fillable = [
         'school_id',
         'client_main_id',
+        'user_id',
         'price_total',
         'has_cancellation_insurance',
         'price_cancellation_insurance',
@@ -285,6 +292,7 @@ use Spatie\Activitylog\LogOptions;
     public static array $rules = [
         'school_id' => 'nullable',
         'client_main_id' => 'nullable',
+        'user_id' => 'nullable',
         'price_total' => 'nullable|numeric',
         'has_cancellation_insurance' => 'nullable|boolean',
         'price_cancellation_insurance' => 'nullable|numeric',

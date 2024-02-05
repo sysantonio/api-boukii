@@ -8,6 +8,7 @@ use App\Http\Requests\API\UpdateBookingAPIRequest;
 use App\Http\Resources\API\BookingResource;
 use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
+use App\Models\BookingLog;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -148,6 +149,15 @@ class BookingAPIController extends AppBaseController
         $input = $request->all();
 
         $booking = $this->bookingRepository->create($input);
+
+        $logData = [
+            'booking_id' => $booking->id,
+            'action' => 'created by api',
+            'user_id' => $booking->user_id,
+            'description' => 'Booking created',
+        ];
+
+        BookingLog::create($logData);
 
         return $this->sendResponse(new BookingResource($booking), 'Booking saved successfully');
     }
