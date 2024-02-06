@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\API\BookingResource;
@@ -29,19 +29,14 @@ use Validator;
  * Class HomeController
  * @package App\Http\Controllers\Teach
  */
-class MonitorController extends AppBaseController
+class MonitorController extends SlugAuthController
 {
-
-    public function __construct()
-    {
-
-    }
 
     /**
      * @OA\Post(
-     *      path="/admin/monitor/available",
+     *      path="/slug/monitor/available",
      *      summary="getMonitorsAvailable",
-     *      tags={"Admin"},
+     *      tags={"BookingPage"},
      *      description="Get monitors available",
      *      @OA\Response(
      *          response=200,
@@ -67,7 +62,7 @@ class MonitorController extends AppBaseController
      */
     public function getMonitorsAvailable(Request $request): JsonResponse
     {
-        $school = $this->getSchool($request);
+        $school = $this->school;
 
         $isAnyAdultClient = false;
         $clientLanguages = [];
@@ -127,7 +122,8 @@ class MonitorController extends AppBaseController
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function ($query) use ($request) {
                 $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime))->where('status', 1);
+                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime)
+                    ->where('status', 1));
             })
             ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
@@ -167,9 +163,9 @@ class MonitorController extends AppBaseController
 
     /**
      * @OA\Post(
-     *      path="/admin/monitor/available/{id}",
+     *      path="/slug/monitor/available/{id}",
      *      summary="checkIfMonitorIsAvailable",
-     *      tags={"Admin"},
+     *      tags={"BookingPage"},
      *      description="Get monitor availability",
      *      @OA\Response(
      *          response=200,

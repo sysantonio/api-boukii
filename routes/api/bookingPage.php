@@ -56,4 +56,13 @@ Route::middleware(['bookingPage'])->group(function () {
     Route::post('bookings/payments/{id}',
         [\App\Http\Controllers\BookingPage\BookingController::class, 'payBooking'])
         ->name('api.bookings.bookings.pay');
+
+    /** Monitor **/
+    Route::post('monitors/available', [\App\Http\Controllers\BookingPage\MonitorController::class, 'getMonitorsAvailable'])
+        ->name('api.bookings.monitors.available');
+
+    Route::post('monitors/available/{id}', [\App\Http\Controllers\BookingPage\MonitorController::class,
+        'checkIfMonitorIsAvailable'])
+        ->name('api.bookings.monitor.availability');
+
 });
