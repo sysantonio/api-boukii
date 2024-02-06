@@ -69,6 +69,7 @@ class CourseController extends SlugAuthController
         $degreeOrder = $request->input('degree_order');
         $getLowerDegrees = 1;
         // return $this->sendResponse($this->school->id, 'Courses retrieved successfully');
+        $today = now(); // Obtener la fecha actual
 
         try {
             $courses =
@@ -78,6 +79,25 @@ class CourseController extends SlugAuthController
                     ->where('school_id', $this->school->id)
                     ->where('online', 1)
                     ->where('active', 1)
+                    ->where(function($query) use ($today) {
+                        $query->where(function($subquery) use ($today) {
+                            $subquery->whereNull('date_start_res')
+                                ->whereNull('date_end_res');
+                        })
+                            ->orWhere(function($subquery) use ($today) {
+                                $subquery->whereDate('date_start_res', '<=', $today)
+                                    ->whereDate('date_end_res', '>=', $today);
+                            })
+                            ->orWhere(function($subquery) use ($today) {
+                                $subquery->whereDate('date_start_res', '=', $today)
+                                    ->whereNotNull('date_end_res');
+                            })
+                            ->orWhere(function($subquery) use ($today) {
+                                $subquery->whereNotNull('date_start_res')
+                                    ->whereDate('date_end_res', '=', $today);
+                            });
+                    })
+
                     ->get();
 
             return $this->sendResponse($courses, 'Courses retrieved successfully');
