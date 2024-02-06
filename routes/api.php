@@ -8,6 +8,7 @@ use App\Models\Language;
 use App\Models\Mail;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
+use App\Models\MonitorsSchool;
 use App\Models\OldModels\UserSport;
 use App\Models\Station;
 use App\Models\StationService;
@@ -35,6 +36,88 @@ Route::any('/users-permisions', function () {
     foreach (User::all() as $user) {
         $user->setInitialPermissionsByRole();
     }
+});
+
+Route::any('/testAval', function (Request $request) {
+
+        $date = $request->input('date');
+        $schoolId = 8;
+
+        // Obtén todos los monitores de la escuela
+        $monitors = MonitorsSchool::with(['monitor.sports', 'monitor.courseSubgroups'])
+            ->where('school_id', $schoolId)
+            ->where('active_school', 1)
+            ->get()
+            ->pluck('monitor');
+
+        $availableMonitors = [];
+
+        foreach ($monitors as $monitor) {
+            // Obtén los NWDS del monitor para ese día
+            $nwds = MonitorNwd::where('monitor_id', $monitor->id)
+                ->where('school_id', $schoolId)
+                ->whereDate('start_date', '<=', $date)
+                ->whereDate('end_date', '>=', $date)
+                ->get();
+
+            // Obtén los subgrupos asignados al monitor para ese día
+            $subgroups = $monitor->courseSubgroups->filter(function ($subgroup) use ($date) {
+                return $subgroup->courseDate->date == $date;
+            });
+
+            // Define los rangos de horas disponibles para el monitor
+            $availableHours = [];
+
+            // Agrega el rango de horas de NWDS al arreglo de horas disponibles
+            foreach ($nwds as $nwd) {
+                $availableHours[] = [
+                    'start_time' => $nwd->start_time,
+                    'end_time' => $nwd->end_time,
+                ];
+            }
+
+            // Agrega los rangos de horas de los subgrupos al arreglo de horas disponibles
+            foreach ($subgroups as $subgroup) {
+                $availableHours[] = [
+                    'start_time' => $subgroup->start_time,
+                    'end_time' => $subgroup->end_time,
+                ];
+            }
+
+
+            $combinedHours = [];
+
+            // Combinar los rangos de horas solapados
+            foreach ($availableHours as $hour) {
+                $added = false;
+                foreach ($combinedHours as &$combinedHour) {
+                    if ($hour['start_time'] <= $combinedHour['end_time'] && $hour['end_time'] >= $combinedHour['start_time']) {
+                        // Solapamiento encontrado, combina los rangos
+                        $combinedHour['start_time'] = min($hour['start_time'], $combinedHour['start_time']);
+                        $combinedHour['end_time'] = max($hour['end_time'], $combinedHour['end_time']);
+                        $added = true;
+                        break;
+                    }
+                }
+                if (!$added) {
+                    // No se encontró solapamiento, agrega el rango como nuevo
+                    $combinedHours[] = $hour;
+                }
+            }
+
+            // Ordenar los rangos combinados por hora de inicio
+            usort($combinedHours, function ($a, $b) {
+                return $a['start_time'] <=> $b['start_time'];
+            });
+
+            $availableMonitors[] = [
+                'monitor' => $monitor,
+                'available_hours' => $combinedHours,
+            ];
+        }
+
+        return collect($availableMonitors);
+
 });
 
 Route::any('/monitors-active', function () {

@@ -222,7 +222,7 @@ class BookingController extends SlugAuthController
             }
         }
 
-        if($bookingUser[0]['course']['course_type'] == 2) {
+        if($request->bookingUsers[0]['course']['course_type'] == 2) {
             $monitorAvailabilityRequest = new Request([
                 'date' => $date,
                 'startTime' => $startTime,
@@ -235,7 +235,7 @@ class BookingController extends SlugAuthController
                 return $this->sendError('No monitor available on that date');
             }
         }
-        
+
         return $this->sendResponse([], 'Client has not overlaps bookings');
     }
 

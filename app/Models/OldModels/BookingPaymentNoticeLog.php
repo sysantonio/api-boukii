@@ -12,8 +12,8 @@ class BookingPaymentNoticeLog extends Model
     protected $connection = 'old';
 
 protected $fillable = [
-		'booking2_id',
-		'booking_user2_id',
+		'booking_id',
+		'booking_user_id',
 		'date'
 	];
     public $timestamps = false;
@@ -22,7 +22,7 @@ protected $fillable = [
     {
         $notify = 1;
 
-        $logs = self::where('booking2_id', $data->booking2_id)
+        $logs = self::where('booking_id', $data->booking2_id)
                     ->get();
 
 
