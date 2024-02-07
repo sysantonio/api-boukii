@@ -70,6 +70,11 @@ class CourseController extends SlugAuthController
         $maxAge = $request->input('max_age') ?? null;
         $clientId = $request->input('client_id');
         $degreeOrder = $request->input('degree_order');
+        $degreeOrderArray = [];
+        if($degreeOrder) {
+            $degreeOrderArray = explode(',', $degreeOrder);
+        }
+
         $getLowerDegrees = 1;
         // return $this->sendResponse($this->school->id, 'Courses retrieved successfully');
         $today = now(); // Obtener la fecha actual
@@ -77,7 +82,7 @@ class CourseController extends SlugAuthController
         try {
             $courses =
                 Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees,
-                    $degreeOrder, $minAge, $maxAge)
+                    $degreeOrderArray, $minAge, $maxAge)
                     ->with('courseDates.courseGroups.courseSubgroups.monitor')
                     ->where('school_id', $this->school->id)
                     ->where('online', 1)
