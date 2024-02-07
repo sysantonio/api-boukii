@@ -57,6 +57,14 @@ Route::middleware(['bookingPage'])->group(function () {
         [\App\Http\Controllers\BookingPage\BookingController::class, 'payBooking'])
         ->name('api.bookings.bookings.pay');
 
+    Route::post('bookings/refunds/{id}',
+        [\App\Http\Controllers\BookingPage\BookingController::class, 'refundBooking'])
+        ->name('api.admin.bookings.refund');
+
+    Route::post('bookings/cancel',
+        [\App\Http\Controllers\BookingPage\BookingController::class, 'cancelBookings'])
+        ->name('api.admin.bookings.cancel');
+
     /** Monitor **/
     Route::post('monitors/available', [\App\Http\Controllers\BookingPage\MonitorController::class, 'getMonitorsAvailable'])
         ->name('api.bookings.monitors.available');

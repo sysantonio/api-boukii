@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BookingPage;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
+use App\Mail\BookingCancelMailer;
 use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingLog;
@@ -400,6 +401,182 @@ class BookingController extends SlugAuthController
         }
 
         return $this->sendError('Link could not be created');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/slug/bookings/refunds/{id}",
+     *      summary="refundBooking",
+     *      tags={"BookingPage"},
+     *      description="Refund specific booking",
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ID of the booking to refund",
+     *          required=true,
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="amount",
+     *          in="query",
+     *          description="Amount to refund",
+     *          required=true,
+     *          @OA\Schema(type="number", format="float")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful refund",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=true
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  example={"refund": true}
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string",
+     *                  example="Refund completed successfully"
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Booking not found",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=false
+     *              ),
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="array",
+     *                  example={"message": "Booking not found"}
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Invalid request",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean",
+     *                  example=false
+     *              ),
+     *              @OA\Property(
+     *                  property="error",
+     *                  type="array",
+     *                  example={"message": "Invalid amount"}
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function refundBooking(Request $request, $id): JsonResponse
+    {
+        $school = $this->school;
+        $booking = Booking::with('payments')->find($id);
+        $amountToRefund = $request->get('amount');
+
+        if (!$booking) {
+            return $this->sendError('Booking not found', 404);
+        }
+
+        if (!is_numeric($amountToRefund) || $amountToRefund <= 0) {
+            return $this->sendError('Invalid amount', 400);
+        }
+
+        $refund = PayrexxHelpers::refundTransaction($booking, $amountToRefund);
+
+        if ($refund) {
+            return $this->sendResponse(['refund' => $refund], 'Refund completed successfully');
+        }
+
+        return $this->sendError('Refund failed', 500);
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/slug/bookings/cancel",
+     *      summary="cancelBooking",
+     *      tags={"BookingPage"},
+     *      description="Cancel specific booking or group of bookingIds",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Booking")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function cancelBookings(Request $request): JsonResponse
+    {
+        $school = $this->school;
+
+
+        $bookingUsers = BookingUser::whereIn('id', $request->bookingUsers)->get();
+        $booking = $bookingUsers[0]->booking;
+
+        if (!$bookingUsers) {
+            return $this->sendError('Booking users not found', [], 404);
+        }
+
+        $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree',
+            'bookingUsers.monitor', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+            'bookingUsers.courseDate', 'clientMain']);
+
+        /*        foreach ($bookingUsers as $bookingUser) {
+                    $bookingUser->status = 2;
+                    $bookingUser->save();
+                }*/
+
+        // Tell buyer user by email
+        dispatch(function () use ($school, $booking, $bookingUsers) {
+            $buyerUser = $booking->clientMain;
+
+            // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+            try
+            {
+                \Mail::to($buyerUser->email)
+                    ->send(new BookingCancelMailer(
+                        $school,
+                        $booking,
+                        $bookingUsers,
+                        $buyerUser,
+                        null
+                    ));
+            }
+            catch (\Exception $ex)
+            {
+                \Illuminate\Support\Facades\Log::debug('BookingController->cancelBookingFull BookingCancelMailer: ' . $ex->getMessage());
+            }
+        })->afterResponse();
+
+        return $this->sendResponse([], 'Cancel completed successfully');
+
     }
 
 }
