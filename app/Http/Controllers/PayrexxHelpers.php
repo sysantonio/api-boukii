@@ -85,11 +85,13 @@ class PayrexxHelpers
             }
 
             // Agregar el campo "reduction" al "basket"
-            $basket[] = [
-                'name' => [1 => $basketData['reduction']['name']],
-                'quantity' => $basketData['reduction']['quantity'],
-                'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
-            ];
+            if (isset($basketData['reduction'])) {
+                $basket[] = [
+                    'name' => [1 => $basketData['reduction']['name']],
+                    'quantity' => $basketData['reduction']['quantity'],
+                    'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
+                ];
+            }
 
             // Agregar el campo "tva" al "basket"
             $basket[] = [
