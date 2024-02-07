@@ -84,9 +84,9 @@ use Illuminate\Database\Eloquent\Model;
     public static array $rules = [
         'type' => 'nullable|string|max:125',
         'lang' => 'nullable|string|max:125',
-        'subject' => 'nullable|string|max:125',
-        'title' => 'nullable|string|max:125',
-        'body' => 'nullable|string|max:65535',
+        'subject' => 'nullable|string',
+        'title' => 'nullable|string',
+        'body' => 'nullable|string',
         'school_id' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable'
