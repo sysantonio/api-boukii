@@ -348,7 +348,7 @@ class BookingController extends AppBaseController
         $school = $this->getSchool($request);
 
 
-        $bookingUsers = BookingUser::whereIn($request->bookingUsers)->get();
+        $bookingUsers = BookingUser::whereIn('id', $request->bookingUsers)->get();
         $booking = $bookingUsers[0]->booking;
 
         if (!$bookingUsers) {
