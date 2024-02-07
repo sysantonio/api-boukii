@@ -357,7 +357,7 @@ class BookingController extends AppBaseController
 
         $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree',
             'bookingUsers.monitor', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
-            'bookingUsers.courseDate', 'bookingUsers.clientMain']);
+            'bookingUsers.courseDate', 'clientMain']);
 
 /*        foreach ($bookingUsers as $bookingUser) {
             $bookingUser->status = 2;
@@ -366,7 +366,7 @@ class BookingController extends AppBaseController
 
         // Tell buyer user by email
         dispatch(function () use ($school, $booking, $bookingUsers) {
-            $buyerUser = $bookingUsers[0]->clientMain;
+            $buyerUser = $booking->clientMain;
 
             // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
             try
