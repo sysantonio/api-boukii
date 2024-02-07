@@ -78,6 +78,7 @@ class BookingController extends SlugAuthController
             'price_total' => $data['price_total'],
             'has_cancellation_insurance' => $data['has_cancellation_insurance'],
             'price_cancellation_insurance' => $data['price_cancellation_insurance'],
+            'basket' => $data['basket'],
             'status' => 1,
             'currency' => 'CHF',
 
