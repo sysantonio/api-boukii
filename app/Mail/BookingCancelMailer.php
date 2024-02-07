@@ -77,7 +77,7 @@ class BookingCancelMailer extends Mailable
             'schoolConditionsURL' => $this->schoolData->conditions_url,
             'reference' => '#' . $this->bookingData->id,
             'bookingNotes' => $this->bookingData->notes,
-            'courses' => $this->cancelledLines,
+            'courses' => $this->parseBookedGroupedCourses($this->cancelledLines),
             'voucherCode' => $voucherCode,
             'voucherAmount' => $voucherAmount,
             'actionURL' => null,
@@ -90,5 +90,14 @@ class BookingCancelMailer extends Mailable
         return $this->to($this->userData->email)
                     ->subject($subject)
                     ->view($templateView)->with($templateData);
+    }
+
+    public function parseBookedGroupedCourses($bookingUsers)
+    {
+
+        $groupedCourses = $bookingUsers->groupBy(['course.course_type', 'client_id',
+            'course_id', 'degree_id', 'course_date_id']);
+
+        return $groupedCourses;
     }
 }
