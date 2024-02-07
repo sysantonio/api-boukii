@@ -365,7 +365,7 @@ class BookingController extends AppBaseController
 
         // Tell buyer user by email
         dispatch(function () use ($school, $booking, $bookingUsers) {
-            $buyerUser = $bookingUsers->clientMain;
+            $buyerUser = $bookingUsers[0]->clientMain;
 
             // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
             try
