@@ -355,8 +355,9 @@ class BookingController extends AppBaseController
             return $this->sendError('Booking users not found', [], 404);
         }
 
-        $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
-            'bookingUsers.courseSubGroup', 'bookingUsers.course', 'bookingUsers.courseDate']);
+        $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree',
+            'bookingUsers.monitor', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+            'bookingUsers.courseDate', 'bookingUsers.clientMain']);
 
 /*        foreach ($bookingUsers as $bookingUser) {
             $bookingUser->status = 2;
@@ -384,6 +385,8 @@ class BookingController extends AppBaseController
                 \Illuminate\Support\Facades\Log::debug('BookingController->cancelBookingFull BookingCancelMailer: ' . $ex->getMessage());
             }
         })->afterResponse();
+
+        return $this->sendResponse([], 'Cancel completed successfully');
 
     }
 }
