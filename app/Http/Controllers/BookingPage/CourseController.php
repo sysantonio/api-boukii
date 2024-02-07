@@ -66,6 +66,9 @@ class CourseController extends SlugAuthController
         $type = $request->input('course_type') ?? 1;
         $sportId = $request->input('sport_id') ?? 1;
         $clientId = $request->input('client_id');
+        $minAge = $request->input('min_age') ?? 0;
+        $maxAge = $request->input('max_age') ?? 99;
+        $clientId = $request->input('client_id');
         $degreeOrder = $request->input('degree_order');
         $getLowerDegrees = 1;
         // return $this->sendResponse($this->school->id, 'Courses retrieved successfully');
@@ -74,7 +77,7 @@ class CourseController extends SlugAuthController
         try {
             $courses =
                 Course::withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, null, $getLowerDegrees,
-                    $degreeOrder)
+                    $degreeOrder, $minAge, $maxAge)
                     ->with('courseDates.courseGroups.courseSubgroups.monitor')
                     ->where('school_id', $this->school->id)
                     ->where('online', 1)
