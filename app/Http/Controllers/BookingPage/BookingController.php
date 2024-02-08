@@ -337,11 +337,17 @@ class BookingController extends SlugAuthController
         // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
         $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);
 
+        Log::debug('Check avialable lvl 1 monitors:', $availableMonitors->toArray());
+
         // Eliminar los elementos nulos
         $availableMonitors = array_filter($availableMonitors->toArray());
 
+        Log::debug('Check avialable lvl 2 monitors:', $availableMonitors);
+
         // Reindexar el array para eliminar las claves
         $availableMonitors = array_values($availableMonitors);
+
+        Log::debug('Check avialable lvl 3 monitors:', $availableMonitors);
 
         // Paso 4: Devolver los monitores disponibles.
         return empty($availableMonitors);
