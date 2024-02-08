@@ -476,6 +476,23 @@ class MigrationController extends AppBaseController
 
         $oldDegrees = \App\Models\OldModels\Degree::all();
         $fechaInicio = Carbon::createFromDate(2023, 9, 1);
+        $data = [
+            368 => '{\"weekDays\":{\"sunday\":false,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            520 => '{\"weekDays\":{\"sunday\":true,\"monday\":false,\"tuesday\":false,\"wednesday\":false,\"thursday\":false,\"friday\":true,\"saturday\":true}}',
+            522 => '{\"weekDays\":{\"sunday\":true,\"monday\":false,\"tuesday\":false,\"wednesday\":false,\"thursday\":false,\"friday\":false,\"saturday\":true}}',
+            523 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            524 => '{\"weekDays\":{\"sunday\":true,\"monday\":false,\"tuesday\":false,\"wednesday\":false,\"thursday\":false,\"friday\":false,\"saturday\":true}}',
+            525 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            774 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            777 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            781 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            808 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            826 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            848 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            866 => '{\"weekDays\":{\"sunday\":true,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":true}}',
+            872 => '{\"weekDays\":{\"sunday\":false,\"monday\":true,\"tuesday\":true,\"wednesday\":true,\"thursday\":true,\"friday\":true,\"saturday\":false}}'
+        ];
+
 
 
         $oldCoursesCollectives = Course2::where('created_at', '>', $fechaInicio)
@@ -610,7 +627,12 @@ class MigrationController extends AppBaseController
                 $newCourse->settings =
                     json_encode(['weekDays' => $this->getWeekDayAvailability($prive->day_start_res, $prive->day_end_res)]);
                 $newCourse->is_flexible = $prive->duration_flexible;
-                $newCourse->price_range = json_encode($prive->priceRanges, true);
+                //$newCourse->price_range = json_encode($prive->priceRanges, true);
+                if (isset($prive->priceRanges)) {
+                    if (isset($priceRanges[$prive->id])) {
+                        $newCourse->price_range = json_encode($data[$prive->id]);
+                    }
+                }
                 $newCourse->old_id = $prive->id;
                 $base64Image = $prive->image;
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
@@ -722,7 +744,7 @@ class MigrationController extends AppBaseController
             ->with(['booking_users.course', 'booking_users.subgroup.group.course'])
             ->get();
 
-       // $bookingsUsersWithoutCourse = [];
+        // $bookingsUsersWithoutCourse = [];
 
         foreach ($oldBookings as $oldBooking) {
             $newBooking = new Booking($oldBooking->toArray());
@@ -786,7 +808,7 @@ class MigrationController extends AppBaseController
                             continue;
                         }
                         $oldCourse = Course2::find($oldCourseGroup->course2_id);
-                       // Log::channel('migration')->warning('Reserva sin subgrupo inicial: course', $oldCourse->toArray());
+                        // Log::channel('migration')->warning('Reserva sin subgrupo inicial: course', $oldCourse->toArray());
 
                         if(!$oldCourse) {
                             Log::channel('migration')->info('Reserva sin curso: id', $oldBookingUser->toArray());
