@@ -348,6 +348,7 @@ class BookingController extends SlugAuthController
         $availableMonitors = array_values($availableMonitors);
 
         Log::debug('Check avialable lvl 3 monitors:', $availableMonitors);
+        Log::debug('Check avialable empty monitors:'. empty($availableMonitors));
 
         // Paso 4: Devolver los monitores disponibles.
         return empty($availableMonitors);
