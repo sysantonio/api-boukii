@@ -457,7 +457,7 @@ class Monitor extends Model
                         ->whereTime('hour_end', '>', $startTime);
                 }
 
-            })
+            })->where('status', 1)
             ->exists();
 
         $hasFullDayNwd = MonitorNwd::where('monitor_id', $monitorId)

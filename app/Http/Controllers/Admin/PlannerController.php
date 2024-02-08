@@ -416,7 +416,8 @@ class PlannerController extends AppBaseController
                 $hourEnd = $courseSubgroup->courseDate->hour_end;
                 if($monitorId !== null) {
                     if (Monitor::isMonitorBusy($monitorId, $date, $hourStart, $hourEnd)) {
-                        return $this->sendError('Overlap detected for subgroup. Monitor cannot be transferred.');
+                        return $this->sendError('Overlap detected for subgroup.
+                        Monitor cannot be transferred.');
                     }
                 }
 
