@@ -238,7 +238,7 @@ class BookingController extends SlugAuthController
                 'sportId' => $bookingUser['course']['sport_id'],
                 'clientIds' => $clientIds
             ]);
-            if(!$this->getMonitorsAvailable($monitorAvailabilityRequest)) {
+            if(empty($this->getMonitorsAvailable($monitorAvailabilityRequest))) {
                 return $this->sendError('No monitor available on that date');
             }
         }
@@ -246,7 +246,7 @@ class BookingController extends SlugAuthController
         return $this->sendResponse([], 'Client has not overlaps bookings');
     }
 
-    public function getMonitorsAvailable(Request $request): bool
+    public function getMonitorsAvailable(Request $request): array
     {
         $school = $this->school;
 
@@ -351,7 +351,7 @@ class BookingController extends SlugAuthController
         Log::debug('Check avialable empty monitors:'. empty($availableMonitors));
 
         // Paso 4: Devolver los monitores disponibles.
-        return empty($availableMonitors);
+        return $availableMonitors;
 
     }
 
