@@ -305,7 +305,7 @@ class BookingController extends SlugAuthController
                 ->get()
                 ->pluck('monitor');
         Log::debug('Check elgible monitors request:', $request->all());
-        Log::debug('Check elgible monitors:', $eligibleMonitors);
+        Log::debug('Check elgible monitors:', $eligibleMonitors->toArray());
 
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function ($query) use ($request) {
@@ -333,7 +333,7 @@ class BookingController extends SlugAuthController
                 ->pluck('monitor_id'))
             ->unique();
 
-        Log::debug('Check busy monitors:', $busyMonitors);
+        Log::debug('Check busy monitors:', $busyMonitors->toArray());
         // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
         $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);
 
