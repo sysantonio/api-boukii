@@ -211,7 +211,9 @@ class CourseController extends SlugAuthController
                         $hasAvailability = $subgroup->booking_users_count < $subgroup->max_participants;
                         $availableDegree = [
                             'degree_id' => $group->degree_id,
-                            'recommended_age' => $group->recommended_age
+                            'recommended_age' => $group->recommended_age,
+                            'age_max' => $group->age_max,
+                            'age_min' => $group->age_min
                         ];
                         if ($hasAvailability) {
                             if(!$unAvailableDegreeIds->contains($availableDegree)) {
@@ -240,6 +242,8 @@ class CourseController extends SlugAuthController
                 if ($degree) {
                     $degree->load('degreesSchoolSportGoals');
                     $degree->recommended_age = $item['recommended_age'];
+                    $degree->age_max = $item['age_max'];
+                    $degree->age_min = $item['age_min'];
                 }
                 return $degree;
             })->filter();
