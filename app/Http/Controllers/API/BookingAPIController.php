@@ -67,6 +67,7 @@ class BookingAPIController extends AppBaseController
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
             additionalConditions: function ($query) use ($request) {
+                $query->where('status', '!=', 3);
                 // Filtrar por reservas con múltiples bookingUsers con user_id diferentes
                 if ($request->has('isMultiple') && $request->isMultiple == true) {
                     $query->whereHas('bookingUsers', function ($subQuery) {
