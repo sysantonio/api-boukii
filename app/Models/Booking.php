@@ -571,7 +571,7 @@ use Spatie\Activitylog\LogOptions;
                             'date' => date('Y-m-d H:i:s')
                         ]);
                     } catch (\Exception $ex) {
-                        \Illuminate\Support\Facades\Log::debug('Cron bookingInfo24h: ', $ex->getTrace());
+                        \Illuminate\Support\Facades\Log::debug('Cron bookingInfo15min: ', $ex->getTrace());
                     }
                 })->afterResponse();
             }
@@ -587,8 +587,7 @@ use Spatie\Activitylog\LogOptions;
         */
         \Illuminate\Support\Facades\Log::debug('Inicio cron cancelUnpaids15m');
 
-        $bookings = self::with('clientMain')->where('payment_method_id', 2)
-            ->where('paid', 0)
+        $bookings = self::with('clientMain')->where('status', 3)
             ->get();
 
         foreach($bookings as $booking)
@@ -609,7 +608,7 @@ use Spatie\Activitylog\LogOptions;
 
         }
 
-        \Illuminate\Support\Facades\Log::debug('Fin cron bookingInfo24h');
+        \Illuminate\Support\Facades\Log::debug('Fin cron cancelUnpaids15m');
     }
 
     public static function cancelBookingFull($bookingID)
