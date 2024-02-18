@@ -121,8 +121,8 @@ class MonitorController extends SlugAuthController
 
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function ($query) use ($request) {
-                $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime)
+                $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime)
                     ->where('status', 1));
             })
             ->pluck('monitor_id')
@@ -132,16 +132,16 @@ class MonitorController extends SlugAuthController
                     // Aquí incluimos la lógica para verificar si es un día entero
                     $query->where('full_day', true)
                         ->orWhere(function ($timeQuery) use ($request) {
-                            $timeQuery->whereTime('start_time', '<=',
+                            $timeQuery->whereTime('start_time', '<',
                                 Carbon::createFromFormat('H:i', $request->endTime))
-                                ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                                ->whereTime('end_time', '>', Carbon::createFromFormat('H:i', $request->startTime));
                         });
                 })
                 ->pluck('monitor_id'))
             ->merge(CourseSubgroup::whereHas('courseDate', function ($query) use ($request) {
                 $query->whereDate('date', $request->date)
-                    ->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                    ->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime));
             })
                 ->pluck('monitor_id'))
             ->unique();
