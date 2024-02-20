@@ -7,6 +7,7 @@ use App\Mail\BookingInfoMailer;
 use App\Models\OldModels\BookingUsers2;
 use App\Models\OldModels\School;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
@@ -352,6 +353,27 @@ use Spatie\Activitylog\LogOptions;
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->useLogName('activity');
+    }
+    protected $appends = ['sport'];
+
+    public function getSportAttribute()
+    {
+        // Obtener todos los bookingUsers asociados a este booking
+        $bookingUsers = $this->bookingUsers()->with('course')->get();
+
+        // Obtener los cursos únicos asociados a los bookingUsers
+        $courses = $bookingUsers->pluck('course')->unique();
+
+        if ($courses->count() == 1) {
+            // Si solo hay un curso, devolver el deporte de ese curso
+            return $courses->first()->sport;
+        } elseif ($courses->pluck('sport')->unique()->count() == 1) {
+            // Si hay varios cursos pero todos tienen el mismo deporte, devolver ese deporte
+            return $courses->first()->sport;
+        } else {
+            // Si hay varios cursos con deportes diferentes, devolver 'multiple'
+            return 'multiple';
+        }
     }
 
     /**

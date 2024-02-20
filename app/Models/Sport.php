@@ -26,6 +26,16 @@ use Spatie\Activitylog\LogOptions;
  *          type="string"
  *      ),
  *      @OA\Property(
+ *           property="icon_collective",
+ *           description="Icon when the sport is collective",
+ *           type="string"
+ *       ),
+ *       @OA\Property(
+ *           property="icon_prive",
+ *           description="Icon when the sport is prive",
+ *           type="string"
+ *       ),
+ *      @OA\Property(
  *          property="sport_type",
  *          description="Type of sport",
  *          type="string"
@@ -59,6 +69,8 @@ class Sport extends Model
 
     public $fillable = [
         'name',
+        'icon_collective',
+        'icon_prive',
         'icon_selected',
         'icon_unselected',
         'sport_type'
@@ -66,12 +78,16 @@ class Sport extends Model
 
     protected $casts = [
         'name' => 'string',
+        'icon_collective' => 'string',
+        'icon_prive' => 'string',
         'icon_selected' => 'string',
         'icon_unselected' => 'string'
     ];
 
     public static array $rules = [
         'name' => 'required|string|max:255',
+        'icon_collective' => 'required|string|max:500',
+        'icon_prive' => 'required|string|max:500',
         'icon_selected' => 'required|string|max:500',
         'icon_unselected' => 'required|string|max:500',
         'sport_type' => 'required',

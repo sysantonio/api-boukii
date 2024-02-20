@@ -70,7 +70,9 @@ class CourseController extends AppBaseController
             skip: $request->get('skip'),
             limit: $request->get('limit'),
             pagination: $request->get('perPage'),
-            with: $request->get('with',  ['station', 'sport', 'courseDates.courseGroups.courseSubgroups.bookingUsers', 'courseExtras']),
+            with: $request->get('with',  ['station', 'sport',
+                'courseDates.courseGroups.courseSubgroups.bookingUsers',
+                'courseExtras']),
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
             additionalConditions: function ($query) use ($request) {
@@ -187,7 +189,8 @@ class CourseController extends AppBaseController
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with( 'station','bookingUsers.client.sports',
-            'courseDates.courseGroups.courseSubgroups.monitor', 'courseDates.courseGroups.courseSubgroups.bookingUsers')
+            'courseDates.courseGroups.courseSubgroups.monitor',
+            'courseDates.courseGroups.courseSubgroups.bookingUsers')
             ->where('school_id', $school->id)->find($id);
 
         if (empty($course)) {
