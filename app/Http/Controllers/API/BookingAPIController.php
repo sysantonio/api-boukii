@@ -83,6 +83,12 @@ class BookingAPIController extends AppBaseController
                     });
                 }
 
+                if ($request->has('courseId')) {
+                    $query->whereHas('bookingUsers', function ($subQuery) use ($request) {
+                        $subQuery->where('course_id', $request->courseId);
+                    });
+                }
+
                 // Filtrar por reservas que tienen todos los bookingUsers con courseDate anteriores al día de hoy
                 if ($request->has('finished')) {
                     $today = now()->format('Y-m-d H:i:s');
