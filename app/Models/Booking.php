@@ -364,16 +364,32 @@ use Spatie\Activitylog\LogOptions;
         // Obtener los cursos únicos asociados a los bookingUsers
         $courses = $bookingUsers->pluck('course')->unique();
 
-        if ($courses->count() == 1) {
-            // Si solo hay un curso, devolver el deporte de ese curso
-            return $courses->first()->sport;
-        } elseif ($courses->pluck('sport')->unique()->count() == 1) {
-            // Si hay varios cursos pero todos tienen el mismo deporte, devolver ese deporte
-            return $courses->first()->sport;
-        } else {
-            // Si hay varios cursos con deportes diferentes, devolver 'multiple'
-            return 'multiple';
+        // Verificar si todos los bookingUsers tienen el mismo course_type
+        $courseType = $courses->first()->course_type ?? null;
+        $sameCourseType = $courses->every(function ($course) use ($courseType) {
+            return $course->course_type === $courseType;
+        });
+
+        if ($sameCourseType && $courses->count() == 1) {
+            // Si solo hay un curso y todos tienen el mismo course_type
+            // devolver el deporte de ese curso
+            if ($courseType == 1) {
+                return $courses->first()->sport->icon_collective;
+            } elseif ($courseType == 2) {
+                return $courses->first()->sport->icon_prive;
+            }
+        } elseif ($sameCourseType && $courses->pluck('sport')->unique()->count() == 1) {
+            // Si hay varios cursos pero todos tienen el mismo course_type y el mismo deporte
+            // devolver ese deporte
+            if ($courseType == 1) {
+                return $courses->first()->sport->icon_collective;
+            } elseif ($courseType == 2) {
+                return $courses->first()->sport->icon_prive;
+            }
         }
+        // Si hay varios cursos con diferentes course_type o deportes diferentes
+        // devolver 'multiple'
+        return 'multiple';
     }
 
     /**
