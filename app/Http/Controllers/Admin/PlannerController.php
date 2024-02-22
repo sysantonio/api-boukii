@@ -7,6 +7,7 @@ use App\Models\BookingUser;
 use App\Models\CourseSubgroup;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
+use App\Models\MonitorSportAuthorizedDegree;
 use App\Models\MonitorsSchool;
 use App\Models\Station;
 use Carbon\Carbon;
@@ -222,6 +223,18 @@ class PlannerController extends AppBaseController
                 ->where('active_school', 1)
                 ->get();
             $monitors = $monitorSchools->pluck('monitor');
+        }
+
+        foreach ($monitors as $monitor) {
+
+            // Recorrer los deportes del monitor
+            foreach ($monitor->sports as $sport) {
+
+                $sport->authorizedDegrees = MonitorSportAuthorizedDegree::whereHas('monitorSport',
+                    function ($q) use($sport, $schoolId, $monitor){
+                    $q->where('sport_id', $sport->id)->where('school_id', $schoolId)->where('monitor_id', $monitor->id);
+                })->with('degree')->get();
+            }
         }
 
         // Obtén los resultados para las reservas y los MonitorNwd
