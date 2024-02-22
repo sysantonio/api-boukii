@@ -97,6 +97,7 @@ return [
         'school_team' => 'El equipo de la Escuela Suiza de Esquí Charmey',
         'email' => 'ess@charmey.ch',
         'phone' => '+41 (0)26 927 55 25',
+        'unknown' => 'Por determinar'
     ],
     'bookingInfoChange' => [
         'subject' => 'Tu reserva en Boukii ha cambiado',

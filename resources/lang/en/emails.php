@@ -87,7 +87,8 @@ return [
         'thank_you' => 'Thank you for your registration, and we look forward to welcoming you!',
         'school_team' => 'The Swiss Ski School Charmey Team',
         'email' => 'ess@charmey.ch',
-        'phone' => '+41 (0)26 927 55 25'
+        'phone' => '+41 (0)26 927 55 25',
+        'unknown' => 'To be defined'
     ],
     'bookingInfoChange' => [
         'subject' => 'Your reservation at Boukii has changed',

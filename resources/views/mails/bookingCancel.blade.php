@@ -7,7 +7,7 @@
     <p>
         {{ trans('emails.bookingCancel.cancellation_greeting', ['userName' => $userName]) }},
         <br>
-        {{ trans('emails.bookingCancel.cancellation_intro', ['reference' => $reference]) }}
+        {!! trans('emails.bookingCancel.cancellation_intro', ['reference' => $reference]) !!}
         @if (count($courses) == 1)
             {{ trans('emails.bookingCancel.single_course') }}
         @else
@@ -45,8 +45,8 @@
             @foreach ($client as $courseKey=>$course)
                 @foreach ($course as $keyDegree => $degree)
                     @foreach ($degree as $keyDate => $courseDate)
-                        {{ \Carbon\Carbon::parse($courseDate[0]['courseDate']['date'])->format('d-m-Y') }}
-                        {{$courseDate[0]['courseDate']['hour_start']}}  - {{$courseDate[0]['courseDate']['hour_end']}}
+                        {{ \Carbon\Carbon::parse($courseDate[0]['date'])->format('d-m-Y') }}
+                        {{$courseDate[0]['hour_start']}}  - {{$courseDate[0]['hour_end']}}
                         <br>
                         <li>{{ __('emails.bookingCreate.instructor', ['monitor' => isset($courseDate[0]['monitor']) ? $courseDate[0]['monitor']['full_name'] : 'unknown']) }}
                             .
