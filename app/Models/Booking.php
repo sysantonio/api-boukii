@@ -368,7 +368,10 @@ use Spatie\Activitylog\LogOptions;
             // Verificar si todos los bookingUsers tienen el mismo course_type
             $courseType = $courses->first()->course_type ?? null;
             $sameCourseType = $courses->every(function ($course) use ($courseType) {
-                return $course->course_type === $courseType;
+                if ($course && isset($course->course_type)) {
+                    return $course->course_type === $courseType;
+                }
+                return false;
             });
 
             if ($sameCourseType && $courses->count() == 1) {
