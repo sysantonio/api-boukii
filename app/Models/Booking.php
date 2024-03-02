@@ -364,33 +364,37 @@ use Spatie\Activitylog\LogOptions;
         // Obtener los cursos únicos asociados a los bookingUsers
         $courses = $bookingUsers->pluck('course')->unique();
 
-        // Verificar si todos los bookingUsers tienen el mismo course_type
-        $courseType = $courses->first()->course_type ?? null;
-        $sameCourseType = $courses->every(function ($course) use ($courseType) {
-            return $course->course_type === $courseType;
-        });
+        if ($courses->isNotEmpty()) {
+            // Verificar si todos los bookingUsers tienen el mismo course_type
+            $courseType = $courses->first()->course_type ?? null;
+            $sameCourseType = $courses->every(function ($course) use ($courseType) {
+                return $course->course_type === $courseType;
+            });
 
-        if ($sameCourseType && $courses->count() == 1) {
-            // Si solo hay un curso y todos tienen el mismo course_type
-            // devolver el deporte de ese curso
-            if ($courseType == 1) {
-                return $courses->first()->sport->icon_collective;
-            } elseif ($courseType == 2) {
-                return $courses->first()->sport->icon_prive;
-            }
-        } elseif ($sameCourseType && $courses->pluck('sport')->unique()->count() == 1) {
-            // Si hay varios cursos pero todos tienen el mismo course_type y el mismo deporte
-            // devolver ese deporte
-            if ($courseType == 1) {
-                return $courses->first()->sport->icon_collective;
-            } elseif ($courseType == 2) {
-                return $courses->first()->sport->icon_prive;
+            if ($sameCourseType && $courses->count() == 1) {
+                // Si solo hay un curso y todos tienen el mismo course_type
+                // devolver el deporte de ese curso
+                if ($courseType == 1) {
+                    return $courses->first()->sport->icon_collective;
+                } elseif ($courseType == 2) {
+                    return $courses->first()->sport->icon_prive;
+                }
+            } elseif ($sameCourseType && $courses->pluck('sport')->unique()->count() == 1) {
+                // Si hay varios cursos pero todos tienen el mismo course_type y el mismo deporte
+                // devolver ese deporte
+                if ($courseType == 1) {
+                    return $courses->first()->sport->icon_collective;
+                } elseif ($courseType == 2) {
+                    return $courses->first()->sport->icon_prive;
+                }
             }
         }
+
         // Si hay varios cursos con diferentes course_type o deportes diferentes
         // devolver 'multiple'
         return 'multiple';
     }
+
 
     /**
      * Generate an unique reference for Payrexx - only for bookings that wanna pay this way
