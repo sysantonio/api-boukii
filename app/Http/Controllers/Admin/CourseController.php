@@ -87,8 +87,8 @@ class CourseController extends AppBaseController
 
                 $query->when($request->has('finished'), function ($query) {
                     $today = now()->format('Y-m-d');
-                    $query->whereHas('courseDates', function ($subquery) use ($today) {
-                        $subquery->where('date', '<', $today);
+                    $query->whereDoesntHave('courseDates', function ($subquery) use ($today) {
+                        $subquery->where('date', '>=', $today);
                     });
                 });
 
