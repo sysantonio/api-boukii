@@ -227,6 +227,36 @@ class BookingUser extends Model
         'deleted_at' => 'nullable'
     ];
 
+    //protected $appends = ['sport'];
+
+    public function getSportAttribute()
+    {
+        // Obtener el curso asociado a este bookingUser
+        $course = $this->course;
+
+        if ($course) {
+            $courseType = $course->course_type ?? null;
+
+            // Verificar si hay un course_type definido
+            if ($courseType !== null) {
+                // Devolver el deporte basado en el course_type
+                switch ($courseType) {
+                    case 1:
+                        return $course->sport->icon_collective;
+                        break;
+                    case 2:
+                        return $course->sport->icon_prive;
+                        break;
+                    default:
+                        return 'multiple';
+                }
+            }
+        }
+
+        // Si no se puede determinar el deporte, devolver 'multiple'
+        return 'multiple';
+    }
+
     public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Client::class, 'client_id');

@@ -114,6 +114,15 @@ abstract class BaseRepository
                         });
                     });
                 }
+
+                if (strpos(get_class($this->model), 'Voucher') !== false) {
+                    $query->orWhere(function($q) use($value, $search) {
+                        $q->whereHas('client', function ($subQuery) use ($search) {
+                            $subQuery->where('first_name', 'like', "%" . $search . "%")
+                                ->orWhere('last_name', 'like', "%" . $search . "%");
+                        });
+                    });
+                }
             });
 
         }
