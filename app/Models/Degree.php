@@ -29,6 +29,12 @@ use Spatie\Activitylog\LogOptions;
  *           nullable=false
  *       ),
  *       @OA\Property(
+ *            property="image",
+ *            description="Image of the degree",
+ *            type="string",
+ *            nullable=false
+ *        ),
+ *       @OA\Property(
  *           property="annotation",
  *           description="Additional annotation, null for unused at this school",
  *           type="string",
@@ -115,6 +121,7 @@ class Degree extends Model
     public $fillable = [
         'league',
         'level',
+        'image',
         'name',
         'annotation',
         'degree_order',
@@ -130,6 +137,7 @@ class Degree extends Model
     protected $casts = [
         'league' => 'string',
         'level' => 'string',
+        'image' => 'string',
         'name' => 'string',
         'annotation' => 'string',
         'color' => 'string',
@@ -139,6 +147,7 @@ class Degree extends Model
     public static array $rules = [
         'league' => 'required|string|max:255',
         'level' => 'required|string|max:255',
+        'image' => 'nullable',
         'name' => 'required|string|max:100',
         'annotation' => 'nullable|string|max:65535',
         'degree_order' => 'required',
