@@ -10,6 +10,7 @@ use App\Models\Degree;
 use App\Repositories\DegreeRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class DegreeController
@@ -103,6 +104,26 @@ class DegreeAPIController extends AppBaseController
     public function store(CreateDegreeAPIRequest $request): JsonResponse
     {
         $input = $request->all();
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'degree/image_'.time().'.'.$type;
+            Storage::disk('public')->put($imageName, $imageData);
+            $input['image'] = url(Storage::url($imageName));
+        }
 
         $degree = $this->degreeRepository->create($input);
 
@@ -206,6 +227,28 @@ class DegreeAPIController extends AppBaseController
 
         if (empty($degree)) {
             return $this->sendError('Degree not found');
+        }
+
+        if(!empty($input['image'])) {
+            $base64Image = $request->input('image');
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
+
+                if ($imageData === false) {
+                    $this->sendError('base64_decode failed');
+                }
+            } else {
+                $this->sendError('did not match data URI with image data');
+            }
+
+            $imageName = 'degree/image_'.time().'.'.$type;
+            Storage::disk('public')->put($imageName, $imageData);
+            $input['image'] = url(url(Storage::url($imageName)));
+        } else {
+            $input = $request->except('image');
         }
 
         $degree = $this->degreeRepository->update($input, $id);
