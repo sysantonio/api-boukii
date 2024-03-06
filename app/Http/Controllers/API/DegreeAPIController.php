@@ -246,8 +246,6 @@ class DegreeAPIController extends AppBaseController
             } else {
                 $this->sendError('did not match data URI with image data');
             }
-
-
         } else {
             $input = $request->except('image');
         }

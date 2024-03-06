@@ -251,13 +251,12 @@ class UserAPIController extends AppBaseController
                 if ($imageData === false) {
                     $this->sendError('base64_decode failed');
                 }
+                $imageName = 'user/image_'.time().'.'.$type;
+                Storage::disk('public')->put($imageName, $imageData);
+                $input['image'] = url(Storage::url($imageName));
             } else {
                 $this->sendError('did not match data URI with image data');
             }
-
-            $imageName = 'user/image_'.time().'.'.$type;
-            Storage::disk('public')->put($imageName, $imageData);
-            $input['image'] = url(Storage::url($imageName));
         } else {
             $input = $request->except('image');
         }

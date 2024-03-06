@@ -240,13 +240,12 @@ class CourseAPIController extends AppBaseController
                 if ($imageData === false) {
                     $this->sendError('base64_decode failed');
                 }
+                $imageName = 'course/image_'.time().'.'.$type;
+                Storage::disk('public')->put($imageName, $imageData);
+                $input['image'] = url(url(Storage::url($imageName)));
             } else {
                 $this->sendError('did not match data URI with image data');
             }
-
-            $imageName = 'course/image_'.time().'.'.$type;
-            Storage::disk('public')->put($imageName, $imageData);
-            $input['image'] = url(url(Storage::url($imageName)));
         } else {
             $input = $request->except('image');
         }
