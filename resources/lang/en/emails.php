@@ -14,6 +14,7 @@ return [
             'plural_participants' => 'Participants:',
             'instructor' => 'Instructor: :monitor',
             'refund_guarantee' => '+ Refund Guarantee',
+            'not_paid' => 'Pending payment',
             'booking_notes' => ':bookingNotes',
             'sincerely' => 'Sincerely,',
             'school_name' => 'The :schoolName School'],

@@ -14,6 +14,7 @@ return [
         'plural_participants' => 'Participants :',
         'instructor' => 'Instructeur : :monitor',
         'refund_guarantee' => '+ Garantie de remboursement',
+        'not_paid' => 'Paiement en attente',
         'booking_notes' => ':bookingNotes',
         'sincerely' => 'Cordialement,',
         'school_name' => 'École :schoolName',

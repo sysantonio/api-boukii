@@ -82,6 +82,12 @@
 
     <br>
 
+    @if ($paid)
+        <h3>{{ __('emails.bookingCreate.not_paid') }}</h3>
+    @endif
+
+    <br>
+
     <p>
         {{ __('emails.bookingCreate.booking_notes', ['bookingNotes' => $bookingNotes]) }}
     </p>

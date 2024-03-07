@@ -22,6 +22,7 @@ class BookingCreateMailer extends Mailable
     private $schoolData;
     private $bookingData;
     private $userData;
+    private $paid;
 
 
     /**
@@ -32,11 +33,12 @@ class BookingCreateMailer extends Mailable
      * @param \App\Models\User $userData Who
      * @return void
      */
-    public function __construct($schoolData, $bookingData, $userData)
+    public function __construct($schoolData, $bookingData, $userData, $paid)
     {
         $this->schoolData = $schoolData;
         $this->bookingData = $bookingData;
         $this->userData = $userData;
+        $this->paid = $paid;
     }
 
     /**
@@ -72,7 +74,8 @@ class BookingCreateMailer extends Mailable
             'courses' => $this->bookingData->parseBookedGroupedCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'actionURL' => null,
-            'footerView' => $footerView
+            'footerView' => $footerView,
+            'paid'=> $this->paid
         ];
 
         $subject = __('emails.bookingCreate.subject');

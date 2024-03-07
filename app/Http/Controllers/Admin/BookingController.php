@@ -225,7 +225,7 @@ class BookingController extends AppBaseController
 
         try {
             Mail::to($booking->clientMain->email)
-                ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain));
+                ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain, $request['paid']));
         } catch (\Exception $ex) {
             \Illuminate\Support\Facades\Log::debug('BookingControllerMail->createBooking BookingCreateMailer: ' .
                 $ex->getMessage());

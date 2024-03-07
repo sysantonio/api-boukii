@@ -130,7 +130,8 @@ class PayrexxController
                                                 ->send(new BookingCreateMailer(
                                                     $schoolData,
                                                     $booking,
-                                                    $buyerUser
+                                                    $buyerUser,
+                                                    true
                                                 ));
                                         } catch (\Exception $ex) {
                                             \Illuminate\Support\Facades\Log::debug('BookingController->createBooking BookingCreateMailer: ' .

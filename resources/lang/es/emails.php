@@ -14,9 +14,9 @@ return [
         'plural_participants' => 'Participantes:',
         'instructor' => 'Instructor: :monitor',
         'refund_guarantee' => '+ Garantía de reembolso',
+        'not_paid' => 'Pendiente de pago',
         'booking_notes' => ':bookingNotes',
         'sincerely' => 'Atentamente,',
-        'booking_notes' => ':bookingNotes',
         'school_name' => 'La escuela :schoolName',
     ],
     'bookingPay' => [
