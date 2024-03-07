@@ -10,6 +10,7 @@ use App\Models\Mail;
 use Illuminate\Mail\Mailable;
 
 use App\Models\Language;
+use Illuminate\Support\Facades\Log;
 
 /**
  * When a new Booking is created, whatever the chosen payment method,
@@ -73,6 +74,8 @@ class BookingCreateMailer extends Mailable
             'actionURL' => null,
             'footerView' => $footerView
         ];
+
+        Log::debug('Check templateData Create', $templateData);
 
         $subject = __('emails.bookingCreate.subject');
         \App::setLocale($oldLocale);

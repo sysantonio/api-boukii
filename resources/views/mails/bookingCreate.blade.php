@@ -5,7 +5,7 @@
         {!! $titleTemplate !!}
     </p>
     <p>
-        {{ __('emails.bookingCreate.greeting', ['userName' => $userName]) }},
+        {{ __('emails.bookingCreate.greeting', ['userName' => $userName]) }}
         <br>
         {!!  __('emails.bookingCreate.reservation_request', ['reference' => $reference])  !!}
         @if (count($courses) == 1)
