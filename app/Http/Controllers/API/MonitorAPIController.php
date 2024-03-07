@@ -76,12 +76,25 @@ class MonitorAPIController extends AppBaseController
                 }
             }
         );
-        $monitors->load('sports');
 
-        // Elimina los deportes duplicados
-        $monitors->each(function ($monitor) {
-            $monitor->setRelation('sports', $monitor->sports->unique('id'));
-        });
+        if ($request->has('with') && in_array('sports', $request->get('with')) && $request->has('school_id')) {
+            $monitors->load('sports');
+
+            $monitors->each(function ($monitor) use ($request) {
+                $sportsDegrees = collect(); // Inicializamos una colección vacía para los deportes grados
+                $degrees = \App\Models\MonitorSportsDegree::where('school_id', $request['school_id'])
+                    ->where('monitor_id', $monitor->id)
+                    ->with('sport') // Cargar la relación 'sport'
+                    ->get(); // Obtener los objetos de deportes grados en lugar de solo los IDs
+
+                // Agregamos los deportes grados encontrados a la colección
+                $sportsDegrees = $sportsDegrees->merge($degrees);
+
+                // Asignamos la colección de deportes grados al monitor
+                $monitor->setRelation('sports', $sportsDegrees->pluck('sport'));
+            });
+        }
+
         return $this->sendResponse($monitors, 'Monitors retrieved successfully');
     }
 
