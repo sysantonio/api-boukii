@@ -62,6 +62,15 @@
 
                 @endforeach
             @endforeach
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tbody>
+                <tr>
+                    <td align="center">
+                        <a href="{{ $client->first()->first()->first()->first()['client']['id'] }}" target="_blank"><img src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{ $client->first()->first()->first()->first()['client']['id'] }}"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
             <hr>
 
         @endforeach

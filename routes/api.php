@@ -193,9 +193,9 @@ Route::any('/update-clients-schools', function () {
     return response()->json(['message' => 'School IDs updated successfully']);
 });
 
-Route::any('/mailtest', function () {
+Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
-    $bookingData = \App\Models\Booking::find(2115);
+    $bookingData = \App\Models\Booking::find($bookingId);
     $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
         'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
         'bookingUsers.courseDate']);
@@ -210,11 +210,11 @@ Route::any('/mailtest', function () {
     \App::setLocale($userLocale);
 
 
-    $templateView = 'mails.bookingPay';
+    $templateView = 'mails.bookingCreate';
 
     $footerView = 'mails.footer';
 
-    $templateMail = Mail::where('type', 'booking_cancel')->where('school_id', $schoolData->id)
+    $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $schoolData->id)
         ->where('lang', $userLocale)->first();
 
     $voucherCode = "";
@@ -231,7 +231,7 @@ Route::any('/mailtest', function () {
         'schoolLogo' => $schoolData->logo,
         'schoolEmail' => $schoolData->contact_email,
         'schoolConditionsURL' => $schoolData->conditions_url,
-        'reference' => '#' . $bookingData->id,
+        'reference' =>  $bookingData->id,
         'bookingNotes' => $bookingData->notes,
         'courses' => $bookingData->parseBookedGroupedCourses(),
         'voucherCode' => $voucherCode,
