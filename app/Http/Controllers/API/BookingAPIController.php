@@ -158,9 +158,11 @@ class BookingAPIController extends AppBaseController
         $input = $request->all();
 
         $booking = $this->bookingRepository->create($input);
+        Log::debug('Check booking after create', $booking->toArray());
         $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
             'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
             'bookingUsers.courseDate']);
+        Log::debug('Check booking after create and loadmissing', $booking->toArray());
         $logData = [
             'booking_id' => $booking->id,
             'action' => 'created by api',
