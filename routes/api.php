@@ -247,8 +247,9 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
 
     $subject = __('emails.bookingInfo.subject');
+    \App::setLocale($oldLocale);
 
-    return view($templateView)->with($templateData);
+    return view($templateView)->subject($subject)->with($templateData);
 });
 
 Route::post('payrexxNotification', [\App\Http\Controllers\PayrexxController::class, 'processNotification'])

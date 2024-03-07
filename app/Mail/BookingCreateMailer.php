@@ -75,8 +75,6 @@ class BookingCreateMailer extends Mailable
             'footerView' => $footerView
         ];
 
-        Log::debug('Check templateData Create', $templateData);
-
         $subject = __('emails.bookingCreate.subject');
         \App::setLocale($oldLocale);
 

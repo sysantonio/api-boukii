@@ -6,6 +6,7 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
 use App\Mail\BookingCancelMailer;
+use App\Mail\BookingCreateMailer;
 use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingUser;
@@ -14,6 +15,7 @@ use App\Models\Voucher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Payrexx\Payrexx;
 use Response;
 use Validator;
@@ -214,6 +216,25 @@ class BookingController extends AppBaseController
         return $this->sendError('Invalid payment method');
     }
 
+    public function mailBooking(Request $request, $id): JsonResponse
+    {
+        $booking = Booking::find($id);
+        if (!$booking) {
+            return $this->sendError('Booking not found', [], 404);
+        }
+
+        try {
+            Mail::to($booking->clientMain->email)
+                ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain));
+        } catch (\Exception $ex) {
+            \Illuminate\Support\Facades\Log::debug('BookingControllerMail->createBooking BookingCreateMailer: ' .
+                $ex->getMessage());
+            return $this->sendError('Error sending mail: '. $ex->getMessage());
+        }
+
+        return $this->sendResponse([], 'Mail sent correctly');
+    }
+
     /**
      * @OA\Post(
      *      path="/admin/bookings/refunds/{id}",
@@ -359,10 +380,10 @@ class BookingController extends AppBaseController
             'bookingUsers.monitor', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
             'bookingUsers.courseDate', 'clientMain']);
 
-/*        foreach ($bookingUsers as $bookingUser) {
-            $bookingUser->status = 2;
-            $bookingUser->save();
-        }*/
+        /*        foreach ($bookingUsers as $bookingUser) {
+                    $bookingUser->status = 2;
+                    $bookingUser->save();
+                }*/
 
         // Tell buyer user by email
         dispatch(function () use ($school, $booking, $bookingUsers) {
