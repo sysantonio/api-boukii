@@ -70,6 +70,7 @@ class BookingInfoUpdateMailer extends Mailable
             'footerView' => $footerView
         ];
 
+        Log::debug('Check templateData update', $templateData);
         $subject = __('emails.bookingInfo.subject');
         \App::setLocale($oldLocale);
 
