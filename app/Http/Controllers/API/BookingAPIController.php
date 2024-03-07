@@ -168,7 +168,7 @@ class BookingAPIController extends AppBaseController
 
         BookingLog::create($logData);
         $schoolData = $booking->school;
-        $buyerUser = User::find($booking->user_main_id);
+        $buyerUser = User::find($booking->client_main_id);
         dispatch(function () use ($schoolData, $booking, $buyerUser) {
             // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
             try {

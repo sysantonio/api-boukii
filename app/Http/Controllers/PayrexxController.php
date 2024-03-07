@@ -120,7 +120,7 @@ class PayrexxController
 
                             if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED) {
 
-                                $buyerUser = User::find($booking->user_main_id);
+                                $buyerUser = User::find($booking->client_main_id);
                                 if ($booking->payment_method_id == 2 && $booking->source == 'web') {
                                     // As of 2022-10-25 tell buyer user by email at this point, even before payment, and continue
                                     dispatch(function () use ($schoolData, $booking, $buyerUser) {
