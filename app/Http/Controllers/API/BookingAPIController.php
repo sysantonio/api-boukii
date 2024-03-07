@@ -6,9 +6,11 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\API\CreateBookingAPIRequest;
 use App\Http\Requests\API\UpdateBookingAPIRequest;
 use App\Http\Resources\API\BookingResource;
+use App\Mail\BookingCreateMailer;
 use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
 use App\Models\BookingLog;
+use App\Models\User;
 use App\Repositories\BookingRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -165,6 +167,23 @@ class BookingAPIController extends AppBaseController
         ];
 
         BookingLog::create($logData);
+        $schoolData = $booking->school;
+        $buyerUser = User::find($booking->user_main_id);
+        dispatch(function () use ($schoolData, $booking, $buyerUser) {
+            // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+            try {
+                \Mail::to($buyerUser->email)
+                    ->send(new BookingCreateMailer(
+                        $schoolData,
+                        $booking,
+                        $buyerUser
+                    ));
+            } catch (\Exception $ex) {
+                \Illuminate\Support\Facades\Log::debug('BookingControllerApi->createBooking BookingCreateMailer: ' .
+                    $ex->getMessage());
+            }
+        })->afterResponse();
+
 
         return $this->sendResponse(new BookingResource($booking), 'Booking saved successfully');
     }
