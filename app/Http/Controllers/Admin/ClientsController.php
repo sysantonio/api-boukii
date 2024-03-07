@@ -148,13 +148,16 @@ class ClientsController extends AppBaseController
                 additionalConditions: function($query) use($school, $search) {
                     $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school) {
                         $query->where('school_id', $school->id);
-                    })->orWhereHas('utilizers', function ($subQuery) use ($school, $search) {
-                        $subQuery->where('first_name', 'like', "%" . $search . "%")
-                            ->orWhere('last_name', 'like', "%" . $search . "%")
-                            ->whereHas('clientsSchools', function ($query) use($school) {
-                                $query->where('school_id', $school->id);
-                            });
                     });
+                    if ($search) {
+                        $query->orWhereHas('utilizers', function ($subQuery) use ($school, $search) {
+                            $subQuery->where('first_name', 'like', "%" . $search . "%")
+                                ->orWhere('last_name', 'like', "%" . $search . "%")
+                                ->whereHas('clientsSchools', function ($query) use($school) {
+                                    $query->where('school_id', $school->id);
+                                });
+                        });
+                    }
                 }
             );
 

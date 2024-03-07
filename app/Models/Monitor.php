@@ -431,7 +431,7 @@ class Monitor extends Model
             'id', // Clave foránea en el modelo final
             'id', // Clave local en el modelo inicial
             'sport_id' // Clave local en el modelo intermedio
-        );
+        )->distinct();
     }
 
     public function monitorsSchools(): \Illuminate\Database\Eloquent\Relations\HasMany
