@@ -158,7 +158,9 @@ class BookingAPIController extends AppBaseController
         $input = $request->all();
 
         $booking = $this->bookingRepository->create($input);
-
+        $booking->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
+            'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+            'bookingUsers.courseDate']);
         $logData = [
             'booking_id' => $booking->id,
             'action' => 'created by api',
@@ -167,24 +169,17 @@ class BookingAPIController extends AppBaseController
         ];
 
         BookingLog::create($logData);
-        $schoolData = $booking->school;
-        $buyerUser = User::find($booking->client_main_id);
-        dispatch(function () use ($schoolData, $booking, $buyerUser) {
+
+        dispatch(function () use ($booking) {
             // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
             try {
-                \Mail::to($buyerUser->email)
-                    ->send(new BookingCreateMailer(
-                        $schoolData,
-                        $booking,
-                        $buyerUser
-                    ));
+                Mail::to($booking->clientMain->email)
+                    ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain));
             } catch (\Exception $ex) {
                 \Illuminate\Support\Facades\Log::debug('BookingControllerApi->createBooking BookingCreateMailer: ' .
                     $ex->getMessage());
             }
         })->afterResponse();
-
-
         return $this->sendResponse(new BookingResource($booking), 'Booking saved successfully');
     }
 
