@@ -4,7 +4,7 @@ return [
     'bookingCreate' => [
         'subject' => 'Votre réservation chez Boukii',
         'greeting' => 'Bonjour :userName,',
-        'reservation_request' => 'Nous avons reçu une demande de réservation avec la référence :reference, pour',
+        'reservation_request' => 'Nous avons reçu une demande de réservation avec la référence <strong>:reference</strong>, pour',
         'singular_course' => 'le cours suivant :',
         'plural_courses' => 'les cours suivants :',
         'course_count' => ':countx :name',
@@ -33,6 +33,7 @@ return [
         'refund_guarantee' => '+ Garantie de remboursement',
         'payment_notice' => 'Pour compléter cette réservation, vous devez payer :amount :currency.',
         'payment_instructions' => 'Pour cela, scannez ou cliquez sur ce QR.',
+        'booking_notes' => ':bookingNotes',
         'sincerely' => 'Cordialement,',
         'school_name' => 'École :schoolName',
     ],
@@ -68,7 +69,7 @@ return [
     'bookingNoticePay' => [
         'subject' => 'Payez votre réservation chez Boukii',
         'greeting' => 'Bonjour :userName,',
-        'payment_deadline' => 'Vous avez 24 heures pour effectuer le paiement de la réservation avec la référence :reference.',
+        'payment_deadline' => 'Vous avez 24 heures pour effectuer le paiement de la réservation avec la référence <strong>:reference</strong>.',
         'payment_notice' => 'Pour compléter cette réservation, vous devez payer :amount :currency.',
         'payment_instructions' => 'Pour cela, scannez ou cliquez sur ce code QR.',
         'regards' => 'Cordialement, École :schoolName',
@@ -76,12 +77,13 @@ return [
     'bookingInfo' => [
         'subject' => 'Votre réservation chez Boukii',
         'greeting' => 'Bonjour :userName,',
-        'reservation_request' => 'Nous vous envoyons cet e-mail pour vous rappeler votre réservation avec la référence :reference, pour',
+        'reservation_request' => 'Nous vous envoyons cet e-mail pour vous rappeler votre réservation avec la référence <strong>:reference</strong>, pour',
         'singular_course' => 'le cours suivant :',
         'plural_courses' => 'les cours suivants :',
         'course_count' => ':countx :name',
         'singular_date' => 'Date :',
         'plural_dates' => 'Dates :',
+        'forfait' => 'Forfait',
         'singular_participant' => 'Participant :',
         'plural_participants' => 'Participants :',
         'collective_courses' => 'Cours collectifs',
@@ -97,7 +99,7 @@ return [
     'bookingInfoChange' => [
         'subject' => 'Votre réservation chez Boukii a été modifiée',
         'greeting' => 'Bonjour :userName,',
-        'reservation_request' => 'Nous vous envoyons cet e-mail pour vous informer que votre réservation avec la référence :reference a été modifiée, pour',
+        'reservation_request' => 'Nous vous envoyons cet e-mail pour vous informer que votre réservation avec la référence <strong>:reference</strong> a été modifiée, pour',
         'singular_course' => 'le cours suivant :',
         'plural_courses' => 'les cours suivants :',
         'course_count' => ':countx :name',
@@ -112,6 +114,8 @@ return [
         'thank_you' => 'Merci pour votre inscription, et nous sommes impatients de vous accueillir !',
         'school_team' => "L'équipe de l'École Suisse de Ski de Charmey",
         'email' => 'ess@charmey.ch',
+        'degree' => 'Degré',
+        'extras' => 'Suppléments',
         'phone' => '+41 (0)26 927 55 25'
     ],
     'footer' => [

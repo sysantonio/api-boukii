@@ -7,7 +7,7 @@
     <p>
         {{ __('emails.bookingInfo.greeting', ['userName' => $userName]) }},
         <br>
-        {{ __('emails.bookingInfo.reservation_request', ['reference' => $reference]) }}
+        {!!  __('emails.bookingInfo.reservation_request', ['reference' => $reference]) !!}
         @if (count($courses) == 1)
             {{ __('emails.bookingInfo.singular_course') }}
         @else
@@ -62,6 +62,15 @@
 
                 @endforeach
             @endforeach
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tbody>
+                <tr>
+                    <td align="center">
+                        <a href="{{ $client->first()->first()->first()->first()['client']['id'] }}" target="_blank"><img src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{ $client->first()->first()->first()->first()['client']['id'] }}"></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
             <hr>
 
         @endforeach
@@ -77,8 +86,15 @@
         {{ __('emails.bookingInfo.booking_notes', ['bookingNotes' => $bookingNotes]) }}
     </p>
 
+
     <p>
         {!! $bodyTemplate !!}
     </p>
 
+    <p>
+        {{ __('emails.bookingPay.sincerely', ['schoolName' => $schoolName]) }}
+    </p>
+    <p>
+        {{ __('emails.bookingPay.school_name', ['schoolName' => $schoolName]) }}
+    </p>
 @endsection

@@ -7,7 +7,7 @@
     <p>
         {{ __('emails.bookingPay.greeting', ['userName' => $userName]) }},
         <br>
-        {{ __('emails.bookingPay.payment_deadline', ['reference' => $reference]) }}
+        {!!  __('emails.bookingNoticePay.payment_deadline', ['reference' => $reference]) !!}
     </p>
 
     <p>

@@ -1,15 +1,10 @@
-
-Aquí tienes la traducción al español de las claves que proporcionaste:
-
-php
-Copy code
 <?php
 
 return [
     'bookingCreate' => [
         'subject' => 'Tu reserva en Boukii',
         'greeting' => 'Hola :userName,',
-        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia :reference, para',
+        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia <strong>:reference</strong>, para',
         'singular_course' => 'el siguiente curso:',
         'plural_courses' => 'los siguientes cursos:',
         'course_count' => ':countx :name',
@@ -21,12 +16,13 @@ return [
         'refund_guarantee' => '+ Garantía de reembolso',
         'booking_notes' => ':bookingNotes',
         'sincerely' => 'Atentamente,',
+        'booking_notes' => ':bookingNotes',
         'school_name' => 'La escuela :schoolName',
     ],
     'bookingPay' => [
         'subject' => 'Paga tu reserva en Boukii',
         'greeting' => 'Hola :userName,',
-        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia :reference, para',
+        'reservation_request' => 'Hemos recibido una solicitud de reserva con referencia <strong>:reference</strong>, para',
         'singular_course' => 'el siguiente curso:',
         'plural_courses' => 'los siguientes cursos:',
         'course_count' => ':countx :name',
@@ -73,7 +69,7 @@ return [
     'bookingNoticePay' => [
         'subject' => 'Paga tu reserva en Boukii',
         'greeting' => 'Hola :userName,',
-        'payment_deadline' => 'Tienes 24 horas para realizar el pago de la reserva con referencia :reference.',
+        'payment_deadline' => 'Tienes 24 horas para realizar el pago de la reserva con referencia <strong>:reference</strong>.',
         'payment_notice' => 'Para completar esta reserva, debes pagar :amount :currency.',
         'payment_instructions' => 'Para hacerlo, escanea o haz clic en este código QR.',
         'regards' => 'Atentamente, Escuela :schoolName',
@@ -81,12 +77,13 @@ return [
     'bookingInfo' => [
         'subject' => 'Tu reserva en Boukii',
         'greeting' => 'Hola :userName,',
-        'reservation_request' => 'Te enviamos este correo electrónico para recordarte tu reserva con referencia :reference, para',
+        'reservation_request' => 'Te enviamos este correo electrónico para recordarte tu reserva con referencia <strong>:reference</strong>, para',
         'singular_course' => 'el siguiente curso:',
         'plural_courses' => 'los siguientes cursos:',
         'course_count' => ':countx :name',
         'singular_date' => 'Fecha:',
         'plural_dates' => 'Fechas:',
+        'forfait' => 'Forfait',
         'singular_participant' => 'Participante:',
         'plural_participants' => 'Participantes:',
         'collective_courses' => 'Cursos colectivos',
@@ -96,13 +93,15 @@ return [
         'thank_you' => 'Gracias por tu inscripción y esperamos darte la bienvenida.',
         'school_team' => 'El equipo de la Escuela Suiza de Esquí Charmey',
         'email' => 'ess@charmey.ch',
+        'degree' => 'Grado',
+        'extras' => 'Extras',
         'phone' => '+41 (0)26 927 55 25',
         'unknown' => 'Por determinar'
     ],
     'bookingInfoChange' => [
         'subject' => 'Tu reserva en Boukii ha cambiado',
         'greeting' => 'Hola :userName,',
-        'reservation_request' => 'Te estamos enviando este correo electrónico para informarte que tu reserva con referencia :reference ha cambiado, para',
+        'reservation_request' => 'Te estamos enviando este correo electrónico para informarte que tu reserva con referencia <strong>:reference</strong> ha cambiado, para',
         'singular_course' => 'el siguiente curso:',
         'plural_courses' => 'los siguientes cursos:',
         'course_count' => ':countx :name',

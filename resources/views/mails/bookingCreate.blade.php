@@ -7,7 +7,7 @@
     <p>
         {{ __('emails.bookingCreate.greeting', ['userName' => $userName]) }},
         <br>
-        {{ __('emails.bookingCreate.reservation_request', ['reference' => $reference]) }}
+        {!!  __('emails.bookingCreate.reservation_request', ['reference' => $reference])  !!}
         @if (count($courses) == 1)
             {{ __('emails.bookingCreate.singular_course') }}
         @else

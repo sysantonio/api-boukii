@@ -104,4 +104,7 @@
     <p>
         {{ __('emails.bookingPay.sincerely', ['schoolName' => $schoolName]) }}
     </p>
+    <p>
+        {{ __('emails.bookingPay.school_name', ['schoolName' => $schoolName]) }}
+    </p>
 @endsection
