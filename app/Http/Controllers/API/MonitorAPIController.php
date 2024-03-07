@@ -76,6 +76,12 @@ class MonitorAPIController extends AppBaseController
                 }
             }
         );
+        $monitors->load('sports');
+
+        // Elimina los deportes duplicados
+        $monitors->each(function ($monitor) {
+            $monitor->setRelation('sports', $monitor->sports->unique('id'));
+        });
         return $this->sendResponse($monitors, 'Monitors retrieved successfully');
     }
 
