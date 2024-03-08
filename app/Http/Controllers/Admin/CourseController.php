@@ -85,7 +85,7 @@ class CourseController extends AppBaseController
                     $query->whereIn('sport_id', $request->sport_id);
                 });
 
-                $query->when($request->has('finished'), function ($query) {
+                $query->when($request->has('finished') && $request->finished, function ($query) {
                     $today = now()->format('Y-m-d');
                     $query->whereDoesntHave('courseDates', function ($subquery) use ($today) {
                         $subquery->where('date', '>=', $today);
