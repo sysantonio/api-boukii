@@ -92,6 +92,13 @@ class CourseController extends AppBaseController
                     });
                 });
 
+                $query->when($request->has('active'), function ($query) {
+                    $today = now()->format('Y-m-d');
+                    $query->whereDoesntHave('courseDates', function ($subquery) use ($today) {
+                        $subquery->where('date', '<=', $today);
+                    });
+                });
+
                 // Agregar condiciones para el rango de fechas
                 $startDate = $request->input('start_date');
                 $endDate = $request->input('end_date');
