@@ -395,6 +395,35 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
+    protected $appends = ['icon'];
+    public function getIconAttribute()
+    {
+        // Obtener el curso asociado a este bookingUser
+        $course = $this;
+
+        if ($course) {
+            $courseType = $course->course_type ?? null;
+
+            // Verificar si hay un course_type definido
+            if ($courseType !== null) {
+                // Devolver el deporte basado en el course_type
+                switch ($courseType) {
+                    case 1:
+                        return $course->sport->icon_collective;
+                        break;
+                    case 2:
+                        return $course->sport->icon_prive;
+                        break;
+                    default:
+                        return 'multiple';
+                }
+            }
+        }
+
+        // Si no se puede determinar el deporte, devolver 'multiple'
+        return 'multiple';
+    }
+
     public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
                                                     $clientId = null, $degreeId = null, $getLowerDegrees = false,
                                                     $degreeOrders = null, $min_age = null, $max_age = null)
