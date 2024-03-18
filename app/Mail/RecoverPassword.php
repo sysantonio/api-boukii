@@ -15,7 +15,6 @@ class RecoverPassword extends Mailable
      * Create a new message instance.
      *
      * @param User $user
-     * @param string $url
      */
     public function __construct($user)
     {
@@ -28,19 +27,19 @@ class RecoverPassword extends Mailable
         // Apply that user's language - or default
         $defaultLocale = config('app.fallback_locale');
         $oldLocale = \App::getLocale();
-        $userLang = Language::find( $this->user->language1_id );
+        $userLang = Language::find($this->user->language1_id);
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = \View::exists('mails.recoverPassword');
-        $footerView = \View::exists('mails.footer');
+        $templateView = 'mails.recoverPassword'; // Load the view file directly
+        $footerView = 'mails.footer'; // Load the view file directly
 
         $templateData = [
             'userName' => trim($this->user->first_name . ' ' . $this->user->last_name),
             'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $this->user->recover_token .'?user='. $this->user->id ,
             'footerView' => $footerView,
 
-            //SCHOOL DATA - none
+            // SCHOOL DATA - none
             'schoolName' => '',
             'schoolLogo' => '',
             'schoolEmail' => '',
@@ -51,7 +50,7 @@ class RecoverPassword extends Mailable
         \App::setLocale($oldLocale);
 
         return $this->to($this->user->email)
-                    ->subject($subject)
-                    ->view($templateView)->with($templateData);
+            ->subject($subject)
+            ->view($templateView)->with($templateData);
     }
 }
