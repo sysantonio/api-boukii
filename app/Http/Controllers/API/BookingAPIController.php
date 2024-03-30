@@ -66,6 +66,7 @@ class BookingAPIController extends AppBaseController
             search: $request->get('search'),
             skip: $request->get('skip'),
             limit: $request->get('limit'),
+            pagination: $request->get('perPage', 10),
             with: $request->get('with', []),
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
