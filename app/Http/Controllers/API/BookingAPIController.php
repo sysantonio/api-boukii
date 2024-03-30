@@ -96,7 +96,7 @@ class BookingAPIController extends AppBaseController
                 }
 
                 // Filtrar por reservas que tienen todos los bookingUsers con courseDate anteriores al día de hoy
-                if ($request->has('finished')) {
+                if ($request->has('finished') && !$request->has('all')) {
                     $today = now()->format('Y-m-d H:i:s');
                     $isFinished = $request->finished == 1; // Verifica si finished es 1
 
