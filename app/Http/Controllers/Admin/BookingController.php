@@ -101,9 +101,10 @@ class BookingController extends AppBaseController
     public function checkClientBookingOverlap(Request $request): JsonResponse
     {
         $overlapBookingUsers = [];
-        foreach ($request->bookingUsers as $bookingUser) {
+        $bookingUserIds = $request->input('bookingUserIds', []);
 
-            if (BookingUser::hasOverlappingBookings($bookingUser)) {
+        foreach ($request->bookingUsers as $bookingUser) {
+            if (BookingUser::hasOverlappingBookings($bookingUser, $bookingUserIds)) {
                 $overlapBookingUsers[] = $bookingUser;
             }
         }
@@ -112,7 +113,7 @@ class BookingController extends AppBaseController
             return $this->sendResponse($overlapBookingUsers, 'Client has overlapping bookings', 404);
         }
 
-        return $this->sendResponse([], 'Client has not overlaps bookings');
+        return $this->sendResponse([], 'Client has no overlapping bookings');
     }
 
     /**

@@ -325,11 +325,14 @@ class BookingUser extends Model
         return $query->where('monitor_id', $monitor);
     }
 
-    public static function hasOverlappingBookings($bookingUser)
+    public static function hasOverlappingBookings($bookingUser, $bookingUserIds)
     {
         $clientBookings = BookingUser::where('client_id', $bookingUser['client_id'])
             ->where('date', $bookingUser['date'])
             ->where('status', 1)
+            ->when(count($bookingUserIds) > 0, function ($query) use ($bookingUserIds) {
+                return $query->whereNotIn('id', $bookingUserIds);
+            })
             ->get();
 
         foreach ($clientBookings as $existingBooking) {

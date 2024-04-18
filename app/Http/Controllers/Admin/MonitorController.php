@@ -71,6 +71,7 @@ class MonitorController extends AppBaseController
 
         $isAnyAdultClient = false;
         $clientLanguages = [];
+        $bookingUserIds = $request->input('bookingUserIds', []);
 
         if ($request->has('clientIds') && is_array($request->clientIds)) {
             foreach ($request->clientIds as $clientId) {
@@ -125,11 +126,15 @@ class MonitorController extends AppBaseController
                 ->pluck('monitor');
 
         $busyMonitors = BookingUser::whereDate('date', $request->date)
+            ->when(count($bookingUserIds) > 0, function ($query) use ($bookingUserIds) {
+                return $query->whereNotIn('id', $bookingUserIds);
+            })
             ->where(function ($query) use ($request) {
                 $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime))->where('status', 1);
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime))
+                    ->where('status', 1);
             })
-            ->pluck('monitor_id')
+        ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
                 ->whereDate('end_date', '>=', $request->date)
                 ->where(function ($query) use ($request) {
