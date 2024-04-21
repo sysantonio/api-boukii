@@ -7,6 +7,7 @@ use App\Http\Controllers\PayrexxHelpers;
 use App\Http\Resources\API\BookingResource;
 use App\Mail\BookingCancelMailer;
 use App\Mail\BookingCreateMailer;
+use App\Mail\BookingInfoMailer;
 use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingUser;
@@ -225,12 +226,17 @@ class BookingController extends AppBaseController
         }
 
         try {
-            Mail::to($booking->clientMain->email)
-                ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain, $request['paid']));
+            if($request['is_info']) {
+                Mail::to($booking->clientMain->email)
+                    ->send(new BookingInfoMailer($booking->school, $booking, $booking->clientMain));
+            } else {
+                Mail::to($booking->clientMain->email)
+                    ->send(new BookingCreateMailer($booking->school, $booking, $booking->clientMain, $request['paid']));
+            }
         } catch (\Exception $ex) {
             \Illuminate\Support\Facades\Log::debug('BookingControllerMail->createBooking BookingCreateMailer: ' .
                 $ex->getMessage());
-            return $this->sendError('Error sending mail: '. $ex->getMessage());
+            return $this->sendError('Error sending mail: '. $ex->getMessage(), 400);
         }
 
         return $this->sendResponse([], 'Mail sent correctly');
