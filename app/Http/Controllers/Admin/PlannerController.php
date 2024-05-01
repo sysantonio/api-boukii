@@ -106,7 +106,7 @@ class PlannerController extends AppBaseController
 
         $schoolId = $this->getSchool($request)->id;
 
-        $subgroupsQuery = CourseSubgroup::with(['courseGroup.course', 'bookingUsers.client.sports',
+        $subgroupsQuery = CourseSubgroup::with(['courseGroup.course', 'bookingUsers.client.sports', 'bookingUsers.booking',
             'bookingUsers.client.evaluations.degree', 'bookingUsers.client.evaluations.evaluationFulfilledGoals'])
             ->whereHas('courseGroup.course', function ($query) use ($schoolId) {
                 // Agrega la comprobación de la escuela aquí

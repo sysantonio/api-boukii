@@ -120,12 +120,12 @@ class Voucher extends Model
     ];
 
     public static array $rules = [
-        'code' => 'required|string|max:255',
-        'quantity' => 'required|numeric',
-        'remaining_balance' => 'required|numeric',
-        'payed' => 'required|boolean',
-        'client_id' => 'required',
-        'school_id' => 'required',
+        'code' => 'string|max:255',
+        'quantity' => 'numeric',
+        'remaining_balance' => 'numeric',
+        'payed' => 'boolean',
+        'client_id' => 'numeric',
+        'school_id' => 'numeric',
         'payrexx_reference' => 'nullable|string|max:65535',
         'payrexx_transaction' => 'nullable|string|max:65535',
         'created_at' => 'nullable',
