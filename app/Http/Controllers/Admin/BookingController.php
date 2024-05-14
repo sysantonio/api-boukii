@@ -10,6 +10,7 @@ use App\Mail\BookingCreateMailer;
 use App\Mail\BookingInfoMailer;
 use App\Mail\BookingPayMailer;
 use App\Models\Booking;
+use App\Models\BookingLog;
 use App\Models\BookingUser;
 use App\Models\BookingUsers2;
 use App\Models\Voucher;
@@ -194,6 +195,14 @@ class BookingController extends AppBaseController
                     // Send by email
                     try {
                         $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
+                        $logData = [
+                            'booking_id' => $booking->id,
+                            'action' => 'send_pay_link',
+                            'user_id' => $booking->user_id,
+                            'description' => 'Booking pay link sent',
+                        ];
+
+                        BookingLog::create($logData);
                         \Mail::to($booking->clientMain->email)
                             ->send(new BookingPayMailer(
                                 $school,

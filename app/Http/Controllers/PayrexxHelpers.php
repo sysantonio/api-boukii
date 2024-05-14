@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\BookingLog;
 use App\Models\Client;
 use App\Models\Course;
 use App\Models\Payment;
@@ -527,7 +528,14 @@ class PayrexxHelpers
                         $buyerUser,
                         $link
                     ));
+                $logData = [
+                    'booking_id' => $bookingData->id,
+                    'action' => 'send_pay_link',
+                    'user_id' => $bookingData->user_id,
+                    'description' => 'Booking pay link sent',
+                ];
 
+                BookingLog::create($logData);
                 $sentOK = true;
             } catch (\Exception $e) {
                 // Altought not stated by API documentation (as of 2022-10),
