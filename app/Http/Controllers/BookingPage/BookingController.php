@@ -155,7 +155,7 @@ class BookingController extends SlugAuthController
         $client = Client::find($data['client_main_id'])->load('user');
         BookingLog::create([
             'booking_id' => $booking->id,
-            'action' => 'Booking created from booking page',
+            'action' => 'page_created',
             'user_id' => $client->user->id
         ]);
 
