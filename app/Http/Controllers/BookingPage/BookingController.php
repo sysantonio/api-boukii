@@ -15,6 +15,7 @@ use App\Models\Client;
 use App\Models\Course;
 use App\Models\CourseExtra;
 use App\Models\CourseSubgroup;
+use App\Models\Degree;
 use App\Models\MonitorNwd;
 use App\Models\MonitorSportsDegree;
 use App\Models\Voucher;
@@ -224,19 +225,28 @@ class BookingController extends SlugAuthController
             }
 
 
-            if (BookingUser::hasOverlappingBookings($bookingUser)) {
+            if (BookingUser::hasOverlappingBookings($bookingUser, [])) {
                 return $this->sendError('Client has booking on that date');
             }
         }
 
         if($request->bookingUsers[0]['course']['course_type'] == 2) {
+
+            /*            return $this->sendResponse([
+                            'date' => $date,
+                            'startTime' => $startTime,
+                            'endTime' => $endTime,
+                            'minimumDegreeId' => $highestDegreeId,
+                            'sportId' => $bookingUser['course']['sport_id']
+                        ], 'Client has not overlaps bookings');*/
+            $degreeOrder = Degree::find($highestDegreeId)->degree_order;
             $monitorAvailabilityRequest = new Request([
                 'date' => $date,
                 'startTime' => $startTime,
                 'endTime' => $endTime,
-                'minimumDegreeId' => $highestDegreeId,
-                'sportId' => $bookingUser['course']['sport_id'],
-                'clientIds' => $clientIds
+                'minimumDegreeId' => $degreeOrder,
+                'clientIds' => $clientIds,
+                'sportId' => $bookingUser['course']['sport_id']
             ]);
             if(empty($this->getMonitorsAvailable($monitorAvailabilityRequest))) {
                 return $this->sendError('No monitor available on that date');
@@ -274,11 +284,15 @@ class BookingController extends SlugAuthController
         }
 
         $clientLanguages = array_unique($clientLanguages);
+
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {
                 $query->where('school_id', $school->id)
-                    ->where('degree_id', '>=', $request->minimumDegreeId);
+                    ->whereHas('degree', function ($q) use ($school, $request) {
+                        $q->where('degree_order', '<=', $request->minimumDegreeId);
+                    });
+
             })
                 ->where('sport_id', $request->sportId)
                 // Comprobación adicional para allow_adults si hay algún cliente adulto
@@ -306,10 +320,12 @@ class BookingController extends SlugAuthController
                 ->pluck('monitor');
 
 
+
         $busyMonitors = BookingUser::whereDate('date', $request->date)
             ->where(function ($query) use ($request) {
-                $query->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime))->where('status', 1);
+                $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime))
+                    ->where('status', 1);
             })
             ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
@@ -318,20 +334,19 @@ class BookingController extends SlugAuthController
                     // Aquí incluimos la lógica para verificar si es un día entero
                     $query->where('full_day', true)
                         ->orWhere(function ($timeQuery) use ($request) {
-                            $timeQuery->whereTime('start_time', '<=',
+                            $timeQuery->whereTime('start_time', '<',
                                 Carbon::createFromFormat('H:i', $request->endTime))
-                                ->whereTime('end_time', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                                ->whereTime('end_time', '>', Carbon::createFromFormat('H:i', $request->startTime));
                         });
                 })
                 ->pluck('monitor_id'))
             ->merge(CourseSubgroup::whereHas('courseDate', function ($query) use ($request) {
                 $query->whereDate('date', $request->date)
-                    ->whereTime('hour_start', '<=', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>=', Carbon::createFromFormat('H:i', $request->startTime));
+                    ->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime));
             })
                 ->pluck('monitor_id'))
             ->unique();
-
 
         // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
         $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);

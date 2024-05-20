@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\CourseSubgroup;
+use App\Models\Degree;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\MonitorObservation;
@@ -94,11 +95,15 @@ class MonitorController extends AppBaseController
         }
 
         $clientLanguages = array_unique($clientLanguages);
+        $degreeOrder = Degree::find( $request->minimumDegreeId)->degree_order;
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
-            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {
+            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query)
+            use ($school, $request,$degreeOrder) {
                 $query->where('school_id', $school->id)
-                    ->where('degree_id', '>=', $request->minimumDegreeId);
+                    ->whereHas('degree', function ($q) use ($school, $request, $degreeOrder) {
+                        $q->where('degree_order', '<=', $degreeOrder);
+                    });
             })
                 ->where('sport_id', $request->sportId)
                 // Comprobación adicional para allow_adults si hay algún cliente adulto
