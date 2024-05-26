@@ -75,6 +75,11 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
+    public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
          return LogOptions::defaults()
