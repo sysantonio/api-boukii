@@ -421,28 +421,34 @@ class CourseController extends AppBaseController
 
         // Crear las fechas y grupos
         if (isset($courseData['course_dates'])) {
+            $settings = json_decode($courseData['settings'], true);
+            $weekDays = $settings['weekDays'];
+
             foreach ($courseData['course_dates'] as $dateData) {
+                $date = new \DateTime($dateData['date']);
+                $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
 
-                $date = $course->courseDates()->create($dateData);
+                if (isset($weekDays[$dayOfWeek]) && $weekDays[$dayOfWeek]) {
+                    $date = $course->courseDates()->create($dateData);
 
-                if (isset($dateData['groups'])) {
-                    foreach ($dateData['groups'] as $groupData) {
-                        $groupData['course_id'] = $course->id;
-                        $group = $date->courseGroups()->create($groupData);
+                    if (isset($dateData['groups'])) {
+                        foreach ($dateData['groups'] as $groupData) {
+                            $groupData['course_id'] = $course->id;
+                            $group = $date->courseGroups()->create($groupData);
 
-                        if (isset($groupData['subgroups'])) {
-                            foreach ($groupData['subgroups'] as &$subgroup) {
-                                $subgroup['course_id'] = $course->id;
-                                $subgroup['course_date_id'] = $date->id;
+                            if (isset($groupData['subgroups'])) {
+                                foreach ($groupData['subgroups'] as &$subgroup) {
+                                    $subgroup['course_id'] = $course->id;
+                                    $subgroup['course_date_id'] = $date->id;
+                                }
+
+                                $group->courseSubgroups()->createMany($groupData['subgroups']);
                             }
-
-                            $group->courseSubgroups()->createMany($groupData['subgroups']);
                         }
                     }
                 }
             }
         }
-
         return $this->sendResponse($course,'Curso creado con éxito');
     }
 
