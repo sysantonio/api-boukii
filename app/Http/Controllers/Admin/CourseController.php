@@ -165,7 +165,7 @@ class CourseController extends AppBaseController
                                     //  $totalIntervals = 0;
                                     while ($start < $end) {
                                         $totalIntervals++;
-                                        $start += $durationInSeconds;
+                                        $start += $intervalInSeconds;
                                     }
                                 } else{
                                     $totalIntervals = 5;
@@ -205,7 +205,7 @@ class CourseController extends AppBaseController
 
         return [
             'total_reservations' => $totalBookings,
-            'total_available_places' => $totalPlaces,
+            'total_available_places' => $totalAvailablePlaces,
             'total_places' => $totalPlaces
         ];
     }
@@ -215,7 +215,6 @@ class CourseController extends AppBaseController
         if (strpos($duration, 'h') !== false) {
             // Si el formato es "Xh Ymin", convertirlo a segundos
             preg_match('/(\d+)h (\d+)min/', $duration, $matches);
-            dd($duration);
             $hours = intval($matches[1]);
             $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Si no hay minutos, establecer en 0
             return ($hours * 3600) + ($minutes * 60);

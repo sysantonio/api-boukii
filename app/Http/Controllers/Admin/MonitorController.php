@@ -106,7 +106,7 @@ class MonitorController extends AppBaseController
                     });
             })
                 ->where('sport_id', $request->sportId)
-                // Comprobación adicional para allow_adults si hay algún cliente adulto
+                // Comprobaci"" ón adicional para allow_adults si hay algún cliente adulto
                 ->when($isAnyAdultClient, function ($query) {
                     return $query->where('allow_adults', true);
                 })
