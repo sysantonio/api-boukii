@@ -117,7 +117,7 @@ use Spatie\Activitylog\LogOptions;
 class Degree extends Model
 {
     use SoftDeletes;    use HasFactory;    public $table = 'degrees';
-
+    use \Awobaz\Compoships\Compoships;
     public $fillable = [
         'league',
         'level',

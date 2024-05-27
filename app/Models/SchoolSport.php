@@ -52,6 +52,7 @@ use Spatie\Activitylog\LogOptions;
  */class SchoolSport extends Model
 {
      use SoftDeletes;    use HasFactory;    public $table = 'school_sports';
+    use \Awobaz\Compoships\Compoships;
 
     public $fillable = [
         'school_id',
@@ -78,6 +79,18 @@ use Spatie\Activitylog\LogOptions;
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
+    }
+
+    public function degrees()
+    {
+        return $this->hasMany(
+            Degree::class,
+          [  'school_id',
+            'sport_id'],
+         [  'school_id',
+             'sport_id']
+
+        );
     }
 
     public function getActivitylogOptions(): LogOptions

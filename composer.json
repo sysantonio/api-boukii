@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "awobaz/compoships": "^2.3",
         "darkaonline/l5-swagger": "8.*",
         "doctrine/dbal": "^3.7",
         "ejarnutowski/laravel-api-key": "^1.0",
