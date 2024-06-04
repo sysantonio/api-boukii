@@ -350,86 +350,95 @@ class CourseController extends AppBaseController
         $school = $this->getSchool($request);
         $request->merge(["school_id"=> $school->id]);
 
-        //$request->school_id = $school->id;
-        $request->validate([
-            'course_type' => 'required',
-            'is_flexible' => 'required',
-            'sport_id' => 'required|exists:sports,id',
-            'school_id' => 'required|exists:schools,id',
-            'station_id' => 'nullable|exists:stations,id',
-            'name' => 'required|string|max:65535',
-            'short_description' => 'required|string|max:65535',
-            'description' => 'required|string|max:65535',
-            'price' => 'required|numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'max_participants' => 'required|integer|min:1',
-            'duration' => 'nullable',
-            'date_start' => 'required|date',
-            'date_end' => 'required|date|after_or_equal:date_start',
-            'date_start_res' => 'nullable|date',
-            'date_end_res' => 'nullable|date|after_or_equal:date_start_res',
-            'confirm_attendance' => 'required|boolean',
-            'active' => 'required|boolean',
-            'online' => 'required|boolean',
-            'image' => 'nullable|string',
-            'translations' => 'nullable|string',
-            'price_range' => 'nullable',
-            'discounts' => 'nullable|string',
-            'settings' => 'nullable|string',
-            'course_dates' => 'required|array',
-            'course_dates.*.date' => 'required|date',
-            'course_dates.*.hour_start' => 'required|string|max:255',
-            'course_dates.*.hour_end' => 'required|string|max:255',
-            'course_dates.*.groups' => 'required_if:course_type,1|array',
-            'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
-            'course_dates.*.groups.*.age_min' => 'nullable|integer|min:0',
-            'course_dates.*.groups.*.age_max' => 'nullable|integer|min:0',
-            'course_dates.*.groups.*.recommended_age' => 'nullable|integer|min:0',
-            'course_dates.*.groups.*.teachers_min' => 'nullable|integer|min:1',
-            'course_dates.*.groups.*.teachers_max' => 'nullable|integer|min:1',
-            'course_dates.*.groups.*.observations' => 'nullable|string|max:65535',
-            'course_dates.*.groups.*.teacher_min_degree' => 'nullable|exists:degrees,id',
-            'course_dates.*.groups.*.subgroups' => 'required|array',
-            'course_dates.*.groups.*.subgroups.*.degree_id' => 'required|exists:degrees,id',
-            'course_dates.*.groups.*.subgroups.*.monitor_id' => 'nullable|exists:monitors,id',
-            'course_dates.*.groups.*.subgroups.*.max_participants' => 'nullable|integer|min:0',
-        ]);
+        try {
+            $request->validate([
+                'course_type' => 'required',
+                'is_flexible' => 'required',
+                'sport_id' => 'required|exists:sports,id',
+                'school_id' => 'required|exists:schools,id',
+                'station_id' => 'nullable|exists:stations,id',
+                'name' => 'required|string|max:65535',
+                'short_description' => 'required|string|max:65535',
+                'description' => 'required|string|max:65535',
+                'price' => 'required|numeric|min:0',
+                'currency' => 'required|string|max:3',
+                'max_participants' => 'required|integer|min:1',
+                'duration' => 'nullable',
+                'date_start' => 'required|date',
+                'date_end' => 'required|date|after_or_equal:date_start',
+                'date_start_res' => 'nullable|date',
+                'date_end_res' => 'nullable|date|after_or_equal:date_start_res',
+                'confirm_attendance' => 'required|boolean',
+                'active' => 'required|boolean',
+                'online' => 'required|boolean',
+                'image' => 'nullable|string',
+                'translations' => 'nullable|string',
+                'price_range' => 'nullable',
+                'discounts' => 'nullable|string',
+                'settings' => 'nullable|string',
+                'course_dates' => 'required|array',
+                'course_dates.*.date' => 'required|date',
+                'course_dates.*.hour_start' => 'required|string|max:255',
+                'course_dates.*.hour_end' => 'required|string|max:255',
+                'course_dates.*.groups' => 'required_if:course_type,1|array',
+                'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
+                'course_dates.*.groups.*.age_min' => 'nullable|integer|min:0',
+                'course_dates.*.groups.*.age_max' => 'nullable|integer|min:0',
+                'course_dates.*.groups.*.recommended_age' => 'nullable|integer|min:0',
+                'course_dates.*.groups.*.teachers_min' => 'nullable|integer|min:1',
+                'course_dates.*.groups.*.teachers_max' => 'nullable|integer|min:1',
+                'course_dates.*.groups.*.observations' => 'nullable|string|max:65535',
+                'course_dates.*.groups.*.teacher_min_degree' => 'nullable|exists:degrees,id',
+                'course_dates.*.groups.*.subgroups' => 'required|array',
+                'course_dates.*.groups.*.subgroups.*.degree_id' => 'required|exists:degrees,id',
+                'course_dates.*.groups.*.subgroups.*.monitor_id' => 'nullable|exists:monitors,id',
+                'course_dates.*.groups.*.subgroups.*.max_participants' => 'nullable|integer|min:0',
+            ]);
 
-        $courseData = $request->all();
+            $courseData = $request->all();
 
-        if(!empty($courseData['image'])) {
-            $base64Image = $request->input('image');
+            if(!empty($courseData['image'])) {
+                $base64Image = $request->input('image');
 
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-                $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
-                $type = strtolower($type[1]);
-                $imageData = base64_decode($imageData);
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $type = strtolower($type[1]);
+                    $imageData = base64_decode($imageData);
 
-                if ($imageData === false) {
-                    $this->sendError('base64_decode failed');
+                    if ($imageData === false) {
+                        $this->sendError('base64_decode failed');
+                    }
+                } else {
+                    $this->sendError('did not match data URI with image data');
                 }
-            } else {
-                $this->sendError('did not match data URI with image data');
+
+                $imageName = 'course/image_'.time().'.'.$type;
+                Storage::disk('public')->put($imageName, $imageData);
+                $courseData['image'] = url(Storage::url($imageName));
             }
 
-            $imageName = 'course/image_'.time().'.'.$type;
-            Storage::disk('public')->put($imageName, $imageData);
-            $courseData['image'] = url(Storage::url($imageName));
-        }
+            DB::beginTransaction();
 
-        $course = Course::create($courseData);
+            $course = Course::create($courseData);
 
-        // Crear las fechas y grupos
-        if (isset($courseData['course_dates'])) {
-            $settings = json_decode($courseData['settings'], true);
-            $weekDays = $settings['weekDays'];
+            // Crear las fechas y grupos
+            if (isset($courseData['course_dates'])) {
+                $settings = isset($courseData['settings']) ? json_decode($courseData['settings'], true) : null;
+                $weekDays = $settings ? $settings['weekDays'] : null;
 
-            foreach ($courseData['course_dates'] as $dateData) {
-                $date = new \DateTime($dateData['date']);
-                $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
+                foreach ($courseData['course_dates'] as $dateData) {
+                    if ($weekDays) {
+                        $date = new \DateTime($dateData['date']);
+                        $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
 
-                if (isset($weekDays[$dayOfWeek]) && $weekDays[$dayOfWeek]) {
-                    $date = $course->courseDates()->create($dateData);
+                        if (isset($weekDays[$dayOfWeek]) && $weekDays[$dayOfWeek]) {
+                            $date = $course->courseDates()->create($dateData);
+                        } else {
+                            continue; // Skip this date since it's not in the specified weekdays
+                        }
+                    } else {
+                        $date = $course->courseDates()->create($dateData);
+                    }
 
                     if (isset($dateData['groups'])) {
                         foreach ($dateData['groups'] as $groupData) {
@@ -448,8 +457,13 @@ class CourseController extends AppBaseController
                     }
                 }
             }
+            DB::commit();
+            return $this->sendResponse($course,'Curso creado con éxito');
+        }catch (\Exception $e) {
+            DB::rollback();
+            return $this->sendError('An error occurred while creating the course: ' . $e->getMessage());
         }
-        return $this->sendResponse($course,'Curso creado con éxito');
+
     }
 
     /**

@@ -398,6 +398,25 @@ use Spatie\Activitylog\LogOptions;
         return 'multiple';
     }
 
+    public function getPaymentStatus()
+    {
+        $status = '';
+        $statusPayment = '';
+
+        if ($this->status == 2) {
+            $status = 'total_cancel';
+            $statusPayment = $this->bookingLogs->last()->action;
+
+        } else {
+            $partialCancellation = $this->bookingUsers()->where('status', 2)->exists();
+            $status = $partialCancellation ? 'partial_cancel' : 'active';
+
+        }
+
+
+
+        return $status;
+    }
 
     /**
      * Generate an unique reference for Payrexx - only for bookings that wanna pay this way
@@ -454,39 +473,6 @@ use Spatie\Activitylog\LogOptions;
             'course_id', 'degree_id', 'course_date_id']);
 
         return $groupedCourses;
-    }
-
-    public function getRelatedCourseTitle()
-    {
-        $title = '';
-        $this->loadMissing(['course.global_course', 'subgroup']);
-
-        // If booked a "Loose" Course, just pick its name
-        if ($this->course)
-        {
-            $title = $this->course->name;
-        }
-        // For "Definite" pick root Course name plus Group level
-        else if ($this->subgroup)
-        {
-            $group = $this->subgroup->group;
-            $title = $group->course->global_course->name_global;
-
-            $degreesList = [];
-            foreach (Degree::listBySchoolAndSport($this->booking->school_id, $group->course->sport_id) as $d)
-            {
-                $degreesList[$d->degree_id] = $d;
-            }
-
-            $whichDegree = $degreesList[ $group->degree_id ] ?? null;
-
-            if ($whichDegree)
-            {
-                $title .= ', ' . ($whichDegree->annotation ?? '') . ' ' . ($whichDegree->name ?? '');
-            }
-        }
-
-        return $title;
     }
 
     public static function bookingInfo24h()
