@@ -92,19 +92,19 @@ class MigrationController extends AppBaseController
     public function migrateInitalData(Request $request): JsonResponse
     {
 
-       /* $languages = DB::connection('old')->table('languages')->get();
+       $languages = DB::connection('old')->table('languages')->get();
         DB::statement('ALTER TABLE languages AUTO_INCREMENT = 1;');
         foreach ($languages as $language) {
             $newLanguage = new Language((array)$language);
             $newLanguage->save();
-        }*/
+        }
 
-        /*$oldSportsTypes = DB::connection('old')->table('sport_types')->get();
+        $oldSportsTypes = DB::connection('old')->table('sport_types')->get();
         DB::statement('ALTER TABLE sport_types AUTO_INCREMENT = 1;');
         foreach ($oldSportsTypes as $oldSportsType) {
             $newSportType = new SportType((array)$oldSportsType);
             $newSportType->save();
-        }*/
+        }
 
         $oldSports = DB::connection('old')->table('sports')->get();
         DB::statement('ALTER TABLE sports AUTO_INCREMENT = 1;');
@@ -184,8 +184,8 @@ class MigrationController extends AppBaseController
                     $newGoal = new DegreesSchoolSportGoal((array)$oldGoal);
                     $newGoal->degree_id = $newDegree->id;
                     $newGoal->save();
-                    $newGoal->created_at = $oldGoal->created_at;
-                    $newGoal->updated_at = $oldGoal->updated_at;
+                    $newGoal->created_at = $oldGoal['created_at'];
+                    $newGoal->updated_at = $oldGoal['updated_at'];
                     //  $newGoal->school_id = $newSchool['id'];
                     $newGoal->save();
                     // return $this->sendResponse($newGoal, 200);
@@ -200,9 +200,6 @@ class MigrationController extends AppBaseController
                 $newSchoolColor->school_id = $newSchool['id'];
                 $newSchoolColor->default = 1;
                 $newSchoolColor->save();
-                $newSchoolColor->created_at = $oldSchoolColor->created_at;
-                $newSchoolColor->updated_at = $oldSchoolColor->updated_at;
-                $newSchoolColor->save();
                 //  return $this->sendResponse($newSchoolColor, 200);
             }
 
@@ -212,8 +209,8 @@ class MigrationController extends AppBaseController
                 $newSchoolSalaryLevel = new SchoolSalaryLevel($oldSchoolSalaryLevel);
                 $newSchoolSalaryLevel->school_id = $newSchool['id'];
                 $newSchoolSalaryLevel->save();
-                $newSchoolSalaryLevel->created_at = $oldSchoolSalaryLevel->created_at;
-                $newSchoolSalaryLevel->updated_at = $oldSchoolSalaryLevel->updated_at;
+                $newSchoolSalaryLevel->created_at = $oldSchoolSalaryLevel['created_at'];
+                $newSchoolSalaryLevel->updated_at = $oldSchoolSalaryLevel['updated_at'];
                 $newSchoolSalaryLevel->save();
                 // return $this->sendResponse($newSchoolSalaryLevel, 200);
             }
@@ -224,8 +221,8 @@ class MigrationController extends AppBaseController
                 $newSchoolStation = new StationsSchool($oldSchoolsStation);
                 $newSchoolStation->school_id = $newSchool['id'];
                 $newSchoolStation->save();
-                $newSchoolStation->created_at = $oldSchoolsStation->created_at;
-                $newSchoolStation->updated_at = $oldSchoolsStation->updated_at;
+                $newSchoolStation->created_at = $newSchoolStation['created_at'];
+                $newSchoolStation->updated_at =  $newSchoolStation['updated_at'];
                 $newSchoolStation->save();
                 // return $this->sendResponse($newSchoolStation, 200);
             }
@@ -237,8 +234,8 @@ class MigrationController extends AppBaseController
                 $newSchoolSport = new SchoolSport($oldSchoolSport);
                 $newSchoolSport->school_id = $newSchool['id'];
                 $newSchoolSport->save();
-                $newSchoolSport->created_at = $newSchool->created_at;
-                $newSchoolSport->updated_at = $newSchool->updated_at;
+                $newSchoolSport->created_at = $newSchool['created_at'];
+                $newSchoolSport->updated_at = $newSchool['updated_at'];
                 $newSchoolSport->save();
                 //  return $this->sendResponse($newSchoolSport, 200);
             }
@@ -255,8 +252,8 @@ class MigrationController extends AppBaseController
                     $newTasksCheck = new \App\Models\TaskCheck($oldTasksCheck);
                     $newTasksCheck->task_id = $newTask['id'];
                     $newTasksCheck->save();
-                    $newTasksCheck->created_at = $newTask->created_at;
-                    $newTasksCheck->updated_at = $newTask->updated_at;
+                    $newTasksCheck->created_at = $newTask['created_at'];
+                    $newTasksCheck->updated_at = $newTask['school_id'];
                     $newTasksCheck->save();
 
                 }
@@ -299,9 +296,6 @@ class MigrationController extends AppBaseController
             foreach ($oldClient->schools as $school) {
                 $clientSchool = new ClientsSchool(['client_id' => $newClient->id, 'school_id' => $school->id]);
                 $clientSchool->save();
-                $clientSchool->created_at = $school->pivot->created_at;
-                $clientSchool->updated_at = $school->pivot->updated_at;
-                $clientSchool->save();
             }
 
             $oldDegrees = \App\Models\OldModels\Degree::all();
@@ -315,9 +309,6 @@ class MigrationController extends AppBaseController
                     ->first();
                 $newClientSport->degree_id = $newDegree->id;
                 $newClientSport->client_id = $newClient->id;
-                $newClientSport->save();
-                $newClientSport->created_at = $oldUserSport->created_at;
-                $newClientSport->updated_at = $oldUserSport->updated_at;
                 $newClientSport->save();
             }
         }
@@ -410,9 +401,6 @@ class MigrationController extends AppBaseController
                     'active_school' => $oldMonitorSchool->active_school
                 ]);
                 $monitorSchool->save();
-                $monitorSchool->created_at = $oldMonitorSchool->created_at;
-                $monitorSchool->updated_at = $oldMonitorSchool->updated_at;
-                $monitorSchool->save();
             }
 
             $oldDegrees = \App\Models\OldModels\Degree::all();
@@ -426,9 +414,6 @@ class MigrationController extends AppBaseController
                     ->first();
                 $newMonitorSport->degree_id = $newDegree->id;
                 $newMonitorSport->monitor_id = $newMonitor->id;
-                $newMonitorSport->save();
-                $newMonitorSport->created_at = $oldUserSport->created_at;
-                $newMonitorSport->updated_at = $oldUserSport->updated_at;
                 $newMonitorSport->save();
             }
         }
