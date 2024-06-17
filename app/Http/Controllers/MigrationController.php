@@ -92,12 +92,12 @@ class MigrationController extends AppBaseController
     public function migrateInitalData(Request $request): JsonResponse
     {
 
-        $languages = DB::connection('old')->table('languages')->get();
+       /* $languages = DB::connection('old')->table('languages')->get();
         DB::statement('ALTER TABLE languages AUTO_INCREMENT = 1;');
         foreach ($languages as $language) {
             $newLanguage = new Language((array)$language);
             $newLanguage->save();
-        }
+        }*/
 
         $oldSportsTypes = DB::connection('old')->table('sport_types')->get();
         DB::statement('ALTER TABLE sport_types AUTO_INCREMENT = 1;');
