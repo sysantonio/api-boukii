@@ -97,9 +97,6 @@ class MigrationController extends AppBaseController
         foreach ($languages as $language) {
             $newLanguage = new Language((array)$language);
             $newLanguage->save();
-            $newLanguage->created_at = $language->created_at;
-            $newLanguage->updated_at = $language->updated_at;
-            $newLanguage->save();
         }
 
         $oldSportsTypes = DB::connection('old')->table('sport_types')->get();
