@@ -92,7 +92,7 @@ class MigrationController extends AppBaseController
     public function migrateInitalData(Request $request): JsonResponse
     {
 
-/*       $languages = DB::connection('old')->table('languages')->get();
+       $languages = DB::connection('old')->table('languages')->get();
         DB::statement('ALTER TABLE languages AUTO_INCREMENT = 1;');
         foreach ($languages as $language) {
             $newLanguage = new Language((array)$language);
@@ -104,7 +104,7 @@ class MigrationController extends AppBaseController
         foreach ($oldSportsTypes as $oldSportsType) {
             $newSportType = new SportType((array)$oldSportsType);
             $newSportType->save();
-        }*/
+        }
 
         $oldSports = DB::connection('old')->table('sports')->get();
         DB::statement('ALTER TABLE sports AUTO_INCREMENT = 1;');
@@ -210,7 +210,6 @@ class MigrationController extends AppBaseController
                 $newSchoolSalaryLevel->school_id = $newSchool['id'];
                 $newSchoolSalaryLevel->save();
                 $newSchoolSalaryLevel->created_at = $oldSchoolSalaryLevel['created_at'];
-                $newSchoolSalaryLevel->updated_at = $oldSchoolSalaryLevel['updated_at'];
                 $newSchoolSalaryLevel->save();
                 // return $this->sendResponse($newSchoolSalaryLevel, 200);
             }
@@ -221,9 +220,6 @@ class MigrationController extends AppBaseController
                 $newSchoolStation = new StationsSchool($oldSchoolsStation);
                 $newSchoolStation->school_id = $newSchool['id'];
                 $newSchoolStation->save();
-                $newSchoolStation->created_at = $newSchoolStation['created_at'];
-                $newSchoolStation->updated_at =  $newSchoolStation['updated_at'];
-                $newSchoolStation->save();
                 // return $this->sendResponse($newSchoolStation, 200);
             }
 
@@ -233,9 +229,6 @@ class MigrationController extends AppBaseController
             foreach ($oldSchoolSports as $oldSchoolSport) {
                 $newSchoolSport = new SchoolSport($oldSchoolSport);
                 $newSchoolSport->school_id = $newSchool['id'];
-                $newSchoolSport->save();
-                $newSchoolSport->created_at = $newSchool['created_at'];
-                $newSchoolSport->updated_at = $newSchool['updated_at'];
                 $newSchoolSport->save();
                 //  return $this->sendResponse($newSchoolSport, 200);
             }
