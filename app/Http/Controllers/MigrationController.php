@@ -99,20 +99,17 @@ class MigrationController extends AppBaseController
             $newLanguage->save();
         }*/
 
-        $oldSportsTypes = DB::connection('old')->table('sport_types')->get();
+        /*$oldSportsTypes = DB::connection('old')->table('sport_types')->get();
         DB::statement('ALTER TABLE sport_types AUTO_INCREMENT = 1;');
         foreach ($oldSportsTypes as $oldSportsType) {
             $newSportType = new SportType((array)$oldSportsType);
             $newSportType->save();
-        }
+        }*/
 
         $oldSports = DB::connection('old')->table('sports')->get();
         DB::statement('ALTER TABLE sports AUTO_INCREMENT = 1;');
         foreach ($oldSports as $oldSport) {
             $newSport = new Sport((array)$oldSport);
-            $newSport->save();
-            $newSport->created_at = $oldSport->created_at;
-            $newSport->updated_at = $oldSport->updated_at;
             $newSport->save();
         }
 
