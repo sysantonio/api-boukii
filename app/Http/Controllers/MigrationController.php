@@ -83,8 +83,8 @@ class MigrationController extends AppBaseController
         $this->migrateClients($request);
         $this->migrateMonitors($request);
         $this->migrateUsersSchools($request);
-        $this->migrateCourses($request);
-        $this->migrateBookings($request);
+       /* $this->migrateCourses($request);
+        $this->migrateBookings($request);*/
 
         return $this->sendResponse('Datos totales guardados correctamente', 200);
     }
