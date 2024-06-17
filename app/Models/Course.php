@@ -551,9 +551,9 @@ class Course extends Model
                             });
                         });
             });
-        } elseif ($type == 2) {
+        } elseif ($type == 2 || $type == 3) {
             // Lógica para cursos de tipo 2
-            $query->where('course_type', 2)
+            $query->where('course_type', $type)
                 ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
                 ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
                     $subQuery->where('date', '>=', $startDate)
