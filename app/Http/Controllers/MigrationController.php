@@ -92,45 +92,44 @@ class MigrationController extends AppBaseController
     public function migrateInitalData(Request $request): JsonResponse
     {
 
-        /*$langugages = DB::connection('old')->table('languages')->get();
+        $languages = DB::connection('old')->table('languages')->get();
         DB::statement('ALTER TABLE languages AUTO_INCREMENT = 1;');
-        foreach ($langugages as $langugage) {
-            $newLangugage = new Language((array)$langugage);
-            $newLangugage->save();
-
+        foreach ($languages as $language) {
+            $newLanguage = new Language((array)$language);
+            $newLanguage->created_at = $language->created_at;
+            $newLanguage->updated_at = $language->updated_at;
+            $newLanguage->save();
         }
 
         $oldSportsTypes = DB::connection('old')->table('sport_types')->get();
         DB::statement('ALTER TABLE sport_types AUTO_INCREMENT = 1;');
         foreach ($oldSportsTypes as $oldSportsType) {
-
-
             $newSportType = new SportType((array)$oldSportsType);
+            $newSportType->created_at = $oldSportsType->created_at;
+            $newSportType->updated_at = $oldSportsType->updated_at;
             $newSportType->save();
-            //  return $this->sendResponse($newSport, 200);
-        }*/
-
+        }
 
         $oldSports = DB::connection('old')->table('sports')->get();
         DB::statement('ALTER TABLE sports AUTO_INCREMENT = 1;');
         foreach ($oldSports as $oldSport) {
             $newSport = new Sport((array)$oldSport);
+            $newSport->created_at = $oldSport->created_at;
+            $newSport->updated_at = $oldSport->updated_at;
             $newSport->save();
-            //  return $this->sendResponse($newSport, 200);
         }
 
         $oldServiceTypes = DB::connection('old')->table('service_type')->get();
         foreach ($oldServiceTypes as $oldServiceType) {
             $newServiceType = new ServiceType((array)$oldServiceType);
+            $newServiceType->created_at = $oldServiceType->created_at;
+            $newServiceType->updated_at = $oldServiceType->updated_at;
             $newServiceType->save();
-            //   return $this->sendResponse($newServiceType, 200);
         }
-
 
         $oldStations = DB::connection('old')->table('stations')->get()->toArray();
         DB::statement('ALTER TABLE stations AUTO_INCREMENT = 1;');
         foreach ($oldStations as $oldStation) {
-            // Reemplaza con la obtención real de tu modelo
             $newStation = new Station([
                 'name' => $oldStation->name,
                 'address' => $oldStation->address,
@@ -149,11 +148,11 @@ class MigrationController extends AppBaseController
                 'num_fonicular' => $oldStation->fonicular,
                 'show_details' => $oldStation->show_details,
                 'active' => $oldStation->active,
-                'old_id' => $oldStation->id  // Asumiendo que quieres guardar el antiguo ID en un campo 'old_id'
+                'old_id' => $oldStation->id
             ]);
-
+            $newStation->created_at = $oldStation->created_at;
+            $newStation->updated_at = $oldStation->updated_at;
             $newStation->save();
-            //  return $this->sendResponse($newStation, 200);
         }
 
         $oldSchools = DB::connection('old')->table('schools')->get();
@@ -178,6 +177,8 @@ class MigrationController extends AppBaseController
                 $newDegree->color = $oldDegree->color;
                 $newDegree->age_min = 1;
                 $newDegree->age_max = 99;
+                $newDegree->created_at = $oldDegree->created_at;
+                $newDegree->updated_at = $oldDegree->updated_at;
                 $newDegree->save();
 
                 $oldGoals =
@@ -185,6 +186,8 @@ class MigrationController extends AppBaseController
                 foreach ($oldGoals as $oldGoal) {
                     $newGoal = new DegreesSchoolSportGoal((array)$oldGoal);
                     $newGoal->degree_id = $newDegree->id;
+                    $newGoal->created_at = $oldGoal->created_at;
+                    $newGoal->updated_at = $oldGoal->updated_at;
                     //  $newGoal->school_id = $newSchool['id'];
                     $newGoal->save();
                     // return $this->sendResponse($newGoal, 200);
@@ -198,6 +201,8 @@ class MigrationController extends AppBaseController
                 $newSchoolColor = new \App\Models\SchoolColor($oldSchoolColor);
                 $newSchoolColor->school_id = $newSchool['id'];
                 $newSchoolColor->default = 1;
+                $newSchoolColor->created_at = $oldSchoolColor->created_at;
+                $newSchoolColor->updated_at = $oldSchoolColor->updated_at;
                 $newSchoolColor->save();
                 //  return $this->sendResponse($newSchoolColor, 200);
             }
@@ -207,6 +212,8 @@ class MigrationController extends AppBaseController
             foreach ($oldSchoolSalaryLevels as $oldSchoolSalaryLevel) {
                 $newSchoolSalaryLevel = new SchoolSalaryLevel($oldSchoolSalaryLevel);
                 $newSchoolSalaryLevel->school_id = $newSchool['id'];
+                $newSchoolSalaryLevel->created_at = $oldSchoolSalaryLevel->created_at;
+                $newSchoolSalaryLevel->updated_at = $oldSchoolSalaryLevel->updated_at;
                 $newSchoolSalaryLevel->save();
                 // return $this->sendResponse($newSchoolSalaryLevel, 200);
             }
@@ -216,6 +223,8 @@ class MigrationController extends AppBaseController
             foreach ($oldSchoolsStations as $oldSchoolsStation) {
                 $newSchoolStation = new StationsSchool($oldSchoolsStation);
                 $newSchoolStation->school_id = $newSchool['id'];
+                $newSchoolStation->created_at = $oldSchoolsStation->created_at;
+                $newSchoolStation->updated_at = $oldSchoolsStation->updated_at;
                 $newSchoolStation->save();
                 // return $this->sendResponse($newSchoolStation, 200);
             }
@@ -226,6 +235,8 @@ class MigrationController extends AppBaseController
             foreach ($oldSchoolSports as $oldSchoolSport) {
                 $newSchoolSport = new SchoolSport($oldSchoolSport);
                 $newSchoolSport->school_id = $newSchool['id'];
+                $newSchoolSport->created_at = $newSchool->created_at;
+                $newSchoolSport->updated_at = $newSchool->updated_at;
                 $newSchoolSport->save();
                 //  return $this->sendResponse($newSchoolSport, 200);
             }
@@ -241,6 +252,8 @@ class MigrationController extends AppBaseController
                 foreach ($oldTasksChecks as $oldTasksCheck) {
                     $newTasksCheck = new \App\Models\TaskCheck($oldTasksCheck);
                     $newTasksCheck->task_id = $newTask['id'];
+                    $newTasksCheck->created_at = $newTask->created_at;
+                    $newTasksCheck->updated_at = $newTask->updated_at;
                     $newTasksCheck->save();
 
                 }
@@ -256,46 +269,47 @@ class MigrationController extends AppBaseController
     {
         $clientTypeId = 2;
 
-        //Listamos todos los usuarios con tipo de cliente:
-
-        $oldUsers = DB::connection('old')->table('users')->where('user_type', $clientTypeId)
-            ->get();
-
+        $oldUsers = DB::connection('old')->table('users')->where('user_type', $clientTypeId)->get();
         foreach ($oldUsers as $oldUser) {
-            // Reemplaza con la obtención real de tu modelo
-            $oldClient = User::withTrashed()->find($oldUser->id); // Reemplaza con la obtención real de tu modelo
+            $oldClient = User::withTrashed()->find($oldUser->id);
             $newClient = new Client($oldClient->toArray());
             $newClient->first_name = $oldClient->last_name;
             $newClient->last_name = $oldClient->first_name;
             $newClient->country = $oldClient->country_id;
             $newClient->old_id = $oldClient->id;
+            $newClient->created_at = $oldClient->created_at;
+            $newClient->updated_at = $oldClient->updated_at;
 
             $user = new \App\Models\User($oldClient->toArray());
             $user->type = 2;
+            $user->created_at = $oldClient->created_at;
+            $user->updated_at = $oldClient->updated_at;
             $user->save();
+
             $newClient->user_id = $user->id;
             $newClient->save();
-            //$user->save();
-            $oldClient->load('schools');
 
+            $oldClient->load('schools');
             foreach ($oldClient->schools as $school) {
                 $clientSchool = new ClientsSchool(['client_id' => $newClient->id, 'school_id' => $school->id]);
+                $clientSchool->created_at = $school->pivot->created_at;
+                $clientSchool->updated_at = $school->pivot->updated_at;
                 $clientSchool->save();
             }
 
             $oldDegrees = \App\Models\OldModels\Degree::all();
             $oldUsersSports = UserSport::where('user_id', $oldUser->id)->whereNotNull('school_id')->get();
-
-
             foreach ($oldUsersSports as $oldUserSport) {
                 $newClientSport = new ClientSport($oldUserSport->toArray());
                 $oldDegree = $oldDegrees->firstWhere('id', $oldUserSport->degree_id);
                 $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
-                    ->where('school_id', $oldUserSport->school_id)->where('sport_id', $oldUserSport->sport_id)
+                    ->where('school_id', $oldUserSport->school_id)
+                    ->where('sport_id', $oldUserSport->sport_id)
                     ->first();
                 $newClientSport->degree_id = $newDegree->id;
                 $newClientSport->client_id = $newClient->id;
-
+                $newClientSport->created_at = $oldUserSport->created_at;
+                $newClientSport->updated_at = $oldUserSport->updated_at;
                 $newClientSport->save();
             }
         }
@@ -322,6 +336,8 @@ class MigrationController extends AppBaseController
                 'school_id' => $oldVoucher->school_id,
                 'payrexx_reference' => $oldVoucher->payrexx_reference,
                 'payrexx_transaction' => $oldVoucher->payrexx_transaction,
+                'created_at' => $oldVoucher->created_at,
+                'updated_at' => $oldVoucher->updated_at,
                 'old_id' => $oldVoucher->id
             ]);
 
@@ -350,69 +366,54 @@ class MigrationController extends AppBaseController
     {
         $clientTypeId = 3;
 
-        //Listamos todos los usuarios con tipo de cliente:
-
         $oldUsers = DB::connection('old')->table('users')->where('user_type', $clientTypeId)->get();
-
         foreach ($oldUsers as $oldUser) {
-            // Reemplaza con la obtención real de tu modelo
-            $oldMonitor = User::find($oldUser->id); // Reemplaza con la obtención real de tu modelo
+            $oldMonitor = User::find($oldUser->id);
             $newMonitor = new Monitor($oldMonitor->toArray());
             $newMonitor->country = $oldMonitor->country_id;
             $newMonitor->old_id = $oldMonitor->id;
+            $newMonitor->created_at = $oldMonitor->created_at;
+            $newMonitor->updated_at = $oldMonitor->updated_at;
 
             $user = new \App\Models\User($oldMonitor->toArray());
             $user->type = $clientTypeId;
+            $user->created_at = $oldMonitor->created_at;
+            $user->updated_at = $oldMonitor->updated_at;
             $user->save();
+
             $newMonitor->user_id = $user->id;
             if ($oldMonitor->birth_date == '0000-00-00' || $oldMonitor->birth_date < '1900-01-01') {
-                // Establecer la fecha de nacimiento a null o a una fecha válida predeterminada
-                $newMonitor->birth_date = '1971-01-01'; // O alguna fecha válida predeterminada
+                $newMonitor->birth_date = '1971-01-01';
             }
             $newMonitor->save();
-            $oldMonitor->load('schools');
 
+            $oldMonitor->load('schools');
             foreach ($oldMonitor->schools as $school) {
                 $oldMonitorSchool = UserSchools::where('user_id', $oldMonitor->id)->where('school_id', $school->id)->first();
-                $monitorSchool = new MonitorsSchool(['monitor_id' => $newMonitor->id, 'school_id' => $school->id,
-                    'active_school' => $oldMonitorSchool->active_school]);
+                $monitorSchool = new MonitorsSchool([
+                    'monitor_id' => $newMonitor->id,
+                    'school_id' => $school->id,
+                    'active_school' => $oldMonitorSchool->active_school
+                ]);
+                $monitorSchool->created_at = $oldMonitorSchool->created_at;
+                $monitorSchool->updated_at = $oldMonitorSchool->updated_at;
                 $monitorSchool->save();
             }
 
             $oldDegrees = \App\Models\OldModels\Degree::all();
             $oldUsersSports = UserSport::where('user_id', $oldUser->id)->whereNotNull('school_id')->get();
-
             foreach ($oldUsersSports as $oldUserSport) {
                 $newMonitorSport = new MonitorSportsDegree($oldUserSport->toArray());
                 $oldDegree = $oldDegrees->firstWhere('id', $oldUserSport->degree_id);
                 $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
-                    ->where('school_id', $oldUserSport->school_id)->where('sport_id', $oldUserSport->sport_id)
+                    ->where('school_id', $oldUserSport->school_id)
+                    ->where('sport_id', $oldUserSport->sport_id)
                     ->first();
-                if ($newDegree) {
-                    $newMonitorSport->degree_id = $newDegree->id;
-                    $newMonitorSport->monitor_id = $newMonitor->id;
-                } else {
-                    Log::channel('migration')->info('Error no existe el degree en comparacion', $oldDegree);
-                }
+                $newMonitorSport->degree_id = $newDegree->id;
+                $newMonitorSport->monitor_id = $newMonitor->id;
+                $newMonitorSport->created_at = $oldUserSport->created_at;
+                $newMonitorSport->updated_at = $oldUserSport->updated_at;
                 $newMonitorSport->save();
-                $oldMonitorSportAuthorizedDegrees =
-                    UserSportAuthorizedDegrees::where('user_sport_id', $oldUserSport->id)->get();
-                foreach ($oldMonitorSportAuthorizedDegrees as $oldMonitorSportAuthorizedDegree) {
-                    $newMonitorSportAuthorizedDegree =
-                        new MonitorSportAuthorizedDegree(['monitor_sport_id' => $newMonitorSport->id]);
-                    $degree = DegreeSchoolSport::find($oldMonitorSportAuthorizedDegree->degree_id);
-                    $oldDegree = $oldDegrees->firstWhere('id', $degree->degree_id);
-                    $newDegree = Degree::where('degree_order', $oldDegree->degree_order)
-                        ->where('school_id', $oldUserSport->school_id)->where('sport_id', $oldUserSport->sport_id)
-                        ->first();
-                    if ($newDegree) {
-                        $newMonitorSportAuthorizedDegree->degree_id = $newDegree->id;
-                        $newMonitorSportAuthorizedDegree->save();
-                    } else {
-                        Log::channel('migration')
-                            ->info('Error no existe el degree en comparacion para el montior sport auth', $oldDegree);
-                    }
-                }
             }
         }
 
@@ -434,12 +435,16 @@ class MigrationController extends AppBaseController
                     $newMonitorNwd->monitor_id = $newMonitor->id;
                     $newMonitorNwd->start_date = $startDate->addDays($i)->toDateString();
                     $newMonitorNwd->end_date = $newMonitorNwd->start_date;
+                    $newMonitorNwd->created_at = $oldMonitorNwd->created_at;
+                    $newMonitorNwd->updated_at = $oldMonitorNwd->updated_at;
                     $newMonitorNwd->save();
                 }
             } else {
                 // If start_date is equal to end_date, create a single record
                 $newMonitorNwd = new MonitorNwd($oldMonitorNwd->toArray());
                 $newMonitorNwd->monitor_id = $newMonitor->id;
+                $newMonitorNwd->created_at = $oldMonitorNwd->created_at;
+                $newMonitorNwd->updated_at = $oldMonitorNwd->updated_at;
                 $newMonitorNwd->save();
             }
         }
@@ -459,12 +464,15 @@ class MigrationController extends AppBaseController
             $oldClient = User::find($oldUser->id); // Reemplaza con la obtención real de tu modelo
             $user = new \App\Models\User($oldClient->toArray());
             $user->type = $clientTypeId;
+            $user->created_at = $oldUser->created_at;
+            $user->updated_at = $oldUser->updated_at;
             $user->save();
 
             $oldClient->load('schools');
 
             foreach ($oldClient->schools as $school) {
-                $clientSchool = new SchoolUser(['user_id' => $user->id, 'school_id' => $school->id]);
+                $clientSchool = new SchoolUser(['user_id' => $user->id, 'school_id' => $school->id,
+                    'accepted_at' => $oldClient->updated_at]);
                 $clientSchool->save();
             }
         }
