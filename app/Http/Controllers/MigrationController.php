@@ -104,9 +104,6 @@ class MigrationController extends AppBaseController
         foreach ($oldSportsTypes as $oldSportsType) {
             $newSportType = new SportType((array)$oldSportsType);
             $newSportType->save();
-            $newSportType->created_at = $oldSportsType->created_at;
-            $newSportType->updated_at = $oldSportsType->updated_at;
-            $newSportType->save();
         }
 
         $oldSports = DB::connection('old')->table('sports')->get();
