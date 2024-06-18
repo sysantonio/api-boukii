@@ -13,6 +13,7 @@ use App\Models\OldModels\UserSport;
 use App\Models\Station;
 use App\Models\StationService;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -135,6 +136,41 @@ Route::any('/monitors-active', function () {
     }
 });
 
+Route::any('/clients-active', function () {
+    $clients = Client::with('utilizers.clientsSchools', 'clientSports.degree', 'clientSports.sport', 'clientsSchools')
+        ->get();
+    foreach ($clients as $client) {
+        if($client->utilizers->count()){
+            foreach ($client->utilizers as $utilizer) {
+                $clientSchoolIds = $client->clientsSchools->pluck('school_id')->toArray();
+                $utilizerSchoolIds = $utilizer->clientsSchools->pluck('school_id')->toArray();
+
+                foreach ($clientSchoolIds as $clientSchoolId) {
+                    if (!in_array($clientSchoolId, $utilizerSchoolIds)) {
+                        // El utilizador no tiene este school_id, así que lo creamos
+                        ClientsSchool::create([
+                            'client_id' => $utilizer->id,
+                            'school_id' => $clientSchoolId,
+                            'accepted_at' => Carbon::now()
+                        ]);
+                    }
+                }
+                foreach ($utilizerSchoolIds as $utilizerSchoolId) {
+                    if (!in_array($utilizerSchoolId, $clientSchoolIds)) {
+                        ClientsSchool::create([
+                            'client_id' => $client->id,
+                            'school_id' => $utilizerSchoolId,
+                            'accepted_at' => Carbon::now()
+                        ]);
+                    }
+                }
+            }
+
+        }
+
+    }
+});
+
 Route::get('/refund', function () {
 
     $transactionID = '13023439';
@@ -250,6 +286,36 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     \App::setLocale($oldLocale);
 
     return view($templateView)->subject($subject)->with($templateData);
+});
+
+Route::any('/mailtest', function () {
+
+    $user = User::find(8560);
+    $defaultLocale = config('app.fallback_locale');
+    $oldLocale = \App::getLocale();
+    $userLang = Language::find($user->language1_id);
+    $userLocale = $userLang ? $userLang->code : $defaultLocale;
+    \App::setLocale($userLocale);
+
+    $templateView = 'mails.recoverPassword'; // Load the view file directly
+    $footerView = 'mails.footer'; // Load the view file directly
+
+    $templateData = [
+        'userName' => trim($user->first_name . ' ' . $user->last_name),
+        'actionURL' => env('APP_RESETPASSWORD_URL') . '/' . $user->recover_token .'?user='. $user->id ,
+        'footerView' => $footerView,
+
+        // SCHOOL DATA - none
+        'schoolName' => '',
+        'schoolLogo' => '',
+        'schoolEmail' => '',
+        'schoolConditionsURL' => '',
+    ];
+
+    $subject = __('emails.recoverPassword.subject');
+    \App::setLocale($oldLocale);
+
+    return  view($templateView)->with($templateData);
 });
 
 Route::post('payrexxNotification', [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
