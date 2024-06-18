@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\ClientSport;
+use App\Models\ClientsSchool;
 use App\Models\Course;
 use App\Models\Degree;
 use App\Models\Language;
