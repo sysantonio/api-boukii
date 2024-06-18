@@ -405,8 +405,10 @@ class MigrationController extends AppBaseController
                     ->where('school_id', $oldUserSport->school_id)
                     ->where('sport_id', $oldUserSport->sport_id)
                     ->first();
+                $oldDegreeSchoolSport = DegreeSchoolSport::where('sport_id', $oldUserSport->sport_id)
+                    ->where('school_id', $oldUserSport->school_id);
                 $oldAuthorizedDegree = UserSportAuthorizedDegrees::where('user_sport_id', $oldUserSport->id)
-                    ->where('degree_id', $oldDegree->id)->first();
+                    ->where('degree_id', $oldDegreeSchoolSport->id)->first();
 
                 $newMonitorSport->degree_id = $newDegree->id;
                 $newMonitorSport->monitor_id = $newMonitor->id;
