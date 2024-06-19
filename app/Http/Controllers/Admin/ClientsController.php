@@ -145,16 +145,23 @@ class ClientsController extends AppBaseController
                 with: $with,
                 order: $order,
                 orderColumn: $orderColumn,
-                additionalConditions: function($query) use($school, $search) {
-                    $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school) {
+                additionalConditions: function($query) use($school, $search, $request) {
+                    $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school, $request) {
                         $query->where('school_id', $school->id);
+                            if ($request->has('active')) {
+                                $query->whereNotNull('accepted_at');
+                            }
+
                     });
                     if ($search) {
-                        $query->orWhereHas('utilizers', function ($subQuery) use ($school, $search) {
+                        $query->orWhereHas('utilizers', function ($subQuery) use ($school, $search, $request) {
                             $subQuery->where('first_name', 'like', "%" . $search . "%")
                                 ->orWhere('last_name', 'like', "%" . $search . "%")
-                                ->whereHas('clientsSchools', function ($query) use($school) {
+                                ->whereHas('clientsSchools', function ($query) use($school, $request) {
                                     $query->where('school_id', $school->id);
+                                    if ($request->has('active')) {
+                                        $query->whereNotNull('accepted_at');
+                                    }
                                 });
                         });
                     }

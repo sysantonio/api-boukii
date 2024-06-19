@@ -94,17 +94,18 @@ class MonitorController extends AppBaseController
             }
         }
 
+
         $clientLanguages = array_unique($clientLanguages);
         $degreeOrder = Degree::find( $request->minimumDegreeId)->degree_order;
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query)
             use ($school, $request,$degreeOrder) {
-                $query->where('school_id', $school->id)
+                $query
                     ->whereHas('degree', function ($q) use ($school, $request, $degreeOrder) {
-                        $q->where('degree_order', '<=', $degreeOrder);
+                        $q->where('degree_order', '>=', $degreeOrder);
                     });
-            })
+            })->where('school_id', $school->id)
                 ->where('sport_id', $request->sportId)
                 // Comprobaci"" ón adicional para allow_adults si hay algún cliente adulto
                 ->when($isAnyAdultClient, function ($query) {
