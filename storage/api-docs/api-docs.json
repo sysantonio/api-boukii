@@ -10428,12 +10428,109 @@
                 }
             }
         },
+        "/admin/bookings/refunds/{id}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "refundBooking",
+                "description": "Refund specific booking",
+                "operationId": "639ef0725e91f1ea4d52618a946bfcf3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to refund",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "amount",
+                        "in": "query",
+                        "description": "Amount to refund",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful refund",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Refund completed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/bookings/cancel": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "payBooking",
+                "summary": "cancelBooking",
                 "description": "Cancel specific booking or group of bookingIds",
                 "operationId": "0ea8c2b62214cc812d040f11c2012a5e",
                 "responses": {
@@ -11010,42 +11107,6 @@
                 }
             }
         },
-        "/admin/monitor/pastBookings": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "getMonitorPastBookings",
-                "description": "Get past Bookings of Monitor",
-                "operationId": "be4928a65939678b1b8c02417f111313",
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Booking"
-                                            }
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/admin/getPlanner": {
             "get": {
                 "tags": [
@@ -11196,6 +11257,180 @@
                 }
             }
         },
+        "/admin/statistics/bookings/collective": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get collective bookings for season",
+                "description": "Get collective bookings for the specified season or date range",
+                "operationId": "471006d04989831bff72b2067986e01d",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/statistics/bookings/private": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get private bookings for season",
+                "description": "Get private bookings for the specified season or date range",
+                "operationId": "e34565b52cad041265df1b9e1cb1ba49",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/statistics/bookings/activity": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get activity bookings for season",
+                "description": "Get activity bookings for the specified season or date range",
+                "operationId": "222f2e41492037be75b8a2094fefdab2",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date to filter bookings",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/slug/login": {
             "post": {
                 "tags": [
@@ -11317,6 +11552,181 @@
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/bookings/payments/{id}": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "payBooking",
+                "description": "Pay specific booking",
+                "operationId": "af93ec7afa840ed5a6b21341234ea01e",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Client"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/bookings/refunds/{id}": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "refundBooking",
+                "description": "Refund specific booking",
+                "operationId": "85c54573a408c431a25c2dd5fa7cc5a5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to refund",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "amount",
+                        "in": "query",
+                        "description": "Amount to refund",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful refund",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Refund completed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": {
+                                                "message": "Booking not found"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": {
+                                                "message": "Invalid amount"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/bookings/cancel": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "cancelBooking",
+                "description": "Cancel specific booking or group of bookingIds",
+                "operationId": "949a76c4d7fbe932911a119dff147980",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
                                             }
                                         },
                                         "message": {
@@ -11576,6 +11986,78 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Course"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/monitor/available": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "getMonitorsAvailable",
+                "description": "Get monitors available",
+                "operationId": "d9c9c4283007a8414695264626231b04",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Monitor"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/slug/monitor/available/{id}": {
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "checkIfMonitorIsAvailable",
+                "description": "Get monitor availability",
+                "operationId": "ba17a49aff4bf0e6ed5ac0270c0d3440",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Monitor"
+                                            }
                                         },
                                         "message": {
                                             "type": "string"
@@ -12063,6 +12545,11 @@
                         "description": "Main Client ID",
                         "type": "integer",
                         "nullable": true
+                    },
+                    "user_id": {
+                        "description": "User ID who performed the action",
+                        "type": "integer",
+                        "nullable": false
                     },
                     "payment_method_id": {
                         "description": "Payment Method ID",
@@ -13201,6 +13688,11 @@
                     },
                     "name": {
                         "description": "Name of the degree",
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "image": {
+                        "description": "Image of the degree",
                         "type": "string",
                         "nullable": false
                     },
@@ -14800,6 +15292,14 @@
                     },
                     "icon_unselected": {
                         "description": "Icon when the sport is not selected",
+                        "type": "string"
+                    },
+                    "icon_collective": {
+                        "description": "Icon when the sport is collective",
+                        "type": "string"
+                    },
+                    "icon_prive": {
+                        "description": "Icon when the sport is prive",
                         "type": "string"
                     },
                     "sport_type": {

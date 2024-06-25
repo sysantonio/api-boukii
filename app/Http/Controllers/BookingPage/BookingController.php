@@ -454,7 +454,7 @@ class BookingController extends SlugAuthController
      *              @OA\Property(
      *                  property="data",
      *                  type="array",
-     *                  example={"refund": true}
+     *                  @OA\Items(ref="#/components/schemas/Booking")
      *              ),
      *              @OA\Property(
      *                  property="message",
@@ -475,7 +475,7 @@ class BookingController extends SlugAuthController
      *              ),
      *              @OA\Property(
      *                  property="error",
-     *                  type="array",
+     *                  type="string",
      *                  example={"message": "Booking not found"}
      *              )
      *          )
@@ -492,7 +492,7 @@ class BookingController extends SlugAuthController
      *              ),
      *              @OA\Property(
      *                  property="error",
-     *                  type="array",
+     *                  type="string",
      *                  example={"message": "Invalid amount"}
      *              )
      *          )

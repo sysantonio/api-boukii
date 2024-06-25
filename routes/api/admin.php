@@ -63,6 +63,16 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         [\App\Http\Controllers\Admin\BookingController::class, 'cancelBookings'])
         ->name('api.admin.bookings.cancel');
 
+    /** Statistics */
+    Route::get('statistics/bookings/private', [\App\Http\Controllers\Admin\StatisticsController::class, 'getPrivateBookings'])
+        ->name('api.admin.stats.private');
+
+    Route::get('statistics/bookings/collective', [\App\Http\Controllers\Admin\StatisticsController::class, 'getCollectiveBookings'])
+        ->name('api.admin.stats.collective');
+
+    Route::get('statistics/bookings/activity', [\App\Http\Controllers\Admin\StatisticsController::class, 'getActivityBookings'])
+        ->name('api.admin.stats.activity');
+
     /** Mailing */
     Route::post('mails/send', [\App\Http\Controllers\Admin\MailController::class, 'sendMail']);
 

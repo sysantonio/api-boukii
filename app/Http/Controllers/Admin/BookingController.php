@@ -283,8 +283,8 @@ class BookingController extends AppBaseController
      *              ),
      *              @OA\Property(
      *                  property="data",
-     *                  type="array",
-     *                  example={"refund": true}
+     *                  type="boolean",
+     *                  example= true
      *              ),
      *              @OA\Property(
      *                  property="message",
@@ -305,8 +305,8 @@ class BookingController extends AppBaseController
      *              ),
      *              @OA\Property(
      *                  property="error",
-     *                  type="array",
-     *                  example={"message": "Booking not found"}
+     *                  type="string",
+     *                  example="Booking not found"
      *              )
      *          )
      *      ),
@@ -321,10 +321,10 @@ class BookingController extends AppBaseController
      *                  example=false
      *              ),
      *              @OA\Property(
-     *                  property="error",
-     *                  type="array",
-     *                  example={"message": "Invalid amount"}
-     *              )
+     *                   property="error",
+     *                   type="string",
+     *                   description="Error message"
+     *               )
      *          )
      *      )
      * )

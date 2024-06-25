@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Course;
 use App\Models\CourseDate;
 use App\Models\Monitor;
+use App\Models\MonitorsSchool;
 use App\Repositories\CourseRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,7 @@ class CourseController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
+        $school = $this->getSchool($request);
         $courses = $this->courseRepository->all(
             searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             search: $request->get('search'),
@@ -76,9 +78,9 @@ class CourseController extends AppBaseController
                 'courseExtras']),
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
-            additionalConditions: function ($query) use ($request) {
+            additionalConditions: function ($query) use ($request, $school) {
                 // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
-                $school = $this->getSchool($request);
+
                 $query->where('school_id', $school->id);
 
                 $query->when($request->has('sport_id') && is_array($request->sport_id), function ($query) use ($request) {
@@ -110,30 +112,58 @@ class CourseController extends AppBaseController
                 }
             }
         );
+        $monitorsBySportAndDegree = $this->getGroupedMonitors($school->id);
 
         // Calcula reservas y plazas disponibles para cada curso
         foreach ($courses as $course) {
-            $availability = $this->getCourseAvailability($course);
+            $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
             $course->total_reservations = $availability['total_reservations'];
             $course->total_available_places = $availability['total_available_places'];
+            $course->total_places = $availability['total_places'];
         }
 
         return $this->sendResponse($courses, 'Courses retrieved successfully');
     }
 
-    public function getCourseAvailability($course)
+    private function getGroupedMonitors($schoolId)
+    {
+        $totalMonitors = Monitor::with(['sports', 'monitorSportsDegrees.monitorSportAuthorizedDegrees.degree'])
+            ->whereHas('monitorsSchools', function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId)->where('active_school', 1);
+            })->get();
+
+        $monitorsBySport = [];
+
+        // Itera a través de los monitores
+        foreach ($totalMonitors as $monitor) {
+            // Itera a través de los deportes del monitor
+            foreach ($monitor->sports as $sport) {
+                // Agrupa por deporte
+                $monitorsBySport[$sport->id][] = $monitor;
+            }
+        }
+
+        return $monitorsBySport;
+    }
+
+    public function getCourseAvailability($course, $monitorsGrouped)
     {
         if (!$course) {
             return null; // o manejar como prefieras
         }
 
-        $totalMonitors = Monitor::whereHas('monitorsSchools', function ($query) use ($course) {
-            $query->where('school_id', $course['school_id'])->where('active_school', 1);
-
-        })->count();
         $totalBookings = 0;
         $totalAvailablePlaces = 0;
         $totalPlaces = 0;
+
+        // Si el curso es de tipo 2, buscamos el número de monitores para el deporte del curso
+        if ($course->course_type == 2 && isset($monitorsGrouped[$course->sport_id])) {
+            $monitorsForSport = count($monitorsGrouped[$course->sport_id]);
+        } else {
+            $monitorsForSport = 1; // Si no hay monitores, consideramos al menos 1
+        }
+
+        //dd($monitorsGrouped[$course->sport_id]);
 
         if ($course->course_type == 1) {
             // Cursos de tipo 1
@@ -161,42 +191,40 @@ class CourseController extends AppBaseController
                                 $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
                                 $start = strtotime($courseDate->hour_min);
                                 $end = strtotime($courseDate->hour_max);
-                                if($start && $end) {
-                                    //  $totalIntervals = 0;
+                                if ($start && $end) {
                                     while ($start < $end) {
                                         $totalIntervals++;
                                         $start += $intervalInSeconds;
                                     }
-                                } else{
+                                } else {
                                     $totalIntervals = 5;
                                 }
                                 // Calcular el número de intervalos disponibles
-                                $totalAvailablePlaces += $totalIntervals;
-                                $totalPlaces += $totalIntervals;
+                                $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
+                                $totalPlaces += $totalIntervals * $monitorsForSport;
                                 // Romper el bucle una vez que se encuentre un precio numérico
                                 break 2;
                             }
                         }
                     }
-                    $totalPlaces += $totalIntervals;
-                    $totalAvailablePlaces += $totalIntervals;
+                    $totalPlaces += $totalIntervals * $monitorsForSport;
+                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
                 } else {
                     // Si no es flexible, calcular el número de intervalos disponibles en función de la duración del curso
                     $start = strtotime($courseDate->hour_min);
                     $end = strtotime($courseDate->hour_max);
                     $durationInSeconds = $this->convertDurationToSeconds($course->duration); // Convertir la duración a segundos
-                    if($start && $end) {
-                      //  $totalIntervals = 0;
+                    if ($start && $end) {
                         while ($start < $end) {
                             $totalIntervals++;
                             $start += $durationInSeconds;
                         }
-                    } else{
+                    } else {
                         $totalIntervals = 5;
                     }
 
-                    $totalAvailablePlaces += $totalIntervals;
-                    $totalPlaces += $totalIntervals;
+                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
+                    $totalPlaces += $totalIntervals * $monitorsForSport;
                 }
             }
 
@@ -209,6 +237,7 @@ class CourseController extends AppBaseController
             'total_places' => $totalPlaces
         ];
     }
+
 
     private function convertDurationToSeconds($duration)
     {
@@ -307,7 +336,9 @@ class CourseController extends AppBaseController
             return $this->sendError('Course does not exist in this school');
         }
 
-        $availability = $this->getCourseAvailability($course);
+        $monitorsBySportAndDegree = $this->getGroupedMonitors($school->id);
+
+        $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
         $course->total_reservations = $availability['total_reservations'];
         $course->total_available_places = $availability['total_available_places'];
 
