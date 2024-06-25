@@ -96,6 +96,11 @@ class SchoolSalaryLevel extends Model
         return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
+    public function monitorSportDegrees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'salary_level');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

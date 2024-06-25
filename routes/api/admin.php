@@ -73,6 +73,9 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('statistics/bookings/activity', [\App\Http\Controllers\Admin\StatisticsController::class, 'getActivityBookings'])
         ->name('api.admin.stats.activity');
 
+  Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorsBookings'])
+        ->name('api.admin.stats.monitors');
+
     /** Mailing */
     Route::post('mails/send', [\App\Http\Controllers\Admin\MailController::class, 'sendMail']);
 

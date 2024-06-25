@@ -227,7 +227,22 @@ class BookingUser extends Model
         'deleted_at' => 'nullable'
     ];
 
-    //protected $appends = ['sport'];
+    protected $appends = ['duration'];
+
+    /**
+     * Calculate duration between start and end time.
+     *
+     * @return string|null
+     */
+    public function getDurationAttribute(): ?string
+    {
+        if ($this->hour_start && $this->hour_end) {
+            $startTime = \Carbon\Carbon::parse($this->hour_start);
+            $endTime = \Carbon\Carbon::parse($this->hour_end);
+            return $startTime->diff($endTime)->format('%H:%I:%S');
+        }
+        return null;
+    }
 
     public function getSportAttribute()
     {

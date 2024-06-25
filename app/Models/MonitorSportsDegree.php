@@ -132,6 +132,11 @@ class MonitorSportsDegree extends Model
         return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
+    public function salary(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\SchoolSalaryLevel::class, 'salary_level', 'id');
+    }
+
     public function monitorSportAuthorizedDegrees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\MonitorSportAuthorizedDegree::class, 'monitor_sport_id');
