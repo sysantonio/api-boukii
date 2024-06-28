@@ -64,17 +64,25 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         ->name('api.admin.bookings.cancel');
 
     /** Statistics */
-    Route::get('statistics/bookings/private', [\App\Http\Controllers\Admin\StatisticsController::class, 'getPrivateBookings'])
-        ->name('api.admin.stats.private');
-
-    Route::get('statistics/bookings/collective', [\App\Http\Controllers\Admin\StatisticsController::class, 'getCollectiveBookings'])
-        ->name('api.admin.stats.collective');
-
-    Route::get('statistics/bookings/activity', [\App\Http\Controllers\Admin\StatisticsController::class, 'getActivityBookings'])
-        ->name('api.admin.stats.activity');
+    Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalAvailablePlacesByCourseType'])
+        ->name('api.admin.stats.bookings');
 
   Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorsBookings'])
         ->name('api.admin.stats.monitors');
+
+    Route::get('statistics/bookings/monitors/active', [\App\Http\Controllers\Admin\StatisticsController::class, 'getActiveMonitors'])
+        ->name('api.admin.stats.monitors.active');
+
+    Route::get('statistics/bookings/monitors/hours', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalWorkedHours'])
+        ->name('api.admin.stats.monitors.hours');
+
+    Route::get('statistics/bookings/monitors/sports', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalWorkedHoursBySport'])
+        ->name('api.admin.stats.monitors.sports');
+
+
+  Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorDailyBookings'])
+        ->name('api.admin.stats.monitors');
+
 
     /** Mailing */
     Route::post('mails/send', [\App\Http\Controllers\Admin\MailController::class, 'sendMail']);

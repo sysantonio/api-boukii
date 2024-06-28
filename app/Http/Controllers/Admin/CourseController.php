@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Response;
 use Validator;
-
-;
+use App\Traits\Utils;
 
 /**
  * Class UserController
@@ -27,7 +26,7 @@ use Validator;
 
 class CourseController extends AppBaseController
 {
-
+    use Utils;
     private $courseRepository;
 
     public function __construct(CourseRepository $courseRepo)
@@ -124,167 +123,6 @@ class CourseController extends AppBaseController
 
         return $this->sendResponse($courses, 'Courses retrieved successfully');
     }
-
-    private function getGroupedMonitors($schoolId)
-    {
-        $totalMonitors = Monitor::with(['sports', 'monitorSportsDegrees.monitorSportAuthorizedDegrees.degree'])
-            ->whereHas('monitorsSchools', function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId)->where('active_school', 1);
-            })->get();
-
-        $monitorsBySport = [];
-
-        // Itera a través de los monitores
-        foreach ($totalMonitors as $monitor) {
-            // Itera a través de los deportes del monitor
-            foreach ($monitor->sports as $sport) {
-                // Agrupa por deporte
-                $monitorsBySport[$sport->id][] = $monitor;
-            }
-        }
-
-        return $monitorsBySport;
-    }
-
-    public function getCourseAvailability($course, $monitorsGrouped)
-    {
-        if (!$course) {
-            return null; // o manejar como prefieras
-        }
-
-        $totalBookings = 0;
-        $totalAvailablePlaces = 0;
-        $totalPlaces = 0;
-
-        // Si el curso es de tipo 2, buscamos el número de monitores para el deporte del curso
-        if ($course->course_type == 2 && isset($monitorsGrouped[$course->sport_id])) {
-            $monitorsForSport = count($monitorsGrouped[$course->sport_id]);
-        } else {
-            $monitorsForSport = 1; // Si no hay monitores, consideramos al menos 1
-        }
-
-        //dd($monitorsGrouped[$course->sport_id]);
-
-        if ($course->course_type == 1) {
-            // Cursos de tipo 1
-            foreach ($course->courseDates as $courseDate) {
-                foreach ($courseDate->courseSubgroups as $subgroup) {
-                    $bookings = $subgroup->bookingUsers()->where('status', 1)->count();
-                    $totalBookings += $bookings;
-                    $totalPlaces += $subgroup->max_participants;
-                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
-                }
-            }
-        } else {
-            // Cursos de tipo 2
-            $totalIntervals = 0;
-            foreach ($course->courseDates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->where('status', 1)->count();
-                $totalBookings += $bookings;
-                // Si es flexible, contar los intervalos disponibles
-                if ($course->is_flexible && $course->price_range) {
-                    foreach ($course->price_range as $price) {
-                        foreach ($price as $participants => $priceValue) {
-                            $priceValue = str_replace(',', '.', $priceValue);
-                            if (is_numeric($priceValue)) {
-                                // Obtener la duración del intervalo en segundos
-                                $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
-                                $start = strtotime($courseDate->hour_min);
-                                $end = strtotime($courseDate->hour_max);
-                                if ($start && $end) {
-                                    while ($start < $end) {
-                                        $totalIntervals++;
-                                        $start += $intervalInSeconds;
-                                    }
-                                } else {
-                                    $totalIntervals = 5;
-                                }
-                                // Calcular el número de intervalos disponibles
-                                $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                                $totalPlaces += $totalIntervals * $monitorsForSport;
-                                // Romper el bucle una vez que se encuentre un precio numérico
-                                break 2;
-                            }
-                        }
-                    }
-                    $totalPlaces += $totalIntervals * $monitorsForSport;
-                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                } else {
-                    // Si no es flexible, calcular el número de intervalos disponibles en función de la duración del curso
-                    $start = strtotime($courseDate->hour_min);
-                    $end = strtotime($courseDate->hour_max);
-                    $durationInSeconds = $this->convertDurationToSeconds($course->duration); // Convertir la duración a segundos
-                    if ($start && $end) {
-                        while ($start < $end) {
-                            $totalIntervals++;
-                            $start += $durationInSeconds;
-                        }
-                    } else {
-                        $totalIntervals = 5;
-                    }
-
-                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                    $totalPlaces += $totalIntervals * $monitorsForSport;
-                }
-            }
-
-            $totalAvailablePlaces = max(0, $totalAvailablePlaces - $totalBookings);
-        }
-
-        return [
-            'total_reservations' => $totalBookings,
-            'total_available_places' => $totalAvailablePlaces,
-            'total_places' => $totalPlaces
-        ];
-    }
-
-
-    private function convertDurationToSeconds($duration)
-    {
-        if (strpos($duration, 'h') !== false) {
-            // Si el formato es "Xh Ymin", convertirlo a segundos
-            preg_match('/(\d+)h (\d+)min/', $duration, $matches);
-            $hours = intval($matches[1]);
-            $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Si no hay minutos, establecer en 0
-            return ($hours * 3600) + ($minutes * 60);
-        } elseif (strpos($duration, 'min') !== false) {
-            // Si el formato es solo "Ymin", convertirlo a segundos
-            preg_match('/(\d+)min/', $duration, $matches);
-            $minutes = intval($matches[1]);
-            return $minutes * 60;
-        } else {
-            // Si el formato es "HH:mm:ss", convertirlo a segundos
-            $time = explode(':', $duration);
-            $hours = intval($time[0]);
-            $minutes = intval($time[1]);
-            $seconds = intval($time[2]);
-            return ($hours * 3600) + ($minutes * 60) + $seconds;
-        }
-    }
-
-    private function convertDurationRangeToSeconds($duration)
-    {
-        if (strpos($duration, 'h') !== false) {
-            // Si el formato es "Xh Ymin" o "Xh", convertirlo a segundos
-            preg_match('/(\d+)h(?: (\d+)min)?/', $duration, $matches);
-            if (!empty($matches[1])) {
-                $hours = intval($matches[1]);
-                $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Si no hay minutos, establecer en 0
-                return ($hours * 3600) + ($minutes * 60);
-            }
-        } elseif (strpos($duration, 'min') !== false) {
-            // Si el formato es solo "Ymin", convertirlo a segundos
-            preg_match('/(\d+)min/', $duration, $matches);
-            if (!empty($matches[1])) {
-                $minutes = intval($matches[1]);
-                return $minutes * 60;
-            }
-        }
-
-        // Si no se pudo convertir, devolver 0 segundos
-        return 0;
-    }
-
 
     /**
      * @OA\Get(
