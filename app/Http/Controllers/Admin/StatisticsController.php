@@ -98,13 +98,21 @@ class StatisticsController extends AppBaseController
         })->count();
 
         $bookingUsersCollective = BookingUser::where('school_id', $schoolId)
-            ->where('monitor_id', '!=', null)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
             ->where('date', '>=', $startDate)
             ->where('date', '<=', $endDate)->pluck('monitor_id');
 
         $nwds = MonitorNwd::where('school_id', $schoolId)
             ->where('user_nwd_subtype_id', 2)
-            ->where('monitor_id', '!=', null)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
             ->where('start_date', '>=', $startDate)
             ->where('start_date', '<=', $endDate)
             ->pluck('monitor_id');
@@ -129,17 +137,26 @@ class StatisticsController extends AppBaseController
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
 
-        $hoursBySport = $this->calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate);
+        // Obtener monitor_id si está presente en la request
+        $monitorId = $request->monitor_id;
+
+        $hoursBySport = $this->calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId);
 
         return $this->sendResponse($hoursBySport, 'Total worked hours by sport retrieved successfully');
     }
 
-    private function calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate)
+    private function calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId = null)
     {
-        $bookingUsers = BookingUser::with('course.sport')
+        $bookingUsersQuery = BookingUser::with('course.sport')
             ->where('school_id', $schoolId)
-            ->whereBetween('date', [$startDate, $endDate])
-            ->get();
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        // Aplicar filtro por monitor_id si está presente
+        if ($monitorId) {
+            $bookingUsersQuery->where('monitor_id', $monitorId);
+        }
+
+        $bookingUsers = $bookingUsersQuery->get();
 
         $hoursBySport = [];
 
@@ -172,22 +189,27 @@ class StatisticsController extends AppBaseController
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
 
-        $totalWorkedHours = $this->calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season);
+        $totalWorkedHours = $this->calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season, $request->monitor_id);
 
         return $this->sendResponse($totalWorkedHours, 'Total worked hours retrieved successfully');
     }
 
-    private function calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season)
+    private function calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season, $monitor)
     {
         $bookingUsers = BookingUser::with('monitor')
             ->where('school_id', $schoolId)
+            ->when($monitor, function ($query) use ($monitor) {
+                return $query->where('monitor_id', $monitor);
+            })
             ->whereBetween('date', [$startDate, $endDate])
             ->get();
 
         $nwds = MonitorNwd::with('monitor')
             ->where('school_id', $schoolId)
             ->where('user_nwd_subtype_id', 2)
-            ->whereNotNull('monitor_id')
+            ->when($monitor, function ($query) use ($monitor) {
+                return $query->where('monitor_id', $monitor);
+            })
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get();
 
@@ -200,11 +222,13 @@ class StatisticsController extends AppBaseController
         $totalBookingHours = 0;
         $totalCourseHours = 0;
         $totalNwdHours = 0;
+        $totalCourseAvaiableHours = 0;
         $monitorsBySportAndDegree = $this->getGroupedMonitors($schoolId);
 
         foreach ($courses as $course) {
             $durations = $this->getCourseAvailability($course, $monitorsBySportAndDegree, $startDate, $endDate);
             $totalCourseHours += $durations['total_hours'];
+            $totalCourseAvaiableHours += $durations['total_available_hours'];
         }
 
         foreach ($bookingUsers as $bookingUser) {
@@ -240,8 +264,9 @@ class StatisticsController extends AppBaseController
             'totalBookingHours' => $totalBookingHours,
             'totalNwdHours' => $totalNwdHours,
             'totalCourseHours' => $totalCourseHours,
+            'totalAvailableHours' => $totalCourseAvaiableHours,
             'totalMonitorHours' => $totalMonitorHours,
-            'totalWorkedHours' => $totalBookingHours + $totalNwdHours + $totalCourseHours + $totalMonitorHours
+            'totalWorkedHours' => $totalBookingHours + $totalNwdHours
         ];
     }
 
@@ -370,6 +395,11 @@ class StatisticsController extends AppBaseController
             ->when($request->has('type'), function ($query) use ($request) {
                 return $query->where('course_type', $request->type);
             })
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                $query->whereHas('bookingUsers', function ($q) use($request) {
+                    return $q->where('monitor_id', $request->monitor_id);
+                });
+            })
             ->get();
 
         $monitorsGrouped = $this->getGroupedMonitors($schoolId);
@@ -378,14 +408,17 @@ class StatisticsController extends AppBaseController
             'total_places_type_1' => 0,
             'total_available_places_type_1' => 0,
             'total_hours_type_1' => 0,
+            'total_available_hours_type_1' => 0,
             'total_price_type_1' => $totalPricesByType['total_price_type_1'],
             'total_places_type_2' => 0,
             'total_available_places_type_2' => 0,
             'total_hours_type_2' => 0,
+            'total_available_hours_type_2' => 0,
             'total_price_type_2' => $totalPricesByType['total_price_type_2'],
             'total_places_type_3' => 0,
             'total_available_places_type_3' => 0,
             'total_hours_type_3' => 0,
+            'total_available_hours_type_3' => 0,
             'total_price_type_3' => $totalPricesByType['total_price_type_3'],
         ];
 
@@ -396,14 +429,17 @@ class StatisticsController extends AppBaseController
                     $courseAvailabilityByType['total_places_type_1'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_1'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_1'] += $availability['total_hours'];
+                    $courseAvailabilityByType['total_available_hours_type_1'] += $availability['total_available_hours'];
                 } elseif ($course->course_type == 2) {
                     $courseAvailabilityByType['total_places_type_2'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_2'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_2'] += $availability['total_hours'];
+                    $courseAvailabilityByType['total_available_hours_type_2'] += $availability['total_available_hours'];
                 } else {
                     $courseAvailabilityByType['total_places_type_3'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_3'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_3'] += $availability['total_hours'];
+                    $courseAvailabilityByType['total_available_hours_type_3'] += $availability['total_available_hours'];
                 }
             }
         }
@@ -416,6 +452,7 @@ class StatisticsController extends AppBaseController
                 'total_available_places' => $courseAvailabilityByType['total_available_places_type_' . $courseType],
                 'total_price' => $courseAvailabilityByType['total_price_type_' . $courseType],
                 'total_hours' => $courseAvailabilityByType['total_hours_type_' . $courseType],
+                'total_available_hours' => $courseAvailabilityByType['total_available_hours_type_' . $courseType],
             ], 'Total available places and prices for the specified course type retrieved successfully');
         }
 
@@ -488,7 +525,11 @@ class StatisticsController extends AppBaseController
 
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
-            ->where('monitor_id', '!=', null)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
             ->where('date', '>=', $startDate)
             ->where('date', '<=', $endDate)
             ->get();
@@ -496,7 +537,11 @@ class StatisticsController extends AppBaseController
         $settings = json_decode($this->getSchool($request)->settings);
         $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
             ->where('school_id', $schoolId)
-            ->where('monitor_id', '!=', null)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
             ->where('start_date', '>=', $startDate)
             ->where('start_date', '<=', $endDate)
             ->get();
@@ -553,6 +598,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
+                    'hour_price' => $salaryLevel->pay,
                 ];
             }
 
@@ -614,6 +660,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
+                    'hour_price' => $salaryLevel->pay,
                 ];
             }
 
@@ -717,6 +764,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
+                    'hour_price' => $salaryLevel->pay,
                 ];
             }
 
@@ -741,6 +789,7 @@ class StatisticsController extends AppBaseController
             $monitor = $nwd->monitor;
             $salaryLevel = null;
             $duration = $fullDayDuration;
+            $date = Carbon::parse($nwd->start_date)->format('Y-m-d');
             if (!$nwd->full_day) {
                 $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
                 // Convertir la duración en horas decimales
@@ -778,6 +827,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
+                    'hour_price' => $salaryLevel->pay,
                 ];
             }
 

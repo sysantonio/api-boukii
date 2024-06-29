@@ -18,6 +18,7 @@ trait Utils
         $totalBookings = 0;
         $totalAvailablePlaces = 0;
         $totalPlaces = 0;
+        $totalAvailableHours = 0;
         $totalHours = 0;
 
         // Si el curso es de tipo 2, buscamos el número de monitores para el deporte del curso
@@ -70,7 +71,8 @@ trait Utils
 
                         $totalPlaces -= $totalIntervals;
                         $totalAvailablePlaces -= $totalIntervals;
-                        $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                        $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                     }
 
                     foreach ($nwds as $nwd) {
@@ -89,7 +91,8 @@ trait Utils
 
                         $totalPlaces -= $totalIntervals;
                         $totalAvailablePlaces -= $totalIntervals;
-                        $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                        $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                     }
                 }
             }
@@ -134,6 +137,7 @@ trait Utils
                                 $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
                                 $totalPlaces += $totalIntervals * $monitorsForSport;
                                 $totalHours += $totalIntervals * $this->convertSecondsToHours($intervalInSeconds);
+                                $totalAvailableHours += $totalIntervals * $this->convertSecondsToHours($intervalInSeconds);
                                 // Romper el bucle una vez que se encuentre un precio numérico
                                 break 2;
                             }
@@ -156,6 +160,7 @@ trait Utils
                     $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
                     $totalPlaces += $totalIntervals * $monitorsForSport;
                     $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalAvailableHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                 }
                 $totalIntervals = 0;
                 foreach ($bookingUsers as $bookingUser) {
@@ -174,7 +179,8 @@ trait Utils
 
                     $totalPlaces -= $totalIntervals;
                     $totalAvailablePlaces -= $totalIntervals;
-                    $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                 }
                 foreach ($nwds as $nwd) {
                     $start = strtotime($nwd->hour_start ?? $season->hour_start);
@@ -192,7 +198,8 @@ trait Utils
 
                     $totalPlaces -= $totalIntervals;
                     $totalAvailablePlaces -= $totalIntervals;
-                    $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                 }
             }
 
@@ -203,6 +210,7 @@ trait Utils
             'total_reservations' => $totalBookings,
             'total_available_places' => $totalAvailablePlaces,
             'total_places' => $totalPlaces,
+            'total_available_hours' => $totalAvailableHours,
             'total_hours' => $totalHours
         ];
     }
@@ -210,145 +218,6 @@ trait Utils
     private function convertSecondsToHours($seconds)
     {
         return $seconds / 3600;
-    }
-
-    public function getCourseAvailability2($course, $monitorsGrouped)
-    {
-        if (!$course) {
-            return null; // o manejar como prefieras
-        }
-
-        $totalBookings = 0;
-        $totalAvailablePlaces = 0;
-        $totalPlaces = 0;
-        $monitorsForSport = 1; // Asumir al menos 1 monitor disponible por defecto
-
-        $startDate = $course->courseDates->min('date');
-        $endDate = $course->courseDates->max('date');
-
-        // Obtener reservas y bloqueos de los monitores excluyendo el curso actual
-        $monitorAvailability = $this->getMonitorAvailabilityForCourse($course, $startDate, $endDate);
-
-        $occupiedIntervals = [];
-        $season = $monitorAvailability['season'];
-
-        foreach ($monitorAvailability['monitorBookings'] as $booking) {
-            $startTime = strtotime($booking->date . ' ' . $booking->start_time);
-            $endTime = strtotime($booking->date . ' ' . $booking->end_time);
-            $occupiedIntervals[] = [
-                'monitor_id' => $booking->monitor_id,
-                'start_time' => $startTime,
-                'end_time' => $endTime
-            ];
-        }
-
-        foreach ($monitorAvailability['monitorNwds'] as $nwd) {
-            $startDate = strtotime($nwd->start_date . ' ' . $nwd->start_time);
-            $endDate = strtotime($nwd->end_date . ' ' . $nwd->end_time);
-
-            if ($nwd->full_day) {
-                $startDate = strtotime($nwd->start_date . ' ' . $season->hour_start);
-                $endDate = strtotime($nwd->end_date . ' ' . $season->hour_end);
-            }
-
-            while ($startDate <= $endDate) {
-                $occupiedIntervals[] = [
-                    'monitor_id' => $nwd->monitor_id,
-                    'start_time' => $startDate,
-                    'end_time' => min($endDate, $startDate + $this->convertDurationToSeconds($nwd->duration))
-                ];
-                $startDate += 86400; // Incrementar por un día
-            }
-        }
-
-        // Filtrar monitores ocupados
-        $availableMonitors = [];
-        foreach ($monitorsGrouped[$course->sport_id] ?? [] as $monitorId) {
-            $isAvailable = true;
-            foreach ($occupiedIntervals as $interval) {
-                if ($interval['monitor_id'] == $monitorId) {
-                    $isAvailable = false;
-                    break;
-                }
-            }
-            if ($isAvailable) {
-                $availableMonitors[] = $monitorId;
-            }
-        }
-
-        $monitorsForSport = max(1, count($availableMonitors));
-
-        if ($course->course_type == 1) {
-            // Cursos de tipo 1
-            foreach ($course->courseDates as $courseDate) {
-                foreach ($courseDate->courseSubgroups as $subgroup) {
-                    $bookings = $subgroup->bookingUsers()->where('status', 1)->count();
-                    $totalBookings += $bookings;
-                    $totalPlaces += $subgroup->max_participants;
-                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
-                }
-            }
-        } else {
-            // Cursos de tipo 2
-            $totalIntervals = 0;
-            foreach ($course->courseDates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->where('status', 1)->count();
-                $totalBookings += $bookings;
-                // Si es flexible, contar los intervalos disponibles
-                if ($course->is_flexible && $course->price_range) {
-                    foreach ($course->price_range as $price) {
-                        foreach ($price as $participants => $priceValue) {
-                            $priceValue = str_replace(',', '.', $priceValue);
-                            if (is_numeric($priceValue)) {
-                                // Obtener la duración del intervalo en segundos
-                                $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
-                                $start = strtotime($courseDate->hour_min);
-                                $end = strtotime($courseDate->hour_max);
-                                if ($start && $end) {
-                                    while ($start < $end) {
-                                        $totalIntervals++;
-                                        $start += $intervalInSeconds;
-                                    }
-                                } else {
-                                    $totalIntervals = 5;
-                                }
-                                // Calcular el número de intervalos disponibles
-                                $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                                $totalPlaces += $totalIntervals * $monitorsForSport;
-                                // Romper el bucle una vez que se encuentre un precio numérico
-                                break 2;
-                            }
-                        }
-                    }
-                    $totalPlaces += $totalIntervals * $monitorsForSport;
-                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                } else {
-                    // Si no es flexible, calcular el número de intervalos disponibles en función de la duración del curso
-                    $start = strtotime($courseDate->hour_min);
-                    $end = strtotime($courseDate->hour_max);
-                    $durationInSeconds = $this->convertDurationToSeconds($course->duration); // Convertir la duración a segundos
-                    if ($start && $end) {
-                        while ($start < $end) {
-                            $totalIntervals++;
-                            $start += $durationInSeconds;
-                        }
-                    } else {
-                        $totalIntervals = 5;
-                    }
-
-                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                    $totalPlaces += $totalIntervals * $monitorsForSport;
-                }
-            }
-
-            $totalAvailablePlaces = max(0, $totalAvailablePlaces - $totalBookings);
-        }
-
-        return [
-            'total_reservations' => $totalBookings,
-            'total_available_places' => $totalAvailablePlaces,
-            'total_places' => $totalPlaces
-        ];
     }
 
     public function getMonitorAvailabilityForCourse($course, $startDate, $endDate)
