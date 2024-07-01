@@ -67,6 +67,12 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalAvailablePlacesByCourseType'])
         ->name('api.admin.stats.bookings');
 
+    Route::get('statistics/bookings/dates', [\App\Http\Controllers\Admin\StatisticsController::class, 'getBookingUsersByDateRange'])
+        ->name('api.admin.stats.bookingsDates');
+
+    Route::get('statistics/bookings/sports', [\App\Http\Controllers\Admin\StatisticsController::class, 'getBookingUsersBySport'])
+        ->name('api.admin.stats.bookingsSports');
+
   Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorsBookings'])
         ->name('api.admin.stats.monitors');
 

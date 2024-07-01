@@ -194,6 +194,136 @@ class StatisticsController extends AppBaseController
         return $this->sendResponse($totalWorkedHours, 'Total worked hours retrieved successfully');
     }
 
+    public function getBookingUsersByDateRange(Request $request)
+    {
+        $schoolId = $this->getSchool($request)->id;
+        $monitorId = $request->monitor_id ?? null;
+
+        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+
+        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
+        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
+        ->first();
+
+        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($season->start_date);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($season->end_date);
+
+        // Determinar el intervalo de agrupación
+        $interval = $this->determineInterval($startDate, $endDate);
+
+        // Generar el rango de fechas completas basado en el intervalo
+        $dateRange = $this->generateDateRange($startDate, $endDate, $interval);
+
+        // Obtener y agrupar los datos
+        $bookings = BookingUser::with('course')
+            ->where('school_id', $schoolId)
+            ->when($monitorId, function ($query) use ($monitorId) {
+                return $query->where('monitor_id', $monitorId);
+            })
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        // Agrupar los datos por el intervalo determinado y luego por el tipo de curso
+        $groupedData = $bookings->groupBy(function ($booking) use ($interval) {
+            return Carbon::parse($booking->date)->format($interval);
+        })->map(function ($group) {
+            return $group->groupBy('course.course_type')->map->count();
+        });
+
+        // Rellenar el rango de fechas con valores por defecto si no hay datos
+        $data = [];
+        foreach ($dateRange as $date) {
+            $data[$date] = $groupedData->get($date, collect([1 => 0, 2 => 0, 3 => 0]));
+        }
+
+        return $this->sendResponse($data, 'Booking users retrieved successfully');
+    }
+
+    public function getBookingUsersBySport(Request $request)
+    {
+        $schoolId = $this->getSchool($request)->id;
+        $monitorId = $request->monitor_id ?? null;
+
+        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+
+        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
+        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
+        ->first();
+
+        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($season->start_date);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($season->end_date);
+
+        // Determinar el intervalo de agrupación
+        $interval = $this->determineInterval($startDate, $endDate);
+
+        // Generar el rango de fechas completas basado en el intervalo
+        $dateRange = $this->generateDateRange($startDate, $endDate, $interval);
+
+        // Obtener y agrupar los datos
+        $bookings = BookingUser::with('course.sport')
+            ->where('school_id', $schoolId)
+            ->when($monitorId, function ($query) use ($monitorId) {
+                return $query->where('monitor_id', $monitorId);
+            })
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        // Agrupar los datos por el intervalo determinado y luego por el deporte
+        $groupedData = $bookings->groupBy(function ($booking) use ($interval) {
+            return Carbon::parse($booking->date)->format($interval);
+        })->map(function ($group) {
+            return $group->groupBy('course.sport.name')->map->count();
+        });
+
+        // Rellenar el rango de fechas con valores por defecto si no hay datos
+        $data = [];
+        foreach ($dateRange as $date) {
+            $data[$date] = $groupedData->get($date, collect([])); // Suponiendo que los deportes se añaden dinámicamente
+        }
+
+        return $this->sendResponse($data, 'Booking users by sport retrieved successfully');
+    }
+
+
+    private function determineInterval(Carbon $startDate, Carbon $endDate)
+    {
+        $daysDiff = $endDate->diffInDays($startDate);
+
+        if ($daysDiff <= 30) {
+            return 'Y-m-d'; // Agrupar por día
+        } elseif ($daysDiff <= 180) {
+            return 'Y-W'; // Agrupar por semana
+        } else {
+            return 'Y-m'; // Agrupar por mes
+        }
+    }
+
+    private function generateDateRange(Carbon $startDate, Carbon $endDate, $interval)
+    {
+        $dateRange = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate->lte($endDate)) {
+            $dateRange[] = $currentDate->format($interval);
+            switch ($interval) {
+                case 'Y-m-d':
+                    $currentDate->addDay();
+                    break;
+                case 'Y-W':
+                    $currentDate->addWeek();
+                    break;
+                case 'Y-m':
+                    $currentDate->addMonth();
+                    break;
+            }
+        }
+
+        return $dateRange;
+    }
+
+
     private function calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season, $monitor)
     {
         $bookingUsers = BookingUser::with('monitor')
@@ -598,7 +728,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
-                    'hour_price' => $salaryLevel->pay,
+                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
                 ];
             }
 
@@ -660,7 +790,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
-                    'hour_price' => $salaryLevel->pay,
+                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
                 ];
             }
 
@@ -764,7 +894,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
-                    'hour_price' => $salaryLevel->pay,
+                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
                 ];
             }
 
