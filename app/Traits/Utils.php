@@ -38,8 +38,8 @@ trait Utils
             // Cursos de tipo 1
             foreach ($dates as $courseDate) {
                 foreach ($courseDate->courseSubgroups as $subgroup) {
-                    $bookings = $subgroup->bookingUsers()->where('status', 1)->count();
-                    $totalBookings += $bookings;
+                    $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
+                    $totalBookings += $bookings->count();
                     $totalPlaces += $subgroup->max_participants;
                     $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
                     $nwds = MonitorNwd::where('start_date', $courseDate->date)
@@ -94,15 +94,36 @@ trait Utils
                         $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                         $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                     }
+                    if($bookings->count()){
+                        foreach ($bookings as $booking) {
+                            $start = strtotime($booking->hour_start);
+                            $end = strtotime($booking->hour_end);
+                            $durationInSeconds = $this->convertDurationToSeconds(
+                                $this->calculateDuration($booking->hour_start, $booking->hour_end));
+
+                            if ($start && $end) {
+                                while ($start < $end) {
+                                    $totalIntervals++;
+                                    $start += $durationInSeconds;
+                                }
+                            } else {
+                                $totalIntervals = 5;
+                            }
+
+                            $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                        }
+                    }
                 }
+
             }
         } else {
             // Cursos de tipo 2
             $totalIntervals = 0;
 
             foreach ($dates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->where('status', 1)->count();
-                $totalBookings += $bookings;
+                $bookings = $courseDate->bookingUsers()->where('status', 1)->get();
+                $totalBookings += $bookings->count();
+
 
                 $nwds = MonitorNwd::where('start_date', $courseDate->date)
                     ->where('user_nwd_subtype_id', 2)
@@ -200,6 +221,26 @@ trait Utils
                     $totalAvailablePlaces -= $totalIntervals;
                     $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                     $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                }
+
+                if($bookings->count()){
+                    foreach ($bookings as $booking) {
+                        $start = strtotime($booking->hour_start);
+                        $end = strtotime($booking->hour_end);
+                        $durationInSeconds = $this->convertDurationToSeconds(
+                            $this->calculateDuration($booking->hour_start, $booking->hour_end));
+
+                        if ($start && $end) {
+                            while ($start < $end) {
+                                $totalIntervals++;
+                                $start += $durationInSeconds;
+                            }
+                        } else {
+                            $totalIntervals = 5;
+                        }
+
+                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    }
                 }
             }
 
