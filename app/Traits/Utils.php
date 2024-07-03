@@ -41,7 +41,7 @@ trait Utils
                     $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
                     $totalBookings += $bookings->count();
                     $totalPlaces += $subgroup->max_participants;
-                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings);
+                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings->count());
                     $nwds = MonitorNwd::where('start_date', $courseDate->date)
                         ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
                         ->get();
