@@ -204,6 +204,7 @@ class StatisticsController extends AppBaseController
                 }
             }
 
+            $totalCost = array_sum($payments);
 
             $result[] = [
                 'course_id' => $course->id,
@@ -211,7 +212,13 @@ class StatisticsController extends AppBaseController
                 'total_places' => $availability['total_places'],
                 'booked_places' => $availability['total_reservations'],
                 'available_places' => $availability['total_available_places'],
-                'payments' => $payments,
+                'cash' => $payments['cash'],
+                'other' => $payments['other'],
+                'boukii' => $payments['boukii'],
+                'online' => $payments['online'],
+                'voucher_gift' => $payments['voucher_gift'],
+                'sell_voucher' => $payments['sell_voucher'],
+                'total_cost' => $totalCost
             ];
         }
         return $this->sendResponse($result, 'Total worked hours by sport retrieved successfully');
@@ -960,22 +967,26 @@ class StatisticsController extends AppBaseController
     public function getMonitorDailyBookings(Request $request, $monitorId): JsonResponse
     {
         $schoolId = $this->getSchool($request)->id;
+        $today = now()->format('Y-m-d');
+        $season = Season::whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->first();
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
-
-        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
-        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
-        ->first();
-
-        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $sportId = $request->sport_id; // Obtener el sport_id de la request
 
+        // Obtener reservas de usuario con monitor filtradas por sport_id
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
             ->where('monitor_id', $monitorId)
             ->where('date', '>=', $startDate)
             ->where('date', '<=', $endDate)
+            ->whereHas('course.sport', function($query) use ($sportId) {
+                if ($sportId) {
+                    $query->where('id', $sportId);
+                }
+            })
             ->get();
 
         $settings = json_decode($this->getSchool($request)->settings);
@@ -984,21 +995,21 @@ class StatisticsController extends AppBaseController
             ->where('monitor_id', $monitorId)
             ->where('user_nwd_subtype_id', 2)
             ->whereBetween('start_date', [$startDate, $endDate])
+            ->whereHas('monitor.monitorSportsDegrees.sport', function($query) use ($sportId) {
+                if ($sportId) {
+                    $query->where('id', $sportId);
+                }
+            })
             ->get();
 
-        $currency = 'CHF'; // Valor por defecto si settings no existe o es null
-
-        // Verificar si settings existe y tiene la propiedad taxes->currency
+        $currency = 'CHF';
         if ($settings && isset($settings->taxes->currency)) {
             $currency = $settings->taxes->currency;
         }
 
-        $fullDayDuration = $this->convertDurationToHours($this->calculateDuration($season->hour_start,  $season->hour_end));
-
-        // Inicialización de variables para almacenar resultados
+        $fullDayDuration = $this->convertDurationToHours($this->calculateDuration($season->hour_start, $season->hour_end));
         $monitorDailySummary = [];
 
-        // Recorrer cada reserva de usuario con monitor
         foreach ($bookingUsersWithMonitor as $bookingUser) {
             $monitor = $bookingUser->monitor;
             $sport = $bookingUser->course->sport;
@@ -1006,11 +1017,8 @@ class StatisticsController extends AppBaseController
             $salaryLevel = null;
             $duration = $bookingUser->duration;
             $date = Carbon::parse($bookingUser->date)->format('Y-m-d');
-
-            // Convertir la duración en horas decimales
             $hours = $this->convertDurationToHours($duration);
 
-            // Buscar el salario y las horas según el tipo de curso
             foreach ($monitor->monitorSportsDegrees as $degree) {
                 if ($degree->sport_id === $sport->id && $degree->school_id == $schoolId) {
                     $salaryLevel = $degree->salary;
@@ -1018,10 +1026,7 @@ class StatisticsController extends AppBaseController
                 }
             }
 
-            // Calcular el costo por tipo de curso
             $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
-            //dd($date);
-            // Agregar información al resumen del monitor por día
             if (!isset($monitorDailySummary[$date])) {
                 $monitorDailySummary[$date] = [
                     'date' => $date,
@@ -1031,6 +1036,7 @@ class StatisticsController extends AppBaseController
                     'currency' => $currency,
                     'hours_collective' => 0,
                     'hours_nwd' => 0,
+                    'hours_nwd_payed' => 0,
                     'hours_private' => 0,
                     'hours_activities' => 0,
                     'cost_collective' => 0,
@@ -1043,7 +1049,6 @@ class StatisticsController extends AppBaseController
                 ];
             }
 
-            // Actualizar horas y costos según el tipo de curso
             if ($courseType == 1) {
                 $monitorDailySummary[$date]['hours_collective'] += $hours;
                 $monitorDailySummary[$date]['cost_collective'] += $cost;
@@ -1055,7 +1060,6 @@ class StatisticsController extends AppBaseController
                 $monitorDailySummary[$date]['cost_activities'] += $cost;
             }
 
-            // Actualizar las horas totales y el costo total
             $monitorDailySummary[$date]['total_hours'] += $hours;
             $monitorDailySummary[$date]['total_cost'] += $cost;
         }
@@ -1067,7 +1071,6 @@ class StatisticsController extends AppBaseController
             $date = Carbon::parse($nwd->start_date)->format('Y-m-d');
             if (!$nwd->full_day) {
                 $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
-                // Convertir la duración en horas decimales
                 $hours = $this->convertDurationToHours($duration);
             } else {
                 $hours = $duration;
@@ -1081,10 +1084,7 @@ class StatisticsController extends AppBaseController
                 }
             }
 
-            // Calcular el costo por tipo de curso
             $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
-
-            // Agregar información al resumen del monitor por día
             if (!isset($monitorDailySummary[$date])) {
                 $monitorDailySummary[$date] = [
                     'date' => $date,
@@ -1094,6 +1094,7 @@ class StatisticsController extends AppBaseController
                     'currency' => $currency,
                     'hours_collective' => 0,
                     'hours_nwd' => 0,
+                    'hours_nwd_payed' => 0,
                     'hours_private' => 0,
                     'hours_activities' => 0,
                     'cost_collective' => 0,
@@ -1106,10 +1107,12 @@ class StatisticsController extends AppBaseController
                 ];
             }
 
-            $monitorDailySummary[$date]['hours_nwd'] += $hours;
-            $monitorDailySummary[$date]['cost_nwd'] += $cost;
-
-            // Actualizar las horas totales y el costo total
+            if ($nwd->user_nwd_subtype_id == 2) {
+                $monitorDailySummary[$date]['hours_nwd_payed'] += $hours;
+                $monitorDailySummary[$date]['cost_nwd'] += $cost;
+            } else {
+                $monitorDailySummary[$date]['hours_nwd'] += $hours;
+            }
             $monitorDailySummary[$date]['total_hours'] += $hours;
             $monitorDailySummary[$date]['total_cost'] += $cost;
         }
@@ -1117,6 +1120,7 @@ class StatisticsController extends AppBaseController
         $monitorDailySummaryJson = array_values($monitorDailySummary);
         return $this->sendResponse($monitorDailySummaryJson, 'Monitor daily bookings retrieved successfully');
     }
+
 
     // Función para convertir la duración en formato HH:MM:SS a horas decimales
     private function convertDurationToHours($duration): float|int
