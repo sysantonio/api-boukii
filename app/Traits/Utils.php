@@ -19,6 +19,9 @@ trait Utils
         $totalAvailablePlaces = 0;
         $totalPlaces = 0;
         $totalAvailableHours = 0;
+        $totalPlacesHours = 0;
+        $totalBookingsPlaces = 0;
+        $totalBookingsHours = 0;
         $totalHours = 0;
 
         // Si el curso es de tipo 2, buscamos el número de monitores para el deporte del curso
@@ -34,116 +37,116 @@ trait Utils
             $dates = $dates->whereBetween('date', [$startDate, $endDate]);
         }
 
+        // Cursos de tipo 1
         if ($course->course_type == 1) {
-            // Cursos de tipo 1
-            foreach ($dates as $courseDate) {
-                foreach ($courseDate->courseSubgroups as $subgroup) {
-                    $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
-                    $totalBookings += $bookings->count();
-                    $totalPlaces += $subgroup->max_participants;
-                    $totalAvailablePlaces += max(0, $subgroup->max_participants - $bookings->count());
-                    $nwds = MonitorNwd::where('start_date', $courseDate->date)
-                        ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
-                        ->get();
+            if($course->is_flexible) {
+                foreach ($dates as $courseDate) {
+                    foreach ($courseDate->courseSubgroups as $subgroup) {
 
-                    $bookingUsers = BookingUser::whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
-                        ->where('date', $courseDate->date)->get();
+                        $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
+                        $totalBookingsPlaces += $bookings->count();
 
-                    $season = Season::whereDate('start_date', '<=', $courseDate->date) // Fecha de inicio menor o igual a hoy
-                    ->whereDate('end_date', '>=', $courseDate->date)   // Fecha de fin mayor o igual a hoy
-                    ->first();
+                        $hoursTotalDate =  $this->convertSecondsToHours(
+                                $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                            ) * $subgroup->max_participants;
+                        $hoursTotalBooked =  $this->convertSecondsToHours(
+                                $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                            ) * $totalBookingsPlaces;
+                        $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
+                        $totalAvailableHours += $totalHoursAvailable;
+                        $totalPlaces += $subgroup->max_participants;
+                        $totalAvailablePlaces += max(0, $subgroup->max_participants - $totalBookingsPlaces);
 
-                    $totalIntervals = 0;
-
-                    foreach ($bookingUsers as $bookingUser) {
-                        $start = strtotime($bookingUser->hour_start);
-                        $end = strtotime($bookingUser->hour_end);
-                        $durationInSeconds = $this->convertDurationToSeconds($this->calculateDuration($bookingUser->hour_start, $bookingUser->hour_end));
-
-                        if ($start && $end) {
-                            while ($start < $end) {
-                                $totalIntervals++;
-                                $start += $durationInSeconds;
-                            }
-                        } else {
-                            $totalIntervals = 5;
-                        }
-
-                        $totalPlaces -= $totalIntervals;
-                        $totalAvailablePlaces -= $totalIntervals;
-                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                        $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                     }
 
-                    foreach ($nwds as $nwd) {
-                        $start = strtotime($nwd->start_time ?? $season->hour_start);
-                        $end = strtotime($nwd->end_time ?? $season->hour_end);
-                        $durationInSeconds = $this->convertDurationToSeconds($this->calculateDuration($nwd->start_time ?? $season->hour_start, $nwd->end_time ?? $season->hour_end));
-
-                        if ($start && $end) {
-                            while ($start < $end) {
-                                $totalIntervals++;
-                                $start += $durationInSeconds;
-                            }
-                        } else {
-                            $totalIntervals = 5;
-                        }
-
-                        $totalPlaces -= $totalIntervals;
-                        $totalAvailablePlaces -= $totalIntervals;
-                        $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                    }
-                    if($bookings->count()){
-                        foreach ($bookings as $booking) {
-                            $start = strtotime($booking->hour_start);
-                            $end = strtotime($booking->hour_end);
-                            $durationInSeconds = $this->convertDurationToSeconds(
-                                $this->calculateDuration($booking->hour_start, $booking->hour_end));
-
-                            if ($start && $end) {
-                                while ($start < $end) {
-                                    $totalIntervals++;
-                                    $start += $durationInSeconds;
-                                }
-                            } else {
-                                $totalIntervals = 5;
-                            }
-
-                            $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                        }
-                    }
                 }
+            } else {
+                $bookings = $course->bookingUsers()->where('status', 1)->get();
+                $totalBookingsPlaces += $bookings->count();
+
+                $hoursTotalDate =  $this->convertSecondsToHours(
+                        $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
+                    ) * $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
+                $hoursTotalBooked =  $this->convertSecondsToHours(
+                        $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
+                    ) * $totalBookingsPlaces;
+                $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
+                $totalAvailableHours += $totalHoursAvailable;
+                $totalHours += $hoursTotalDate;
+                $totalPlaces += $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
+                $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
 
             }
-        } else {
+
+
+        }
+        else {
             // Cursos de tipo 2
-            $totalIntervals = 0;
+
+            $totalPlacesPerHour = $monitorsForSport *
+                (1 / $this->convertSecondsToHours(
+                    $this->convertDurationToSeconds($course->duration)));
+
 
             foreach ($dates as $courseDate) {
                 $bookings = $courseDate->bookingUsers()->where('status', 1)->get();
                 $totalBookings += $bookings->count();
-
 
                 $nwds = MonitorNwd::where('start_date', $courseDate->date)
                     ->where('user_nwd_subtype_id', 2)
                     ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
                     ->get();
 
-                $bookingUsers = BookingUser::whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
-                    ->where('date', $courseDate->date)->get();
+                $bookingUsers = BookingUser::whereIn('monitor_id',
+                    collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    ->where('date', $courseDate->date)->where('course_id', $course->id)->get();
+
+                $bookingUsersOtherCourses = BookingUser::whereIn('monitor_id',
+                    collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    ->where('date', $courseDate->date)->where('course_id', '!=', $course->id)->get();
 
                 $season = Season::whereDate('start_date', '<=', $courseDate->date) // Fecha de inicio menor o igual a hoy
                 ->whereDate('end_date', '>=', $courseDate->date)   // Fecha de fin mayor o igual a hoy
                 ->first();
                 // Si es flexible, contar los intervalos disponibles
                 if ($course->is_flexible && $course->price_range) {
+                    $minDuration = null;
                     foreach ($course->price_range as $price) {
                         foreach ($price as $participants => $priceValue) {
+
                             $priceValue = str_replace(',', '.', $priceValue);
                             if (is_numeric($priceValue)) {
+
                                 // Obtener la duración del intervalo en segundos
                                 $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
+                               // $intervalInSeconds = $this->convertDurationRangeToSeconds("30min");
+                                if(!$minDuration) {
+                                    $minDuration = $intervalInSeconds;
+                                    $totalPlacesPerHour = $monitorsForSport *
+                                        (1 /  $this->convertSecondsToHours($minDuration)) * $course->max_participants;
+
+                                    $placesTotalDate = $totalPlacesPerHour *
+                                            $this->convertSecondsToHours(
+                                                $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                                            ) * $course->max_participants;
+
+
+                                    $hoursTotalDate = $monitorsForSport *
+                                        $this->convertSecondsToHours(
+                                            $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                                        ) * $course->max_participants;
+
+                                    $totalAvailablePlaces += $placesTotalDate;
+                                    $totalPlaces += $placesTotalDate;
+                                    $totalHours += $hoursTotalDate;
+                                    $totalPlacesHours += $hoursTotalDate;
+                                    $totalAvailableHours += $hoursTotalDate;
+
+                                    break 2;
+                                }
+/*                                if (is_null($durationInSeconds) || $intervalInSeconds < $durationInSeconds) {
+                                    $durationInSeconds = $intervalInSeconds;
+                                }
                                 $start = strtotime($courseDate->hour_min);
                                 $end = strtotime($courseDate->hour_max);
                                 if ($start && $end) {
@@ -153,108 +156,111 @@ trait Utils
                                     }
                                 } else {
                                     $totalIntervals = 5;
-                                }
+                                }*/
                                 // Calcular el número de intervalos disponibles
-                                $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
+                /*                $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
                                 $totalPlaces += $totalIntervals * $monitorsForSport;
                                 $totalHours += $totalIntervals * $this->convertSecondsToHours($intervalInSeconds);
-                                $totalAvailableHours += $totalIntervals * $this->convertSecondsToHours($intervalInSeconds);
+                                $totalAvailableHours += $totalIntervals * $this->convertSecondsToHours($intervalInSeconds);*/
                                 // Romper el bucle una vez que se encuentre un precio numérico
-                                break 2;
+
                             }
                         }
                     }
-                } else {
-                    // Si no es flexible, calcular el número de intervalos disponibles en función de la duración del curso
-                    $start = strtotime($courseDate->hour_min);
-                    $end = strtotime($courseDate->hour_max);
-                    $durationInSeconds = $this->convertDurationToSeconds($course->duration); // Convertir la duración a segundos
-                    if ($start && $end) {
-                        while ($start < $end) {
-                            $totalIntervals++;
-                            $start += $durationInSeconds;
-                        }
-                    } else {
-                        $totalIntervals = 5;
-                    }
-
-                    $totalAvailablePlaces += $totalIntervals * $monitorsForSport;
-                    $totalPlaces += $totalIntervals * $monitorsForSport;
-                    $totalHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                    $totalAvailableHours += $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
                 }
-                $totalIntervals = 0;
+                else {
+
+                    $placesTotalDate = $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                        ) * $totalPlacesPerHour * $course->max_participants;
+
+                    $hoursTotalDate =  $this->convertSecondsToHours(
+                        $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                    * $monitorsForSport * $course->max_participants);
+
+                    $totalAvailablePlaces += $placesTotalDate;
+                    $totalPlaces += $placesTotalDate;
+                    $totalHours += $hoursTotalDate;
+                    $totalPlacesHours += $hoursTotalDate;
+                    $totalAvailableHours += $hoursTotalDate;
+
+                }
+
                 foreach ($bookingUsers as $bookingUser) {
-                    $start = strtotime($bookingUser->hour_start);
-                    $end = strtotime($bookingUser->hour_end);
-                    $durationInSeconds = $this->convertDurationToSeconds($this->calculateDuration($bookingUser->hour_start, $bookingUser->hour_end));
 
-                    if ($start && $end) {
-                        while ($start < $end) {
-                            $totalIntervals++;
-                            $start += $durationInSeconds;
-                        }
-                    } else {
-                        $totalIntervals = 5;
-                    }
+                    $placesTotalDate = $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($bookingUser->hour_start, $bookingUser->hour_end)
+                        );
+                    $hoursTotalDate =  $this->convertSecondsToHours(
+                        $this->convertTimeRangeToSeconds($bookingUser->hour_start, $bookingUser->hour_end));
 
-                    $totalPlaces -= $totalIntervals;
-                    $totalAvailablePlaces -= $totalIntervals;
-                    $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                    $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+
+
+                    $totalPlaces -= $placesTotalDate;
+                    $totalAvailablePlaces -= $placesTotalDate;
+                    $totalPlacesHours -= $hoursTotalDate;
+                    $totalAvailableHours -= $hoursTotalDate;
+                    $totalBookingsPlaces += $placesTotalDate;
+                    $totalBookingsHours += $hoursTotalDate;
+
                 }
+
                 foreach ($nwds as $nwd) {
-                    $start = strtotime($nwd->hour_start ?? $season->hour_start);
-                    $end = strtotime($nwd->end_time ?? $season->hour_end);
-                    $durationInSeconds = $this->convertDurationToSeconds($this->calculateDuration($nwd->start_time ?? $season->hour_start, $nwd->end_time ?? $season->hour_end));
+                    $start =$nwd->hour_start ?? $season->hour_start;
+                    $end = $nwd->end_time ?? $season->hour_end;
+                    $placesTotalDate = $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($start, $end)
+                        );
+                    $hoursTotalDate =  $this->convertSecondsToHours(
+                        $this->convertTimeRangeToSeconds($start, $end));
 
-                    if ($start && $end) {
-                        while ($start < $end) {
-                            $totalIntervals++;
-                            $start += $durationInSeconds;
-                        }
-                    } else {
-                        $totalIntervals = 5;
-                    }
-
-                    $totalPlaces -= $totalIntervals;
-                    $totalAvailablePlaces -= $totalIntervals;
-                    $totalHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
-                    $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                    $totalPlaces -= $placesTotalDate;
+                    $totalAvailablePlaces -= $placesTotalDate;
+                    $totalPlacesHours -= $hoursTotalDate;
+                    $totalAvailableHours -= $hoursTotalDate;
                 }
 
-                if($bookings->count()){
-                    foreach ($bookings as $booking) {
-                        $start = strtotime($booking->hour_start);
-                        $end = strtotime($booking->hour_end);
-                        $durationInSeconds = $this->convertDurationToSeconds(
-                            $this->calculateDuration($booking->hour_start, $booking->hour_end));
-
-                        if ($start && $end) {
-                            while ($start < $end) {
-                                $totalIntervals++;
-                                $start += $durationInSeconds;
-                            }
-                        } else {
-                            $totalIntervals = 5;
-                        }
-
-                        $totalAvailableHours -= $totalIntervals * $this->convertSecondsToHours($durationInSeconds);
+                if($bookingUsersOtherCourses->count()){
+                    foreach ($bookingUsersOtherCourses as $bookingUser) {
+                        $placesTotalDate = $this->convertSecondsToHours(
+                                $this->convertTimeRangeToSeconds($bookingUser->hour_start, $bookingUser->hour_end)
+                            ) ;
+                        $hoursTotalDate =  $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($bookingUser->hour_start, $bookingUser->hour_end));
+                       // dd($placesTotalDate);
+                       // $totalPlaces -= $placesTotalDate;
+                        $totalAvailablePlaces -= $placesTotalDate;
+                        $totalPlacesHours -= $hoursTotalDate;
+                        //$totalHours -= $hoursTotalDate;
+                        $totalAvailableHours -= $hoursTotalDate;
                     }
                 }
             }
-
-            $totalAvailablePlaces = max(0, $totalAvailablePlaces - $totalBookings);
         }
 
         return [
-            'total_reservations' => $totalBookings,
+            'total_reservations_places' => $totalBookingsPlaces,
+            'total_reservations_hours' => $totalBookingsHours,
             'total_available_places' => $totalAvailablePlaces,
             'total_places' => $totalPlaces,
+            'total_places_hours' => $totalPlacesHours,
             'total_available_hours' => $totalAvailableHours,
             'total_hours' => $totalHours
         ];
     }
+
+    private function convertTimeRangeToSeconds($startTime, $endTime)
+    {
+        // Convertir horas a segundos
+        $startSeconds = strtotime($startTime) - strtotime("TODAY");
+        $endSeconds = strtotime($endTime) - strtotime("TODAY");
+
+        // Calcular la diferencia en segundos
+        $intervalInSeconds = $endSeconds - $startSeconds;
+
+        return $intervalInSeconds;
+    }
+
 
     private function convertSecondsToHours($seconds)
     {
@@ -347,12 +353,21 @@ trait Utils
         return 0;
     }
 
-    public function getGroupedMonitors($schoolId)
+    public function getGroupedMonitors($schoolId, $monitorId = null, $sportId = null)
     {
-        $totalMonitors = Monitor::with(['sports', 'monitorSportsDegrees.monitorSportAuthorizedDegrees.degree'])
+        $totalMonitors = Monitor::with(['monitorSportsDegrees.monitorSportAuthorizedDegrees.degree'])
             ->whereHas('monitorsSchools', function ($query) use ($schoolId) {
                 $query->where('school_id', $schoolId)->where('active_school', 1);
-            })->get();
+            })
+            ->when($monitorId, function ($query) use ($monitorId) {
+                $query->where('id', $monitorId);
+            })
+            ->when($sportId, function ($query) use ($sportId) {
+                $query->whereHas('monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($sportId) {
+                    $query->where('sport_id', $sportId);
+                });
+            })
+            ->get();
 
         $monitorsBySport = [];
 
@@ -367,4 +382,5 @@ trait Utils
 
         return $monitorsBySport;
     }
+
 }

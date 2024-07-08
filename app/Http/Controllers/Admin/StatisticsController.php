@@ -95,7 +95,7 @@ class StatisticsController extends AppBaseController
 
         // Obtener los monitores totales filtrados por escuela y deporte si se proporciona
         $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request) {
-            $query->where('school_id', $request['school_id']);
+            $query->where('school_id', $request['school_id'])->where('active_school', 1);
         });
 
         if ($request->has('sport_id')) {
@@ -180,10 +180,10 @@ class StatisticsController extends AppBaseController
 
         // Estructura de respuesta
         $result = [];
-        $monitorsGrouped = $this->getGroupedMonitors($schoolId);
+        $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
         foreach ($courses as $course) {
             // Calcular la disponibilidad
-            $availability = $this->getCourseAvailability($course, $monitorsGrouped);
+            $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
             // Agrupar pagos por tipo
             // Agrupar pagos por tipo
             $payments = [
@@ -208,9 +208,10 @@ class StatisticsController extends AppBaseController
 
             $result[] = [
                 'course_id' => $course->id,
+                'icon' => $course->icon,
                 'name' => $course->name,
                 'total_places' => $availability['total_places'],
-                'booked_places' => $availability['total_reservations'],
+                'booked_places' => $availability['total_reservations_places'],
                 'available_places' => $availability['total_available_places'],
                 'cash' => $payments['cash'],
                 'other' => $payments['other'],
@@ -224,7 +225,6 @@ class StatisticsController extends AppBaseController
         return $this->sendResponse($result, 'Total worked hours by sport retrieved successfully');
 
     }
-
 
 
     public function getTotalWorkedHoursBySport(Request $request): JsonResponse
@@ -517,7 +517,9 @@ class StatisticsController extends AppBaseController
             });
         }
 
-        $totalMonitors = $totalMonitorsQuery->count();
+        $totalMonitors = $monitor ? 1 : $totalMonitorsQuery->count();
+
+
 
         // Calcular la duración diaria en horas
         $dailyDurationHours = $this->convertDurationToHours($this->calculateDuration($season->hour_start, $season->hour_end));
@@ -535,83 +537,6 @@ class StatisticsController extends AppBaseController
         ];
     }
 
-
-
-
-    /**
-     * @OA\Get(
-     *      path="/admin/statistics/bookings/collective",
-     *      summary="Get collective bookings for season",
-     *      tags={"Admin"},
-     *      description="Get collective bookings for the specified season or date range",
-     *      @OA\Parameter(
-     *          name="start_date",
-     *          in="query",
-     *          description="Start date to filter bookings",
-     *          required=false,
-     *          @OA\Schema(
-     *              type="string",
-     *              format="date"
-     *          )
-     *      ),
-     *      @OA\Parameter(
-     *          name="end_date",
-     *          in="query",
-     *          description="End date to filter bookings",
-     *          required=false,
-     *          @OA\Schema(
-     *              type="string",
-     *              format="date"
-     *          )
-     *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              type="object",
-     *              @OA\Property(
-     *                  property="success",
-     *                  type="boolean"
-     *              ),
-     *              @OA\Property(
-     *                  property="data",
-     *                  type="array",
-     *                  @OA\Items(
-     *                      ref="#/components/schemas/Booking"
-     *                  )
-     *              ),
-     *              @OA\Property(
-     *                  property="message",
-     *                  type="string"
-     *              )
-     *          )
-     *      )
-     * )
-     */
-    public function getCollectiveBookings(Request $request): JsonResponse
-    {
-        $schoolId = $this->getSchool($request)->id;
-
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
-
-        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
-        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
-        ->first();
-
-        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
-        $startDate = $request->start_date ?? $season->start_date;
-        $endDate = $request->end_date ?? $season->end_date;
-
-        $bookingUsersCollective = BookingUser::where('school_id', $schoolId)
-            ->where('course_group_id', '!=', null)
-            ->when($request->has('monitor_id'), function ($query) use($request) {
-                return $query->where('monitor_id', $request->monitor_id);
-            })
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)->get();
-
-        return $this->sendResponse($bookingUsersCollective, 'Collective booking courses of the season retrieved successfully');
-    }
 
     public function getTotalAvailablePlacesByCourseType(Request $request)
     {
@@ -676,44 +601,56 @@ class StatisticsController extends AppBaseController
             })
             ->get();
 
-        $monitorsGrouped = $this->getGroupedMonitors($schoolId);
+        $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
 
         $courseAvailabilityByType = [
             'total_places_type_1' => 0,
             'total_available_places_type_1' => 0,
             'total_hours_type_1' => 0,
             'total_available_hours_type_1' => 0,
+            'total_reservations_places_type_1' => 0,
+            'total_reservations_hours_type_1' => 0,
             'total_price_type_1' => $totalPricesByType['total_price_type_1'],
             'total_places_type_2' => 0,
             'total_available_places_type_2' => 0,
             'total_hours_type_2' => 0,
             'total_available_hours_type_2' => 0,
+            'total_reservations_places_type_2' => 0,
+            'total_reservations_hours_type_2' => 0,
             'total_price_type_2' => $totalPricesByType['total_price_type_2'],
             'total_places_type_3' => 0,
             'total_available_places_type_3' => 0,
             'total_hours_type_3' => 0,
             'total_available_hours_type_3' => 0,
+            'total_reservations_places_type_3' => 0,
+            'total_reservations_hours_type_3' => 0,
             'total_price_type_3' => $totalPricesByType['total_price_type_3'],
         ];
 
         foreach ($courses as $course) {
-            $availability = $this->getCourseAvailability($course, $monitorsGrouped);
+            $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
             if ($availability) {
                 if ($course->course_type == 1) {
                     $courseAvailabilityByType['total_places_type_1'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_1'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_1'] += $availability['total_hours'];
                     $courseAvailabilityByType['total_available_hours_type_1'] += $availability['total_available_hours'];
+                    $courseAvailabilityByType['total_reservations_places_type_1'] += $availability['total_reservations_places'];
+                    $courseAvailabilityByType['total_reservations_hours_type_1'] += $availability['total_reservations_hours'];
                 } elseif ($course->course_type == 2) {
                     $courseAvailabilityByType['total_places_type_2'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_2'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_2'] += $availability['total_hours'];
                     $courseAvailabilityByType['total_available_hours_type_2'] += $availability['total_available_hours'];
+                    $courseAvailabilityByType['total_reservations_places_type_2'] += $availability['total_reservations_places'];
+                    $courseAvailabilityByType['total_reservations_hours_type_2'] += $availability['total_reservations_hours'];
                 } else {
                     $courseAvailabilityByType['total_places_type_3'] += $availability['total_places'];
                     $courseAvailabilityByType['total_available_places_type_3'] += $availability['total_available_places'];
                     $courseAvailabilityByType['total_hours_type_3'] += $availability['total_hours'];
                     $courseAvailabilityByType['total_available_hours_type_3'] += $availability['total_available_hours'];
+                    $courseAvailabilityByType['total_reservations_places_type_3'] += $availability['total_reservations_places'];
+                    $courseAvailabilityByType['total_reservations_hours_type_3'] += $availability['total_reservations_hours'];
                 }
             }
         }
@@ -727,8 +664,11 @@ class StatisticsController extends AppBaseController
                 'total_price' => $courseAvailabilityByType['total_price_type_' . $courseType],
                 'total_hours' => $courseAvailabilityByType['total_hours_type_' . $courseType],
                 'total_available_hours' => $courseAvailabilityByType['total_available_hours_type_' . $courseType],
+                'total_reservations_places' => $courseAvailabilityByType['total_reservations_places_type_' . $courseType],
+                'total_reservations_hours' => $courseAvailabilityByType['total_reservations_hours_type_' . $courseType],
             ], 'Total available places and prices for the specified course type retrieved successfully');
         }
+
 
         return $this->sendResponse($courseAvailabilityByType, 'Total available places by course type retrieved successfully');
     }
@@ -837,8 +777,55 @@ class StatisticsController extends AppBaseController
 
         $fullDayDuration = $this->convertDurationToHours($this->calculateDuration($season->hour_start, $season->hour_end));
 
+        // Obtener todos los monitores de la escuela
+
+
+        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request) {
+            $query->where('school_id', $request['school_id'])->where('active_school', 1);
+        })->when($request->has('monitor_id'), function ($query) use ($request) {
+            return $query->where('id', $request->monitor_id);
+        });
+
+        if ($request->has('sport_id')) {
+            $totalMonitorsQuery->whereHas('monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
+                $query->where('sport_id', $request->sport_id);
+            });
+        }
+
+        $allMonitors = $totalMonitorsQuery->get();
+
         // Inicialización de variables para almacenar resultados
         $monitorSummary = [];
+
+        // Recorrer cada monitor para inicializar los valores a 0
+        foreach ($allMonitors as $monitor) {
+            $monitorSummary[$monitor->id] = [
+                'first_name' => $monitor->first_name,
+                'id' => $monitor->id,
+                'sport' => null,
+                'currency' => $currency,
+                'hours_collective' => 0,
+                'hours_nwd' => 0,
+                'hours_nwd_payed' => 0,
+                'hours_private' => 0,
+                'hours_activities' => 0,
+                'cost_nwd' => 0,
+                'cost_collective' => 0,
+                'cost_private' => 0,
+                'cost_activities' => 0,
+                'total_hours' => 0,
+                'total_cost' => 0,
+                'hour_price' => 0,
+            ];
+            foreach ($monitor->monitorSportsDegrees as $degree) {
+                if ($degree->school_id == $schoolId && (!$request->has('sport_id') || $degree->sport_id == $request->sport_id)) {
+                    $salaryLevel = $degree->salary;
+                    $sport = $degree->sport;
+                    break;
+                }
+            }
+            $monitorSummary[$monitor->id]['sport'] = $sport;
+        }
 
         // Recorrer cada reserva de usuario con monitor
         foreach ($bookingUsersWithMonitor as $bookingUser) {
@@ -862,28 +849,6 @@ class StatisticsController extends AppBaseController
             // Calcular el costo por tipo de curso
             $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
 
-            // Agregar información al resumen del monitor
-            if (!isset($monitorSummary[$monitor->id])) {
-                $monitorSummary[$monitor->id] = [
-                    'first_name' => $monitor->first_name,
-                    'id' => $monitor->id,
-                    'sport' => $sport,
-                    'currency' => $currency,
-                    'hours_collective' => 0,
-                    'hours_nwd' => 0,
-                    'hours_nwd_payed' => 0,
-                    'hours_private' => 0,
-                    'hours_activities' => 0,
-                    'cost_nwd' => 0,
-                    'cost_collective' => 0,
-                    'cost_private' => 0,
-                    'cost_activities' => 0,
-                    'total_hours' => 0,
-                    'total_cost' => 0,
-                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
-                ];
-            }
-
             // Actualizar horas y costos según el tipo de curso
             if ($courseType == 1) {
                 $monitorSummary[$monitor->id]['hours_collective'] += $hours;
@@ -899,6 +864,7 @@ class StatisticsController extends AppBaseController
             // Actualizar las horas totales y el costo total
             $monitorSummary[$monitor->id]['total_hours'] += $hours;
             $monitorSummary[$monitor->id]['total_cost'] += $cost;
+            $monitorSummary[$monitor->id]['hour_price'] = $salaryLevel ? $salaryLevel->pay : 0;
         }
 
         foreach ($nwds as $nwd) {
@@ -924,28 +890,6 @@ class StatisticsController extends AppBaseController
             // Calcular el costo si user_nwd_subtype_id es 2
             $cost = ($nwd->user_nwd_subtype_id == 2 && $salaryLevel) ? ($salaryLevel->pay * $hours) : 0;
 
-            // Agregar información al resumen del monitor
-            if (!isset($monitorSummary[$monitor->id])) {
-                $monitorSummary[$monitor->id] = [
-                    'first_name' => $monitor->first_name,
-                    'id' => $monitor->id,
-                    'sport' => $sport,
-                    'currency' => $currency,
-                    'hours_collective' => 0,
-                    'hours_nwd' => 0,
-                    'hours_nwd_payed' => 0,
-                    'hours_private' => 0,
-                    'hours_activities' => 0,
-                    'cost_collective' => 0,
-                    'cost_nwd' => 0,
-                    'cost_private' => 0,
-                    'cost_activities' => 0,
-                    'total_hours' => 0,
-                    'total_cost' => 0,
-                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
-                ];
-            }
-
             // Actualizar las horas y costos solo si user_nwd_subtype_id es 2
             if ($nwd->user_nwd_subtype_id == 2) {
                 $monitorSummary[$monitor->id]['hours_nwd_payed'] += $hours;
@@ -957,11 +901,13 @@ class StatisticsController extends AppBaseController
             // Actualizar las horas totales y el costo total
             $monitorSummary[$monitor->id]['total_hours'] += $hours;
             $monitorSummary[$monitor->id]['total_cost'] += $cost;
+            $monitorSummary[$monitor->id]['hour_price'] = $salaryLevel ? $salaryLevel->pay : 0;
         }
 
         $monitorSummaryJson = array_values($monitorSummary);
         return $this->sendResponse($monitorSummaryJson, 'Monitor bookings of the season retrieved successfully');
     }
+
 
 
     public function getMonitorDailyBookings(Request $request, $monitorId): JsonResponse
