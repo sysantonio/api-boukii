@@ -2,20 +2,19 @@
 
 namespace Database\Factories;
 
-use App\Models\Voucher;
+use App\Models\DiscountCode;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-use App\Models\Client;
 use App\Models\School;
 
-class VoucherFactory extends Factory
+class DiscountCodeFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = Voucher::class;
+    protected $model = DiscountCode::class;
 
     /**
      * Define the model's default state.
@@ -24,7 +23,6 @@ class VoucherFactory extends Factory
      */
     public function definition()
     {
-
         $school = School::first();
         if (!$school) {
             $school = School::factory()->create();
@@ -33,13 +31,10 @@ class VoucherFactory extends Factory
         return [
             'code' => $this->faker->text($this->faker->numberBetween(5, 255)),
             'quantity' => $this->faker->numberBetween(0, 9223372036854775807),
-            'remaining_balance' => $this->faker->numberBetween(0, 9223372036854775807),
-            'payed' => $this->faker->boolean,
-            'is_gift' => $this->faker->boolean,
-            'client_id' => $this->faker->word,
+            'percentage' => $this->faker->numberBetween(0, 9223372036854775807),
             'school_id' => $this->faker->word,
-            'payrexx_reference' => $this->faker->text($this->faker->numberBetween(5, 65535)),
-            'payrexx_transaction' => $this->faker->text($this->faker->numberBetween(5, 65535)),
+            'total' => $this->faker->word,
+            'remaining' => $this->faker->word,
             'created_at' => $this->faker->date('Y-m-d H:i:s'),
             'updated_at' => $this->faker->date('Y-m-d H:i:s'),
             'deleted_at' => $this->faker->date('Y-m-d H:i:s')

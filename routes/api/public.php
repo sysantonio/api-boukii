@@ -169,5 +169,8 @@ Route::middleware(['guest'])->group(function () {
     Route::resource('evaluation-files', App\Http\Controllers\API\EvaluationFileAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::resource('discount-codes', App\Http\Controllers\API\DiscountCodeAPIController::class)
+        ->except(['create', 'edit']);
+
 });
 

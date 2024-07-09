@@ -40,6 +40,13 @@ use Spatie\Activitylog\LogOptions;
  *          nullable=false,
  *          type="boolean",
  *      ),
+ *     @OA\Property(
+ *          property="is_gift",
+ *          description="Indicates whether the voucher has been gift or not",
+ *          readOnly=false,
+ *          nullable=false,
+ *          type="boolean",
+ *      ),
  *      @OA\Property(
  *            property="school_id",
  *            description="ID of the school associated with the voucher",
@@ -103,6 +110,7 @@ class Voucher extends Model
         'quantity',
         'remaining_balance',
         'payed',
+        'is_gift',
         'client_id',
         'school_id',
         'payrexx_reference',
@@ -115,6 +123,7 @@ class Voucher extends Model
         'quantity' => 'float',
         'remaining_balance' => 'float',
         'payed' => 'boolean',
+        'is_gift' => 'boolean',
         'payrexx_reference' => 'string',
         'payrexx_transaction' => 'string',
     ];
@@ -124,6 +133,7 @@ class Voucher extends Model
         'quantity' => 'numeric',
         'remaining_balance' => 'numeric',
         'payed' => 'boolean',
+        'is_gift' => 'boolean',
         'client_id' => 'numeric',
         'school_id' => 'numeric',
         'payrexx_reference' => 'nullable|string|max:65535',

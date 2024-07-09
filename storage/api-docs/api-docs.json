@@ -3572,6 +3572,221 @@
                 }
             }
         },
+        "/discount-codes": {
+            "get": {
+                "tags": [
+                    "DiscountCode"
+                ],
+                "summary": "getDiscountCodeList",
+                "description": "Get all DiscountCodes",
+                "operationId": "594080b39a808fa9721cca8c61b2c127",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DiscountCode"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "DiscountCode"
+                ],
+                "summary": "createDiscountCode",
+                "description": "Create DiscountCode",
+                "operationId": "725c6880896202b00943569ea1b51365",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DiscountCode"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DiscountCode"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/discount-codes/{id}": {
+            "get": {
+                "tags": [
+                    "DiscountCode"
+                ],
+                "summary": "getDiscountCodeItem",
+                "description": "Get DiscountCode",
+                "operationId": "cd5df2fa4489e86e376a07e3562c503a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of DiscountCode",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DiscountCode"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "DiscountCode"
+                ],
+                "summary": "updateDiscountCode",
+                "description": "Update DiscountCode",
+                "operationId": "0595926fa4a3128601667dfa14dceee0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of DiscountCode",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DiscountCode"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DiscountCode"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "DiscountCode"
+                ],
+                "summary": "deleteDiscountCode",
+                "description": "Delete DiscountCode",
+                "operationId": "14a8c59c065671cbe55a27d86ff303d2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of DiscountCode",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/email-logs": {
             "get": {
                 "tags": [
@@ -11257,14 +11472,14 @@
                 }
             }
         },
-        "/admin/statistics/bookings/collective": {
+        "/admin/statistics/monitors/active": {
             "get": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Get collective bookings for season",
                 "description": "Get collective bookings for the specified season or date range",
-                "operationId": "471006d04989831bff72b2067986e01d",
+                "operationId": "213c20494c02bf83b75c4a79ac81010f",
                 "parameters": [
                     {
                         "name": "start_date",
@@ -11315,72 +11530,14 @@
                 }
             }
         },
-        "/admin/statistics/bookings/private": {
+        "/admin/statistics/bookings/monitors": {
             "get": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Get private bookings for season",
-                "description": "Get private bookings for the specified season or date range",
-                "operationId": "e34565b52cad041265df1b9e1cb1ba49",
-                "parameters": [
-                    {
-                        "name": "start_date",
-                        "in": "query",
-                        "description": "Start date to filter bookings",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "end_date",
-                        "in": "query",
-                        "description": "End date to filter bookings",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Booking"
-                                            }
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/statistics/bookings/activity": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get activity bookings for season",
-                "description": "Get activity bookings for the specified season or date range",
-                "operationId": "222f2e41492037be75b8a2094fefdab2",
+                "summary": "Get monitors bookings for season",
+                "description": "Get monitors bookings for the specified season or date range",
+                "operationId": "cca7497425cc8a5bfc54ee766f1947c3",
                 "parameters": [
                     {
                         "name": "start_date",
@@ -13802,6 +13959,56 @@
                 },
                 "type": "object"
             },
+            "DiscountCode": {
+                "required": [
+                    "code",
+                    "school_id"
+                ],
+                "properties": {
+                    "code": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "quantity": {
+                        "description": "",
+                        "type": "number",
+                        "format": "number",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "percentage": {
+                        "description": "",
+                        "type": "number",
+                        "format": "number",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "deleted_at": {
+                        "description": "",
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "EmailLog": {
                 "required": [
                     "date",
@@ -15849,6 +16056,12 @@
                     },
                     "payed": {
                         "description": "Indicates whether the voucher has been paid or not",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
+                    },
+                    "is_gift": {
+                        "description": "Indicates whether the voucher has been gift or not",
                         "type": "boolean",
                         "readOnly": false,
                         "nullable": false

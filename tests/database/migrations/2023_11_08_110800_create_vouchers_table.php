@@ -19,13 +19,14 @@ class CreateVouchersTable extends Migration
             $table->double('quantity', 15, 2);
             $table->double('remaining_balance', 15, 2);
             $table->boolean('payed')->default(0);
+            $table->boolean('is_gift')->default(0);
             $table->bigInteger('client_id');
             $table->bigInteger('school_id');
             $table->text('payrexx_reference')->nullable();
             $table->text('payrexx_transaction')->nullable();
             $table->timestamps();
             $table->timestamp('deleted_at')->nullable();
-            
+
             $table->foreign('client_id', 'vouchers_ibfk_1')->references('id')->on('clients');
             $table->foreign('school_id', 'vouchers_ibfk_2')->references('id')->on('schools');
         });

@@ -2,22 +2,18 @@
 
 namespace App\Repositories;
 
-use App\Models\Voucher;
+use App\Models\DiscountCode;
 use App\Repositories\BaseRepository;
 
-class VoucherRepository extends BaseRepository
+class DiscountCodeRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-'id',
         'code',
         'quantity',
-        'remaining_balance',
-        'payed',
-        'is_gift',
-        'client_id',
+        'percentage',
         'school_id',
-        'payrexx_reference',
-        'payrexx_transaction'
+        'total',
+        'remaining'
     ];
 
     public function getFieldsSearchable(): array
@@ -27,6 +23,6 @@ class VoucherRepository extends BaseRepository
 
     public function model(): string
     {
-        return Voucher::class;
+        return DiscountCode::class;
     }
 }
