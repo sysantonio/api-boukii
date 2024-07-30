@@ -333,16 +333,16 @@ trait Utils
     private function convertDurationRangeToSeconds($duration)
     {
         if (strpos($duration, 'h') !== false) {
-            // Si el formato es "Xh Ymin" o "Xh", convertirlo a segundos
-            preg_match('/(\d+)h(?: (\d+)min)?/', $duration, $matches);
+            // Si el formato es "Xh Ymin" o "Xh Ym" o "Xh", convertirlo a segundos
+            preg_match('/(\d+)h(?: (\d+)(?:min|m))?/', $duration, $matches);
             if (!empty($matches[1])) {
                 $hours = intval($matches[1]);
                 $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Si no hay minutos, establecer en 0
                 return ($hours * 3600) + ($minutes * 60);
             }
-        } elseif (strpos($duration, 'min') !== false) {
-            // Si el formato es solo "Ymin", convertirlo a segundos
-            preg_match('/(\d+)min/', $duration, $matches);
+        } elseif (strpos($duration, 'min') !== false || strpos($duration, 'm') !== false) {
+            // Si el formato es solo "Ymin" o "Ym", convertirlo a segundos
+            preg_match('/(\d+)(?:min|m)/', $duration, $matches);
             if (!empty($matches[1])) {
                 $minutes = intval($matches[1]);
                 return $minutes * 60;
