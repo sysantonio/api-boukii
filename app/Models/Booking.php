@@ -327,6 +327,11 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\Client::class, 'client_main_id');
     }
 
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
     public function bookingLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\BookingLog::class, 'booking_id');
