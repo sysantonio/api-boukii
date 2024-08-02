@@ -354,7 +354,22 @@ use Spatie\Activitylog\LogOptions;
             ->dontSubmitEmptyLogs()
             ->useLogName('activity');
     }
-    protected $appends = ['sport'];
+    protected $appends = ['sport', 'bonus', 'payment_method'];
+
+    public function getBonusAttribute() {
+        return $this->vouchersLogs()->exists();
+    }
+
+    public function getPaymentMethodAttribute() {
+        $hasVouchers = $this->vouchersLogs()->exists();
+        $hasPayments = $this->payments()->exists();
+
+        if ($hasVouchers && !$hasPayments) {
+            return 6;
+        }
+
+        return $this->payment_method_id;
+    }
 
     public function getSportAttribute()
     {
