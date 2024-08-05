@@ -59,11 +59,11 @@ Route::middleware(['bookingPage'])->group(function () {
 
     Route::post('bookings/refunds/{id}',
         [\App\Http\Controllers\BookingPage\BookingController::class, 'refundBooking'])
-        ->name('api.admin.bookings.refund');
+        ->name('api.bookings.bookings.refund');
 
     Route::post('bookings/cancel',
         [\App\Http\Controllers\BookingPage\BookingController::class, 'cancelBookings'])
-        ->name('api.admin.bookings.cancel');
+        ->name('api.bookings.bookings.cancel');
 
     /** Monitor **/
     Route::post('monitors/available', [\App\Http\Controllers\BookingPage\MonitorController::class, 'getMonitorsAvailable'])

@@ -65,7 +65,13 @@ Route::middleware(['guest'])->group(function () {
         ->except(['create', 'edit']);
 
     Route::resource('courses', App\Http\Controllers\API\CourseAPIController::class)
-        ->except(['create', 'edit']);
+        ->except(['create', 'edit']) ->names([
+            'index' => 'api.courses.index',
+            'store' => 'api.courses.store',
+            'show' => 'api.courses.show',
+            'update' => 'api.courses.update',
+            'destroy' => 'api.courses.destroy',
+        ]);
 
     Route::resource('course-dates', App\Http\Controllers\API\CourseDateAPIController::class)
         ->except(['create', 'edit']);
@@ -116,7 +122,13 @@ Route::middleware(['guest'])->group(function () {
         ->name('api.teach.clients.transfer');
 
     Route::resource('clients', App\Http\Controllers\API\ClientAPIController::class)
-        ->except(['create', 'edit']);
+        ->except(['create', 'edit'])->names([
+            'index' => 'api.clients.index',
+            'store' => 'api.clients.store',
+            'show' => 'api.clients.show',
+            'update' => 'api.clients.update',
+            'destroy' => 'api.clients.destroy',
+        ]);
 
     Route::resource('clients-utilizers', App\Http\Controllers\API\ClientsUtilizerAPIController::class)
         ->except(['create', 'edit']);

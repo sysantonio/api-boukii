@@ -32,7 +32,13 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         ->name('api.admin.clients.main');
 
     Route::resource('clients', App\Http\Controllers\Admin\ClientsController::class)
-        ->except(['create', 'edit']);
+        ->except(['create', 'edit'])->names([
+            'index' => 'api.admin.clients.index',
+            'store' => 'api.admin.clients.store',
+            'show' => 'api.admin.clients.show',
+            'update' => 'api.admin.clients.update',
+            'destroy' => 'api.admin.clients.destroy',
+        ]);
 
     Route::get('clients/{id}/utilizers', [\App\Http\Controllers\Admin\ClientsController::class, 'getUtilizers'])
         ->name('api.admin.clients.utilizers');
