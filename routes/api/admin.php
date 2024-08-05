@@ -17,7 +17,13 @@ Route::post('auth/reset-password/{token}', [\App\Http\Controllers\Auth\AuthContr
 Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
     Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)
-        ->except(['create', 'edit']);
+        ->except(['create', 'edit'])->names([
+            'index' => 'api.admin.courses.index',
+            'store' => 'api.admin.courses.store',
+            'show' => 'api.admin.courses.show',
+            'update' => 'api.admin.courses.update',
+            'destroy' => 'api.admin.courses.destroy',
+        ]);
 
     Route::get('getPlanner', [\App\Http\Controllers\Admin\PlannerController::class, 'getPlanner'])
         ->name('api.admin.planner');
