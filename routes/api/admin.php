@@ -90,7 +90,7 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
 
   Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorDailyBookings'])
-        ->name('api.admin.stats.monitors');
+        ->name('api.admin.stats.monitors.id');
 
 
     /** Mailing */
