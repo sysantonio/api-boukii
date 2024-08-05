@@ -22,14 +22,17 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('getPlanner', [\App\Http\Controllers\Admin\PlannerController::class, 'getPlanner'])
         ->name('api.admin.planner');
 
-    Route::get('clients/mains', [\App\Http\Controllers\Admin\ClientsController::class, 'getMains']);
+    Route::get('clients/mains', [\App\Http\Controllers\Admin\ClientsController::class, 'getMains'])
+        ->name('api.admin.clients.main');
 
     Route::resource('clients', App\Http\Controllers\Admin\ClientsController::class)
         ->except(['create', 'edit']);
 
-    Route::get('clients/{id}/utilizers', [\App\Http\Controllers\Admin\ClientsController::class, 'getUtilizers']);
+    Route::get('clients/{id}/utilizers', [\App\Http\Controllers\Admin\ClientsController::class, 'getUtilizers'])
+        ->name('api.admin.clients.utilizers');
 
-    Route::get('clients/course/{id}', [\App\Http\Controllers\Admin\ClientsController::class, 'getClientsByCourse']);
+    Route::get('clients/course/{id}', [\App\Http\Controllers\Admin\ClientsController::class, 'getClientsByCourse'])
+        ->name('api.admin.clients.courses.find');
 
     Route::post('monitors/available', [\App\Http\Controllers\Admin\MonitorController::class, 'getMonitorsAvailable'])
         ->name('api.admin.monitors.available');
