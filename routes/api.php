@@ -33,11 +33,26 @@ use Payrexx\Payrexx;
 |
 */
 
-Route::any('/users-permisions', function () {
+Route::any('/users-permissions', function () {
+    // Ejecuta el comando artisan para resetear la caché de permisos
     $output = shell_exec('php artisan permission:cache-reset');
-    foreach (User::all() as $user) {
-        $user->setInitialPermissionsByRole();
+
+    // Verifica si el comando se ejecutó correctamente
+    if ($output === null) {
+        return 'Error al ejecutar el comando artisan';
     }
+
+    // Asigna permisos iniciales a los usuarios
+    foreach (User::all() as $user) {
+        try {
+            $user->setInitialPermissionsByRole();
+        } catch (Exception $e) {
+            // Maneja excepciones para saber si algo falla durante el proceso
+            return 'Error al asignar permisos: ' . $e->getMessage();
+        }
+    }
+
+    return 'Permisos actualizados correctamente';
 });
 
 Route::any('/testAval', function (Request $request) {
@@ -320,7 +335,7 @@ Route::any('/mailtest', function () {
 });
 
 Route::post('payrexxNotification', [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
-    ->name('api.migration.data');
+    ->name('api.payrexx.notification');
 
 Route::get('payrexx/finish', function (Request $request) {
     return response()->make('Payrexx close ' . $request->status, 200);
