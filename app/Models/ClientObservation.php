@@ -82,11 +82,11 @@ class ClientObservation extends Model
     ];
 
     public static array $rules = [
-        'general' => 'string|max:5000',
-        'notes' => 'string|max:5000',
-        'historical' => 'string|max:5000',
-        'client_id' => 'required',
-        'school_id' => 'required',
+        'general' => 'nullable|string|max:5000',
+        'notes' => 'nullable|string|max:5000',
+        'historical' => 'nullable|string|max:5000',
+        'client_id' => 'required|integer|exists:clients,id',
+        'school_id' => 'required|integer|exists:schools,id',
         'created_at' => 'nullable',
         'updated_at' => 'nullable'
     ];
