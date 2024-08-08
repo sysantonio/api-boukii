@@ -353,6 +353,11 @@ class Course extends Model
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
     }
 
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
     public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\School::class, 'school_id');

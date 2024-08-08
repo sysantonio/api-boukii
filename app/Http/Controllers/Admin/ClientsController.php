@@ -135,38 +135,42 @@ class ClientsController extends AppBaseController
         $orderColumn = $request->input('orderColumn', 'id');
         $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
 
-        $clientsWithUtilizers =
-            $this->clientRepository->all(
-                searchArray: $searchParameters,
-                search: $search,
-                skip: $request->input('skip'),
-                limit: $request->input('limit'),
-                pagination: $perPage,
-                with: $with,
-                order: $order,
-                orderColumn: $orderColumn,
-                additionalConditions: function($query) use($school, $search, $request) {
-                    $query->whereDoesntHave('main')->whereHas('clientsSchools', function ($query) use($school, $request) {
+        $clientsWithUtilizers = $this->clientRepository->all(
+            searchArray: $searchParameters,
+            search: $search,
+            skip: $request->input('skip'),
+            limit: $request->input('limit'),
+            pagination: $perPage,
+            with: $with,
+            order: $order,
+            orderColumn: $orderColumn,
+            additionalConditions: function($query) use($school, $search, $request) {
+                // Primera condición: Filtrar clientes sin 'main' y con 'clientsSchools' coincidentes con la escuela
+                $query->whereDoesntHave('main')
+                    ->whereHas('clientsSchools', function ($query) use($school, $request) {
                         $query->where('school_id', $school->id);
-                            if ($request->has('active')) {
-                                $query->whereNotNull('accepted_at');
-                            }
-
+                        if ($request->has('active')) {
+                            $query->whereNotNull('accepted_at');
+                        }
                     });
-                    if ($search) {
-                        $query->orWhereHas('utilizers', function ($subQuery) use ($school, $search, $request) {
-                            $subQuery->where('first_name', 'like', "%" . $search . "%")
-                                ->orWhere('last_name', 'like', "%" . $search . "%")
-                                ->whereHas('clientsSchools', function ($query) use($school, $request) {
-                                    $query->where('school_id', $school->id);
-                                    if ($request->has('active')) {
-                                        $query->whereNotNull('accepted_at');
-                                    }
-                                });
-                        });
-                    }
+
+                // Segunda condición: Búsqueda adicional en 'utilizers' si hay un término de búsqueda
+                if ($search) {
+                    $query->whereHas('utilizers', function ($subQuery) use ($school, $search, $request) {
+                        $subQuery->where(function ($subSubQuery) use ($search) {
+                            $subSubQuery->where('first_name', 'like', "%" . $search . "%")
+                                ->orWhere('last_name', 'like', "%" . $search . "%");
+                        })
+                            ->whereHas('clientsSchools', function ($query) use($school, $request) {
+                                $query->where('school_id', $school->id);
+                                if ($request->has('active')) {
+                                    $query->whereNotNull('accepted_at');
+                                }
+                            });
+                    });
                 }
-            );
+            }
+        );
 
         return response()->json($clientsWithUtilizers);
     }
