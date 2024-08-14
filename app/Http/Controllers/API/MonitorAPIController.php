@@ -74,6 +74,12 @@ class MonitorAPIController extends AppBaseController
                         }
                     });
                 }
+
+                if ($request->has('sports_id') && is_array($request->sports_id)) {
+                    $query->whereHas('monitorSportsDegrees', function ($query) use ($request) {
+                        $query->whereIn('sport_id', $request->sports_id);
+                    });
+                }
             }
         );
 

@@ -82,8 +82,14 @@ class CourseController extends AppBaseController
 
                 $query->where('school_id', $school->id);
 
-                $query->when($request->has('sport_id') && is_array($request->sport_id), function ($query) use ($request) {
-                    $query->whereIn('sport_id', $request->sport_id);
+                $query->when($request->has('course_types') && is_array($request->course_types), function ($query) use ($request) {
+                    $query->whereIn('course_type', $request->course_types);
+                });
+
+
+                $query->when($request->has('sports_id') && is_array($request->sports_id), function ($query) use ($request) {
+                   // dd($request->sport_id);
+                    $query->whereIn('sport_id', $request->sports_id);
                 });
 
                 $query->when($request->has('finished') && $request->finished, function ($query) {

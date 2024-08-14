@@ -64,7 +64,14 @@ class CourseAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) use ($request) {
+                if ($request->has('courseType')) {
+                    $courseTypes = explode(',', $request->courseType); // Dividir en un array por comas
+
+                    $query->whereIn('course_type', $courseTypes);
+                }
+            }
         );
 
         return $this->sendResponse($courses, 'Courses retrieved successfully');
