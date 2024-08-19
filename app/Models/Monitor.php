@@ -352,6 +352,8 @@ class Monitor extends Model
         'deleted_at' => 'nullable'
     ];
 
+    protected $appends = ['monitor_sports_degrees_details'];
+
     public function language2(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Language::class, 'language2_id');
@@ -419,7 +421,25 @@ class Monitor extends Model
 
     public function monitorSportsDegrees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'monitor_id');
+        return $this->hasMany(MonitorSportsDegree::class, 'monitor_id')
+            ->with(['sport', 'degree']); // Cargar deportes y niveles relacionados
+    }
+
+    // ...
+
+    public function getMonitorSportsDegreesDetailsAttribute()
+    {
+        return $this->monitorSportsDegrees->map(function ($monitorSportsDegree) {
+            return [
+                'sport_name' => $monitorSportsDegree->sport->name,
+                'sport_icon_selected' => $monitorSportsDegree->sport->icon_selected,
+                'sport_icon_unselected' => $monitorSportsDegree->sport->icon_unselected,
+                'school_id' => $monitorSportsDegree->school_id,
+                'sport_id' => $monitorSportsDegree->sport_id,
+                'degree' => $monitorSportsDegree->degree,
+                'monitor_sport_authorized_degrees' => $monitorSportsDegree->monitorSportAuthorizedDegrees? $monitorSportsDegree->monitorSportAuthorizedDegrees->reverse() : [],
+            ];
+        });
     }
 
     public function sports(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
