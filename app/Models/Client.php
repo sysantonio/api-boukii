@@ -240,6 +240,23 @@ class Client extends Model
         'deleted_at' => 'nullable'
     ];
 
+    protected $appends = ['client_sports_data', 'utilizers_data'];
+
+    public function getClientSportsDataAttribute()
+    {
+
+        return $this->clientSports()->with(['sport', 'degree'])->get();
+
+    }
+
+    // Accessor for utilizers
+    public function getUtilizersDataAttribute()
+    {
+
+        return $this->utilizers()->with(['clientSports.sport', 'clientSports.degree'])->get();
+
+    }
+
     public function language3(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Language::class, 'language3_id');
