@@ -96,7 +96,7 @@ class MonitorController extends AppBaseController
 
 
         $clientLanguages = array_unique($clientLanguages);
-        $degreeOrder = Degree::find( $request->minimumDegreeId)->degree_order;
+        $degreeOrder = $request->minimumDegreeId ? Degree::find($request->minimumDegreeId)->degree_order : 1;
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query)
