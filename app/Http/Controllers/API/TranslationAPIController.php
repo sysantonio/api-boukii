@@ -91,7 +91,7 @@ class TranslationAPIController extends AppBaseController
             $response = Http::withHeaders([
                 'Authorization' => 'DeepL-Auth-Key ' . $deeplApiKey,
             ])->post($deeplApiUrl, [
-                'text' => $request->input('text'),
+                'text' => [$request->input('text')],  // Convertir el texto a un array
                 'target_lang' => $request->input('target_lang'),
             ]);
 
