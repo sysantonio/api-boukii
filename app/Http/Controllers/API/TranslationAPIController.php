@@ -3,21 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
-use App\Http\Requests\API\CreateBookingAPIRequest;
-use App\Http\Requests\API\UpdateBookingAPIRequest;
-use App\Http\Resources\API\BookingResource;
-use App\Models\Booking;
-use App\Models\BookingUser;
-use App\Models\Course;
-use App\Models\CourseDate;
-use App\Models\Monitor;
-use App\Models\MonitorNwd;
-use App\Repositories\BookingRepository;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
