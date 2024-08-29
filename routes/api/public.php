@@ -13,6 +13,9 @@ Route::middleware(['guest'])->group(function () {
     Route::post('availability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
         ->name('api.availability.get');
 
+    Route::post('translate', [App\Http\Controllers\API\TranslationAPIController::class, 'translate'])
+        ->name('api.translation.get');
+
     Route::resource('stations', App\Http\Controllers\API\StationAPIController::class)
         ->except(['create', 'edit']);
 

@@ -9834,6 +9834,102 @@
                 }
             }
         },
+        "/translate": {
+            "post": {
+                "tags": [
+                    "Translation"
+                ],
+                "summary": "Traduce texto a un idioma especificado",
+                "description": "Envía texto para ser traducido al idioma especificado usando la API de DeepL.",
+                "operationId": "83d08df7e6ea41c6d90f324c1e23572e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "text",
+                                    "target_lang"
+                                ],
+                                "properties": {
+                                    "text": {
+                                        "type": "string",
+                                        "example": "Hello World!"
+                                    },
+                                    "target_lang": {
+                                        "type": "string",
+                                        "example": "ES"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "translations": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "detected_source_language": {
+                                                        "type": "string",
+                                                        "example": "EN"
+                                                    },
+                                                    "text": {
+                                                        "type": "string",
+                                                        "example": "¡Hola Mundo!"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud incorrecta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "El texto a traducir es obligatorio."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Ocurrió un error al realizar la traducción."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "tags": [

@@ -262,7 +262,7 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     \App::setLocale($userLocale);
 
 
-    $templateView = 'mails.bookingCreate';
+    $templateView = 'mails.newBookingCreate';
 
     $footerView = 'mails.footer';
 
@@ -280,6 +280,7 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
         'bodyTemplate' => $templateMail->body ?? '',
         'userName' => trim($userData->first_name . ' ' . $userData->last_name),
         'schoolName' => $schoolData->name,
+        'schoolDescription' => $schoolData->description,
         'schoolLogo' => $schoolData->logo,
         'schoolEmail' => $schoolData->contact_email,
         'schoolConditionsURL' => $schoolData->conditions_url,
@@ -291,6 +292,7 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
         'hasCancellationInsurance' => false,
         'amount' => number_format($bookingData->price_total, 2),
         'currency' => $bookingData->currency,
+        'paid' => $bookingData->paid,
         'actionURL' => 'test',
         'footerView' => $footerView
     ];
@@ -298,10 +300,10 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     //dd($templateData['courses']);
 
 
-    $subject = __('emails.bookingInfo.subject');
+  //  $subject = __('emails.bookingInfo.subject');
     \App::setLocale($oldLocale);
 
-    return view($templateView)->subject($subject)->with($templateData);
+    return view($templateView)->with($templateData);
 });
 
 Route::any('/mailtest', function () {
