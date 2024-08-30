@@ -437,7 +437,7 @@ class Monitor extends Model
                 'school_id' => $monitorSportsDegree->school_id,
                 'sport_id' => $monitorSportsDegree->sport_id,
                 'degree' => $monitorSportsDegree->degree,
-                'monitor_sport_authorized_degrees' => $monitorSportsDegree->monitorSportAuthorizedDegrees? $monitorSportsDegree->monitorSportAuthorizedDegrees->reverse() : [],
+                'monitor_sport_authorized_degrees' => $monitorSportsDegree->monitorSportAuthorizedDegrees ? $monitorSportsDegree->monitorSportAuthorizedDegrees->reverse() : [],
             ];
         });
     }

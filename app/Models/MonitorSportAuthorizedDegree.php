@@ -51,6 +51,8 @@ use Spatie\Activitylog\LogOptions;
 {
     use SoftDeletes;    use HasFactory;    public $table = 'monitor_sport_authorized_degrees';
 
+    protected $with = ['degree'];
+
     public $fillable = [
         'monitor_sport_id',
         'degree_id'
