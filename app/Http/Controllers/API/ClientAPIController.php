@@ -375,7 +375,8 @@ class ClientAPIController extends AppBaseController
 
                 foreach ($groups as $group) {
                     if (Carbon::parse($courseDate->date)->gte($today)) {
-                        if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {
+                        //** Removed subgroups length, not seems to be reasonable with new features. */
+                        /*if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {*/
 
                             $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
 
@@ -388,12 +389,12 @@ class ClientAPIController extends AppBaseController
                                 DB::rollBack();
                                 return $this->sendError('Some groups are not identical');
                             }
-                        } else {
+/*                        } else {
                             DB::rollBack();
                             Log::error('Initial count'. $initialGroup->courseSubgroups->count() );
                             Log::error('Sned count '. $group->courseSubgroups->count() );
                             return $this->sendError('Some groups are not identical length');
-                        }
+                        }*/
                     }
 
                 }
