@@ -801,6 +801,10 @@ class StatisticsController extends AppBaseController
         foreach ($allMonitors as $monitor) {
             $monitorSummary[$monitor->id] = [
                 'first_name' => $monitor->first_name,
+                'language1_id' => $monitor->language1_id,
+                'country' => $monitor->country,
+                'birth_date' => $monitor->birth_date,
+                'image' => $monitor->image,
                 'id' => $monitor->id,
                 'sport' => null,
                 'currency' => $currency,
@@ -977,6 +981,10 @@ class StatisticsController extends AppBaseController
                 $monitorDailySummary[$date] = [
                     'date' => $date,
                     'first_name' => $monitor->first_name,
+                    'language1_id' => $monitor->language1_id,
+                    'country' => $monitor->country,
+                    'birth_date' => $monitor->birth_date,
+                    'image' => $monitor->image,
                     'id' => $monitor->id,
                     'sport' => $sport,
                     'currency' => $currency,
@@ -1035,6 +1043,10 @@ class StatisticsController extends AppBaseController
                 $monitorDailySummary[$date] = [
                     'date' => $date,
                     'first_name' => $monitor->first_name,
+                    'language1_id' => $monitor->language1_id,
+                    'country' => $monitor->country,
+                    'birth_date' => $monitor->birth_date,
+                    'image' => $monitor->image,
                     'id' => $monitor->id,
                     'sport' => $sport,
                     'currency' => $currency,
@@ -1049,7 +1061,7 @@ class StatisticsController extends AppBaseController
                     'cost_activities' => 0,
                     'total_hours' => 0,
                     'total_cost' => 0,
-                    'hour_price' => $salaryLevel->pay,
+                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
                 ];
             }
 
