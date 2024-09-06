@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 /**
  * @OA\Schema(
  *      schema="ClientSport",
@@ -34,9 +35,14 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
  *          format="date-time"
  *      )
  * )
- */class ClientSport extends Pivot
+ */
+
+class ClientSport extends Pivot
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'clients_sports';
+
+    use SoftDeletes, HasFactory;
+
+    public $table = 'clients_sports';
 
     public $fillable = [
         'client_id',

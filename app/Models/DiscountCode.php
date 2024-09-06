@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 /**
  * @OA\Schema(
  *      schema="DiscountCode",
@@ -56,9 +59,14 @@ use Illuminate\Database\Eloquent\Model;
  *          format="date-time"
  *      )
  * )
- */class DiscountCode extends Model
+ */
+
+class DiscountCode extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'discounts_codes';
+
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'discounts_codes';
 
     public $fillable = [
         'code',
@@ -90,5 +98,13 @@ use Illuminate\Database\Eloquent\Model;
     public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\School::class, 'school_id');
+    }
+
+        public function getActivitylogOptions(): LogOptions
+    {
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

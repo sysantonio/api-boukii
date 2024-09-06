@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 /**
  * @OA\Schema(
  *      schema="EvaluationFile",
@@ -56,7 +59,9 @@ use Illuminate\Database\Eloquent\Model;
  * )
  */class EvaluationFile extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'evaluation_files';
+       use LogsActivity, SoftDeletes, HasFactory;
+
+       public $table = 'evaluation_files';
 
     public $fillable = [
         'evaluation_id',
@@ -84,5 +89,13 @@ use Illuminate\Database\Eloquent\Model;
     public function evaluation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Evaluation::class, 'evaluation_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

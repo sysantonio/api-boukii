@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 /**
  * @OA\Schema(
  *      schema="Mail",
@@ -60,9 +63,11 @@ use Illuminate\Database\Eloquent\Model;
  *          format="date-time"
  *      )
  * )
- */class Mail extends Model
+ */
+
+class Mail extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'mails';
+       use LogsActivity, SoftDeletes, HasFactory;     public $table = 'mails';
 
     public $fillable = [
         'type',
@@ -95,5 +100,13 @@ use Illuminate\Database\Eloquent\Model;
     public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\School::class, 'school_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

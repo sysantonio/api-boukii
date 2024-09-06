@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -171,7 +172,9 @@ use Spatie\Activitylog\LogOptions;
  */
 class Client extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'clients';
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'clients';
 
     public $fillable = [
         'email',
@@ -375,8 +378,11 @@ class Client extends Model
     }
 
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -76,7 +77,9 @@ use Spatie\Activitylog\LogOptions;
  */
 class CourseSubgroup extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'course_subgroups';
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'course_subgroups';
     protected $appends = ['is_full'];
     public $fillable = [
         'course_id',
@@ -242,8 +245,11 @@ class CourseSubgroup extends Model
         return $query;
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

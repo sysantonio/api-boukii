@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -66,7 +67,7 @@ use Spatie\Activitylog\LogOptions;
  */
 class SchoolSalaryLevel extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'school_salary_levels';
+     use LogsActivity, SoftDeletes, HasFactory;     public $table = 'school_salary_levels';
 
     public $fillable = [
         'school_id',
@@ -101,8 +102,11 @@ class SchoolSalaryLevel extends Model
         return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'salary_level');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

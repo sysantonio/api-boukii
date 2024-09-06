@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -50,8 +51,9 @@ use Spatie\Activitylog\LogOptions;
  */
 class BookingUserExtra extends Model
 {
-    use SoftDeletes;
-    use HasFactory;
+
+    use LogsActivity, SoftDeletes, HasFactory;
+
     public $table = 'booking_user_extras';
 
     public $fillable = [
@@ -82,8 +84,11 @@ class BookingUserExtra extends Model
         return $this->belongsTo(\App\Models\CourseExtra::class, 'course_extra_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

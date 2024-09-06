@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -230,9 +231,13 @@ use Spatie\Activitylog\LogOptions;
  *          format="date-time"
  *      )
  * )
- */class Booking extends Model
+ */
+
+class Booking extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'bookings';
+     use LogsActivity, SoftDeletes, HasFactory;
+
+     public $table = 'bookings';
 
     public $fillable = [
         'school_id',
@@ -352,9 +357,12 @@ use Spatie\Activitylog\LogOptions;
         return $this->hasMany(\App\Models\Payment::class, 'booking_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
     protected $appends = ['sport', 'bonus', 'payment_method'];
 

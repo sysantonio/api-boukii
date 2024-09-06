@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -53,7 +54,7 @@ use Spatie\Activitylog\LogOptions;
  */
 class EvaluationFulfilledGoal extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'evaluation_fulfilled_goals';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'evaluation_fulfilled_goals';
 
     public $fillable = [
         'evaluation_id',
@@ -84,8 +85,11 @@ class EvaluationFulfilledGoal extends Model
         return $this->belongsTo(\App\Models\Degree::class, 'degrees_school_sport_goals_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

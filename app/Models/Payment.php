@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -73,7 +74,7 @@ use Spatie\Activitylog\LogOptions;
  * )
  */class Payment extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'payments';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'payments';
 
     public $fillable = [
         'booking_id',
@@ -116,9 +117,12 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\Booking::class, 'booking_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 
     // Special for field "payrexx_transaction": store encrypted

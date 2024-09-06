@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -67,7 +68,9 @@ use Spatie\Activitylog\LogOptions;
  */
 class CourseDate extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'course_dates';
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'course_dates';
 
     public $fillable = [
         'course_id',
@@ -144,8 +147,11 @@ class CourseDate extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_date_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

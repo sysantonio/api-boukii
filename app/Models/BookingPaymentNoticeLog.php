@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class BookingPaymentNoticeLog extends Model
 {
+
     protected $table = 'booking_payment_notice_log';
 
-protected $fillable = [
-		'booking_id',
-		'booking_user_id',
-		'date'
-	];
+    protected $fillable = [
+        'booking_id',
+        'booking_user_id',
+        'date'
+    ];
     public $timestamps = false;
 
     public static function checkToNotify($data)
@@ -22,7 +23,7 @@ protected $fillable = [
         $notify = 1;
 
         $logs = self::where('booking_id', $data->booking2_id)
-                    ->get();
+            ->get();
 
 
         $fecha_actual = Carbon::createFromFormat('Y-m-d H:i:s', date("Y-m-d H:i:s"));

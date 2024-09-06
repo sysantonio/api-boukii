@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -106,7 +107,7 @@ use Spatie\Permission\Traits\HasRoles;
  * )
  */class User extends Authenticatable
 {
-     use SoftDeletes, HasFactory, Notifiable, HasApiTokens, HasRoles;    public $table = 'users';
+     use LogsActivity, SoftDeletes, HasFactory, Notifiable, HasApiTokens, HasRoles;    public $table = 'users';
 
     public $fillable = [
         'username',

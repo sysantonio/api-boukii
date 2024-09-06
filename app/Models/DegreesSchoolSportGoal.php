@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -47,7 +48,9 @@ use Spatie\Activitylog\LogOptions;
  */
 class DegreesSchoolSportGoal extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'degrees_school_sport_goals';
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'degrees_school_sport_goals';
 
     public $fillable = [
         'degree_id',
@@ -71,8 +74,11 @@ class DegreesSchoolSportGoal extends Model
         return $this->belongsTo(\App\Models\Degree::class, 'degree_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

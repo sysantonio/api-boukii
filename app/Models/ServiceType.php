@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
  use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -44,7 +45,7 @@ use Spatie\Activitylog\LogOptions;
  * )
  */class ServiceType extends Model
 {
-     use SoftDeletes;    use HasFactory;    public $table = 'service_type';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'service_type';
 
     public $fillable = [
         'name'

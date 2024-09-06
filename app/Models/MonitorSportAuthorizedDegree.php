@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -49,7 +50,7 @@ use Spatie\Activitylog\LogOptions;
  * )
  */class MonitorSportAuthorizedDegree extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'monitor_sport_authorized_degrees';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'monitor_sport_authorized_degrees';
 
     protected $with = ['degree'];
 
@@ -80,8 +81,11 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\MonitorSportsDegree::class, 'monitor_sport_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

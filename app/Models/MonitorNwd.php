@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -111,7 +112,7 @@ use Spatie\Activitylog\LogOptions;
  */
 class MonitorNwd extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'monitor_nwd';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'monitor_nwd';
 
     public $fillable = [
         'monitor_id',
@@ -170,8 +171,11 @@ class MonitorNwd extends Model
         return $this->belongsTo(\App\Models\Station::class, 'station_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 }

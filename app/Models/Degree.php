@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @OA\Schema(
@@ -116,8 +117,12 @@ use Spatie\Activitylog\LogOptions;
  */
 class Degree extends Model
 {
-    use SoftDeletes;    use HasFactory;    public $table = 'degrees';
+    use LogsActivity, SoftDeletes, HasFactory;
+
+    public $table = 'degrees';
+
     use \Awobaz\Compoships\Compoships;
+
     public $fillable = [
         'league',
         'level',
@@ -213,9 +218,12 @@ class Degree extends Model
         return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'degree_id');
     }
 
-public function getActivitylogOptions(): LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+         return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('activity');
     }
 
     /**
