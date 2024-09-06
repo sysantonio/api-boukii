@@ -348,38 +348,6 @@ class Course extends Model
         'deleted_at' => 'nullable'
     ];
 
-    public function setHourStartAttribute($value)
-    {
-        if ($value && \Carbon\Carbon::hasFormat($value, 'H:i')) {
-            // Si el formato es correcto, lo guarda con el formato H:i:s
-            $this->attributes['hour_start'] = \Carbon\Carbon::createFromFormat('H:i', $value)->format('H:i:s');
-        } else {
-            // Si el formato es incorrecto o no viene, se puede manejar de diferentes maneras
-            $this->attributes['hour_start'] = null; // Establece el valor como null o algún valor por defecto
-        }
-    }
-
-    public function setHourEndAttribute($value)
-    {
-        if ($value && \Carbon\Carbon::hasFormat($value, 'H:i')) {
-            // Si el formato es correcto, lo guarda con el formato H:i:s
-            $this->attributes['hour_end'] = \Carbon\Carbon::createFromFormat('H:i', $value)->format('H:i:s');
-        } else {
-            // Si el formato es incorrecto o no viene, lo maneja adecuadamente
-            $this->attributes['hour_end'] = null; // Establece el valor como null o algún valor por defecto
-        }
-    }
-
-    public function getHourStartAttribute($value)
-    {
-        return $value ? \Carbon\Carbon::createFromFormat('H:i:s', $value)->format('H:i') : null; // Manejar valor null
-    }
-
-    public function getHourEndAttribute($value)
-    {
-        return $value ? \Carbon\Carbon::createFromFormat('H:i:s', $value)->format('H:i') : null; // Manejar valor null
-    }
-
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
