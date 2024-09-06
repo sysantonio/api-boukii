@@ -101,11 +101,8 @@ class SchoolSalaryLevel extends Model
         return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'salary_level');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

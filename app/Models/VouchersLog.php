@@ -93,11 +93,8 @@ class VouchersLog extends Model
         return $this->belongsTo(\App\Models\Voucher::class, 'voucher_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

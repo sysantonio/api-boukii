@@ -84,11 +84,8 @@ class EvaluationFulfilledGoal extends Model
         return $this->belongsTo(\App\Models\Degree::class, 'degrees_school_sport_goals_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

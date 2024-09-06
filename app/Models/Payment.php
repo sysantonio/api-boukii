@@ -116,12 +116,9 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\Booking::class, 'booking_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 
     // Special for field "payrexx_transaction": store encrypted

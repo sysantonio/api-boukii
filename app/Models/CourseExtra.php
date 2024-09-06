@@ -95,11 +95,8 @@ class CourseExtra extends Model
         return $this->hasMany(\App\Models\BookingUserExtra::class, 'course_extra_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

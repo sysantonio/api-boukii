@@ -529,11 +529,8 @@ class Monitor extends Model
         return $isBooked || $isNwd || $isCourse || $hasFullDayNwd;
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

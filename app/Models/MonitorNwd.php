@@ -170,11 +170,8 @@ class MonitorNwd extends Model
         return $this->belongsTo(\App\Models\Station::class, 'station_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

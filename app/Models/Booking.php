@@ -352,12 +352,9 @@ use Spatie\Activitylog\LogOptions;
         return $this->hasMany(\App\Models\Payment::class, 'booking_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
     protected $appends = ['sport', 'bonus', 'payment_method'];
 

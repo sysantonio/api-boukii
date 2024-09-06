@@ -142,11 +142,8 @@ class MonitorSportsDegree extends Model
         return $this->hasMany(\App\Models\MonitorSportAuthorizedDegree::class, 'monitor_sport_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

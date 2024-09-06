@@ -144,11 +144,8 @@ class CourseDate extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_date_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

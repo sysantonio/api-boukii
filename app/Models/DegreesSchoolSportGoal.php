@@ -71,11 +71,8 @@ class DegreesSchoolSportGoal extends Model
         return $this->belongsTo(\App\Models\Degree::class, 'degree_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }

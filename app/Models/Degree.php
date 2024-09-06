@@ -213,12 +213,9 @@ class Degree extends Model
         return $this->hasMany(\App\Models\MonitorSportsDegree::class, 'degree_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 
     /**

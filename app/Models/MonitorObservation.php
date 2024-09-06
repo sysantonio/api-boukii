@@ -107,11 +107,8 @@ use Spatie\Activitylog\LogOptions;
         return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
-    public function getActivitylogOptions(): LogOptions
+public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+        return LogOptions::defaults();
     }
 }
