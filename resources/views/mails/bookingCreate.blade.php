@@ -1,4 +1,4 @@
-@extends('mails.layout')
+@extends('mails.newLayout')
 
 @section('body')
     <p>

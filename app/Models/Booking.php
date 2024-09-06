@@ -359,10 +359,7 @@ class Booking extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+         return LogOptions::defaults();
     }
     protected $appends = ['sport', 'bonus', 'payment_method'];
 

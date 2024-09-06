@@ -195,10 +195,7 @@ use Spatie\Permission\Traits\HasRoles;
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+         return LogOptions::defaults();
     }
 
     public function setInitialPermissionsByRole(): void

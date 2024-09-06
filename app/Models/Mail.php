@@ -104,9 +104,6 @@ class Mail extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('activity');
+         return LogOptions::defaults();
     }
 }
