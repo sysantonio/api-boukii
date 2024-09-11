@@ -317,9 +317,9 @@ class Monitor extends Model
 
     public static array $rules = [
         'email' => 'nullable|string|max:100',
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'birth_date' => 'required',
+        'first_name' => 'string|max:255',
+        'last_name' => 'string|max:255',
+        'birth_date' => 'nullable',
         'phone' => 'nullable|string|max:255',
         'telephone' => 'nullable|string|max:255',
         'address' => 'nullable|string|max:255',
