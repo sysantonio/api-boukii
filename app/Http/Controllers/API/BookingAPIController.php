@@ -84,8 +84,8 @@ class BookingAPIController extends AppBaseController
                     });
                 }
 
-                if ($request->has('courseType')) {
-                    $courseTypes = explode(',', $request->courseType); // Dividir en un array por comas
+                if ($request->has('course_types')) {
+                    $courseTypes = $request->get('course_types');
 
                     $query->whereHas('bookingUsers.course', function ($subQuery) use ($courseTypes) {
                         $subQuery->whereIn('course_type', $courseTypes);
