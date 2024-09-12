@@ -62,7 +62,11 @@ class BookingAPIController extends AppBaseController
     public function index(Request $request): JsonResponse
     {
         $bookings = $this->bookingRepository->all(
-            searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with', 'isMultiple', 'courseType', 'finished']),
+            searchArray: $request->except([
+                'skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
+                'orderColumn', 'page', 'with', 'isMultiple', 'course_types',
+                'course_type', 'finished', 'all'
+            ]),
             search: $request->get('search'),
             skip: $request->get('skip'),
             limit: $request->get('limit'),
@@ -71,58 +75,11 @@ class BookingAPIController extends AppBaseController
             order: $request->get('order', 'desc'),
             orderColumn: $request->get('orderColumn', 'id'),
             additionalConditions: function ($query) use ($request) {
-                if (!$request->has('all')) {
-                    $query->where('status', '!=', 3);
-                }
-
-                // Filtrar por reservas con múltiples bookingUsers con user_id diferentes
-                if ($request->has('isMultiple') && $request->isMultiple == true) {
-                    $query->whereHas('bookingUsers', function ($subQuery) {
-                        $subQuery->select('booking_id')
-                            ->groupBy('booking_id')
-                            ->havingRaw('COUNT(DISTINCT user_id) > 1');
-                    });
-                }
-
-                if ($request->has('course_types')) {
-                    $courseTypes = $request->get('course_types');
-
-                    $query->whereHas('bookingUsers.course', function ($subQuery) use ($courseTypes) {
-                        $subQuery->whereIn('course_type', $courseTypes);
-                    });
-                }
-
-                if ($request->has('courseId')) {
-                    $query->whereHas('bookingUsers', function ($subQuery) use ($request) {
-                        $subQuery->where('course_id', $request->courseId);
-                    });
-                }
-
-                // Filtrar por reservas que tienen todos los bookingUsers con courseDate anteriores al día de hoy
-                if ($request->has('finished') && !$request->has('all')) {
-                    $today = now()->format('Y-m-d H:i:s');
-                    $isFinished = $request->finished == 1; // Verifica si finished es 1
-
-                    $query->whereDoesntHave('bookingUsers', function ($subQuery) use ($today, $isFinished) {
-                        $subQuery->where(function ($dateQuery) use ($today, $isFinished) {
-                            if ($isFinished) {
-                                // Filtra las reservas finalizadas
-                                $dateQuery->where('date', '<=', $today)
-                                    ->orWhere(function ($hourQuery) use ($today) {
-                                        $hourQuery->where('date', $today)
-                                            ->where('hour_end', '<=', $today);
-                                    });
-                            } else {
-                                // Filtra las reservas no finalizadas
-                                $dateQuery->where('date', '>', $today)
-                                    ->orWhere(function ($hourQuery) use ($today) {
-                                        $hourQuery->where('date', $today)
-                                            ->where('hour_end', '>', $today);
-                                    });
-                            }
-                        });
-                    });
-                }
+                $this->applyStatusFilter($query, $request);
+                $this->applyIsMultipleFilter($query, $request);
+                $this->applyCourseTypeFilter($query, $request);
+                $this->applyCourseIdFilter($query, $request);
+                $this->applyFinishedFilter($query, $request);
             }
         );
 
@@ -341,5 +298,80 @@ class BookingAPIController extends AppBaseController
         $booking->delete();
 
         return $this->sendSuccess('Booking deleted successfully');
+    }
+
+    private function applyStatusFilter($query, Request $request): void
+    {
+        if (!$request->has('all')) {
+            $query->where('status', '!=', 3);
+        }
+    }
+
+    private function applyIsMultipleFilter($query, Request $request): void
+    {
+        if ($request->has('isMultiple')) {
+            $isMultiple = filter_var($request->get('isMultiple'), FILTER_VALIDATE_BOOLEAN);
+
+            $query->whereHas('bookingUsers', function ($subQuery) use ($isMultiple) {
+                $subQuery->select('booking_id')
+                    ->groupBy('booking_id')
+                    ->havingRaw($isMultiple ? 'COUNT(DISTINCT client_id) > 1' : 'COUNT(DISTINCT client_id) = 1');
+            });
+        }
+    }
+
+    private function applyCourseTypeFilter($query, Request $request): void
+    {
+        if ($request->has('course_types')) {
+            $courseTypes = $request->get('course_types');
+            $query->whereHas('bookingUsers.course', function ($subQuery) use ($courseTypes) {
+                $subQuery->whereIn('course_type', $courseTypes);
+            });
+        }
+
+        if ($request->has('course_type')) {
+            $courseType = $request->get('course_type');
+            $query->whereHas('bookingUsers.course', function ($subQuery) use ($courseType) {
+                $subQuery->where('course_type', $courseType);
+            });
+        }
+    }
+
+    private function applyCourseIdFilter($query, Request $request): void
+    {
+        if ($request->has('courseId')) {
+            $courseId = $request->get('courseId');
+            $query->whereHas('bookingUsers', function ($subQuery) use ($courseId) {
+                $subQuery->where('course_id', $courseId);
+            });
+        }
+    }
+
+    private function applyFinishedFilter($query, Request $request): void
+    {
+        if ($request->has('finished') && !$request->has('all')) {
+            $today = now()->format('Y-m-d H:i:s');
+            $isFinished = $request->get('finished') == 1;
+
+            $query->whereDoesntHave('bookingUsers', function ($subQuery) use ($today, $isFinished) {
+                $subQuery->where(function ($dateQuery) use ($today, $isFinished) {
+                    if ($isFinished) {
+                        // Filtrar reservas finalizadas
+                        $dateQuery->where('date', '<=', $today)
+                            ->orWhere(function ($hourQuery) use ($today) {
+                                $hourQuery->where('date', $today)
+                                    ->where('hour_end', '<=', $today);
+                            });
+                    } else {
+                        // Filtrar reservas no finalizadas
+                        $dateQuery->where('date', '>', $today)
+                            ->orWhere(function ($hourQuery) use ($today) {
+                                $hourQuery->where('date', $today)
+                                    ->where('hour_end', '>', $today);
+                            });
+                    }
+                });
+            });
+        }
     }
 }
