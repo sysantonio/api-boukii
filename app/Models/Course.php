@@ -401,7 +401,36 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    protected $appends = ['icon'];
+    protected $appends = ['icon', 'minPrice'];
+
+    public function getMinPriceAttribute()
+    {
+        $priceRange = $this->price_range;
+
+        // Verificamos si el campo tiene datos
+        if (is_array($priceRange) && !empty($priceRange)) {
+            $minPrice = null;
+
+            // Iteramos sobre el array y buscamos el valor mínimo
+            foreach ($priceRange as $interval) {
+                // Obtenemos los valores del objeto sin la clave 'intervalo'
+                $prices = array_filter(array_except($interval, ['intervalo']), function ($value) {
+                    return $value !== null; // Filtramos los valores que no son null
+                });
+
+                // Si hay precios válidos, calculamos el mínimo
+                if (!empty($prices)) {
+                    $currentMin = min($prices); // Obtenemos el valor mínimo del intervalo actual
+                    $minPrice = $minPrice === null ? $currentMin : min($minPrice, $currentMin);
+                }
+            }
+
+            return $minPrice;
+        }
+
+        return $this->price; // Retornar null si no hay datos válidos en el JSON
+    }
+
     public function getIconAttribute()
     {
         // Obtener el curso asociado a este bookingUser
