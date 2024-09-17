@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Arr;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -414,7 +415,7 @@ class Course extends Model
             // Iteramos sobre el array y buscamos el valor mínimo
             foreach ($priceRange as $interval) {
                 // Obtenemos los valores del objeto sin la clave 'intervalo'
-                $prices = array_filter(array_except($interval, ['intervalo']), function ($value) {
+                $prices = array_filter(Arr::except($interval, ['intervalo']), function ($value) {
                     return $value !== null; // Filtramos los valores que no son null
                 });
 
