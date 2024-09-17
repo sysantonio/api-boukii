@@ -98,7 +98,8 @@ class AvailabilityAPIController extends AppBaseController
 
         try {
             // Build the query based on the presence of 'school_id'
-            $query = Course::with('station', 'sport', 'courseDates.courseGroups.courseSubgroups', 'courseExtras')
+            $query = Course::with('station', 'sport', 'courseDates.courseGroups.courseSubgroups.monitor',
+                'courseExtras', 'courseDates.courseGroups.degree')
                 ->withAvailableDates($type, $startDate, $endDate, $sportId, $clientId, $degreeId, $getLowerDegrees);
 
             if ($schoolId !== null) {
