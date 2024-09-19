@@ -404,6 +404,9 @@ class Booking extends Model
                 } elseif ($courseType == 2) {
                     return $courses->first()->sport->icon_prive;
                 }
+                elseif ($courseType == 3) {
+                    return $courses->first()->sport->icon_activity;
+                }
             } elseif ($sameCourseType && $courses->pluck('sport')->unique()->count() == 1) {
                 // Si hay varios cursos pero todos tienen el mismo course_type y el mismo deporte
                 // devolver ese deporte
@@ -411,6 +414,8 @@ class Booking extends Model
                     return $courses->first()->sport->icon_collective;
                 } elseif ($courseType == 2) {
                     return $courses->first()->sport->icon_prive;
+                } elseif ($courseType == 3) {
+                    return $courses->first()->sport->icon_activity;
                 }
             }
         }

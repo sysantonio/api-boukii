@@ -262,6 +262,9 @@ class BookingUser extends Model
                     case 2:
                         return $course->sport->icon_prive;
                         break;
+                    case 3:
+                        return $course->sport->icon_activity;
+                        break;
                     default:
                         return 'multiple';
                 }
@@ -364,6 +367,6 @@ class BookingUser extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults();
+        return LogOptions::defaults();
     }
 }

@@ -402,26 +402,22 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    protected $appends = ['icon', 'minPrice'];
+    protected $appends = ['icon', 'minPrice', 'minDuration'];
 
     public function getMinPriceAttribute()
     {
         $priceRange = $this->price_range;
 
-        // Verificamos si el campo tiene datos
         if (is_array($priceRange) && !empty($priceRange)) {
             $minPrice = null;
 
-            // Iteramos sobre el array y buscamos el valor mínimo
             foreach ($priceRange as $interval) {
-                // Obtenemos los valores del objeto sin la clave 'intervalo'
                 $prices = array_filter(Arr::except($interval, ['intervalo']), function ($value) {
-                    return $value !== null; // Filtramos los valores que no son null
+                    return $value !== null;
                 });
 
-                // Si hay precios válidos, calculamos el mínimo
                 if (!empty($prices)) {
-                    $currentMin = min($prices); // Obtenemos el valor mínimo del intervalo actual
+                    $currentMin = min($prices);
                     $minPrice = $minPrice === null ? $currentMin : min($minPrice, $currentMin);
                 }
             }
@@ -429,7 +425,61 @@ class Course extends Model
             return $minPrice;
         }
 
-        return $this->price; // Retornar null si no hay datos válidos en el JSON
+        return $this->price;
+    }
+
+    public function getMinDurationAttribute()
+    {
+        $priceRange = $this->price_range;
+
+        if (is_array($priceRange) && !empty($priceRange)) {
+            $minDuration = null;
+
+            foreach ($priceRange as $interval) {
+                // Comprobar si hay precios en el intervalo
+                $prices = array_filter(Arr::except($interval, ['intervalo']), function ($value) {
+                    return $value !== null;
+                });
+
+                if (!empty($prices) && isset($interval['intervalo'])) {
+                    $duration = $interval['intervalo'];
+
+                    if ($minDuration === null) {
+                        $minDuration = $duration;
+                    } else {
+                        $minDuration = $this->compareDurations($minDuration, $duration);
+                    }
+                }
+            }
+
+            return $minDuration;
+        }
+
+        return $this->duration;
+    }
+
+    private function compareDurations($duration1, $duration2)
+    {
+        $duration1Minutes = $this->durationToMinutes($duration1);
+        $duration2Minutes = $this->durationToMinutes($duration2);
+
+        return $duration1Minutes < $duration2Minutes ? $duration1 : $duration2;
+    }
+
+    private function durationToMinutes($duration)
+    {
+        $parts = explode(' ', $duration);
+        $minutes = 0;
+
+        foreach ($parts as $part) {
+            if (str_ends_with($part, 'h')) {
+                $minutes += (int) str_replace('h', '', $part) * 60;
+            } elseif (str_ends_with($part, 'm')) {
+                $minutes += (int) str_replace('m', '', $part);
+            }
+        }
+
+        return $minutes;
     }
 
     public function getIconAttribute()
@@ -450,8 +500,11 @@ class Course extends Model
                     case 2:
                         return $course->sport->icon_prive;
                         break;
+                    case 3:
+                        return $course->sport->icon_activity;
+                        break;
                     default:
-                        return 'multiple';
+                        return $course->sport->icon_selected;
                 }
             }
         }
@@ -499,18 +552,24 @@ class Course extends Model
             // Lógica para cursos de tipo 1
             $query->whereHas('courseDates', function (Builder $subQuery) use (
                 $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
-                $isAdultClient, $clientLanguages
+                $isAdultClient, $clientLanguages, $clientId
             ) {
                 $subQuery->where('date', '>=', $startDate)
                     ->where('date', '<=', $endDate)
                     ->whereHas('courseSubgroups',
                         function (Builder $subQuery) use (
                             $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
-                            $isAdultClient, $clientLanguages
+                            $isAdultClient, $clientLanguages, $clientId
                         ) {
                             $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
                                 WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
                                 AND booking_users.deleted_at IS NULL)')
+                                ->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
+                                    // Excluir los subgrupos donde el cliente ya tiene una reserva
+                                    $bookingQuery->where('client_id', $clientId)
+                                        ->where('status', 1) // Solo excluir reservas activas
+                                        ->whereNull('deleted_at'); // Excluir si la reserva no está eliminada
+                                })
                                 ->whereHas('courseGroup',
                                     function (Builder $groupQuery) use (
                                         $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
@@ -559,7 +618,6 @@ class Course extends Model
                                                     }
                                                 });
                                         }
-
 
                                     });
                             $subQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
@@ -611,6 +669,6 @@ class Course extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults();
+        return LogOptions::defaults();
     }
 }

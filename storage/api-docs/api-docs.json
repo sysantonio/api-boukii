@@ -15601,6 +15601,10 @@
                         "description": "Icon when the sport is collective",
                         "type": "string"
                     },
+                    "icon_activity": {
+                        "description": "Icon when the sport is activity",
+                        "type": "string"
+                    },
                     "icon_prive": {
                         "description": "Icon when the sport is prive",
                         "type": "string"

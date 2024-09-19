@@ -31,6 +31,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *           description="Icon when the sport is collective",
  *           type="string"
  *       ),
+ *     @OA\Property(
+ *           property="icon_activity",
+ *           description="Icon when the sport is activity",
+ *           type="string"
+ *       ),
  *       @OA\Property(
  *           property="icon_prive",
  *           description="Icon when the sport is prive",
@@ -72,6 +77,7 @@ class Sport extends Model
         'name',
         'icon_collective',
         'icon_prive',
+        'icon_activity',
         'icon_selected',
         'icon_unselected',
         'sport_type'
@@ -81,6 +87,7 @@ class Sport extends Model
         'name' => 'string',
         'icon_collective' => 'string',
         'icon_prive' => 'string',
+        'icon_activity' => 'string',
         'icon_selected' => 'string',
         'icon_unselected' => 'string'
     ];
@@ -89,6 +96,7 @@ class Sport extends Model
         'name' => 'required|string|max:255',
         'icon_collective' => 'required|string|max:500',
         'icon_prive' => 'required|string|max:500',
+        'icon_activity' => 'required|string|max:500',
         'icon_selected' => 'required|string|max:500',
         'icon_unselected' => 'required|string|max:500',
         'sport_type' => 'required',
