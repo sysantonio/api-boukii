@@ -23,6 +23,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          type="integer",
  *          nullable=false
  *      ),
+ *     @OA\Property(
+ *          property="quantity",
+ *          description="Quantity extras selected when group it can be more than 1",
+ *          type="integer",
+ *          nullable=false
+ *      ),
  *      @OA\Property(
  *          property="created_at",
  *          description="Creation timestamp",
@@ -57,8 +63,9 @@ class BookingUserExtra extends Model
     public $table = 'booking_user_extras';
 
     public $fillable = [
-        'booking_user_id', // Corregido el nombre de la propiedad
-        'course_extra_id'
+        'booking_user_id',
+        'course_extra_id',
+        'quantity'
     ];
 
     protected $casts = [
@@ -67,6 +74,7 @@ class BookingUserExtra extends Model
 
     public static array $rules = [
         'booking_user_id' => 'required',
+        'quantity' => 'numeric',
         'course_extra_id' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',

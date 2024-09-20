@@ -29,6 +29,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          type="string",
  *          nullable=true
  *      ),
+ *     @OA\Property(
+ *          property="group",
+ *          description="group of the course extra when is activity",
+ *          type="string",
+ *          nullable=true
+ *      ),
  *      @OA\Property(
  *          property="price",
  *          description="Price of the course extra",
@@ -69,12 +75,14 @@ class CourseExtra extends Model
         'course_id',
         'name',
         'description',
+        'group',
         'price'
     ];
 
     protected $casts = [
         'name' => 'string',
         'description' => 'string',
+        'group' => 'string',
         'price' => 'decimal:2'
     ];
 
@@ -82,6 +90,7 @@ class CourseExtra extends Model
         'course_id' => 'required',
         'name' => 'required|string|max:255',
         'description' => 'nullable|string|max:255',
+        'group' => 'nullable|string|max:255',
         'price' => 'required|numeric',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',

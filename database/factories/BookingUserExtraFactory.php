@@ -33,6 +33,7 @@ class BookingUserExtraFactory extends Factory
         return [
             'booking_user_id' => $this->faker->word,
             'course_extra_id' => $this->faker->word,
+            'quantity' => $this->faker->numberBetween(1, 10),
             'created_at' => $this->faker->date('Y-m-d H:i:s'),
             'updated_at' => $this->faker->date('Y-m-d H:i:s'),
             'deleted_at' => $this->faker->date('Y-m-d H:i:s')
