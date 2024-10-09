@@ -133,7 +133,7 @@ class ClientsController extends AppBaseController
         $search = $request->input('search');
         $order = $request->input('order', 'desc');
         $orderColumn = $request->input('orderColumn', 'id');
-        $with = $request->input('with', ['utilizers', 'clientSports.degree', 'clientSports.sport']);
+        $with = $request->input('with', ['utilizers.clientSports.sport', 'utilizers.clientSports.degree', 'clientSports.degree', 'clientSports.sport']);
 
         $clientsWithUtilizers = $this->clientRepository->all(
             searchArray: $searchParameters,
@@ -157,6 +157,7 @@ class ClientsController extends AppBaseController
                 // Segunda condición: Búsqueda adicional en 'utilizers' si hay un término de búsqueda
                 if ($search) {
                     $query->whereHas('utilizers', function ($subQuery) use ($school, $search, $request) {
+
                         $subQuery->where(function ($subSubQuery) use ($search) {
                             $subSubQuery->where('first_name', 'like', "%" . $search . "%")
                                 ->orWhere('last_name', 'like', "%" . $search . "%");
@@ -167,6 +168,11 @@ class ClientsController extends AppBaseController
                                     $query->whereNotNull('accepted_at');
                                 }
                             });
+                    });
+
+                    $query->orWhere(function ($subQuery) use ($search) {
+                        $subQuery->where('first_name', 'like', "%" . $search . "%")
+                            ->orWhere('last_name', 'like', "%" . $search . "%");
                     });
                 }
             }
