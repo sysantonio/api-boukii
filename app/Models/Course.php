@@ -597,10 +597,10 @@ class Course extends Model
                                         } else {
                                             // Filtrado por min_age y max_age si clientId no está disponible
                                             if ($min_age !== null) {
-                                                $groupQuery->where('age_min', '<=', $min_age);
+                                                $groupQuery->where('age_min', '<=', $max_age);
                                             }
                                             if ($max_age !== null) {
-                                                $groupQuery->where('age_max', '>=', $max_age);
+                                                $groupQuery->where('age_max', '>=', $min_age);
                                             }
                                         }
                                         // Comprobación de degree_order y rango de edad

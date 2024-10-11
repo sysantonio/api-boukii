@@ -94,8 +94,8 @@ class StatisticsController extends AppBaseController
         $endDate = $request->end_date ?? $season->end_date;
 
         // Obtener los monitores totales filtrados por escuela y deporte si se proporciona
-        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request) {
-            $query->where('school_id', $request['school_id'])->where('active_school', 1);
+        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request, $schoolId) {
+            $query->where('school_id', $schoolId)->where('active_school', 1);
         });
 
         if ($request->has('sport_id')) {
@@ -145,6 +145,7 @@ class StatisticsController extends AppBaseController
     {
         $schoolId = $this->getSchool($request)->id;
         $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+
         // Obtén los filtros de la request
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -158,6 +159,7 @@ class StatisticsController extends AppBaseController
 
         // Construye la consulta base para los cursos
         $coursesQuery = Course::with(['bookingUsers.booking.payments'])
+            ->where('school_id', $schoolId) // Filtrar por school_id
             ->when($startDate, function ($query, $startDate) {
                 return $query->whereHas('courseDates', function ($query) use ($startDate) {
                     $query->where('date', '>=', $startDate);
@@ -184,7 +186,7 @@ class StatisticsController extends AppBaseController
         foreach ($courses as $course) {
             // Calcular la disponibilidad
             $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
-            // Agrupar pagos por tipo
+
             // Agrupar pagos por tipo
             $payments = [
                 'cash' => 0,
@@ -222,9 +224,10 @@ class StatisticsController extends AppBaseController
                 'total_cost' => $totalCost
             ];
         }
-        return $this->sendResponse($result, 'Total worked hours by sport retrieved successfully');
 
+        return $this->sendResponse($result, 'Total worked hours by sport retrieved successfully');
     }
+
 
 
     public function getTotalWorkedHoursBySport(Request $request): JsonResponse
@@ -780,8 +783,8 @@ class StatisticsController extends AppBaseController
         // Obtener todos los monitores de la escuela
 
 
-        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request) {
-            $query->where('school_id', $request['school_id'])->where('active_school', 1);
+        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request, $schoolId) {
+            $query->where('school_id', $schoolId)->where('active_school', 1);
         })->when($request->has('monitor_id'), function ($query) use ($request) {
             return $query->where('id', $request->monitor_id);
         });
