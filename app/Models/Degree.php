@@ -150,10 +150,10 @@ class Degree extends Model
     ];
 
     public static array $rules = [
-        'league' => 'required|string|max:255',
-        'level' => 'required|string|max:255',
+        'league' => 'string|max:255',
+        'level' => 'string|max:255',
         'image' => 'nullable',
-        'name' => 'required|string|max:100',
+        'name' => 'string|max:100',
         'annotation' => 'nullable|string|max:65535',
         'degree_order' => 'required',
         'progress' => 'required',
