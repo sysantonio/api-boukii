@@ -33,8 +33,8 @@ class UpdateEmailsFromOldDatabase extends Command
                 ->where('email', 'like', "{$emailPrefix}%")
                 ->get();
 
-            $clientMatches = Client::where('first_name', $oldUser->first_name)
-                ->where('last_name', $oldUser->last_name)
+            $clientMatches = Client::where('last_name', $oldUser->first_name)
+                ->where('first_name', $oldUser->last_name)
                 ->where('email', 'like', "{$emailPrefix}%")
                 ->get();
 
