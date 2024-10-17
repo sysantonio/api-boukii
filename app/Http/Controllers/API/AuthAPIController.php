@@ -30,6 +30,12 @@ class AuthAPIController extends AppBaseController
     }
     public function sendResetLink(Request $request)
     {
+        $types = [
+            2 => 'client',
+            1 => 'admin',
+            4 => 'superadmin'
+        ];
+
         $request->validate([
             'email' => 'required|email',
             'type' => 'required', // Agrega el tipo de usuario como requerido
@@ -39,6 +45,7 @@ class AuthAPIController extends AppBaseController
         // Busca el usuario a través de la relación con el cliente y las escuelas
         $user = User::where('email', $request->email)
             ->where('type', $request->type)
+            ->orWhere('type', $types[$request->type])
             ->whereHas('clients', function ($query) use ($request) {
                 // Filtrar por las escuelas del cliente
                 $query->whereHas('schools', function ($schoolQuery) use ($request) {
