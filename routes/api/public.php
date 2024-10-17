@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/forgot-password', [App\Http\Controllers\API\AuthAPIController::class, 'sendResetLink'])
     ->name('password.email');
 
-Route::post('/reset-password', [App\Http\Controllers\API\AuthAPIController::class, 'resetPassword'])
+Route::put('/reset-password', [App\Http\Controllers\API\AuthAPIController::class, 'resetPassword'])
     ->name('password.reset');
 
 Route::middleware(['guest'])->group(function () {
