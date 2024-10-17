@@ -70,6 +70,26 @@ class PayrexxController
                                 if ($booking->trashed()) {
                                     $booking->restore(); // Restaurar la reserva eliminada
                                 }
+                                $buyerUser = User::find($booking->client_main_id);
+                                if ($booking->payment_method_id == 2 && $booking->source == 'web') {
+                                    // As of 2022-10-25 tell buyer user by email at this point, even before payment, and continue
+                                    dispatch(function () use ($schoolData, $booking, $buyerUser) {
+                                        // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                                        try {
+                                            \Mail::to($buyerUser->email)
+                                                ->send(new BookingCreateMailer(
+                                                    $schoolData,
+                                                    $booking,
+                                                    $buyerUser,
+                                                    true
+                                                ));
+                                        } catch (\Exception $ex) {
+                                            \Illuminate\Support\Facades\Log::debug('BookingController->createBooking BookingCreateMailer: ' .
+                                                $ex->getMessage());
+                                        }
+                                    })->afterResponse();
+                                }
+
                                 // Everything seems to fit, so mark booking as paid,
                                 // storing some Transaction info for future refunds
                                 // N.B: as of 2022-10-08 field $data2->invoice->totalAmount is null
