@@ -44,8 +44,10 @@ class AuthAPIController extends AppBaseController
 
         // Busca el usuario a través de la relación con el cliente y las escuelas
         $user = User::where('email', $request->email)
-            ->where('type', $request->type)
-            ->orWhere('type', $types[$request->type])
+            ->where(function($query) use ($request, $types) {
+                $query->where('type', $request->type)
+                    ->orWhere('type', $types[$request->type]);
+            })
             ->whereHas('clients', function ($query) use ($request) {
                 // Filtrar por las escuelas del cliente
                 $query->whereHas('schools', function ($schoolQuery) use ($request) {
