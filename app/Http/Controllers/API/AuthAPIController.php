@@ -38,7 +38,7 @@ class AuthAPIController extends AppBaseController
 
         $user = User::where('email', $request->email)
             ->where('type', $request->type)
-            ->whereHas('clientsSchools', function ($q) use($request) {
+            ->whereHas('usersSchools', function ($q) use($request) {
                 $q ->where('school_id', $request->school_id);
             })->first();
 
