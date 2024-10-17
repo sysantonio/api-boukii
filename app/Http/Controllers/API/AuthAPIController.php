@@ -39,22 +39,27 @@ class AuthAPIController extends AppBaseController
         $request->validate([
             'email' => 'required|email',
             'type' => 'required', // Agrega el tipo de usuario como requerido
-            'school_id' => 'required'
+            'school_id' => 'nullable'
         ]);
 
         // Busca el usuario a través de la relación con el cliente y las escuelas
-        $user = User::where('email', $request->email)
+        $userQuery = User::where('email', $request->email)
             ->where(function($query) use ($request, $types) {
                 $query->where('type', $request->type)
                     ->orWhere('type', $types[$request->type]);
-            })
-            ->whereHas('clients', function ($query) use ($request) {
+            });
+
+        // Añadir el filtro de school_id solo si no es nulo
+        if ($request->school_id !== null) {
+            $userQuery->whereHas('clients', function ($query) use ($request) {
                 // Filtrar por las escuelas del cliente
                 $query->whereHas('schools', function ($schoolQuery) use ($request) {
                     $schoolQuery->where('school_id', $request->school_id);
                 });
-            })
-            ->first();
+            });
+        }
+
+        $user = $userQuery->first();
 
         if (!$user) {
             return response()->json(['email' => 'No podemos encontrar un usuario con ese email, tipo y escuela.'], 404);
@@ -72,6 +77,7 @@ class AuthAPIController extends AppBaseController
 
         return response()->json(['message' => 'Se ha enviado un enlace de restablecimiento de contraseña.']);
     }
+
 
 
     public function resetPassword(Request $request)
