@@ -121,10 +121,15 @@ class CourseController extends AppBaseController
 
         // Calcula reservas y plazas disponibles para cada curso
         foreach ($courses as $course) {
-            $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
-            $course->total_reservations = $availability['total_reservations_places'];
-            $course->total_available_places = $availability['total_available_places'];
-            $course->total_places = $availability['total_places'];
+            if($course->course_type == 1) {
+                $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
+                $course->total_reservations = $availability['total_reservations_places'];
+                $course->total_available_places = $availability['total_available_places'];
+                $course->total_places = $availability['total_places'];
+            } else {
+                $course->total_reservations = $course->bookingUsers->count();
+            }
+
         }
 
         return $this->sendResponse($courses, 'Courses retrieved successfully');
