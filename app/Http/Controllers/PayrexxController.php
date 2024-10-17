@@ -41,7 +41,9 @@ class PayrexxController
                 $referenceID = trim($data['referenceId'] ?? '');
 
                 $booking = (strlen($referenceID) > 2)
-                    ? Booking::with('school')->where('payrexx_reference', '=', $referenceID)->first()
+                    ? Booking::withTrashed()->with('school')
+                        ->where('payrexx_reference', '=', $referenceID)
+                        ->first()
                     : null;
 
                 if ($booking) {
@@ -65,6 +67,9 @@ class PayrexxController
                             );
 
                             if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED) {
+                                if ($booking->trashed()) {
+                                    $booking->restore(); // Restaurar la reserva eliminada
+                                }
                                 // Everything seems to fit, so mark booking as paid,
                                 // storing some Transaction info for future refunds
                                 // N.B: as of 2022-10-08 field $data2->invoice->totalAmount is null

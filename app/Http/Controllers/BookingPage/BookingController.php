@@ -159,6 +159,9 @@ class BookingController extends SlugAuthController
             'user_id' => $client->user->id
         ]);
 
+        $booking->deleted_at = now();
+        $booking->save();
+
         return response()->json(['message' => 'Reserva creada con éxito', 'booking_id' => $booking->id], 201);
 
     }
@@ -396,7 +399,7 @@ class BookingController extends SlugAuthController
     public function payBooking(Request $request, $id): JsonResponse
     {
         $school = $this->school;
-        $booking = Booking::find($id);
+        $booking = Booking::withTrashed()->find($id);
         $paymentMethod = 2;
 
         if (!$booking) {
@@ -418,7 +421,9 @@ class BookingController extends SlugAuthController
             return $this->sendResponse($payrexxLink, 'Link retrieved successfully');
         }
 
-        return $this->sendError('Link could not be created');
+        return $this->sendError('Link could not be created. Booking has been removed.');
+
+
     }
 
     /**

@@ -67,6 +67,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *           nullable=true
  *       ),
  *       @OA\Property(
+ *           property="group_id",
+ *           description="Grouped bookings ID",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *       @OA\Property(
  *           property="hour_start",
  *           description="Start Hour",
  *           type="string",
@@ -181,6 +187,7 @@ class BookingUser extends Model
         'degree_id',
         'course_group_id',
         'monitor_id',
+        'group_id',
         'date',
         'hour_start',
         'hour_end',
@@ -214,6 +221,7 @@ class BookingUser extends Model
         'degree_id' => 'nullable',
         'course_group_id' => 'nullable',
         'monitor_id' => 'nullable',
+        'group_id' => 'nullable',
         'date' => 'nullable',
         'hour_start' => 'nullable',
         'hour_end' => 'nullable',
@@ -227,7 +235,7 @@ class BookingUser extends Model
         'deleted_at' => 'nullable'
     ];
 
-    protected $appends = ['duration'];
+    protected $appends = ['duration', 'formattedDuration'];
 
     /**
      * Calculate duration between start and end time.
@@ -241,6 +249,42 @@ class BookingUser extends Model
             $endTime = \Carbon\Carbon::parse($this->hour_end);
             return $startTime->diff($endTime)->format('%H:%I:%S');
         }
+        return null;
+    }
+
+    public function getHourStartAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('H:i');
+    }
+
+    public function getHourEndAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('H:i');
+    }
+
+    public function getFormattedDurationAttribute(): ?string
+    {
+        if ($this->hour_start && $this->hour_end) {
+            $startTime = \Carbon\Carbon::parse($this->hour_start);
+            $endTime = \Carbon\Carbon::parse($this->hour_end);
+
+            // Obtener la diferencia en horas y minutos
+            $diffInMinutes = $startTime->diffInMinutes($endTime);
+            $hours = intdiv($diffInMinutes, 60); // Horas completas
+            $minutes = $diffInMinutes % 60; // Minutos restantes
+
+            // Formatear el resultado
+            $duration = '';
+            if ($hours > 0) {
+                $duration .= $hours . 'h';
+            }
+            if ($minutes > 0) {
+                $duration .= ' ' . $minutes . 'm';
+            }
+
+            return trim($duration); // Eliminar espacios innecesarios
+        }
+
         return null;
     }
 
@@ -345,6 +389,7 @@ class BookingUser extends Model
 
     public static function hasOverlappingBookings($bookingUser, $bookingUserIds)
     {
+
         $clientBookings = BookingUser::where('client_id', $bookingUser['client_id'])
             ->where('date', $bookingUser['date'])
             ->where('status', 1)
@@ -354,9 +399,15 @@ class BookingUser extends Model
             ->get();
 
         foreach ($clientBookings as $existingBooking) {
+
             // Comprobar si hay solapamiento de horarios
-            if ($bookingUser['hour_start'] < $existingBooking->hour_end &&
-                $existingBooking->hour_start < $bookingUser['hour_end']) {
+            if (
+                ($bookingUser['hour_start'] < $existingBooking->hour_end &&
+                    $existingBooking->hour_start < $bookingUser['hour_end']) ||
+                // Comprobar si los tiempos son exactamente iguales
+                ($bookingUser['hour_start'] === $existingBooking->hour_start &&
+                    $bookingUser['hour_end'] === $existingBooking->hour_end)
+            ) {
                 return true; // Hay solapamiento
             }
         }
