@@ -32,12 +32,15 @@ class AuthAPIController extends AppBaseController
     {
         $request->validate([
             'email' => 'required|email',
-            'type' => 'required' // Agrega el tipo de usuario como requerido
+            'type' => 'required', // Agrega el tipo de usuario como requerido
+            'school_id' => 'required'
         ]);
 
         $user = User::where('email', $request->email)
             ->where('type', $request->type)
-            ->first();
+            ->whereHas('clientsSchools', function ($q) use($request) {
+                $q ->where('school_id', $request->school_id);
+            })->first();
 
         if (!$user) {
             return response()->json(['email' => 'No podemos encontrar un usuario con ese email y tipo.']);
