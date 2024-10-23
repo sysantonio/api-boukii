@@ -55,8 +55,8 @@ class BookingCreateMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mails.bookingCreate';
-        $footerView = 'mails.footer';
+        $templateView = 'mailsv2.BookingCreate';
+        $footerView = 'mailsv2.footer';
 
         $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();
@@ -71,6 +71,7 @@ class BookingCreateMailer extends Mailable
             'schoolConditionsURL' => $this->schoolData->conditions_url,
             'reference' => '#' . $this->bookingData->id,
             'bookingNotes' => $this->bookingData->notes,
+            'booking' => $this->bookingData,
             'courses' => $this->bookingData->parseBookedGroupedCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'actionURL' => null,

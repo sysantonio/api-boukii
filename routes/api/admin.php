@@ -57,6 +57,10 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         ->name('api.admin.planner.transfer');
 
     /** Booking **/
+    Route::post('bookings',
+        [\App\Http\Controllers\Admin\BookingController::class, 'store'])
+        ->name('api.admin.bookings.store');
+
     Route::post('bookings/checkbooking',
         [\App\Http\Controllers\Admin\BookingController::class, 'checkClientBookingOverlap'])
         ->name('api.admin.bookings.bookingoverlap');
@@ -77,6 +81,10 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::post('bookings/cancel',
         [\App\Http\Controllers\Admin\BookingController::class, 'cancelBookings'])
         ->name('api.admin.bookings.cancel');
+
+    Route::post('bookings/update',
+        [\App\Http\Controllers\Admin\BookingController::class, 'update'])
+        ->name('api.admin.bookings.update');
 
     /** Statistics */
     Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalAvailablePlacesByCourseType'])

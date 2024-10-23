@@ -1,4 +1,4 @@
-@extends('mails.newLayout')
+@extends('mailsv2.newLayout')
 
 @section('body')
     <p>
@@ -33,7 +33,7 @@
             </li>
             @if(isset($client->first()->first()->first()->first()['courseExtras'][0]))
                 <li>
-                    {{ __('emails.bookingInfo.extras') }}:  {{ __('emails.bookingInfo.forfait') }}
+                    {{ __('emails.bookingInfo.extras') }}: {{ __('emails.bookingInfo.forfait') }}
                     {{ $client->first()->first()->first()->first()['courseExtras'][0]['description'] }}.
                 </li>
             @endif
@@ -66,7 +66,8 @@
                 <tbody>
                 <tr>
                     <td align="center">
-                        <a href="{{ $client->first()->first()->first()->first()['client']['id'] }}" target="_blank"><img src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{ $client->first()->first()->first()->first()['client']['id'] }}"></a>
+                        <a href="{{ $client->first()->first()->first()->first()['client']['id'] }}" target="_blank"><img
+                                    src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{ $client->first()->first()->first()->first()['client']['id'] }}"></a>
                     </td>
                 </tr>
                 </tbody>

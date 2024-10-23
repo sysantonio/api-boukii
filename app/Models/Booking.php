@@ -361,7 +361,7 @@ class Booking extends Model
     {
          return LogOptions::defaults();
     }
-    protected $appends = ['sport', 'bonus', 'payment_method'];
+    protected $appends = ['sport', 'bonus', 'payment_method_status', 'cancellation_status', 'payment_method'];
 
     public function getBonusAttribute() {
         return $this->vouchersLogs()->exists();
@@ -425,24 +425,63 @@ class Booking extends Model
         return 'multiple';
     }
 
-    public function getPaymentStatus()
+    public function getCancellationStatusAttribute()
     {
         $status = '';
         $statusPayment = '';
 
+        // Si el estado de la reserva es "totalmente cancelada"
         if ($this->status == 2) {
             $status = 'total_cancel';
             $statusPayment = $this->bookingLogs->last()->action;
 
         } else {
+            // Comprobamos si hay cancelaciones parciales
             $partialCancellation = $this->bookingUsers()->where('status', 2)->exists();
             $status = $partialCancellation ? 'partial_cancel' : 'active';
 
+            // Verificamos si todas las fechas han pasado
+            $allDatesPassed = $this->bookingUsers()->where('date', '>', now())->exists();
+            if (!$allDatesPassed && !$partialCancellation) {
+                $status = 'finished';
+            }
         }
 
-
-
         return $status;
+    }
+
+    public function getPaymentMethodStatusAttribute()
+    {
+        // Si la reserva está pagada y el estado es 'activa' o 'terminada'
+        if ($this->isPaid && in_array($this->cancellation_status, ['active', 'finished'])) {
+            return 'paid';
+        }
+
+        // Si la reserva está pagada y está cancelada o parcialmente cancelada
+        if ($this->isPaid && in_array($this->cancellation_status, ['total_cancel', 'partial_cancel'])) {
+            $refundPayment = $this->payments()->where('status', 'refund')->latest()->first();
+            $noRefundPayment = $this->payments()->where('status', 'no_refund')->exists();
+
+            if ($noRefundPayment) {
+                return 'no_refund';
+            }
+
+            if ($refundPayment) {
+                return $refundPayment->notes;
+            }
+        }
+
+        // Si la reserva no está pagada, devolver diferentes estados según el `payment_method_id`
+        if (!$this->isPaid) {
+            switch ($this->payment_method_id) {
+                case 3:
+                    return 'link_send';
+                case 5:
+                    return 'confirmed_without_payment';
+                default:
+                    return 'unpaid';
+            }
+        }
     }
 
     /**
@@ -500,6 +539,55 @@ class Booking extends Model
             'course_id', 'degree_id', 'course_date_id']);
 
         return $groupedCourses;
+    }
+
+    public function parseBookedGroupedWithCourses()
+    {
+        // Cargar las relaciones necesarias para los bookingUsers
+        $this->loadMissing([
+            'bookingUsers',
+            'bookingUsers.client',
+            'bookingUsers.degree',
+            'bookingUsers.monitor',
+            'bookingUsers.courseExtras',
+            'bookingUsers.courseSubGroup',
+            'bookingUsers.course',
+            'bookingUsers.courseDate'
+        ]);
+
+        $bookingUsers = $this->bookingUsers;
+
+        // Preparar un array para almacenar el resultado final
+        $result = [];
+
+        // Recorrer los bookingUsers para agrupar según el tipo de curso
+        foreach ($bookingUsers as $bookingUser) {
+            $course = $bookingUser->course;
+            $groupKey = null;
+
+            // Si el curso es de tipo 1, agrupar por course_id y client_id
+            if ($course->course_type == 1) {
+                $groupKey = $course->id . '_' . $bookingUser->client_id;
+            }
+            // Si el curso es de tipo 2 o 3, agrupar por course_id, date, hour_start, hour_end y monitor_id
+            elseif (in_array($course->course_type, [2, 3])) {
+                $groupKey = $course->id . '_' . $bookingUser->date . '_' . $bookingUser->hour_start . '_' . $bookingUser->hour_end . '_' . ($bookingUser->monitor_id ?? 'null');
+            }
+
+            // Si la clave del grupo aún no existe en el resultado, crearla
+            if (!isset($result[$groupKey])) {
+                $result[$groupKey] = [
+                    'course' => $course,
+                    'booking_users' => []
+                ];
+            }
+
+            // Agregar el bookingUser al grupo correspondiente
+            $result[$groupKey]['booking_users'][] = $bookingUser;
+        }
+
+        // Devolver el resultado como un array de agrupaciones
+        return array_values($result);
     }
 
     public static function bookingInfo24h()

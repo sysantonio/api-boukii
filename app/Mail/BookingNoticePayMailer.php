@@ -49,8 +49,8 @@ class BookingNoticePayMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mails.bookingPayNotice';
-        $footerView = 'mails.footer';
+        $templateView = 'mailsv2.BookingPayNotice';
+        $footerView = 'mailsv2.footer';
 
         $templateMail = Mail::where('type', 'payment_reminder')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();
@@ -65,6 +65,7 @@ class BookingNoticePayMailer extends Mailable
             'schoolConditionsURL' => $this->schoolData->conditions_url,
             'reference' => $this->bookingData->payrexx_reference,
             'bookingNotes' => $this->bookingData->notes,
+            'booking' => $this->bookingData,
             // 'courses' => $this->bookingData->parseBookedCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'amount' => number_format($this->bookingData->price_total, 2),

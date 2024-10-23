@@ -72,7 +72,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          format="date-time"
  *      )
  * )
- */class Payment extends Model
+ */
+
+class Payment extends Model
 {
       use LogsActivity, SoftDeletes, HasFactory;     public $table = 'payments';
 

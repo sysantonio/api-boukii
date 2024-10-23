@@ -248,7 +248,8 @@ Route::any('/update-clients-schools', function () {
 Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
     $bookingData = \App\Models\Booking::find($bookingId);
-    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client', 'bookingUsers.degree', 'bookingUsers.monitor',
+    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client.language1', 'bookingUsers.degree',
+        'bookingUsers.monitor.language1',
         'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
         'bookingUsers.courseDate']);
     $schoolData = \App\Models\School::find(1);
@@ -262,9 +263,9 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     \App::setLocale($userLocale);
 
 
-    $templateView = 'mails.newBookingCreate';
+    $templateView = 'mailsv2.newBookingPayNotice';
 
-    $footerView = 'mails.footer';
+    $footerView = 'mailsv2.newFooter';
 
     $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $schoolData->id)
         ->where('lang', $userLocale)->first();
@@ -283,10 +284,13 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
         'schoolDescription' => $schoolData->description,
         'schoolLogo' => $schoolData->logo,
         'schoolEmail' => $schoolData->contact_email,
+        'schoolPhone' => $schoolData->contact_phone,
         'schoolConditionsURL' => $schoolData->conditions_url,
         'reference' =>  $bookingData->id,
         'bookingNotes' => $bookingData->notes,
-        'courses' => $bookingData->parseBookedGroupedCourses(),
+        'courses' => $bookingData->parseBookedGroupedWithCourses(),
+        'bookings' => $bookingData->bookingUsers,
+        'booking' => $bookingData,
         'voucherCode' => $voucherCode,
         'voucherAmount' => $voucherAmount,
         'hasCancellationInsurance' => false,
@@ -297,7 +301,7 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
         'footerView' => $footerView
     ];
 
-    //dd($templateData['courses']);
+   //dd($templateData['courses']);
 
 
   //  $subject = __('emails.bookingInfo.subject');

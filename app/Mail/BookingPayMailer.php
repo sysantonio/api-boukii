@@ -57,12 +57,12 @@ class BookingPayMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mails.bookingPay';
-        $footerView = 'mails.footer';
+        $templateView = 'mailsv2.BookingPay';
+        $footerView = 'mailsv2.footer';
 
         $templateMail = Mail::where('type', 'payment_link')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();
-        
+
         $templateData = [
             'titleTemplate' => $templateMail ? $templateMail->title : '',
             'bodyTemplate' => $templateMail ? $templateMail->body: '',
@@ -73,6 +73,7 @@ class BookingPayMailer extends Mailable
             'schoolConditionsURL' => $this->schoolData->conditions_url,
             'reference' => $this->bookingData->payrexx_reference,
             'bookingNotes' => $this->bookingData->notes,
+            'booking' => $this->bookingData,
             'courses' => $this->bookingData->parseBookedGroupedCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'amount' => number_format($this->bookingData->price_total, 2),
