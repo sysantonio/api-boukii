@@ -85,7 +85,7 @@ class BookingLog extends Model
         'booking_id' => 'required',
         'action' => 'required|string|max:100',
         'description' => 'nullable|string|max:65535',
-        'user_id' => 'required',
+        'user_id' => 'nullable',
         'before_change' => 'nullable|string',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
