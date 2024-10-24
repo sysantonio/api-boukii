@@ -83,7 +83,7 @@
         <tbody>
         <tr>
             <td align="center">
-                <a href="{{ $actionURL }}" target="_blank"><img src="https://chart.googleapis.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{ $actionURL }}"></a>
+                {!! QrCode::size(300)->generate($actionURL) !!}
             </td>
         </tr>
         </tbody>
