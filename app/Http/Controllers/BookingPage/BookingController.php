@@ -234,24 +234,25 @@ class BookingController extends SlugAuthController
         }
 
         if($request->bookingUsers[0]['course']['course_type'] == 2) {
+            $degreeOrder = Degree::find($highestDegreeId)->degree_order ?? null;
 
-            /*            return $this->sendResponse([
-                            'date' => $date,
-                            'startTime' => $startTime,
-                            'endTime' => $endTime,
-                            'minimumDegreeId' => $highestDegreeId,
-                            'sportId' => $bookingUser['course']['sport_id']
-                        ], 'Client has not overlaps bookings');*/
-            $degreeOrder = Degree::find($highestDegreeId)->degree_order;
-            $monitorAvailabilityRequest = new Request([
+            // Crear el array con las condiciones necesarias
+            $monitorAvailabilityData = [
                 'date' => $date,
                 'startTime' => $startTime,
                 'endTime' => $endTime,
-                'minimumDegreeId' => $degreeOrder,
                 'clientIds' => $clientIds,
                 'sportId' => $bookingUser['course']['sport_id']
-            ]);
-            if(empty($this->getMonitorsAvailable($monitorAvailabilityRequest))) {
+            ];
+
+            // Solo añadir 'minimumDegreeId' si existe 'degreeOrder'
+            if ($degreeOrder !== null) {
+                $monitorAvailabilityData['minimumDegreeId'] = $degreeOrder;
+            }
+
+            $monitorAvailabilityRequest = new Request($monitorAvailabilityData);
+
+            if (empty($this->getMonitorsAvailable($monitorAvailabilityRequest))) {
                 return $this->sendError('No monitor available on that date');
             }
         }
@@ -291,22 +292,26 @@ class BookingController extends SlugAuthController
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {
-                $query->where('school_id', $school->id)
-                    ->whereHas('degree', function ($q) use ($school, $request) {
+                $query->where('school_id', $school->id);
+
+                // Solo aplicar la condición de degree_order si minimumDegreeId no es null
+                if (!is_null($request->minimumDegreeId)) {
+                    $query->whereHas('degree', function ($q) use ($request) {
                         $q->where('degree_order', '<=', $request->minimumDegreeId);
                     });
-
+                }
             })
                 ->where('sport_id', $request->sportId)
-                // Comprobación adicional para allow_adults si hay algún cliente adulto
                 ->when($isAnyAdultClient, function ($query) {
                     return $query->where('allow_adults', true);
                 })
                 ->with(['monitor' => function ($query) use ($school, $clientLanguages) {
                     $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
-                        $subQuery->where('school_id', $school->id)->where('active_school', 1);
+                        $subQuery->where('school_id', $school->id)
+                            ->where('active_school', 1);
                     });
-                    // Añadir filtro de idiomas si clientIds está presente
+
+                    // Filtrar monitores por idioma si clientLanguages está presente
                     if (!empty($clientLanguages)) {
                         $query->where(function ($query) use ($clientLanguages) {
                             $query->orWhereIn('language1_id', $clientLanguages)
@@ -315,7 +320,6 @@ class BookingController extends SlugAuthController
                                 ->orWhereIn('language4_id', $clientLanguages)
                                 ->orWhereIn('language5_id', $clientLanguages)
                                 ->orWhereIn('language6_id', $clientLanguages);
-
                         });
                     }
                 }])
