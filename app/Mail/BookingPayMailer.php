@@ -74,7 +74,7 @@ class BookingPayMailer extends Mailable
             'reference' => $this->bookingData->payrexx_reference,
             'bookingNotes' => $this->bookingData->notes,
             'booking' => $this->bookingData,
-            'courses' => $this->bookingData->parseBookedGroupedCourses(),
+            'courses' => $this->bookingData->parseBookedGroupedWithCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'amount' => number_format($this->bookingData->price_total, 2),
             'currency' => $this->bookingData->currency,

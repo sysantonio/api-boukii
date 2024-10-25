@@ -64,7 +64,7 @@ class BookingInfoMailer extends Mailable
             'reference' => '#' . $this->bookingData->id,
             'bookingNotes' => $this->bookingData->notes,
             'booking' => $this->bookingData,
-            'courses' => $this->bookingData->parseBookedGroupedCourses(),
+            'courses' => $this->bookingData->parseBookedGroupedWithCourses(),
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
             'actionURL' => null,
             'footerView' => $footerView
