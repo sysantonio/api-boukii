@@ -656,31 +656,32 @@ class BookingController extends AppBaseController
             );
 
             if (strlen($payrexxLink) > 1) {
-                dispatch(function () use ($school, $booking, $payrexxLink) {
-                    // Send by email
-                    try {
-                        $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
-                        $logData = [
-                            'booking_id' => $booking->id,
-                            'action' => 'send_pay_link',
-                            'user_id' => $booking->user_id,
-                            'description' => 'Booking pay link sent',
-                        ];
 
-                        BookingLog::create($logData);
-                        \Mail::to($booking->clientMain->email)
-                            ->send(new BookingPayMailer(
-                                $school,
-                                $bookingData,
-                                $booking->clientMain,
-                                $payrexxLink
-                            ));
-                    } catch (\Exception $e) {
-                        Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $booking->id);
-                        Log::channel('payrexx')->error($e->getMessage());
-                    }
+                // Send by email
+                try {
+                    $bookingData = $booking->fresh();   // To retrieve its generated PayrexxReference
+                    $logData = [
+                        'booking_id' => $booking->id,
+                        'action' => 'send_pay_link',
+                        'user_id' => $booking->user_id,
+                        'description' => 'Booking pay link sent',
+                    ];
 
-                })->afterResponse();
+                    BookingLog::create($logData);
+                    \Mail::to($booking->clientMain->email)
+                        ->send(new BookingPayMailer(
+                            $school,
+                            $bookingData,
+                            $booking->clientMain,
+                            $payrexxLink
+                        ));
+                } catch (\Exception $e) {
+                    Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $booking->id);
+                    Log::channel('payrexx')->error($e->getMessage());
+                    return $this->sendError('Link could not be created');
+                }
+
+
 
                 return $this->sendResponse([], 'Mail sent correctly');
 

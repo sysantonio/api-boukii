@@ -65,7 +65,7 @@ class AuthController extends SlugAuthController
         $school = $this->school;
 
 
-        $users = User::with('clients.schools', 'clients.utilizers')
+        $users = User::with('schools', 'clients.schools', 'clients.utilizers')
             ->where('email', $credentials['email'])
             ->where(function ($query) {
                 $query->where('type', 'client')
@@ -78,16 +78,17 @@ class AuthController extends SlugAuthController
             if (Hash::check($credentials['password'], $user->password)) {
                 // Cargar escuelas relacionadas si las hay
                 if ($user->type == 'client' || $user->type == 2) {
-                    if ($user->clients[0]->schools->contains('id', $school->id)) {
-                        $success['token'] = $user->createToken('Boukii')->plainTextToken;
-                        $user->load('clients.utilizers.sports', 'clients.sports');
-                        $user->tokenCan('client:all');
-                        $success['user'] =  $user;
-                        return $this->sendResponse($success, 'User login successfully.');
-                    } else {
-                        return $this->sendError('Unauthorized for this school.', 401);
+                    foreach ($user->clients as $client) {
+                        if ($client->schools->contains('id', $school->id)) {
+                            $success['token'] = $user->createToken('Boukii')->plainTextToken;
+                            $user->load('clients.utilizers.sports', 'clients.sports');
+                            $user->tokenCan('client:all');
+                            $success['user'] =  $user;
+                            return $this->sendResponse($success, 'User login successfully.');
+                        }
                     }
                 }
+
             }
         }
 

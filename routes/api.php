@@ -263,6 +263,7 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     \App::setLocale($userLocale);
 
 
+    $templateView = 'mails.bookingPay';
     $templateView = 'mailsv2.newBookingPayNotice';
 
     $footerView = 'mailsv2.newFooter';
