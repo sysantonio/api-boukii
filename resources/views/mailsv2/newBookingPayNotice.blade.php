@@ -94,7 +94,7 @@
                                         <w:anchorlock/>
                                         <center>
                                     <![endif]-->
-                                    <a href="#" style="background-color:#ed1b66; border-radius:50px; color:#ffffff; display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:18px; font-weight:bold; line-height:40px; text-align:center; text-decoration:none; width:180px; -webkit-text-size-adjust:none; "> {{ __('emails.bookingPay.pay') }}</a>
+                                    <a href="{{$actionURL}}" style="background-color:#ed1b66; border-radius:50px; color:#ffffff; display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:18px; font-weight:bold; line-height:40px; text-align:center; text-decoration:none; width:180px; -webkit-text-size-adjust:none; "> {{ __('emails.bookingPay.pay') }}</a>
                                     <!--[if mso]>
                                     </center>
                                     </v:roundrect>
