@@ -137,7 +137,7 @@ class ClientController extends SlugAuthController
     {
         // Valida los datos de la solicitud, asegúrate de que contenga al menos los campos necesarios
         $request->validate([
-            'name' => 'required|string',
+            'first_name' => 'required|string',
             'last_name' => 'required|string',
             'birth_date' => 'required',
             'language1_id' => 'required'
@@ -152,9 +152,18 @@ class ClientController extends SlugAuthController
 
         // Crea un nuevo cliente con los datos de la solicitud
         $newClient = new Client([
-            'first_name' => $request->input('name'),
+            'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
             'birth_date' => $request->input('birth_date'),
+            'email' => $mainClient->email,
+            'phone' => $mainClient->phone,
+            'telephone' => $mainClient->email,
+            'address' => $mainClient->address,
+            'cp' => $mainClient->cp,
+            'city' => $mainClient->city,
+            'province' => $mainClient->province,
+            'country' => $mainClient->country,
+            'station_id' => $mainClient->station_id,
             'language1_id' => $request->input('language1_id')
         ]);
 
