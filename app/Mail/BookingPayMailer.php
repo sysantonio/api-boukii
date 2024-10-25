@@ -68,6 +68,7 @@ class BookingPayMailer extends Mailable
             'bodyTemplate' => $templateMail ? $templateMail->body: '',
             'userName' => trim($this->userData->first_name . ' ' . $this->userData->last_name),
             'schoolName' => $this->schoolData->name,
+            'schoolDescription' => $this->schoolData->description,
             'schoolLogo' => $this->schoolData->logo,
             'schoolEmail' => $this->schoolData->contact_email,
             'schoolPhone' =>  $this->schoolData->contact_phone,
