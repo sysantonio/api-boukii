@@ -442,7 +442,7 @@
                                         </td>
                                         <td width="200" align="right" style="font-size:14px; line-height:19px; padding:0px 0px;" >
                                             <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#222222;">
-                                                {{$booking->price - $booking->price_tva}} {{$booking->currency}}</font>
+                                                {{$booking->price_total - $booking->price_tva}} {{$booking->currency}}</font>
                                         </td>
                                     </tr>
                                     @if($booking->has_tva)
@@ -476,7 +476,7 @@
                                             <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:#222222; font-weight: bold;">Total</font>
                                         </td>
                                         <td width="200" align="right" style="font-size:16px; line-height:21px; color:#222222; font-weight: bold; padding:0px 0px;" >
-                                            <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:#222222; font-weight: bold;">{{$booking->price}}
+                                            <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:#222222; font-weight: bold;">{{$booking->price_total}}
                                                 {{$booking->currency}}</font>
                                         </td>
                                     </tr>
