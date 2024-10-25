@@ -56,7 +56,7 @@ class BookingCreateMailer extends Mailable
         \App::setLocale($userLocale);
 
         $templateView = 'mailsv2.newBookingCreate';
-        $footerView = 'mailsv2.newfooter';
+        $footerView = 'mailsv2.newFooter';
 
         $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();

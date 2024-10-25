@@ -50,7 +50,7 @@ class BookingNoticePayMailer extends Mailable
         \App::setLocale($userLocale);
 
         $templateView = 'mailsv2.newBookingPayNotice';
-        $footerView = 'mailsv2.newfooter';
+        $footerView = 'mailsv2.newFooter';
 
         $templateMail = Mail::where('type', 'payment_reminder')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();
