@@ -76,7 +76,7 @@
                     <<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="470" style="margin: auto; width:470px" class="email-container">
                         <tr>
                             <td align="center" valign="middle" class="center-on-narrow">
-                                {!! QrCode::size(110)->generate($actionURL) !!}
+                                <img src="data:image/png;base64,{{ base64_encode(\QrCode::format('png')->size(110)->generate($actionURL)) }}" alt="QR Code" style="width: 110px; height: 110px;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td class="center-on-narrow" align="center" style="font-size:16px; line-height:21px; padding:0px 0px;" >

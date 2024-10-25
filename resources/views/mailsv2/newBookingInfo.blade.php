@@ -221,7 +221,7 @@
                                                 </table>
                                             </td>
                                             <td valign="top" width="110" class="left-on-narrow">
-                                                {!! QrCode::size(110)->generate($booking->client_id) !!}
+                                                <img src="data:image/png;base64,{{ base64_encode(\QrCode::format('png')->size(110)->generate($booking->client_id)) }}" alt="QR Code" style="width: 110px; height: 110px;">
                                             </td>
                                         </tr>
                                     </table>
