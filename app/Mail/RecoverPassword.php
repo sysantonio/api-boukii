@@ -47,7 +47,7 @@ class RecoverPassword extends Mailable
         ];
 
         $subject = __('emails.recoverPassword.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->user->email)
             ->subject($subject)

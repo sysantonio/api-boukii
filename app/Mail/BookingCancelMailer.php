@@ -89,7 +89,7 @@ class BookingCancelMailer extends Mailable
         ];
 
         $subject = __('emails.bookingCancel.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->userData->email)
                     ->subject($subject)

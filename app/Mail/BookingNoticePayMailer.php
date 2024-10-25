@@ -77,7 +77,7 @@ class BookingNoticePayMailer extends Mailable
         ];
 
         $subject = __('emails.bookingNoticePay.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->userData->email)
                     ->subject($subject)

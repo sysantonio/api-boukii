@@ -47,7 +47,7 @@ class WelcomeToMailer extends Mailable
         ];
 
         $subject = __('emails.welcomeTo.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->user->email)
                     ->subject($subject)

@@ -83,7 +83,7 @@ class BookingCreateMailer extends Mailable
         ];
 
         $subject = __('emails.bookingCreate.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->userData->email)
             ->subject($subject)

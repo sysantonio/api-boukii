@@ -74,7 +74,7 @@ class BookingInfoMailer extends Mailable
         ];
 
         $subject = __('emails.bookingInfo.subject');
-        \App::setLocale($oldLocale);
+/*        \App::setLocale($oldLocale);*/
 
         return $this->to($this->userData->email)
                     ->subject($subject)
