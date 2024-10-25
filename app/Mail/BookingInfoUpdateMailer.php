@@ -47,8 +47,8 @@ class BookingInfoUpdateMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mailsv2.BookingInfoChange';
-        $footerView = 'mailsv2.footer';
+        $templateView = 'mailsv2.newBookingInfoChange';
+        $footerView = 'mailsv2.newfooter';
 
 
         $templateMail = Mail::where('type', 'booking_change')->where('school_id', $this->schoolData->id)

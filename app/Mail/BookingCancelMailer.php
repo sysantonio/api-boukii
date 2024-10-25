@@ -56,8 +56,8 @@ class BookingCancelMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mailsv2.BookingCancel';
-        $footerView = 'mailsv2.footer';
+        $templateView = 'mailsv2.newBookingCancel';
+        $footerView = 'mailsv2.newfooter';
 
         $templateMail = Mail::where('type', 'booking_cancel')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();

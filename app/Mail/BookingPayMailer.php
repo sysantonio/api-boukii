@@ -57,8 +57,8 @@ class BookingPayMailer extends Mailable
         $userLocale = $userLang ? $userLang->code : $defaultLocale;
         \App::setLocale($userLocale);
 
-        $templateView = 'mailsv2.BookingPay';
-        $footerView = 'mailsv2.footer';
+        $templateView = 'mailsv2.newBookingPay';
+        $footerView = 'mailsv2.newfooter';
 
         $templateMail = Mail::where('type', 'payment_link')->where('school_id', $this->schoolData->id)
             ->where('lang', $userLocale)->first();
