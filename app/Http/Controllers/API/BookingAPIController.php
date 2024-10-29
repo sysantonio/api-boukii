@@ -339,8 +339,8 @@ class BookingAPIController extends AppBaseController
 
     private function applyCourseIdFilter($query, Request $request): void
     {
-        if ($request->has('courseId')) {
-            $courseId = $request->get('courseId');
+        if ($request->has('courseId') || $request->has('course_id')) {
+            $courseId = $request->get('courseId') ?? $request->get('course_id');
             $query->whereHas('bookingUsers', function ($subQuery) use ($courseId) {
                 $subQuery->where('course_id', $courseId);
             });
