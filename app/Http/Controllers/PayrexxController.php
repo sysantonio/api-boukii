@@ -41,7 +41,7 @@ class PayrexxController
                 $referenceID = trim($data['referenceId'] ?? '');
 
                 $booking = (strlen($referenceID) > 2)
-                    ? Booking::withTrashed()->with('school')
+                    ? Booking::withTrashed()->with(['school', 'bookingUsers'])
                         ->where('payrexx_reference', '=', $referenceID)
                         ->first()
                     : null;
@@ -69,6 +69,11 @@ class PayrexxController
                             if ($data2 && $data2->getStatus() === TransactionResponse::CONFIRMED) {
                                 if ($booking->trashed()) {
                                     $booking->restore(); // Restaurar la reserva eliminada
+                                    foreach($booking->bookingUsers as $bookinguser){
+                                        if($bookinguser->trashed()) {
+                                            $bookinguser->restore();
+                                        }
+                                    }
                                 }
                                 $buyerUser = User::find($booking->client_main_id);
                                 if ($booking->payment_method_id == 2 && $booking->source == 'web') {

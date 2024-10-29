@@ -108,10 +108,12 @@ class BookingController extends SlugAuthController
                     'date' => $detail['date'],
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
+                    'deleted_at' => now(),
                     // Puedes añadir campos adicionales según necesites
                 ]);
 
                 $bookingUser->save();
+
 
                 if(isset($detail['extra'])){
                     $tva = isset($detail['extra']['tva']) ? $detail['extra']['tva'] : 0;
@@ -156,7 +158,7 @@ class BookingController extends SlugAuthController
         BookingLog::create([
             'booking_id' => $booking->id,
             'action' => 'page_created',
-            'user_id' => $client->user->id
+            'user_id' => $client->user->id,
         ]);
 
         $booking->deleted_at = now();
