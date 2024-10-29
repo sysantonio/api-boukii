@@ -402,7 +402,27 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    protected $appends = ['icon', 'minPrice', 'minDuration'];
+    protected $appends = ['icon', 'minPrice', 'minDuration', 'start_date', 'end_date'];
+
+    public function getStartDateAttribute()
+    {
+        // Obtiene la primera fecha activa ordenada cronológicamente
+        return $this->courseDates()
+            ->where('active', 1)
+            ->orderBy('date', 'asc')
+            ->first()
+            ?->date;
+    }
+
+    public function getEndDateAttribute()
+    {
+        // Obtiene la última fecha activa ordenada cronológicamente
+        return $this->courseDates()
+            ->where('active', 1)
+            ->orderBy('date', 'desc')
+            ->first()
+            ?->date;
+    }
 
     public function getMinPriceAttribute()
     {
