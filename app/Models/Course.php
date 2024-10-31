@@ -581,8 +581,10 @@ class Course extends Model
                             $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                             $isAdultClient, $clientLanguages, $clientId
                         ) {
+                            // Verificamos que haya al menos un subgrupo con capacidad disponible
                             $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
-                                WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
+                                WHERE booking_users.course_subgroup_id = course_subgroups.id
+                                 AND booking_users.status = 1
                                 AND booking_users.deleted_at IS NULL)')
                                 ->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
                                     // Excluir los subgrupos donde el cliente ya tiene una reserva

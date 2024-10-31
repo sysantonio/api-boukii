@@ -176,9 +176,9 @@ class CourseController extends AppBaseController
         $school = $this->getSchool($request);
 
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
-        $course = Course::with( 'station','bookingUsers.client.sports',
+        $course = Course::with( 'station','bookingUsers.client.sports', 'courseDates.courseSubgroups.bookingUsers.client',
             'courseDates.courseGroups.courseSubgroups.monitor',
-            'courseDates.courseGroups.courseSubgroups.bookingUsers')
+            'courseDates.courseGroups.courseSubgroups.bookingUsers.client')
             ->where('school_id', $school->id)->find($id);
 
         if (empty($course)) {
