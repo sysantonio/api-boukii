@@ -41,6 +41,99 @@ class PayrexxHelpers
      *
      * @return string empty if something failed
      */
+    public static function createGatewayLinkNew($schoolData, $bookingData,
+                                             $basketData, Client $buyerUser = null, $redirectTo = null)
+    {
+        $link = '';
+
+        try {
+
+            // Check that School has Payrexx credentials
+            //dd($schoolData->getPayrexxInstance());
+            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+                throw new \Exception('No credentials for School ID=' . $schoolData->id);
+            }
+
+            // Prepare gateway: basic data
+            $gr = new GatewayRequest();
+            $gr->setReferenceId($bookingData->getOrGeneratePayrexxReference());
+            $gr->setAmount($bookingData->price_total * 100);
+            $gr->setCurrency($bookingData->currency);
+            $gr->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
+
+            // Add School's legal terms, if set
+            if ($schoolData->conditions_url) {
+                $gr->addField('terms', $schoolData->conditions_url);
+            }
+
+            // Calcular el precio total del "basket"
+            $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
+                return $carry + $item['amount'];
+            }, 0);
+
+            $gr->setBasket($basketData->all());
+            $gr->setAmount($totalAmount);
+
+            // Buyer data
+            if ($buyerUser) {
+                $gr->addField('forename', $buyerUser->first_name);
+                $gr->addField('surname', $buyerUser->last_name);
+                $gr->addField('phone', $buyerUser->phone);
+                $gr->addField('email', $buyerUser->email);
+                $gr->addField('street', $buyerUser->address);
+                $gr->addField('postcode', $buyerUser->cp);
+
+                $gr->addField('place', $buyerUser->province);
+                $gr->addField('country',  $buyerUser->country);
+            }
+
+            // OK/error pages to redirect user after payment
+            if ($redirectTo == 'panel') {
+                $gr->setSuccessRedirectUrl(env('ADMIM_URL') . '/bookings?status=success');
+                $gr->setFailedRedirectUrl(env('ADMIM_URL') . '/bookings?status=failed');
+                $gr->setCancelRedirectUrl(env('ADMIM_URL') . '/bookings?status=cancel');
+            } else if ($redirectTo == 'app') {
+                $gr->setSuccessRedirectUrl(route('api.payrexx.finish', ['status' => 'success']));
+                $gr->setFailedRedirectUrl(route('api.payrexx.finish', ['status' => 'failed']));
+                $gr->setCancelRedirectUrl(route('api.payrexx.finish', ['status' => 'cancel']));
+            } else if ($redirectTo != null) {
+                $gr->setSuccessRedirectUrl($redirectTo . '?status=success');
+                $gr->setFailedRedirectUrl($redirectTo . '?status=failed');
+                $gr->setCancelRedirectUrl($redirectTo . '?status=cancel');
+            }
+
+            if($bookingData->source == 'web') {
+                $gr->setValidity(15);
+            }
+
+
+            // Launch it
+            $payrexx = new Payrexx(
+                $schoolData->getPayrexxInstance(),
+                $schoolData->getPayrexxKey(),
+                '',
+                env('PAYREXX_API_BASE_DOMAIN')
+            );
+
+            $gateway = $payrexx->create($gr);
+
+            if ($gateway) {
+                $link = $gateway->getLink();
+            }
+
+        } catch (\Exception $e) {
+            // Altought not stated by API documentation (as of 2022-10),
+            // missing or wrong params will throw an Exception, plus other connection etc issues
+            Log::error('PayrexxHelpers createGatewayLink Booking ID=' . $bookingData->id);
+            Log::error($e->getMessage());
+            Log::error('Error line:'. $e->getLine());
+            Log::error('Error file:'. $e->getFile());
+            $link = '';
+        }
+
+        return $link;
+    }
+
     public static function createGatewayLink($schoolData, $bookingData,
                                              $basketData, Client $buyerUser = null, $redirectTo = null)
     {
@@ -49,9 +142,9 @@ class PayrexxHelpers
         try {
             // Check that School has Payrexx credentials
             //dd($schoolData->getPayrexxInstance());
-            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+     /*       if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
                 throw new \Exception('No credentials for School ID=' . $schoolData->id);
-            }
+            }*/
 
             // Prepare gateway: basic data
             $gr = new GatewayRequest();
@@ -224,6 +317,120 @@ class PayrexxHelpers
         }
     }
 
+    /**
+     * Prepare a Payrexx direct pay link.
+     * @see https://developers.payrexx.com/reference/create-a-paylink
+     *
+     * @param School $schoolData i.e. who wants the money
+     * @param Booking $bookingData i.e. the Booking ID this payment is for
+     * @param User $buyerUser to get his payment & contact details
+     *
+     * @return string empty if something failed
+     */
+    public static function createPayLink($schoolData, $bookingData, $basketData, Client $buyerUser = null)
+    {
+        $link = '';
+
+        try {
+            // Check that School has Payrexx credentials
+            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+                throw new \Exception('No credentials for School ID=' . $schoolData->id);
+            }
+
+
+            // Prepare invoice: basic data
+            $ir = new InvoiceRequest();
+            $ir->setReferenceId($bookingData->getOrGeneratePayrexxReference());
+            $ir->setAmount($bookingData->price_total * 100);
+            $ir->setCurrency($bookingData->currency);
+            $ir->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
+
+
+            // Product data i.e. courses booked plus maybe cancellation insurance
+            $ir->setTitle($schoolData->name);
+
+            // Calcular el precio total del "basket"
+            $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
+                return $carry + $item['amount'];
+            }, 0);
+
+            $paymentSummary = self::generatePaymentSummary($basketData->all());
+            $ir->setAmount($totalAmount);
+           // $ir->setDescription($basketData->all());
+            $ir->setName($bookingData->getOrGeneratePayrexxReference());
+          //  $ir->setPurpose($basketData->all());
+            $ir->setTitle($paymentSummary['title']);
+            $ir->setPurpose('Booking: #'.$bookingData->id);
+            $ir->setDescription($paymentSummary['description']);
+            // Add School's legal terms, if set
+            // (InvoiceRequest DOES accept "terms" as a valid field)
+            if ($schoolData->conditions_url) {
+                $ir->addField('terms', true, $schoolData->conditions_url);
+            }
+
+            if ($buyerUser) {
+                $ir->addField('forename', $buyerUser->first_name);
+                $ir->addField('surname', $buyerUser->last_name);
+                $ir->addField('phone', $buyerUser->phone);
+                $ir->addField('email', $buyerUser->email);
+                $ir->addField('street', $buyerUser->address);
+                $ir->addField('postcode', $buyerUser->cp);
+
+                $ir->addField('place', $buyerUser->province);
+                $ir->addField('country',  $buyerUser->country);
+            }
+
+            // Launch it
+            $payrexx = new Payrexx(
+                $schoolData->getPayrexxInstance(),
+                $schoolData->getPayrexxKey(),
+                '',
+                env('PAYREXX_API_BASE_DOMAIN')
+            );
+           // dd($ir);
+            $invoice = $payrexx->create($ir);
+            //Log::channel('payrexx')->info('Info', $invoice);
+            Log::channel('payrexx')->info($invoice->getLink());
+            if ($invoice) {
+                $link = $invoice->getLink();
+            }
+        } catch (\Exception $e) {
+            // Altought not stated by API documentation (as of 2022-10),
+            // missing or wrong params will throw an Exception, plus other connection etc issues
+            Log::channel('payrexx')->error('PayrexxHelpers createPayLink Booking ID=' . $bookingData->id);
+            Log::channel('payrexx')->error($e->getMessage());
+            Log::channel('payrexx')->error($e->getLine());
+            $link = '';
+        }
+
+        return $link;
+    }
+
+    public static function generatePaymentSummary($basketData)
+    {
+        $title = "Payment";
+        $descriptionLines = [];
+
+        // Calcular el total a pagar
+        $total = 0;
+
+        foreach ($basketData as $item) {
+            $name = $item['name']['1'];
+            $quantity = $item['quantity'];
+            $amount = $item['amount'];
+
+            // Formatear la línea de descripción
+            $descriptionLines[] = "$name - Quantity: $quantity - Price: " . number_format($amount / 100, 2) . " CHF";
+        }
+
+        // Generar el texto de la descripción
+        $description = implode("\n", $descriptionLines);
+
+        return [
+            'title' => $title,
+            'description' => $description,
+        ];
+    }
 
     /**
      * Tell Payrexx to refund some money from a Transaction.
@@ -360,135 +567,6 @@ class PayrexxHelpers
 
 
         return ($response->getStatus() == TransactionResponse::REFUNDED || $response->getStatus() == TransactionResponse::PARTIALLY_REFUNDED);
-    }
-
-
-    /**
-     * Prepare a Payrexx direct pay link.
-     * @see https://developers.payrexx.com/reference/create-a-paylink
-     *
-     * @param School $schoolData i.e. who wants the money
-     * @param Booking $bookingData i.e. the Booking ID this payment is for
-     * @param User $buyerUser to get his payment & contact details
-     *
-     * @return string empty if something failed
-     */
-    public static function createPayLink($schoolData, $bookingData, $basketData, Client $buyerUser = null)
-    {
-        $link = '';
-
-        try {
-            // Check that School has Payrexx credentials
-            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
-                throw new \Exception('No credentials for School ID=' . $schoolData->id);
-            }
-
-
-            // Prepare invoice: basic data
-            $ir = new InvoiceRequest();
-            $ir->setReferenceId($bookingData->getOrGeneratePayrexxReference());
-            $ir->setAmount($bookingData->price_total * 100);
-            $ir->setCurrency($bookingData->currency);
-            $ir->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
-
-
-            // Product data i.e. courses booked plus maybe cancellation insurance
-            $ir->setTitle($schoolData->name);
-
-            $basket = [];
-
-            $basket[] = $basketData['price_base']['name'];
-
-            /*            // Agregar bonos al "basket"
-                        if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
-                            foreach ($basketData['bonus']['bonuses'] as $bonus) {
-                                $basket[] = [
-                                    'name' => [1 => $bonus['name']],
-                                    'quantity' => $bonus['quantity'],
-                                    'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
-                                ];
-                            }
-                        }
-
-                        // Agregar el campo "reduction" al "basket"
-                        $basket[] = [
-                            'name' => [1 => $basketData['reduction']['name']],
-                            'quantity' => $basketData['reduction']['quantity'],
-                            'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
-                        ];
-
-                        // Agregar "Boukii Care" al "basket"
-                        $basket[] = [
-                            'name' => [1 => $basketData['boukii_care']['name']],
-                            'quantity' => $basketData['boukii_care']['quantity'],
-                            'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
-                        ];
-
-                        // Agregar "Cancellation Insurance" al "basket"
-                        $basket[] = [
-                            'name' => [1 => $basketData['cancellation_insurance']['name']],
-                            'quantity' => $basketData['cancellation_insurance']['quantity'],
-                            'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
-                        ];
-
-                        // Agregar extras al "basket"
-                        if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
-                            foreach ($basketData['extras']['extras'] as $extra) {
-                                $basket[] = [
-                                    'name' => [1 => $extra['name']],
-                                    'quantity' => $extra['quantity'],
-                                    'amount' => $extra['price'] * 100, // Convertir el precio a centavos
-                                ];
-                            }
-                        }*/
-
-            // Calcular el precio total del "basket"
-            $totalAmount = $basketData['price_total'] * 100;
-
-            //$ir->setAmount($totalAmount);
-            $ir->setDescription(implode(', ', $basket));
-            $ir->setName($bookingData->getOrGeneratePayrexxReference());
-            $ir->setPurpose(implode(', ', $basket));
-
-            // Add School's legal terms, if set
-            // (InvoiceRequest DOES accept "terms" as a valid field)
-            if ($schoolData->conditions_url) {
-                $ir->addField('terms', true, $schoolData->conditions_url);
-            }
-
-            // Buyer data
-            $ir->addField('forename', true, $buyerUser ? $buyerUser->first_name : '');
-            $ir->addField('surname', true, $buyerUser ? $buyerUser->last_name : '');
-            $ir->addField('phone', false, $buyerUser ? $buyerUser->phone : '');
-            $ir->addField('email', true, $buyerUser ? $buyerUser->email : '');
-            $ir->addField('street', false, $buyerUser ? $buyerUser->address : '');
-            $ir->addField('postcode', false, $buyerUser ? $buyerUser->cp : '');
-            $ir->addField('place', $buyerUser ? $buyerUser->province : '');
-            $ir->addField('country', $buyerUser ? $buyerUser->country : '');
-
-
-            // Launch it
-            $payrexx = new Payrexx(
-                $schoolData->getPayrexxInstance(),
-                $schoolData->getPayrexxKey(),
-                '',
-                env('PAYREXX_API_BASE_DOMAIN')
-            );
-            $invoice = $payrexx->create($ir);
-            //Log::channel('payrexx')->info('Info', $invoice);
-            Log::channel('payrexx')->info($invoice->getLink());
-            if ($invoice) {
-                $link = $invoice->getLink();
-            }
-        } catch (\Exception $e) {
-            // Altought not stated by API documentation (as of 2022-10),
-            // missing or wrong params will throw an Exception, plus other connection etc issues
-            Log::channel('payrexx')->error('PayrexxHelpers createPayLink Booking ID=' . $bookingData->id);
-            Log::channel('payrexx')->error($e->getMessage());
-            $link = '';
-        }
-
-        return $link;
     }
 
 
