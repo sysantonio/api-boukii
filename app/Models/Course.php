@@ -402,7 +402,7 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    protected $appends = ['icon', 'minPrice', 'minDuration', 'start_date', 'end_date'];
+    protected $appends = ['icon', 'minPrice', 'minDuration'];
 
     public function getStartDateAttribute()
     {
