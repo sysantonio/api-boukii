@@ -186,8 +186,7 @@ class CourseController extends SlugAuthController
      */
     public function show($id, Request $request): JsonResponse
     {
-        //$school = $this->getSchool($request);
-
+        $today = now(); // Obtener la fecha actual
         // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
         $course = Course::with([
             'bookingUsers.client.sports',
@@ -197,7 +196,28 @@ class CourseController extends SlugAuthController
                     $subQuery->withCount('bookingUsers')->with('degree');
                 }]);
             }
-        ])->where('school_id', $this->school->id)->find($id);
+        ])->where('school_id', $this->school->id)
+            ->where('online', 1)
+            ->where('active', 1)
+            ->where(function($query) use ($today) {
+                $query->where(function($subquery) use ($today) {
+                    $subquery->whereNull('date_start_res')
+                        ->whereNull('date_end_res');
+                })
+                    ->orWhere(function($subquery) use ($today) {
+                        $subquery->whereDate('date_start_res', '<=', $today)
+                            ->whereDate('date_end_res', '>=', $today);
+                    })
+                    ->orWhere(function($subquery) use ($today) {
+                        $subquery->whereDate('date_start_res', '=', $today)
+                            ->whereNotNull('date_end_res');
+                    })
+                    ->orWhere(function($subquery) use ($today) {
+                        $subquery->whereNotNull('date_start_res')
+                            ->whereDate('date_end_res', '=', $today);
+                    });
+            })
+        ->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
