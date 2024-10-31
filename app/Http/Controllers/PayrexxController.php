@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\BookingCreateMailer;
 use App\Models\Booking;
+use App\Models\Client;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ class PayrexxController
                                         }
                                     }
                                 }
-                                $buyerUser = User::find($booking->client_main_id);
+                                $buyerUser = Client::find($booking->client_main_id);
                                 if ($booking->payment_method_id == 2 && $booking->source == 'web') {
                                     // As of 2022-10-25 tell buyer user by email at this point, even before payment, and continue
                                     dispatch(function () use ($schoolData, $booking, $buyerUser) {
