@@ -350,9 +350,11 @@ class PayrexxHelpers
             $ir->setTitle($schoolData->name);
 
             // Calcular el precio total del "basket"
-            $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
+    /*        $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
                 return $carry + $item['amount'];
-            }, 0);
+            }, 0);*/
+
+            $totalAmount = $basketData['pending_amount'] * 100;
 
             $paymentSummary = self::generatePaymentSummary($basketData->all());
             $ir->setAmount($totalAmount);
@@ -400,6 +402,7 @@ class PayrexxHelpers
             Log::channel('payrexx')->error('PayrexxHelpers createPayLink Booking ID=' . $bookingData->id);
             Log::channel('payrexx')->error($e->getMessage());
             Log::channel('payrexx')->error($e->getLine());
+
             $link = '';
         }
 
@@ -411,16 +414,17 @@ class PayrexxHelpers
         $title = "Payment";
         $descriptionLines = [];
 
-        // Calcular el total a pagar
-        $total = 0;
+        // Recorrer cada item en el array del basketData
+        foreach ($basketData as $key => $item) {
+            // Verificar si el elemento es un array y tiene las claves esperadas
+            if (is_array($item) && isset($item['name'], $item['quantity'], $item['price'])) {
+                $name = $item['name'];
+                $quantity = $item['quantity'];
+                $price = $item['price'];
 
-        foreach ($basketData as $item) {
-            $name = $item['name']['1'];
-            $quantity = $item['quantity'];
-            $amount = $item['amount'];
-
-            // Formatear la línea de descripción
-            $descriptionLines[] = "$name - Quantity: $quantity - Price: " . number_format($amount / 100, 2) . " CHF";
+                // Formatear la línea de descripción
+                $descriptionLines[] = "$name - Quantity: $quantity - Price: " . number_format($price, 2) . " CHF";
+            }
         }
 
         // Generar el texto de la descripción
@@ -431,6 +435,7 @@ class PayrexxHelpers
             'description' => $description,
         ];
     }
+
 
     /**
      * Tell Payrexx to refund some money from a Transaction.
