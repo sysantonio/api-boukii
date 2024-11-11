@@ -79,8 +79,8 @@ class ClientsSchool extends Model
     ];
 
     public static array $rules = [
-        'client_id' => 'required',
-        'school_id' => 'required',
+        'client_id' => 'nullable',
+        'school_id' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable',
