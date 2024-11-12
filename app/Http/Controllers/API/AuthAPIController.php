@@ -33,6 +33,7 @@ class AuthAPIController extends AppBaseController
         $types = [
             2 => 'client',
             1 => 'admin',
+            'monitor' => 3,
             4 => 'superadmin'
         ];
 
