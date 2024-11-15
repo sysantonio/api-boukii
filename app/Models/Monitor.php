@@ -460,6 +460,18 @@ class Monitor extends Model
         return $this->hasMany(\App\Models\MonitorsSchool::class, 'monitor_id');
     }
 
+    public function schools(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            \App\Models\School::class, // Modelo final al que quieres llegar
+            \App\Models\MonitorsSchool::class, // Modelo intermedio
+            'monitor_id', // Clave foránea en el modelo intermedio
+            'id', // Clave foránea en el modelo final
+            'id', // Clave local en el modelo inicial
+            'school_id' // Clave local en el modelo intermedio
+        );
+    }
+
     public function getFullNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";

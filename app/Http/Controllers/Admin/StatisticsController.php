@@ -83,7 +83,7 @@ class StatisticsController extends AppBaseController
     {
         $schoolId = $this->getSchool($request)->id;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -144,7 +144,7 @@ class StatisticsController extends AppBaseController
     public function getCoursesWithDetails(Request $request)
     {
         $schoolId = $this->getSchool($request)->id;
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         // Obtén los filtros de la request
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
@@ -160,6 +160,7 @@ class StatisticsController extends AppBaseController
         // Construye la consulta base para los cursos
         $coursesQuery = Course::with(['bookingUsers.booking.payments'])
             ->where('school_id', $schoolId) // Filtrar por school_id
+            ->whereHas('bookingUsers.booking')
             ->when($startDate, function ($query, $startDate) {
                 return $query->whereHas('courseDates', function ($query) use ($startDate) {
                     $query->where('date', '>=', $startDate);
@@ -198,10 +199,13 @@ class StatisticsController extends AppBaseController
             ];
 
             foreach ($course->bookingUsers as $bookingUser) {
-                foreach ($bookingUser->booking->payments as $payment) {
-                    $paymentType = $payment->type;
-                    if (array_key_exists($paymentType, $payments)) {
-                        $payments[$paymentType] += $payment->amount;
+                // Verificar que booking no es null antes de acceder a payments
+                if ($bookingUser->booking) {
+                    foreach ($bookingUser->booking->payments as $payment) {
+                        $paymentType = $payment->type;
+                        if (array_key_exists($paymentType, $payments)) {
+                            $payments[$paymentType] += $payment->amount;
+                        }
                     }
                 }
             }
@@ -234,7 +238,7 @@ class StatisticsController extends AppBaseController
     {
         $schoolId = $this->getSchool($request)->id;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -295,7 +299,7 @@ class StatisticsController extends AppBaseController
     {
         $schoolId = $this->getSchool($request)->id;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -316,7 +320,7 @@ class StatisticsController extends AppBaseController
         $schoolId = $this->getSchool($request)->id;
         $monitorId = $request->monitor_id ?? null;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -362,7 +366,7 @@ class StatisticsController extends AppBaseController
         $schoolId = $this->getSchool($request)->id;
         $monitorId = $request->monitor_id ?? null;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -544,7 +548,7 @@ class StatisticsController extends AppBaseController
     public function getTotalAvailablePlacesByCourseType(Request $request)
     {
         $schoolId = $this->getSchool($request)->id;
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
@@ -728,13 +732,24 @@ class StatisticsController extends AppBaseController
      */
     public function getMonitorsBookings(Request $request): JsonResponse
     {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+            'monitor_id' => 'integer|exists:monitors,id|nullable',
+            'sport_id' => 'integer|exists:sports,id|nullable',
+        ]);
+
         $schoolId = $this->getSchool($request)->id;
 
-        $today = now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
 
         $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
         ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
         ->first();
+
+        if (!$season) {
+            return response()->json(['error' => 'No se encontró una temporada activa'], 404);
+        }
 
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
@@ -824,6 +839,7 @@ class StatisticsController extends AppBaseController
                 'total_cost' => 0,
                 'hour_price' => 0,
             ];
+            $sport = null;
             foreach ($monitor->monitorSportsDegrees as $degree) {
                 if ($degree->school_id == $schoolId && (!$request->has('sport_id') || $degree->sport_id == $request->sport_id)) {
                     $salaryLevel = $degree->salary;
@@ -897,15 +913,89 @@ class StatisticsController extends AppBaseController
             // Calcular el costo si user_nwd_subtype_id es 2
             $cost = ($nwd->user_nwd_subtype_id == 2 && $salaryLevel) ? ($salaryLevel->pay * $hours) : 0;
 
-            // Actualizar las horas y costos solo si user_nwd_subtype_id es 2
             if ($nwd->user_nwd_subtype_id == 2) {
+                // Inicializar claves si no existen
+                if (!isset($monitorSummary[$monitor->id])) {
+                    $monitorSummary[$monitor->id] = [
+                        'first_name' => $monitor->first_name,
+                        'language1_id' => $monitor->language1_id,
+                        'country' => $monitor->country,
+                        'birth_date' => $monitor->birth_date,
+                        'image' => $monitor->image,
+                        'id' => $monitor->id,
+                        'sport' => null,
+                        'currency' => $currency,
+                        'hours_collective' => 0,
+                        'hours_nwd' => 0,
+                        'hours_nwd_payed' => 0,
+                        'hours_private' => 0,
+                        'hours_activities' => 0,
+                        'cost_nwd' => 0,
+                        'cost_collective' => 0,
+                        'cost_private' => 0,
+                        'cost_activities' => 0,
+                        'total_hours' => 0,
+                        'total_cost' => 0,
+                        'hour_price' => 0,
+                    ];
+                }
                 $monitorSummary[$monitor->id]['hours_nwd_payed'] += $hours;
                 $monitorSummary[$monitor->id]['cost_nwd'] += $cost;
             } else {
+                // Inicializar claves si no existen
+                if (!isset($monitorSummary[$monitor->id])) {
+                    $monitorSummary[$monitor->id] = [
+                        'first_name' => $monitor->first_name,
+                        'language1_id' => $monitor->language1_id,
+                        'country' => $monitor->country,
+                        'birth_date' => $monitor->birth_date,
+                        'image' => $monitor->image,
+                        'id' => $monitor->id,
+                        'sport' => null,
+                        'currency' => $currency,
+                        'hours_collective' => 0,
+                        'hours_nwd' => 0,
+                        'hours_nwd_payed' => 0,
+                        'hours_private' => 0,
+                        'hours_activities' => 0,
+                        'cost_nwd' => 0,
+                        'cost_collective' => 0,
+                        'cost_private' => 0,
+                        'cost_activities' => 0,
+                        'total_hours' => 0,
+                        'total_cost' => 0,
+                        'hour_price' => 0,
+                    ];
+                }
                 $monitorSummary[$monitor->id]['hours_nwd'] += $hours;
             }
 
-            // Actualizar las horas totales y el costo total
+// Actualizar las horas totales y el costo total
+// Inicializar claves si no existen
+            if (!isset($monitorSummary[$monitor->id])) {
+                $monitorSummary[$monitor->id] = [
+                    'first_name' => $monitor->first_name,
+                    'language1_id' => $monitor->language1_id,
+                    'country' => $monitor->country,
+                    'birth_date' => $monitor->birth_date,
+                    'image' => $monitor->image,
+                    'id' => $monitor->id,
+                    'sport' => null,
+                    'currency' => $currency,
+                    'hours_collective' => 0,
+                    'hours_nwd' => 0,
+                    'hours_nwd_payed' => 0,
+                    'hours_private' => 0,
+                    'hours_activities' => 0,
+                    'cost_nwd' => 0,
+                    'cost_collective' => 0,
+                    'cost_private' => 0,
+                    'cost_activities' => 0,
+                    'total_hours' => 0,
+                    'total_cost' => 0,
+                    'hour_price' => 0,
+                ];
+            }
             $monitorSummary[$monitor->id]['total_hours'] += $hours;
             $monitorSummary[$monitor->id]['total_cost'] += $cost;
             $monitorSummary[$monitor->id]['hour_price'] = $salaryLevel ? $salaryLevel->pay : 0;
@@ -920,7 +1010,7 @@ class StatisticsController extends AppBaseController
     public function getMonitorDailyBookings(Request $request, $monitorId): JsonResponse
     {
         $schoolId = $this->getSchool($request)->id;
-        $today = now()->format('Y-m-d');
+        $today = Carbon::now()->format('Y-m-d');
         $season = Season::whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
             ->first();
