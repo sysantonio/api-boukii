@@ -142,9 +142,9 @@ class PayrexxHelpers
         try {
             // Check that School has Payrexx credentials
             //dd($schoolData->getPayrexxInstance());
-     /*       if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+           if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
                 throw new \Exception('No credentials for School ID=' . $schoolData->id);
-            }*/
+            }
 
             // Prepare gateway: basic data
             $gr = new GatewayRequest();

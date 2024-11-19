@@ -9,6 +9,8 @@ use App\Models\Language;
 use App\Models\Mail;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
+use App\Models\MonitorSportAuthorizedDegree;
+use App\Models\MonitorSportsDegree;
 use App\Models\MonitorsSchool;
 use App\Models\OldModels\UserSport;
 use App\Models\Station;
@@ -54,6 +56,107 @@ Route::any('/users-permissions', function () {
 
     return 'Permisos actualizados correctamente';
 });
+
+Route::any('/degrees-update', function () {
+
+    // Paso 1: Obtener todos los grados con school_id = 2
+    $degreesToDuplicate = Degree::where('school_id', 2)->get();
+
+    // Verificar si hay grados a duplicar
+    if ($degreesToDuplicate->isEmpty()) {
+        return response()->json(['message' => 'No degrees found for school_id = 2'], 404);
+    }
+
+    // Array para almacenar la correlación entre el ID antiguo y el nuevo
+    $degreeMapping = [];
+
+    // Paso 2: Crear nuevos grados y almacenar la correlación
+    foreach ($degreesToDuplicate as $degree) {
+        // Crear un nuevo Degree con school_id = 12
+        $newDegree = Degree::create([
+            'league' => $degree->league,
+            'level' => $degree->level,
+            'image' => $degree->image,
+            'name' => $degree->name,
+            'annotation' => $degree->annotation,
+            'degree_order' => $degree->degree_order,
+            'progress' => $degree->progress,
+            'color' => $degree->color,
+            'age_min' => $degree->age_min,
+            'age_max' => $degree->age_max,
+            'active' => $degree->active,
+            'school_id' => 12, // Nuevo school_id
+            'sport_id' => $degree->sport_id, // Asumiendo que sport_id se mantiene igual
+        ]);
+
+        // Almacenar la correlación
+        $degreeMapping[$degree->id] = $newDegree->id; // 'antiguo_id' => 'nuevo_id'
+    }
+
+    // Paso 3: Obtener todos los MonitorSportsDegree con school_id = 2
+    $monitorSportsDegrees = MonitorSportsDegree::where('school_id', 2)->get();
+
+    // Verificar si hay MonitorSportsDegrees para duplicar
+    if ($monitorSportsDegrees->isEmpty()) {
+        return response()->json(['message' => 'No MonitorSportsDegrees found for school_id = 2'], 404);
+    }
+
+    // Paso 4: Crear nuevos MonitorSportsDegrees y duplicar las autorizaciones
+    foreach ($monitorSportsDegrees as $monitorSportsDegree) {
+        // Crear un nuevo MonitorSportsDegree con el nuevo degree_id
+        $newMonitorSportsDegree = MonitorSportsDegree::create([
+            'sport_id' => $monitorSportsDegree->sport_id,
+            'school_id' => 12,
+            'degree_id' => $degreeMapping[$monitorSportsDegree->degree_id] ?? null, // Usar el nuevo degree_id
+            'monitor_id' => $monitorSportsDegree->monitor_id,
+            'salary_level' => $monitorSportsDegree->salary_level,
+            'allow_adults' => $monitorSportsDegree->allow_adults,
+            'is_default' => $monitorSportsDegree->is_default,
+        ]);
+
+        // Paso 5: Obtener los MonitorSportAuthorizedDegrees asociados al antiguo MonitorSportsDegree
+        $authorizedDegrees = MonitorSportAuthorizedDegree::where('monitor_sport_id', $monitorSportsDegree->id)->get();
+
+        // Paso 6: Duplicar los MonitorSportAuthorizedDegrees
+        foreach ($authorizedDegrees as $authorizedDegree) {
+            MonitorSportAuthorizedDegree::create([
+                'monitor_sport_id' => $newMonitorSportsDegree->id, // Nuevo MonitorSportsDegree
+                'degree_id' => $degreeMapping[$authorizedDegree->degree_id] ?? null, // Usar el nuevo degree_id
+            ]);
+        }
+    }
+
+});
+
+Route::any('/update-clients', function () {
+    $clients = Client::all();  // Esto obtiene todos los clientes de la base de datos
+
+    // Iterar sobre todos los clientes
+    foreach ($clients as $client) {
+        // Verificar si el cliente no tiene un email asignado
+        if (!$client->email) {
+            // Obtener el cliente principal asociado al cliente actual (utilizer)
+            $mainClient = $client->main;  // Usamos la relación 'main' para obtener el cliente principal
+
+            // Verificar si el cliente principal existe y tiene un email
+            if ($mainClient && $mainClient->email) {
+                // Actualizar el email del cliente
+                $client->email = $mainClient->email;
+                $client->save();  // Guardar los cambios en el cliente
+
+                // Actualizar el correo en el objeto 'User' si es necesario
+                if ($client->user && !$client->user->email) {
+                    $client->user->email = $mainClient->email;
+                    $client->user->save();  // Guardar el correo en el usuario asociado
+                }
+            }
+        }
+    }
+
+    // Retornar una respuesta exitosa
+    return response()->json(['message' => 'All clients updated successfully']);
+});
+
 
 Route::any('/testAval', function (Request $request) {
 
@@ -248,9 +351,13 @@ Route::any('/update-clients-schools', function () {
 Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
     $bookingData = \App\Models\Booking::find($bookingId);
-    $bookingData->loadMissing(['bookingUsers', 'bookingUsers.client.language1', 'bookingUsers.degree',
+    $bookingData->loadMissing(['bookingUsers',
+        'bookingUsers.client.language1',
+        'bookingUsers.degree',
         'bookingUsers.monitor.language1',
-        'bookingUsers.courseExtras', 'bookingUsers.courseSubGroup', 'bookingUsers.course',
+        'bookingUsers.courseExtras',
+        'bookingUsers.courseSubGroup',
+        'bookingUsers.course',
         'bookingUsers.courseDate']);
     $schoolData = \App\Models\School::find(1);
     $userData = Client::find($bookingData->client_main_id);
@@ -260,11 +367,12 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
     $oldLocale = \App::getLocale();
     $userLang = Language::find($userData->language1_id);
     $userLocale = $userLang ? $userLang->code : $defaultLocale;
+
     \App::setLocale($userLocale);
 
 
     $templateView = 'mails.bookingPay';
-    $templateView = 'mailsv2.newBookingPayNotice';
+    $templateView = 'mailsv2.newBookingPay';
 
     $footerView = 'mailsv2.newFooter';
 
@@ -302,11 +410,11 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
         'footerView' => $footerView
     ];
 
-   //dd($templateData['courses']);
+    //dd($templateData['courses']);
 
 
-  //  $subject = __('emails.bookingInfo.subject');
-    \App::setLocale($oldLocale);
+    //  $subject = __('emails.bookingInfo.subject');
+    //\App::setLocale($oldLocale);
 
     return view($templateView)->with($templateData);
 });
@@ -340,6 +448,16 @@ Route::any('/mailtest', function () {
 
     return  view($templateView)->with($templateData);
 });
+
+Route::any('/testPayrexx', function () {
+
+    $schoolData = \App\Models\School::find(2);
+    if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+        return 'School Data f';
+    }
+    return 'Payrexx works';
+});
+
 
 Route::post('payrexxNotification', [\App\Http\Controllers\PayrexxController::class, 'processNotification'])
     ->name('api.payrexx.notification');
