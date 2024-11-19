@@ -139,17 +139,32 @@ class ClientsController extends AppBaseController
         $orderColumn = $request->input('orderColumn', 'id');
         $with = $request->input('with', ['utilizers.clientSports.sport', 'utilizers.clientSports.degree', 'clientSports.degree', 'clientSports.sport']);
 
+        $fieldSearchable = [
+            'clients.id',
+        'email',
+        'first_name',
+        'last_name',
+        'birth_date',
+        'phone',
+        'telephone',
+        'address',
+        'cp',
+        'city',
+        'province',
+        'country'
+    ];
+
         $clientsWithUtilizers = $this->clientRepository->all(
             searchArray: $searchParameters,
-            search: $search,
+            search: null, // Eliminar búsqueda global por ahora
             skip: $request->input('skip'),
             limit: $request->input('limit'),
             pagination: $perPage,
             with: $with,
             order: $order,
             orderColumn: $orderColumn,
-            additionalConditions: function($query) use ($school, $search, $request) {
-                // Primera condición: Filtrar clientes sin 'main' y con 'clientsSchools' coincidentes con la escuela
+            additionalConditions: function ($query) use ($school, $search, $request, $fieldSearchable) {
+                // Filtrar clientes sin 'main' y relacionados con 'clientsSchools'
                 $query->whereDoesntHave('main')
                     ->whereHas('clientsSchools', function ($query) use ($school, $request) {
                         $query->where('school_id', $school->id);
@@ -158,32 +173,28 @@ class ClientsController extends AppBaseController
                         }
                     });
 
-                // Segunda condición: Búsqueda adicional en 'utilizers' si hay un término de búsqueda
+                // Búsqueda adicional
                 if ($search) {
-                    $query->where(function ($query) use ($school, $search, $request) {
-                        // Filtrar en los utilizadores
-                        $query->whereHas('utilizers', function ($subQuery) use ($school, $search) {
-                            $subQuery->where(function ($subSubQuery) use ($search) {
-                                $subSubQuery->where('first_name', 'like', "%" . $search . "%")
-                                    ->orWhere('last_name', 'like', "%" . $search . "%");
-                            })
-                                ->whereHas('clientsSchools', function ($query) use ($school) {
-                                    $query->where('school_id', $school->id);
-                                });
+                    $query->where(function ($query) use ($school, $search, $fieldSearchable) {
+                        // Buscar en utilizadores
+                        $query->whereHas('utilizers', function ($subQuery) use ($search, $fieldSearchable) {
+                            $subQuery->where(function ($subSubQuery) use ($search, $fieldSearchable) {
+                                foreach ($fieldSearchable as $field) {
+                                    $subSubQuery->orWhere($field, 'like', "%" . $search . "%");
+                                }
+                            });
                         });
 
-                        // Filtrar en el cliente principal directamente
-                        $query->orWhere(function ($subQuery) use ($school, $search) {
-                            $subQuery->where('first_name', 'like', "%" . $search . "%")
-                                ->orWhere('last_name', 'like', "%" . $search . "%")
-                                ->whereHas('clientsSchools', function ($query) use ($school) {
-                                    $query->where('school_id', $school->id);
-                                });
+                        // Buscar en el cliente principal
+                        $query->orWhere(function ($subQuery) use ($search) {
+                            $subQuery->where('clients.first_name', 'like', "%" . $search . "%")
+                                ->orWhere('clients.last_name', 'like', "%" . $search . "%");
                         });
                     });
                 }
             }
         );
+
 
         return response()->json($clientsWithUtilizers);
     }

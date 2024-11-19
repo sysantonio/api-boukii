@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 class ClientRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-'id',
+        'id',
         'email',
         'first_name',
         'last_name',
@@ -20,10 +20,6 @@ class ClientRepository extends BaseRepository
         'city',
         'province',
         'country',
-        'language1_id',
-        'language2_id',
-        'language3_id',
-        'image',
         'user_id'
     ];
 
