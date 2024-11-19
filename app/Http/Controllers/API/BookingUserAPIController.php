@@ -63,7 +63,11 @@ class BookingUserAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            additionalConditions: function ($query) {
+                $query->whereHas('booking');
+
+            }
         );
 
         return $this->sendResponse($bookingUsers, 'Booking Users retrieved successfully');
