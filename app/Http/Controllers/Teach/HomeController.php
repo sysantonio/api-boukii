@@ -84,8 +84,12 @@ class HomeController extends AppBaseController
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals')
             ->where('school_id', $monitor->active_school)
             ->where('status', 1)
+            ->whereHas('booking', function ($subQuery) {
+                $subQuery->where('status',  1);
+            })
             ->byMonitor($monitor->id)
             ->orderBy('hour_start');
+
 
         // Consulta para los MonitorNwd
         $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
@@ -115,7 +119,9 @@ class HomeController extends AppBaseController
             ->where(function ($query) {
                 $query->doesntHave('bookingUsers')
                     ->orWhereHas('bookingUsers', function ($subQuery) {
-                        $subQuery->where('status', '!=', 1);
+                        $subQuery->where('status', '!=', 1)->whereHas('booking', function ($subQuery) {
+                            $subQuery->where('status', '=',  3);
+                        });
                     });
             });
 
