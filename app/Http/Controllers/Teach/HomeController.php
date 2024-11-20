@@ -83,6 +83,7 @@ class HomeController extends AppBaseController
         $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client.sports',
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals')
             ->where('school_id', $monitor->active_school)
+            ->where('status', 1)
             ->byMonitor($monitor->id)
             ->orderBy('hour_start');
 
