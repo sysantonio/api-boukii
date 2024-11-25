@@ -109,7 +109,7 @@ class MonitorNwdAPIController extends AppBaseController
 
         // Verificar si el monitor está ocupado antes de actualizar
         if (Monitor::isMonitorBusy($input['monitor_id'], $input['start_date'], $input['start_time'], $input['end_time'])) {
-            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede crear el MonitorNwd');
+            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede crear el MonitorNwd', 409);
         }
 
         $monitorNwd = $this->monitorNwdRepository->create($input);
@@ -218,7 +218,7 @@ class MonitorNwdAPIController extends AppBaseController
 
         // Verificar si el monitor está ocupado antes de actualizar
         if (Monitor::isMonitorBusy($monitorNwd->monitor_id, $input['start_date'], $input['start_time'], $input['end_time'], $id)) {
-            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede actualizar el MonitorNwd');
+            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede actualizar el MonitorNwd', 409);
         }
 
         $monitorNwd = $this->monitorNwdRepository->update($input, $id);
