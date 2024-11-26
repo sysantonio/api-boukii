@@ -72,11 +72,20 @@ class VoucherAPIController extends AppBaseController
     }
 
     /**
-     * @OA\Get(
-     *      path="/vouchers-trashed",
-     *      summary="getVoucherListTrashed",
+     * @OA\Post(
+     *      path="/vouchers/{id}/restore",
+     *      summary="restoreVoucher",
      *      tags={"Voucher"},
-     *      description="Get all Vouchers Trashed",
+     *      description="Restore a trashed voucher",
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ID of the voucher to restore",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="successful operation",
@@ -88,34 +97,35 @@ class VoucherAPIController extends AppBaseController
      *              ),
      *              @OA\Property(
      *                  property="data",
-     *                  type="array",
-     *                  @OA\Items(ref="#/components/schemas/Voucher")
+     *                  ref="#/components/schemas/Voucher"
      *              ),
      *              @OA\Property(
      *                  property="message",
      *                  type="string"
      *              )
      *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Voucher not found"
      *      )
      * )
      */
-    public function indexWithTrashed(Request $request): JsonResponse
+    public function restore(int $id): JsonResponse
     {
-        $vouchers = $this->voucherRepository->all(
-            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
-            $request->get('search'),
-            $request->get('skip'),
-            $request->get('limit'),
-            $request->perPage,
-            $request->get('with', []),
-            $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id'),
-            null,
-            $request->get('onlyTrashed', false)
-        );
+        // Buscar el voucher, incluyendo los eliminados
+        $voucher = $this->voucherRepository->find($id, [], [], true); // true para incluir withTrashed
 
-        return $this->sendResponse($vouchers, 'Vouchers retrieved successfully');
+        if (!$voucher) {
+            return $this->sendError('Voucher not found', 404);
+        }
+
+        // Restaurar el voucher
+        $voucher->restore();
+
+        return $this->sendResponse($voucher, 'Voucher restored successfully');
     }
+
 
     /**
      * @OA\Post(

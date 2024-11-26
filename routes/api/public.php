@@ -169,6 +169,9 @@ Route::middleware(['guest'])->group(function () {
         App\Http\Controllers\API\MonitorSportAuthorizedDegreeAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::post('vouchers/{id}/restore', [App\Http\Controllers\API\VoucherAPIController::class, 'restore'])
+        ->name('api.vouchers.restore');
+
     Route::resource('vouchers', App\Http\Controllers\API\VoucherAPIController::class)
         ->except(['create', 'edit']);
 
