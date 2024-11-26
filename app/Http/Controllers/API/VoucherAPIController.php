@@ -63,7 +63,55 @@ class VoucherAPIController extends AppBaseController
             $request->perPage,
             $request->get('with', []),
             $request->get('order', 'desc'),
-            $request->get('orderColumn', 'id')
+            $request->get('orderColumn', 'id'),
+            null,
+            $request->get('onlyTrashed', false)
+        );
+
+        return $this->sendResponse($vouchers, 'Vouchers retrieved successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/vouchers-trashed",
+     *      summary="getVoucherListTrashed",
+     *      tags={"Voucher"},
+     *      description="Get all Vouchers Trashed",
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(ref="#/components/schemas/Voucher")
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function indexWithTrashed(Request $request): JsonResponse
+    {
+        $vouchers = $this->voucherRepository->all(
+            $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
+            $request->get('search'),
+            $request->get('skip'),
+            $request->get('limit'),
+            $request->perPage,
+            $request->get('with', []),
+            $request->get('order', 'desc'),
+            $request->get('orderColumn', 'id'),
+            null,
+            $request->get('onlyTrashed', false)
         );
 
         return $this->sendResponse($vouchers, 'Vouchers retrieved successfully');

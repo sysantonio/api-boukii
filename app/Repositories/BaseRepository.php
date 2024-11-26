@@ -74,9 +74,13 @@ abstract class BaseRepository
      */
     public function allQuery(array  $searchArray = [], string $search = null, int $skip = null, int $limit = null,
                              string $order = 'desc', string $orderColumn = 'id', array $with = [],
-                                    $additionalConditions = null): Builder
+                                    $additionalConditions = null, $onlyTrashed = false): Builder
     {
         $query = $this->model->newQuery();
+
+        if ($onlyTrashed) {
+            $query->onlyTrashed();
+        }
 
         // Agregar los 'with' al query
         if (!empty($with)) {
@@ -148,9 +152,9 @@ abstract class BaseRepository
      */
     public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10,
                         array $with = [],
-        $order = 'desc', $orderColumn = 'id', $additionalConditions = null): Builder|LengthAwarePaginator
+        $order = 'desc', $orderColumn = 'id', $additionalConditions = null, $onlyTrashed = false): Builder|LengthAwarePaginator
     {
-        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with, $additionalConditions);
+        $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with, $additionalConditions, $onlyTrashed);
 
         return $query->paginate($pagination);
     }
