@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Payrexx\Models\Request\Gateway as GatewayRequest;
 use Payrexx\Models\Request\Transaction as TransactionRequest;
 use Payrexx\Models\Response\Transaction as TransactionResponse;
 use Payrexx\Payrexx;
@@ -455,7 +456,16 @@ Route::any('/testPayrexx', function () {
     if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
         return 'School Data f';
     }
-    return 'Payrexx works';
+    try {
+        $gr = new GatewayRequest();
+        $ref = 'Boukii #' . $this->id;
+        $ref = (env('APP_ENV') == 'production') ? $ref : 'TEST ' . $ref;
+        $gr->setReferenceId($ref);
+        return 'Payrexx works';
+    } catch (\Throwable $th) {
+        return 'School Data f';
+    }
+
 });
 
 
