@@ -450,9 +450,13 @@ Route::any('/mailtest', function () {
     return  view($templateView)->with($templateData);
 });
 
-Route::any('/testPayrexx', function () {
+Route::post('/testPayrexx', function (Request $request) {
 
-    $schoolData = \App\Models\School::find(2);
+    $schoolData = \App\Models\School::find($request->school_id);
+    $schoolData->setPayrexxInstance($request->payrexx_instance);
+    $schoolData->setPayrexxKey($request->payrexx_key);
+    $schoolData->save();
+
     if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
         return 'School Data f';
     }
