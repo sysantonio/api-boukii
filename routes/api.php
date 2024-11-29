@@ -18,6 +18,7 @@ use App\Models\StationService;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Payrexx\Models\Request\Gateway as GatewayRequest;
@@ -467,7 +468,7 @@ Route::post('/testPayrexx', function (Request $request) {
         $gr->setReferenceId($ref);
         return 'Payrexx works';
     } catch (\Throwable $th) {
-        return 'School Data f';
+        return 'School Data f works';
     }
 
 });
@@ -529,6 +530,53 @@ Route::get('/fix-nwds', function () {
         }
     }
 });
+
+Route::get('/fix-clients', function () {
+    // Obtener todos los clientes de la base de datos nueva
+    $clients = Client::all();
+
+    foreach ($clients as $client) {
+        // Obtener el `old_id` del cliente
+        $oldId = $client->old_id;
+
+        if (!$oldId) {
+            continue; // Si no hay `old_id`, pasa al siguiente cliente
+        }
+
+        // Buscar el usuario antiguo
+        $oldUser = App\Models\OldModels\User::with('schools')->find($oldId);
+
+        if (!$oldUser) {
+            continue; // Si no se encuentra el usuario antiguo, pasa al siguiente cliente
+        }
+
+        // Obtener las escuelas del usuario antiguo
+        $oldSchools = $oldUser->schools;
+
+        // Recorrer las escuelas antiguas
+        foreach ($oldSchools as $oldSchool) {
+
+            // Verificar si `active_school` es 1
+            if ($oldSchool->pivot->active_school !== 1) {
+                continue;
+            }
+
+            // Buscar si la escuela antigua está en las escuelas del cliente nuevo
+            $clientSchool = $client->clientsSchools()
+                ->where('school_id', $oldSchool->id)
+                ->first();
+
+            if ($clientSchool) {
+                // Actualizar el campo `accepted_at`
+                $clientSchool->accepted_at = Carbon::now();
+                $clientSchool->save();
+            }
+        }
+    }
+
+    return response()->json(['message' => 'Proceso completado']);
+});
+
 
 Route::get('/process-images', function () {
     $models = [

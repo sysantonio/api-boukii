@@ -98,7 +98,7 @@ class User extends Authenticatable
 
     public function schools()
     {
-        return $this->belongsToMany(School::class, 'user_schools', 'user_id', 'school_id');
+        return $this->belongsToMany(School::class, 'user_schools', 'user_id', 'school_id')->withPivot('active_school');
     }
 
     public function notes()
