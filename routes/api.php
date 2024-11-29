@@ -532,49 +532,17 @@ Route::get('/fix-nwds', function () {
 });
 
 Route::get('/fix-clients', function () {
-    // Obtener todos los clientes de la base de datos nueva
-    $clients = Client::all();
+    $clients = Client::with('clientsSchools')->get();
 
     foreach ($clients as $client) {
-        // Obtener el `old_id` del cliente
-        $oldId = $client->old_id;
-
-        if (!$oldId) {
-            continue; // Si no hay `old_id`, pasa al siguiente cliente
-        }
-
-        // Buscar el usuario antiguo
-        $oldUser = App\Models\OldModels\User::with('schools')->find($oldId);
-
-        if (!$oldUser) {
-            continue; // Si no se encuentra el usuario antiguo, pasa al siguiente cliente
-        }
-
-        // Obtener las escuelas del usuario antiguo
-        $oldSchools = $oldUser->schools;
-
-        // Recorrer las escuelas antiguas
-        foreach ($oldSchools as $oldSchool) {
-
-            // Verificar si `active_school` es 1
-            if ($oldSchool->pivot->active_school !== 1) {
-                continue;
-            }
-
-            // Buscar si la escuela antigua está en las escuelas del cliente nuevo
-            $clientSchool = $client->clientsSchools()
-                ->where('school_id', $oldSchool->id)
-                ->first();
-
-            if ($clientSchool) {
-                // Actualizar el campo `accepted_at`
-                $clientSchool->accepted_at = Carbon::now();
-                $clientSchool->save();
-            }
+        foreach ($client->clientsSchools as $clientSchool) {
+            // Actualizar el campo `accepted_at` a la fecha y hora actuales
+            $clientSchool->accepted_at = Carbon::now();
+            $clientSchool->save();
         }
     }
 
-    return response()->json(['message' => 'Proceso completado']);
+    return response()->json(['message' => 'Todos los clientes activados para todas las escuelas']);
 });
 
 
