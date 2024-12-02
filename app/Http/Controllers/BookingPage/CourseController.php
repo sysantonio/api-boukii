@@ -226,25 +226,32 @@ class CourseController extends SlugAuthController
             $unAvailableDegreeIds = collect();
             foreach ($course->courseDates as $courseDate) {
                 foreach ($courseDate->courseGroups as $group) {
-                    $group->courseSubgroups = $group->courseSubgroups->filter(function ($subgroup)
-                    use ($availableDegreeIds, $group, $unAvailableDegreeIds) {
+                    $group->courseSubgroups = $group->courseSubgroups->filter(function ($subgroup) use ($availableDegreeIds, $unAvailableDegreeIds, $group) {
                         $hasAvailability = $subgroup->booking_users_count < $subgroup->max_participants;
+
+                        // Crear la estructura de datos del degree
                         $availableDegree = [
                             'degree_id' => $group->degree_id,
                             'recommended_age' => $group->recommended_age,
                             'age_max' => $group->age_max,
                             'age_min' => $group->age_min
                         ];
+
+                        // Registrar disponibilidad o no disponibilidad
                         if ($hasAvailability) {
-                            if(!$unAvailableDegreeIds->contains($availableDegree)) {
+                            if (!$availableDegreeIds->contains($availableDegree)) {
                                 $availableDegreeIds->push($availableDegree);
                             }
                         } else {
-                            $unAvailableDegreeIds->push($availableDegree);
+                            if (!$unAvailableDegreeIds->contains($availableDegree)) {
+                                $unAvailableDegreeIds->push($availableDegree);
+                            }
                         }
+
                         return $hasAvailability;
                     });
 
+                    // Verificar si todos los subgrupos han sido rechazados
                     if ($group->courseSubgroups->isEmpty()) {
                         $courseDate->courseGroups = $courseDate->courseGroups->reject(function ($g) use ($group) {
                             return $g->id === $group->id;
@@ -252,6 +259,7 @@ class CourseController extends SlugAuthController
                     }
                 }
             }
+
 
             $uniqueDegrees = $availableDegreeIds->unique(function ($item) {
                 return $item['degree_id'] . '-' . $item['recommended_age'];
