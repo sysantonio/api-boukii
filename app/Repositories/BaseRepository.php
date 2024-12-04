@@ -87,9 +87,14 @@ abstract class BaseRepository
             $query->with($with);
         }
 
+        // Filtrar por school_id de forma obligatoria
+        if (isset($searchArray['school_id']) && in_array('school_id', $this->getFieldsSearchable())) {
+            $query->where('school_id', $searchArray['school_id']);
+        }
+
         if (count($searchArray)) {
             foreach ($searchArray as $key => $value) {
-                if (in_array($key, $this->getFieldsSearchable())) {
+                if (in_array($key, $this->getFieldsSearchable()) && $key !== 'school_id') {
                     $query->where($key, $value);
                 }
             }
