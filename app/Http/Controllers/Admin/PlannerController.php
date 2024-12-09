@@ -317,11 +317,17 @@ class PlannerController extends AppBaseController
                 /*'subgroups' => $availableSubgroups,*/
             ];
         }
-        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) use($subgroupsPerGroup) {
+        $bookingsWithoutMonitor = $bookings->whereNull('monitor_id')->groupBy(function ($booking) use ($subgroupsPerGroup) {
             if ($booking->course->course_type == 2 || $booking->course->course_type == 3) {
-                return $booking->course_id . '-' . $booking->course_date_id . '-' .  $booking->booking_id;
+                // Si tiene group_id, agrúpalo por course_id, course_date_id y group_id
+                if ($booking->group_id) {
+                    return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->group_id;
+                }
+                // Si no tiene group_id, agrupa por course_id y course_date_id
+                return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->booking_id;
             }
         });
+
 
 
         $subgroupsWithoutMonitor = $subgroups->where('monitor_id', null);
