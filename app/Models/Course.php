@@ -314,41 +314,55 @@ class Course extends Model
         'settings' => 'json'
     ];
 
-    public static array $rules = [
-        'course_type' => 'required',
-        'is_flexible' => 'required|boolean',
-        'sport_id' => 'required',
-        'school_id' => 'required',
-        'station_id' => 'nullable',
-        'name' => 'required|string|max:65535',
-        'short_description' => 'required|string|max:65535',
-        'description' => 'required|string|max:65535',
-        'price' => 'required|numeric',
-        'currency' => 'required|string|max:3',
-        'max_participants' => 'required',
-        'duration' => 'nullable',
-        'date_start' => 'nullable',
-        'date_end' => 'nullable',
-        'date_start_res' => 'nullable',
-        'date_end_res' => 'nullable',
-        'hour_min' => 'nullable|string|max:255',
-        'hour_max' => 'nullable|string|max:255',
-        'confirm_attendance' => 'required|boolean',
-        'active' => 'required|boolean',
-        'unique' => 'nullable',
-        'options' => 'nullable',
-        'online' => 'required|boolean',
-        'image' => 'nullable|string',
-        'age_min' => 'nullable',
-        'age_max' => 'nullable',
-        'translations' => 'nullable|string',
-        'price_range' => 'nullable',
-        'discounts' => 'nullable|string',
-        'settings' => 'nullable|string',
-        'created_at' => 'nullable',
-        'updated_at' => 'nullable',
-        'deleted_at' => 'nullable'
-    ];
+    public static function rules($isUpdate = false): array
+    {
+        $rules = [
+            'course_type' => 'required',
+            'is_flexible' => 'required|boolean',
+            'sport_id' => 'required',
+            'school_id' => 'required',
+            'station_id' => 'nullable',
+            'name' => 'required|string|max:65535',
+            'short_description' => 'required|string|max:65535',
+            'description' => 'required|string|max:65535',
+            'price' => 'required|numeric',
+            'currency' => 'required|string|max:3',
+            'max_participants' => 'required',
+            'duration' => 'nullable',
+            'date_start' => 'nullable',
+            'date_end' => 'nullable',
+            'date_start_res' => 'nullable',
+            'date_end_res' => 'nullable',
+            'hour_min' => 'nullable|string|max:255',
+            'hour_max' => 'nullable|string|max:255',
+            'confirm_attendance' => 'required|boolean',
+            'active' => 'required|boolean',
+            'unique' => 'nullable',
+            'options' => 'nullable',
+            'online' => 'required|boolean',
+            'image' => 'nullable|string',
+            'age_min' => 'nullable',
+            'age_max' => 'nullable',
+            'translations' => 'nullable|string',
+            'price_range' => 'nullable',
+            'discounts' => 'nullable|string',
+            'settings' => 'nullable|string',
+            'created_at' => 'nullable',
+            'updated_at' => 'nullable',
+            'deleted_at' => 'nullable',
+        ];
+
+        // Modifica las reglas si es una actualización
+        if ($isUpdate) {
+            foreach ($rules as $key => $rule) {
+                // Solo elimina la validación de "required" para las actualizaciones
+                $rules[$key] = str_replace('required|', '', $rule);
+                $rules[$key] = str_replace('required', 'nullable', $rules[$key]);
+            }
+        }
+
+        return $rules;
+    }
 
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -685,7 +699,7 @@ class Course extends Model
                     ->where('age_max', '>=', $clientAge);
             }
         }
-
+        //dd($query->toSql(), $query->getBindings());
         return $query;
     }
 

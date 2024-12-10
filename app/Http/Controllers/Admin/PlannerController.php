@@ -110,7 +110,7 @@ class PlannerController extends AppBaseController
             'bookingUsers.client.evaluations.degree', 'bookingUsers.client.evaluations.evaluationFulfilledGoals'])
             ->whereHas('courseGroup.course', function ($query) use ($schoolId) {
                 // Agrega la comprobación de la escuela aquí
-                $query->where('school_id', $schoolId);
+                $query->where('school_id', $schoolId)->where('active', 1);
             })
             ->whereHas('courseDate', function ($query) use ($dateStart, $dateEnd) {
                 if ($dateStart && $dateEnd) {

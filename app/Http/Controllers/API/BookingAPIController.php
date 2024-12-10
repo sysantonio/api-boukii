@@ -302,8 +302,10 @@ class BookingAPIController extends AppBaseController
 
     private function applyStatusFilter($query, Request $request): void
     {
-        if (!$request->has('all')) {
-            $query->where('status', '!=', 3);
+        if($request->has('status')) {
+            $query->where('status', '=', $request->get('status'));
+        } elseif (!$request->has('all')) {
+            $query->where('status', '!=', 2);
         }
     }
 

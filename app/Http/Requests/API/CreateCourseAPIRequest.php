@@ -24,6 +24,6 @@ class CreateCourseAPIRequest extends APIRequest
      */
     public function rules()
     {
-        return Course::$rules;
+        return Course::rules();
     }
 }

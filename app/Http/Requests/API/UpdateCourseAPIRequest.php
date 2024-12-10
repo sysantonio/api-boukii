@@ -24,8 +24,8 @@ class UpdateCourseAPIRequest extends APIRequest
      */
     public function rules()
     {
-        $rules = Course::$rules;
-        
+        $rules = Course::rules(true);
+
         return $rules;
     }
 }
