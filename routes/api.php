@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\ClientSport;
 use App\Models\ClientsSchool;
@@ -615,6 +616,67 @@ Route::get('/process-images', function () {
     }
 
     return 'Proceso completado';
+});
+
+Route::post('/fix-booking-users', function (Illuminate\Http\Request $request) {
+    $data = $request->all();
+
+    $results = [];
+    foreach ($data as $bookingData) {
+        // Obtener el `course_group_id` a través del `course_subgroup_id`
+        $courseGroupId = \DB::table('course_subgroups')
+            ->where('id', $bookingData['course_subgroup_id'])
+            ->value('course_group_id');
+
+        if (!$courseGroupId) {
+            $results[] = [
+                'status' => 'error',
+                'message' => 'Course group not found for course_subgroup_id: ' . $bookingData['course_subgroup_id'],
+                'data' => $bookingData,
+            ];
+            continue;
+        }
+
+        // Añadir el `course_group_id` al booking
+        $bookingData['course_group_id'] = $courseGroupId;
+
+        // Verificar si ya existe
+        $exists = BookingUser::where([
+            'school_id' => $bookingData['school_id'],
+            'booking_id' => $bookingData['booking_id'],
+            'client_id' => $bookingData['client_id'],
+            'course_id' => $bookingData['course_id'],
+            'course_subgroup_id' => $bookingData['course_subgroup_id'],
+            'course_group_id' => $bookingData['course_group_id'],
+            'course_date_id' => $bookingData['course_date_id'],
+            'degree_id' => $bookingData['degree_id'],
+            'hour_start' => $bookingData['hour_start'],
+            'hour_end' => $bookingData['hour_end'],
+            'price' => $bookingData['price'],
+            'currency' => $bookingData['currency'],
+            'date' => $bookingData['date'],
+            'attended' => $bookingData['attended'],
+        ])->exists();
+
+        if ($exists) {
+            $results[] = [
+                'status' => 'skipped',
+                'message' => 'Booking user already exists',
+                'data' => $bookingData,
+            ];
+            continue;
+        }
+
+        // Crear el nuevo registro
+        BookingUser::create($bookingData);
+        $results[] = [
+            'status' => 'success',
+            'message' => 'Booking user created',
+            'data' => $bookingData,
+        ];
+    }
+
+    return response()->json($results);
 });
 
 /* API PAYREXX */
