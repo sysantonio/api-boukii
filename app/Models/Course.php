@@ -389,6 +389,18 @@ class Course extends Model
         return $this->hasMany(\App\Models\BookingUser::class, 'course_id');
     }
 
+    public function bookingUsersActive(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\BookingUser::class, 'course_id')
+            ->where('status', 1) // BookingUser debe tener status 1
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            });
+    }
+
+
+
+
     public function bookings(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(
@@ -616,6 +628,9 @@ class Course extends Model
                                     // Excluir los subgrupos donde el cliente ya tiene una reserva
                                     $bookingQuery->where('client_id', $clientId)
                                         ->where('status', 1) // Solo excluir reservas activas
+                                            ->whereHas('booking', function (Builder $bookingQuery) use ($clientId) {
+                                                $bookingQuery->where('status', 1);
+                                        })
                                         ->whereNull('deleted_at'); // Excluir si la reserva no está eliminada
                                 })
                                 ->whereHas('courseGroup',
@@ -633,10 +648,11 @@ class Course extends Model
                                                         $clientDegree->degree_order);
                                                 });
                                         } else if ($clientDegree !== null && !$getLowerDegrees) {
-                                            $groupQuery->whereHas('degree',
+                                            //TODO: Fix degree
+                                           /*$groupQuery->whereHas('degree',
                                                 function (Builder $degreeQuery) use ($clientDegree) {
-                                                    $degreeQuery->where('id', $clientDegree->id);
-                                                });
+                                                    $degreeQuery->orWhere('id', $clientDegree->id);
+                                                });*/
                                         }
                                         if ($clientAge !== null) {
                                             // Filtrado por la edad del cliente si está disponible

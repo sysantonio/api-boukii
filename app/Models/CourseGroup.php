@@ -166,9 +166,18 @@ class CourseGroup extends Model
         return $this->belongsTo(\App\Models\Course::class, 'course_id');
     }
 
-    public function bookingUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function bookingUserss(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\BookingUser::class, 'course_group_id');
+    }
+
+    public function bookingUsers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\BookingUser::class, 'course_group_id')
+            ->where('status', 1) // BookingUser debe tener status 1
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            });
     }
 
     public function courseSubgroups(): \Illuminate\Database\Eloquent\Relations\HasMany

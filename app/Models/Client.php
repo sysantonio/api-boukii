@@ -283,6 +283,15 @@ class Client extends Model
         return $this->hasMany(\App\Models\BookingUser::class, 'client_id');
     }
 
+    public function bookingUsersActive(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\BookingUser::class, 'client_id')
+            ->where('status', 1) // BookingUser debe tener status 1
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            });
+    }
+
     public function bookings(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Booking::class, 'client_main_id');

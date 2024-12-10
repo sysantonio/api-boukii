@@ -60,7 +60,7 @@ Route::any('/users-permissions', function () {
     return 'Permisos actualizados correctamente';
 });
 
-Route::any('/degrees-update', function () {
+/*Route::any('/degrees-update', function () {
 
     // Paso 1: Obtener todos los grados con school_id = 2
     $degreesToDuplicate = Degree::where('school_id', 2)->get();
@@ -291,9 +291,9 @@ Route::any('/clients-active', function () {
         }
 
     }
-});
+});*/
 
-Route::get('/refund', function () {
+/*Route::get('/refund', function () {
 
     $transactionID = '13023439';
     $bookingData = \App\Models\Booking::with('school')->find(2103);
@@ -349,7 +349,7 @@ Route::any('/update-clients-schools', function () {
     }
 
     return response()->json(['message' => 'School IDs updated successfully']);
-});
+});*/
 
 Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
@@ -507,7 +507,7 @@ Route::get('migration/bookings', [\App\Http\Controllers\MigrationController::cla
 Route::get('migration/all', [\App\Http\Controllers\MigrationController::class, 'migrateAll'])
     ->name('api.migration.all');
 
-Route::get('/fix-nwds', function () {
+/*Route::get('/fix-nwds', function () {
     // Obtener todos los MonitorNwds
     $monitorNwds = MonitorNwd::all();
 
@@ -677,7 +677,7 @@ Route::post('/fix-booking-users', function (Illuminate\Http\Request $request) {
     }
 
     return response()->json($results);
-});
+});*/
 
 /* API PAYREXX */
 Route::prefix('')
