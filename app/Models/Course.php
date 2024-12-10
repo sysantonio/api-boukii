@@ -389,6 +389,18 @@ class Course extends Model
         return $this->hasMany(\App\Models\BookingUser::class, 'course_id');
     }
 
+    public function bookings(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            \App\Models\Booking::class, // Modelo final al que queremos llegar
+            \App\Models\BookingUser::class, // Modelo intermedio
+            'course_id', // Llave foránea en el modelo intermedio (BookingUser) que conecta con Course
+            'id', // Llave primaria en el modelo Booking que conecta con BookingUser
+            'id', // Llave primaria en el modelo Course que conecta con BookingUser
+            'booking_id' // Llave foránea en el modelo BookingUser que conecta con Booking
+        );
+    }
+
     public function courseDates(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseDate::class, 'course_id');

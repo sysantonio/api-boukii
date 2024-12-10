@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Course;
 use App\Models\Monitor;
@@ -196,17 +197,36 @@ class StatisticsController extends AppBaseController
                 'online' => 0,
                 'voucher_gift' => 0,
                 'sell_voucher' => 0,
+                'web' => 0,
+                'admin' => 0,
             ];
 
-            foreach ($course->bookingUsers as $bookingUser) {
-                // Verificar que booking no es null antes de acceder a payments
-                if ($bookingUser->booking) {
-                    foreach ($bookingUser->booking->payments as $payment) {
-                        $paymentType = $payment->type;
-                        if (array_key_exists($paymentType, $payments)) {
-                            $payments[$paymentType] += $payment->amount;
-                        }
+            foreach ($course->bookings as $booking) {
+                // Iterar sobre los pagos de la reserva
+                foreach ($booking->payments as $payment) {
+                    $paymentType = $booking->payment_method_id;
+                    $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
+                    // Sumar o restar según el método de pago
+                    switch ($paymentType) {
+                        case Booking::ID_CASH:
+                            $payments['cash'] += $amount;
+                            break;
+                        case Booking::ID_BOUKIIPAY:
+
+                            $payments['boukii'] += $amount;
+                            break;
+                        case Booking::ID_ONLINE:
+                            $payments['online'] += $amount;
+                            break;
+                        case Booking::ID_OTHER:
+                            $payments['other'] += $amount;
+                            break;
                     }
+                }
+
+                // Contabilizar el origen del booking
+                if (array_key_exists($booking->source, $payments)) {
+                    $payments[$booking->source] += 1; // Incrementar el contador de origen
                 }
             }
 
@@ -225,6 +245,8 @@ class StatisticsController extends AppBaseController
                 'online' => $payments['online'],
                 'voucher_gift' => $payments['voucher_gift'],
                 'sell_voucher' => $payments['sell_voucher'],
+                'web' => $payments['web'],
+                'admin' => $payments['admin'],
                 'total_cost' => $totalCost
             ];
         }
