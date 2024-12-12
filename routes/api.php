@@ -618,6 +618,8 @@ Route::get('/process-images', function () {
     return 'Proceso completado';
 });
 
+*/
+
 Route::post('/fix-booking-users', function (Illuminate\Http\Request $request) {
     $data = $request->all();
 
@@ -677,7 +679,7 @@ Route::post('/fix-booking-users', function (Illuminate\Http\Request $request) {
     }
 
     return response()->json($results);
-});*/
+});
 
 /* API PAYREXX */
 Route::prefix('')
