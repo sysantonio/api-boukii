@@ -440,7 +440,7 @@ class Course extends Model
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
     }
 
-    protected $appends = ['icon', 'minPrice', 'minDuration'];
+    protected $appends = ['icon', 'minPrice', 'minDuration', 'typeString'];
 
     public function getStartDateAttribute()
     {
@@ -450,6 +450,21 @@ class Course extends Model
             ->orderBy('date', 'asc')
             ->first()
             ?->date;
+    }
+
+    public function getTypeStringAttribute()
+    {
+        // Devuelve un string basado en el valor de course_type
+        switch ($this->course_type) {
+            case 1:
+                return 'colective';
+            case 2:
+                return 'private';
+            case 3:
+                return 'activity';
+            default:
+                return null; // O devuelve un valor por defecto si es necesario
+        }
     }
 
     public function getEndDateAttribute()

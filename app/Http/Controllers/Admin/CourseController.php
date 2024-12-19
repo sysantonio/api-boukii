@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CourseDetailsExport;
 use App\Http\Controllers\AppBaseController;
 use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
@@ -193,6 +194,25 @@ class CourseController extends AppBaseController
         $course->total_places = $availability['total_places'];
 
         return $this->sendResponse($course, 'Course retrieved successfully');
+    }
+
+    public function exportDetails(Request $request, $courseId, $lang = 'fr')
+    {
+        $school = $this->getSchool($request);
+
+        app()->setLocale($lang);
+        // Valida el ID del curso
+        $course = Course::with([
+        'courseDates.courseGroups.bookingUsers.client'
+    ])->where('school_id', $school->id)->findOrFail($courseId);
+
+        if (empty($course)) {
+            return $this->sendError('Course does not exist in this school');
+        }
+
+        //dd($course->courseDates[0]);
+        // Exporta el archivo
+        return (new CourseDetailsExport($courseId))->download('course_details.xlsx');
     }
 
     /**

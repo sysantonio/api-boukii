@@ -76,7 +76,9 @@
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="470" style="margin: auto; width:470px" class="email-container">
                         <tr>
                             <td align="center" valign="middle" class="center-on-narrow">
+{{--
                                 <img src="data:image/png;base64,{{ base64_encode(\QrCode::format('png')->size(110)->generate($actionURL)) }}" alt="QR Code" style="width: 110px; height: 110px;">
+--}}
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td class="center-on-narrow" align="center" style="font-size:16px; line-height:21px; padding:0px 0px;" >
@@ -86,7 +88,8 @@
                                 </table>
                             </td>
                             <td width="60" align="center" valign="middle" class="center-on-narrow">
-                                <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:var(--color-dark1);">o</font>
+                                <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px;
+                                color:var(--color-dark1);">o</font>
                             </td>
                             <td class="center-on-narrow" align="center" valign="middle" class="center-on-narrow">
                                 <div><!--[if mso]>
@@ -98,7 +101,8 @@
                                     <!--[if mso]>
                                     </center>
                                     </v:roundrect>
-                                    <![endif]--></div>
+                                    <![endif]-->
+                                </div>
                                 <br>
                                 <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:var(--color-dark1);">{{ __('emails.bookingPay.click') }}</font>
                             </td>

@@ -13,6 +13,9 @@ Route::middleware(['guest'])->group(function () {
     Route::post('availability', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getCourseAvailability'])
         ->name('api.availability.get');
 
+    Route::post('availability/hours', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getAvailableHours'])
+        ->name('api.hours.get');
+
     Route::post('translate', [App\Http\Controllers\API\TranslationAPIController::class, 'translate'])
         ->name('api.translation.get');
 
@@ -75,6 +78,7 @@ Route::middleware(['guest'])->group(function () {
             'update' => 'api.courses.update',
             'destroy' => 'api.courses.destroy',
         ]);
+
 
     Route::resource('course-dates', App\Http\Controllers\API\CourseDateAPIController::class)
         ->except(['create', 'edit']);
