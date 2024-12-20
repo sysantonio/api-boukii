@@ -75,6 +75,10 @@ class ClientAPIController extends AppBaseController
                 if ($request->has('school_id')) {
                     $query->whereHas('clientsSchools', function ($subQuery) use ($request) {
                         $subQuery->where('school_id', $request->get('school_id'));
+                    })->orWhereHas('main', function ($subQuery) use ($request) {
+                        $subQuery->whereHas('clientsSchools', function ($subQuery) use ($request) {
+                            $subQuery->where('school_id', $request->get('school_id'));
+                        });
                     });
                 }
             }
