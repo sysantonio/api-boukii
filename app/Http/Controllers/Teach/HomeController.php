@@ -90,6 +90,7 @@ class HomeController extends AppBaseController
             ->byMonitor($monitor->id)
             ->orderBy('hour_start');
 
+        //return $this->sendResponse($bookingQuery->get(), 'Agenda retrieved successfully');
 
         // Consulta para los MonitorNwd
         $nwdQuery = MonitorNwd::where('monitor_id', $monitor->id)
@@ -117,12 +118,7 @@ class HomeController extends AppBaseController
             })
             ->where('monitor_id', $monitor->id)
             ->where(function ($query) {
-                $query->doesntHave('bookingUsers')
-                    ->orWhereHas('bookingUsers', function ($subQuery) {
-                        $subQuery->where('status', '!=', 1)->whereHas('booking', function ($subQuery) {
-                            $subQuery->where('status', '=',  3);
-                        });
-                    });
+                $query->doesntHave('bookingUsers');
             });
 
         if($schoolId) {
