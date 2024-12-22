@@ -81,8 +81,11 @@ class MailController extends AppBaseController
 
 
         $school = $this->getSchool($request);
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        //TODO: review dates
+
+        $startDate = Carbon::parse($request->input('start_date'))->toDateString(); // "2024-12-21"
+        $endDate = Carbon::parse($request->input('end_date'))->addDay()->toDateString(); // "2024-12-22"
+
         $courseIds = $request->input('course_ids');
         $subject = $request->input('subject');
         $body = $request->input('body');
@@ -104,10 +107,15 @@ class MailController extends AppBaseController
             return $this->sendError('No dates or ids provided');
         }
 
+
+
         foreach ($courses as $course) {
             if ($sendToClients) {
                 // Buscar booking_users únicos relacionados con el curso y dentro del rango de fechas
                 $bookingUsers = BookingUser::with('booking.clientMain')
+                    ->whereHas('booking', function ($query) use ($startDate, $endDate) {
+                        $query->where('status', 1);
+                    })
                     ->whereIn('booking_id', function ($query) use ($course,
                     $startDate, $endDate) {
                     $query->select('id')
@@ -115,7 +123,6 @@ class MailController extends AppBaseController
                         ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate]);
                 })->distinct('booking.client_main_id')->get();
-
                 foreach ($bookingUsers as $bookingUser) {
                     $client = Client::find($bookingUser->booking->client_main_id);
                     if ($client && !in_array($client->email, $uniqueEmails)) {
