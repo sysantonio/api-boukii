@@ -302,8 +302,8 @@ class BookingAPIController extends AppBaseController
 
     private function applyStatusFilter($query, Request $request): void
     {
-        if($request->has('status')) {
-            $query->where('status', '=', $request->get('status'));
+        if($request->has('status') && !$request->has('all')) {
+            $query->where('status',  $request->get('status'));
         } elseif (!$request->has('all')) {
             $query->where('status', '!=', 2);
         }
@@ -351,7 +351,7 @@ class BookingAPIController extends AppBaseController
 
     private function applyFinishedFilter($query, Request $request): void
     {
-        if ($request->has('finished') && !$request->has('all')) {
+        if ($request->has('finished') && !$request->has('all') && !$request->has('status')) {
             $today = now()->format('Y-m-d H:i:s');
             $isFinished = $request->get('finished') == 1;
 

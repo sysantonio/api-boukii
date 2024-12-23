@@ -68,7 +68,7 @@ class CourseController extends AppBaseController
     {
         $school = $this->getSchool($request);
         $courses = $this->courseRepository->all(
-            searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
+            searchArray: $request->except(['skip', 'limit', 'search', 'exclude', 'active', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with']),
             search: $request->get('search'),
             skip: $request->get('skip'),
             limit: $request->get('limit'),
@@ -95,15 +95,15 @@ class CourseController extends AppBaseController
 
                 $query->when($request->has('finished') && $request->finished, function ($query) {
                     $today = now()->format('Y-m-d');
-                    $query->whereDoesntHave('courseDates', function ($subquery) use ($today) {
+                    $query->whereDoesntHave('courseDatesActive', function ($subquery) use ($today) {
                         $subquery->where('date', '>=', $today);
                     });
                 });
 
                 $query->when($request->has('active'), function ($query) {
                     $today = now()->format('Y-m-d');
-                    $query->whereDoesntHave('courseDates', function ($subquery) use ($today) {
-                        $subquery->where('date', '<=', $today);
+                    $query->whereHas('courseDatesActive', function ($subquery) use ($today) {
+                        $subquery->where('date', '>=', $today);
                     });
                 });
 
@@ -112,12 +112,13 @@ class CourseController extends AppBaseController
                 $endDate = $request->input('end_date');
 
                 if ($startDate && $endDate) {
-                    $query->whereHas('courseDates', function ($subquery) use ($startDate, $endDate) {
+                    $query->whereHas('courseDatesActive', function ($subquery) use ($startDate, $endDate) {
                         $subquery->whereBetween('date', [$startDate, $endDate]);
                     });
                 }
             }
         );
+
         $monitorsBySportAndDegree = $this->getGroupedMonitors($school->id);
 
         // Calcula reservas y plazas disponibles para cada curso
@@ -473,8 +474,10 @@ class CourseController extends AppBaseController
                             $modelDate = $date->date->format('Y-m-d');
 
                             if ($providedDate && $providedDate !== $modelDate) {
+                                $bookingUsers = $date->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                                    $query->where('status', '!=', 2);
+                                })->get();
 
-                                $bookingUsers = $date->bookingUsers;
                                 foreach ($bookingUsers as $bookingUser) {
                                     $clientEmail = $bookingUser->booking->clientMain->email;
                                     $bookingId = $bookingUser->booking_id;
@@ -493,6 +496,7 @@ class CourseController extends AppBaseController
                                     }
                                 }
                             }
+
                         }
                     }
 
