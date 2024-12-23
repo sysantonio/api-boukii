@@ -355,25 +355,30 @@ class BookingAPIController extends AppBaseController
             $today = now()->format('Y-m-d H:i:s');
             $isFinished = $request->get('finished') == 1;
 
-            $query->whereDoesntHave('bookingUsers', function ($subQuery) use ($today, $isFinished) {
-                $subQuery->where(function ($dateQuery) use ($today, $isFinished) {
-                    if ($isFinished) {
-                        // Filtrar reservas finalizadas
+            if (!$isFinished) {
+                // Filtrar reservas finalizadas
+                $query->whereDoesntHave('bookingUsers', function ($subQuery) use ($today) {
+                    $subQuery->whereHas('courseDateActive', function ($dateQuery) use ($today) {
+                        $dateQuery->where('date', '>=', $today)
+                            ->orWhere(function ($hourQuery) use ($today) {
+                                $hourQuery->where('date', $today)
+                                    ->where('hour_end', '>=', $today);
+                            });
+                    });
+                });
+            } else {
+                // Filtrar reservas no finalizadas
+                $query->whereHas('bookingUsers', function ($subQuery) use ($today) {
+                    $subQuery->whereHas('courseDateActive', function ($dateQuery) use ($today) {
                         $dateQuery->where('date', '<=', $today)
                             ->orWhere(function ($hourQuery) use ($today) {
                                 $hourQuery->where('date', $today)
-                                    ->where('hour_end', '<=', $today);
+                                    ->where('hour_end', '<', $today);
                             });
-                    } else {
-                        // Filtrar reservas no finalizadas
-                        $dateQuery->where('date', '>', $today)
-                            ->orWhere(function ($hourQuery) use ($today) {
-                                $hourQuery->where('date', $today)
-                                    ->where('hour_end', '>', $today);
-                            });
-                    }
+                    });
                 });
-            });
+            }
         }
     }
+
 }

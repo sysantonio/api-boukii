@@ -360,6 +360,11 @@ class BookingUser extends Model
         return $this->belongsTo(\App\Models\CourseDate::class, 'course_date_id');
     }
 
+    public function courseDateActive(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\CourseDate::class, 'course_date_id')->where('active', true);
+    }
+
     public function monitor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Monitor::class, 'monitor_id');
