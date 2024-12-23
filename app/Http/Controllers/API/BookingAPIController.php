@@ -370,11 +370,7 @@ class BookingAPIController extends AppBaseController
                 // Filtrar reservas no finalizadas
                 $query->whereHas('bookingUsers', function ($subQuery) use ($today) {
                     $subQuery->whereHas('courseDateActive', function ($dateQuery) use ($today) {
-                        $dateQuery->where('date', '<=', $today)
-                            ->orWhere(function ($hourQuery) use ($today) {
-                                $hourQuery->where('date', $today)
-                                    ->where('hour_end', '<', $today);
-                            });
+                        $dateQuery->where('date', '>=', $today);
                     });
                 });
             }
