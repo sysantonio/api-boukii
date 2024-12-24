@@ -93,6 +93,8 @@ class BookingController extends SlugAuthController
         ]);
 
         // Crear BookingUser para cada detalle
+        $groupId = 1; // Inicia el contador de grupo
+
         foreach ($data['cart'] as $cartItem) {
             foreach ($cartItem['details'] as $detail) {
                 $bookingUser = new BookingUser([
@@ -108,14 +110,13 @@ class BookingController extends SlugAuthController
                     'date' => $detail['date'],
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
+                    'group_id' => $groupId, // Asignar el valor del grupo
                     'deleted_at' => now(),
-                    // Puedes añadir campos adicionales según necesites
                 ]);
 
                 $bookingUser->save();
 
-
-                if(isset($detail['extra'])){
+                if (isset($detail['extra'])) {
                     $tva = isset($detail['extra']['tva']) ? $detail['extra']['tva'] : 0;
                     $price = isset($detail['extra']['price']) ? $detail['extra']['price'] : 0;
 
@@ -126,18 +127,20 @@ class BookingController extends SlugAuthController
                         'course_id' => $detail['course_id'],
                         'name' => $detail['extra']['id'],
                         'description' => $detail['extra']['id'],
-                        'price' => $priceWithTva
+                        'price' => $priceWithTva,
                     ]);
 
                     $courseExtra->save();
 
                     BookingUserExtra::create([
                         'booking_user_id' => $bookingUser->id,
-                        'course_extra_id' => $courseExtra->id
+                        'course_extra_id' => $courseExtra->id,
                     ]);
                 }
             }
+            $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`
         }
+
 
         // Actualizar VouchersLog y el cupón si es necesario
         if ($data['voucherAmount'] > 0) {
