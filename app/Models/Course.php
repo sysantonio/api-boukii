@@ -675,10 +675,10 @@ class Course extends Model
                                                 ->where('age_max', '>=', $clientAge);
                                         } else {
                                             // Filtrado por min_age y max_age si clientId no está disponible
-                                            if ($min_age !== null) {
+                                            if ($max_age !== null) {
                                                 $groupQuery->where('age_min', '<=', $max_age);
                                             }
-                                            if ($max_age !== null) {
+                                            if ($min_age !== null) {
                                                 $groupQuery->where('age_max', '>=', $min_age);
                                             }
                                         }
@@ -730,16 +730,31 @@ class Course extends Model
                 ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
                 ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
                     $subQuery->where('date', '>=', $startDate)
-                        ->where('date', '<=', $endDate)
-                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
-                        WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
-                        AND booking_users.deleted_at IS NULL)');
+                        ->where('date', '<=', $endDate);
+                    //TODO: Review availability
+//                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
+//                        WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
+//                        AND booking_users.deleted_at IS NULL)');
 
                 });
 
             if ($clientAge) {
                 $query->where('age_min', '<=', $clientAge)
                     ->where('age_max', '>=', $clientAge);
+            }
+
+            if ($clientAge) {
+                // Filtrado por la edad del cliente si está disponible
+                $query->where('age_min', '<=', $clientAge)
+                    ->where('age_max', '>=', $clientAge);
+            } else {
+                // Filtrado por min_age y max_age si clientId no está disponible
+                if ($max_age !== null) {
+                    $query->where('age_min', '<=', $max_age);
+                }
+                if ($min_age !== null) {
+                    $query->where('age_max', '>=', $min_age);
+                }
             }
 
         }
