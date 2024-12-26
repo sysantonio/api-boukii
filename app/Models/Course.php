@@ -736,18 +736,10 @@ class Course extends Model
                         AND booking_users.deleted_at IS NULL)');
 
                 });
-            if ($clientAge !== null) {
-                // Filtrado por la edad del cliente si está disponible
+
+            if ($clientAge) {
                 $query->where('age_min', '<=', $clientAge)
                     ->where('age_max', '>=', $clientAge);
-            } else {
-                // Filtrado por min_age y max_age si clientId no está disponible
-                if ($min_age !== null) {
-                    $query->where('age_min', '<=', $max_age);
-                }
-                if ($max_age !== null) {
-                    $query->where('age_max', '>=', $min_age);
-                }
             }
 
         }
