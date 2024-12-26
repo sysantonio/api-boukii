@@ -441,7 +441,17 @@ class Booking extends Model
             $status = $partialCancellation ? 'partial_cancel' : 'active';
 
             // Verificamos si todas las fechas han pasado
-            $allDatesPassed = $this->bookingUsers()->where('date', '>', now())->exists();
+            $now = now();
+            $allDatesPassed = $this->bookingUsers()
+                ->where(function ($query) use ($now) {
+                    $query->where('date', '>', $now->toDateString()) // Fecha futura
+                    ->orWhere(function ($subQuery) use ($now) {
+                        $subQuery->where('date', '=', $now->toDateString()) // Mismo día
+                        ->where('hour_end', '>', $now->format('H:i:s')); // Hora final posterior
+                    });
+                })
+                ->exists();
+
             if (!$allDatesPassed && !$partialCancellation) {
                 $status = 'finished';
             }
