@@ -23,6 +23,7 @@ trait Utils
         $totalBookingsPlaces = 0;
         $totalBookingsHours = 0;
         $totalHours = 0;
+        $totalHoursAvailable = 0;
 
         // Si el curso es de tipo 2, buscamos el número de monitores para el deporte del curso
         if ($course->course_type == 2 && isset($monitorsGrouped[$course->sport_id])) {
@@ -39,43 +40,50 @@ trait Utils
 
         // Cursos de tipo 1
         if ($course->course_type == 1) {
-            if($course->is_flexible) {
+            if ($course->is_flexible) {
                 foreach ($dates as $courseDate) {
                     foreach ($courseDate->courseSubgroups as $subgroup) {
-
                         $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
                         $totalBookingsPlaces += $bookings->count();
 
-                        $hoursTotalDate =  $this->convertSecondsToHours(
+                        $hoursTotalDate = $this->convertSecondsToHours(
                                 $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
                             ) * $subgroup->max_participants;
-                        $hoursTotalBooked =  $this->convertSecondsToHours(
+                        $hoursTotalBooked = $this->convertSecondsToHours(
                                 $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
                             ) * $totalBookingsPlaces;
                         $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
                         $totalAvailableHours += $totalHoursAvailable;
                         $totalPlaces += $subgroup->max_participants;
                         $totalAvailablePlaces += max(0, $subgroup->max_participants - $totalBookingsPlaces);
-
                     }
-
                 }
             } else {
-                $bookings = $course->bookingUsers()->where('status', 1)->get();
-                $totalBookingsPlaces += $bookings->count();
+                // Verificar si $dates no está vacío
+                if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
+                    $bookings = $course->bookingUsers()->where('status', 1)->get();
+                    $totalBookingsPlaces += $bookings->count();
 
-                $hoursTotalDate =  $this->convertSecondsToHours(
-                        $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
-                    ) * $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
-                $hoursTotalBooked =  $this->convertSecondsToHours(
-                        $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
-                    ) * $totalBookingsPlaces;
-                $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
-                $totalAvailableHours += $totalHoursAvailable;
-                $totalHours += $hoursTotalDate;
-                $totalPlaces += $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
-                $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
+                    $hoursTotalDate = $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
+                        ) * $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
+                    $hoursTotalBooked = $this->convertSecondsToHours(
+                            $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
+                        ) * $totalBookingsPlaces;
+                    $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
+                    $totalAvailableHours += $totalHoursAvailable;
+                    $totalHours += $hoursTotalDate;
+                    $totalPlaces += $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
+                    $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
+                } else {
+                    // Manejo de error: $dates está vacío o no tiene subgrupos
+                    // Puedes registrar un log, lanzar una excepción o asignar valores por defecto.
 
+                    $totalHours += 0;
+                    $totalPlaces += 0;
+                    $totalAvailablePlaces += 0;
+                    $totalHoursAvailable += 0;
+                }
             }
 
 
