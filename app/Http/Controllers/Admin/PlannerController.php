@@ -131,7 +131,9 @@ class PlannerController extends AppBaseController
         // Consulta para las reservas (BookingUser)
         $bookingQuery = BookingUser::with(['booking.user', 'course.courseDates', 'client.sports',
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals'])
-            ->whereHas('booking')
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
             ->where('school_id', $schoolId)
             ->where('course_subgroup_id', null)
             ->where('status', 1)

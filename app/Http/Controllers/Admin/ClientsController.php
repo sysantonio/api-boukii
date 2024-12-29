@@ -325,6 +325,7 @@ class ClientsController extends AppBaseController
     {
         // Busca todos los BookingUser con el course_id proporcionado
         $bookingUsers = BookingUser::where('course_id', $id)
+            ->whereHas('booking')
             ->with(['client', 'degree', 'course', 'monitor'])
             ->get();
 

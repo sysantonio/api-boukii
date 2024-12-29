@@ -107,10 +107,16 @@ trait Utils
 
                 $bookingUsers = BookingUser::whereIn('monitor_id',
                     collect($monitorsGrouped[$course->sport_id])->pluck('id'))
-                    ->where('date', $courseDate->date)->where('course_id', $course->id)->get();
+                    ->where('date', $courseDate->date)->where('course_id', $course->id) ->whereHas('booking', function ($query) {
+                        $query->where('status', '!=', 2); // La Booking no debe tener status 2
+                    })->where('status', 1)
+                    ->get();
 
                 $bookingUsersOtherCourses = BookingUser::whereIn('monitor_id',
                     collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    ->whereHas('booking', function ($query) {
+                        $query->where('status', '!=', 2); // La Booking no debe tener status 2
+                    })->where('status', 1)
                     ->where('date', $courseDate->date)->where('course_id', '!=', $course->id)->get();
 
                 $season = Season::whereDate('start_date', '<=', $courseDate->date) // Fecha de inicio menor o igual a hoy
@@ -290,6 +296,9 @@ trait Utils
             ->whereHas('course', function ($query) use($courseId) {
                 $query->where('course_id', '!=', $courseId);
             })
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })->where('status', 1)
             ->where('monitor_id', '!=', null)
             ->whereBetween('date', [$startDate, $endDate])
             ->get();

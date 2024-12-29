@@ -109,6 +109,10 @@ class StatisticsController extends AppBaseController
 
         // Obtener los monitores ocupados por las reservas
         $bookingUsersCollective = BookingUser::where('school_id', $schoolId)
+            ->where('status', 1)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             }, function ($query) {
@@ -282,6 +286,10 @@ class StatisticsController extends AppBaseController
     private function calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId = null, $sportId = null)
     {
         $bookingUsersQuery = BookingUser::with('course.sport')
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->where('status', 1)
             ->where('school_id', $schoolId)
             ->whereBetween('date', [$startDate, $endDate]);
 

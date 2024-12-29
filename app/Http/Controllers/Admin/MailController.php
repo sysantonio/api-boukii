@@ -113,8 +113,9 @@ class MailController extends AppBaseController
             if ($sendToClients) {
                 // Buscar booking_users únicos relacionados con el curso y dentro del rango de fechas
                 $bookingUsers = BookingUser::with('booking.clientMain')
-                    ->whereHas('booking', function ($query) use ($startDate, $endDate) {
-                        $query->where('status', 1);
+                    ->where('status', 1)
+                    ->whereHas('booking', function ($query) {
+                        $query->where('status', '!=', 2); // La Booking no debe tener status 2
                     })
                     ->whereIn('booking_id', function ($query) use ($course,
                     $startDate, $endDate) {
@@ -164,7 +165,12 @@ class MailController extends AppBaseController
                         ->from('bookings')
                         ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate]);
-                })->whereNotNull('monitor_id')->distinct('monitor_id')->get();
+                })->whereNotNull('monitor_id')
+                    ->where('status', 1)
+                    ->whereHas('booking', function ($query) {
+                        $query->where('status', '!=', 2); // La Booking no debe tener status 2
+                    })
+                    ->distinct('monitor_id')->get();
 
                 foreach ($monitorBookingUsers as $monitorUser) {
                     $monitor = Monitor::find($monitorUser->monitor_id);

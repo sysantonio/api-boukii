@@ -160,6 +160,10 @@ class ClientsController extends AppBaseController
         $dateEnd = $request->input('date_end');
 
         $bookingQuery = BookingUser::with('booking', 'course.courseDates')
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->where('status', 1)
             ->where('client_id', $id);
 
         if ($dateStart && $dateEnd) {

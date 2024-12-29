@@ -124,6 +124,8 @@ class MonitorController extends SlugAuthController
                 $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
                     ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime)
                     ->where('status', 1));
+            })->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
             })
             ->pluck('monitor_id')
             ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)

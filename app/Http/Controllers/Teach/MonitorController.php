@@ -142,6 +142,10 @@ class MonitorController extends AppBaseController
 
 
         $bookingQuery = BookingUser::with('booking', 'course.courseDates', 'client')
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->where('status', 1)
             ->where('school_id', $monitor->active_school)
             ->byMonitor($monitor->id)
             ->where('date', '<=', Carbon::today());

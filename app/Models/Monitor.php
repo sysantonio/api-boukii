@@ -490,7 +490,9 @@ class Monitor extends Model
                         ->whereTime('hour_end', '>', $startTime);
                 }
 
-            })->where('status', 1)->whereHas('booking')
+            })->where('status', 1) ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
             ->exists();
 
         $hasFullDayNwd = MonitorNwd::where('monitor_id', $monitorId)
