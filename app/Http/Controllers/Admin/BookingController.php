@@ -18,7 +18,6 @@ use App\Models\Client;
 use App\Models\CourseDate;
 use App\Models\CourseExtra;
 use App\Models\CourseSubgroup;
-use App\Models\Monitor;
 use App\Models\Payment;
 use App\Models\Voucher;
 use App\Models\VouchersLog;
@@ -568,18 +567,9 @@ class BookingController extends AppBaseController
     public function checkClientBookingOverlap(Request $request): JsonResponse
     {
         $overlapBookingUsers = [];
-        $overlapBookingUsersMonitor = [];
         $bookingUserIds = $request->input('bookingUserIds', []);
 
         foreach ($request->bookingUsers as $bookingUser) {
-            $monitorId = $bookingUser['monitor_id'];
-            if($monitorId !== null) {
-
-                if (Monitor::isMonitorBusy($monitorId, $bookingUser['date'], $bookingUser['hour_start'],
-                    $bookingUser['hour_end'], $bookingUser['id'])) {
-                    $overlapBookingUsersMonitor[] = $bookingUser;
-                }
-            }
             if (BookingUser::hasOverlappingBookings($bookingUser, $bookingUserIds)) {
                 $overlapBookingUsers[] = $bookingUser;
             }
@@ -587,10 +577,6 @@ class BookingController extends AppBaseController
 
         if (count($overlapBookingUsers)) {
             return $this->sendResponse($overlapBookingUsers, 'Client has overlapping bookings', 409);
-        }
-
-        if (count($overlapBookingUsersMonitor)) {
-            return $this->sendResponse($overlapBookingUsersMonitor, 'Monitor has overlapping', 409);
         }
 
         return $this->sendResponse([], 'Client has no overlapping bookings');
