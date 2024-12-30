@@ -175,6 +175,8 @@ class AvailabilityAPIController extends AppBaseController
                 $query->whereHas('courses', function ($subQuery) use ($courseId) {
                     $subQuery->where('course_id', $courseId);
                 });
+            })->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
             })
             ->pluck('hour_start')
             ->toArray();
@@ -197,6 +199,9 @@ class AvailabilityAPIController extends AppBaseController
         $overlappingBookings = BookingUser::where('client_id', $utilizer['client_id'])
             ->where('date', $date)
             ->where('status', 1)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
             ->get();
 
         $busyHours = [];
@@ -248,6 +253,10 @@ class AvailabilityAPIController extends AppBaseController
             ->whereDate('date', $courseDate->date)
             ->whereTime('hour_start', '<=', $courseDate->hour_end)
             ->whereTime('hour_end', '>=', $courseDate->hour_start)
+            ->where('status', 1)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
             ->exists();
 
         if ($isBusyWithBooking) {

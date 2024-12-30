@@ -323,7 +323,7 @@ class PlannerController extends AppBaseController
             if ($booking->course->course_type == 2 || $booking->course->course_type == 3) {
                 // Si tiene group_id, agrúpalo por course_id, course_date_id y group_id
                 if ($booking->group_id) {
-                    return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->group_id;
+                    return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->booking_id . '-' . $booking->group_id;
                 }
                 // Si no tiene group_id, agrupa por course_id y course_date_id
                 return $booking->course_id . '-' . $booking->course_date_id . '-' . $booking->booking_id;
