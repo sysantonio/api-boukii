@@ -215,11 +215,12 @@ class BookingController extends SlugAuthController
                 // Obtener el degree_id más alto solo una vez
                 if ($highestDegreeId === 0) {
                     $sportId = $bookingUser['course']['sport_id'];
-                    $clientDegrees = $bookingUser['client']['sports'];
-
-                    foreach ($clientDegrees as $clientDegree) {
-                        if ($clientDegree['pivot']['sport_id'] == $sportId && $clientDegree['pivot']['degree_id'] > $highestDegreeId) {
-                            $highestDegreeId = $clientDegree['pivot']['degree_id'];
+                    if (isset($bookingUser['client']['sports']) && is_array($bookingUser['client']['sports'])) {
+                        $clientDegrees = $bookingUser['client']['sports'];
+                        foreach ($clientDegrees as $clientDegree) {
+                            if ($clientDegree['pivot']['sport_id'] == $sportId && $clientDegree['pivot']['degree_id'] > $highestDegreeId) {
+                                $highestDegreeId = $clientDegree['pivot']['degree_id'];
+                            }
                         }
                     }
                 }
