@@ -28,6 +28,9 @@ Route::middleware(['bookingPage'])->group(function () {
     Route::get('courses/{id}', [\App\Http\Controllers\BookingPage\CourseController::class, 'show'])
         ->name('api.bookings.courses.show');
 
+    Route::post('courses/availability/{id}', [\App\Http\Controllers\BookingPage\CourseController::class, 'getDurationsAvailableByCourseDateAndStart'])
+        ->name('api.bookings.courses.availability');
+
     /** Client **/
     Route::get('client/{id}/voucher/{code}',
         [\App\Http\Controllers\BookingPage\ClientController::class, 'getVoucherByCode'])

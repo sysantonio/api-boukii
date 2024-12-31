@@ -4,7 +4,11 @@ namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
 use App\Models\Course;
+use App\Models\CourseDate;
 use App\Models\Degree;
+use App\Models\Monitor;
+use App\Models\MonitorsSchool;
+use App\Models\Season;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -282,6 +286,182 @@ class CourseController extends SlugAuthController
         return $this->sendResponse($course,
             'Course retrieved successfully');
     }
+
+    public function getDurationsAvailableByCourseDateAndStart($id, Request $request): JsonResponse
+    {
+        $courseDate = CourseDate::with('course')->find($id);
+
+        if (!$courseDate) {
+            return $this->sendError('Invalid course date ID.');
+        }
+
+        $course = $courseDate->course;
+        $startTime = $request->hour_start;
+        $endTime = $courseDate->hour_end; // Hora máxima del curso
+        $availableDurations = [];
+
+        if (!$startTime || !strtotime($startTime)) {
+            return $this->sendError('Invalid start time.');
+        }
+
+        // Verificar si es un día festivo
+        if ($this->isHoliday($this->school->id, $courseDate->date)) {
+            return $this->sendResponse([], 'No availability: holiday.');
+        }
+
+        // Buscar monitores activos para la escuela y el rango de fechas
+        $monitors = $this->getActiveMonitorsForSchool($this->school->id, $courseDate->date, $startTime, $endTime);
+
+        if ($monitors->isEmpty()) {
+            return $this->sendResponse([], 'No monitors available.');
+        }
+
+        // Cursos con duración fija
+        if (!$course->is_flexible) {
+            $durationInSeconds = $this->convertDurationToSeconds($course->duration);
+            $endTimeForFixed = $this->addSecondsToTime($startTime, $durationInSeconds);
+
+            // Comprobar si la hora final está dentro de la hora máxima
+            if (strtotime($endTimeForFixed) <= strtotime($endTime)) {
+                if ($this->areMonitorsAvailable($monitors, $courseDate->date, $startTime, $endTimeForFixed)) {
+                    $availableDurations[] = $this->convertSecondsToHourFormat($durationInSeconds);
+                }
+            }
+        } else {
+            // Cursos flexibles
+            foreach ($course->price_range as $price) {
+                foreach ($price as $participants => $priceValue) {
+                    if (is_numeric($priceValue)) {
+                        $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
+                        $endTimeForFlexible = $this->addSecondsToTime($startTime, $intervalInSeconds);
+
+                        // Comprobar si la hora final está dentro de la hora máxima
+                        if (strtotime($endTimeForFlexible) <= strtotime($endTime)) {
+                            if ($this->areMonitorsAvailable($monitors, $courseDate->date, $startTime, $endTimeForFlexible)) {
+                                $availableDurations[] = $this->convertSecondsToHourFormat($intervalInSeconds);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $uniqueDurations = array_unique($availableDurations);
+
+        if (empty($uniqueDurations)) {
+            return $this->sendResponse([], 'No availability.');
+        }
+
+        return $this->sendResponse($uniqueDurations, 'Available durations fetched successfully.');
+    }
+
+// Método auxiliar para comprobar días festivos
+    private function isHoliday($schoolId, $date): bool
+    {
+        $season = Season::where('school_id', $schoolId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->first();
+
+
+
+        if (!$season || empty($season->vacation_days)) {
+            return false;
+        }
+
+        $vacationDays = json_decode($season->vacation_days, true);
+
+        $formattedDate = $date instanceof Carbon ? $date->format('Y-m-d') : (string)$date;
+
+        return in_array($formattedDate, $vacationDays, true);
+    }
+
+
+// Método auxiliar para encontrar monitores activos
+
+    private function getActiveMonitorsForSchool($schoolId, $date, $startTime, $endTime)
+    {
+        $monitorSchools = MonitorsSchool::with([
+            'monitor.sports' => function ($query) use ($schoolId) {
+                $query->where('monitor_sports_degrees.school_id', $schoolId);
+            },
+            'monitor.courseSubgroups' => function ($query) use ($date) {
+                $query->whereHas('courseDate', function ($query) use ($date) {
+                    $query->whereDate('date', $date);
+                });
+            }
+        ])
+            ->where('school_id', $schoolId)
+            ->where('active_school', 1)
+            ->get();
+
+        return $monitorSchools->pluck('monitor');
+    }
+
+// Métodos auxiliares para validaciones
+
+    private function areMonitorsAvailable($monitors, $date, $startTime, $endTime): bool
+    {
+        foreach ($monitors as $monitor) {
+            if (!Monitor::isMonitorBusy($monitor->id, $date, $startTime, $endTime)) {
+                return true; // Hay al menos un monitor disponible
+            }
+        }
+        return false; // Ningún monitor está disponible en el rango
+    }
+
+    private function addSecondsToTime($time, $seconds)
+    {
+        $time = strtotime($time);
+        return date('H:i:s', $time + $seconds);
+    }
+
+    private function convertDurationToSeconds($duration)
+    {
+        $parts = explode(' ', $duration);
+        $hours = 0;
+        $minutes = 0;
+
+        foreach ($parts as $part) {
+            if (str_contains($part, 'h')) {
+                $hours = (int) str_replace('h', '', $part);
+            } elseif (str_contains($part, 'min')) {
+                $minutes = (int) str_replace('min', '', $part);
+            }
+        }
+
+        return ($hours * 3600) + ($minutes * 60);
+    }
+
+    private function convertDurationRangeToSeconds($duration)
+    {
+        return $this->convertDurationToSeconds($duration);
+    }
+
+    private function convertSecondsToDuration($seconds)
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = ($seconds % 3600) / 60;
+
+        $result = [];
+        if ($hours > 0) {
+            $result[] = $hours . 'h';
+        }
+        if ($minutes > 0) {
+            $result[] = $minutes . 'min';
+        }
+
+        return implode(' ', $result);
+    }
+
+    private function convertSecondsToHourFormat($seconds)
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = ($seconds % 3600) / 60;
+
+        return sprintf('%02d:%02d', $hours, $minutes);
+    }
+
 
 
 }
