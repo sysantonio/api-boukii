@@ -97,6 +97,16 @@ class BookingController extends SlugAuthController
 
         foreach ($data['cart'] as $cartItem) {
             foreach ($cartItem['details'] as $detail) {
+
+                if(array_key_exists('course_subgroup_id', $detail)) {
+                    $courseSubgroup = CourseSubgroup::find($detail['course_subgroup_id']);
+                    $monitorId = $courseSubgroup->monitor_id;
+                } else {
+                    $monitorId = array_key_exists('monitor_id', $detail) ?
+                        $detail['monitor_id'] : null;
+
+                }
+
                 $bookingUser = new BookingUser([
                     'school_id' => $detail['school_id'],
                     'booking_id' => $booking->id,
@@ -107,7 +117,7 @@ class BookingController extends SlugAuthController
                     'course_date_id' => $detail['course_date_id'],
                     'course_group_id' => $detail['course_group_id'],
                     'course_subgroup_id' => $detail['course_subgroup_id'],
-                    'monitor_id' => $detail['monitor_id'],
+                    'monitor_id' =>  $monitorId,
                     'date' => $detail['date'],
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
