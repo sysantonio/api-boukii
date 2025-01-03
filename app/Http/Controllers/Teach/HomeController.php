@@ -84,6 +84,7 @@ class HomeController extends AppBaseController
             'client.evaluations.degree', 'client.evaluations.evaluationFulfilledGoals')
             ->where('school_id', $monitor->active_school)
             ->where('status', 1)
+            ->where('accepted', 1)
             ->whereHas('booking', function ($subQuery) {
                 $subQuery->where('status',  1);
             })

@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
+use App\Models\BookingUser;
+use App\Models\Client;
 use App\Models\Course;
 use App\Models\CourseDate;
+use App\Models\CourseSubgroup;
 use App\Models\Degree;
 use App\Models\Monitor;
+use App\Models\MonitorNwd;
+use App\Models\MonitorSportsDegree;
 use App\Models\MonitorsSchool;
 use App\Models\Season;
 use Carbon\Carbon;
@@ -298,61 +303,229 @@ class CourseController extends SlugAuthController
         $course = $courseDate->course;
         $startTime = $request->hour_start;
         $endTime = $courseDate->hour_end; // Hora máxima del curso
-        $availableDurations = [];
 
         if (!$startTime || !strtotime($startTime)) {
             return $this->sendError('Invalid start time.');
         }
 
         // Verificar si es un día festivo
-        if ($this->isHoliday($this->school->id, $courseDate->date)) {
+        if ($this->isHoliday($courseDate->school_id, $courseDate->date)) {
             return $this->sendResponse([], 'No availability: holiday.');
         }
 
-        // Buscar monitores activos para la escuela y el rango de fechas
-        $monitors = $this->getActiveMonitorsForSchool($this->school->id, $courseDate->date, $startTime, $endTime);
-
+        // Obtener monitores activos
+        $monitors = $this->getActiveMonitorsForSchool($this->school->id, $courseDate->date);
         if ($monitors->isEmpty()) {
             return $this->sendResponse([], 'No monitors available.');
         }
 
-        // Cursos con duración fija
+        // Procesar duraciones
+        $durationsWithMonitors = $this->processDurations($course, $courseDate, $startTime, $endTime, $request, $monitors);
+
+        if (empty($durationsWithMonitors)) {
+            return $this->sendResponse([], 'No availability.');
+        }
+
+        // Eliminar duplicados basados en la duración
+        $uniqueDurationsWithMonitors = $this->removeDuplicateDurations($durationsWithMonitors);
+
+        return $this->sendResponse($uniqueDurationsWithMonitors, 'Available durations and monitors fetched successfully.');
+    }
+
+    private function removeDuplicateDurations(array $durationsWithMonitors): array
+    {
+        $unique = [];
+        foreach ($durationsWithMonitors as $item) {
+            $unique[$item['duration']] = $item; // Utiliza la duración como clave
+        }
+        return array_values($unique); // Devuelve los valores únicos
+    }
+
+    private function processDurations($course, $courseDate, $startTime, $endTime, Request $request, $monitors): array
+    {
+        $durationsWithMonitors = [];
+
         if (!$course->is_flexible) {
-            $durationInSeconds = $this->convertDurationToSeconds($course->duration);
-            $endTimeForFixed = $this->addSecondsToTime($startTime, $durationInSeconds);
-
-            // Comprobar si la hora final está dentro de la hora máxima
-            if (strtotime($endTimeForFixed) <= strtotime($endTime)) {
-                if ($this->areMonitorsAvailable($monitors, $courseDate->date, $startTime, $endTimeForFixed)) {
-                    $availableDurations[] = $this->convertSecondsToHourFormat($durationInSeconds);
-                }
-            }
+            // Procesar duración fija
+            $durationsWithMonitors = array_merge($durationsWithMonitors, $this->processFixedDuration($course, $courseDate, $startTime, $endTime, $request, $monitors));
         } else {
-            // Cursos flexibles
-            foreach ($course->price_range as $price) {
-                foreach ($price as $participants => $priceValue) {
-                    if (is_numeric($priceValue)) {
-                        $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
-                        $endTimeForFlexible = $this->addSecondsToTime($startTime, $intervalInSeconds);
+            // Procesar duración flexible
+            $durationsWithMonitors = array_merge($durationsWithMonitors, $this->processFlexibleDurations($course, $courseDate, $startTime, $endTime, $request, $monitors));
+        }
 
-                        // Comprobar si la hora final está dentro de la hora máxima
-                        if (strtotime($endTimeForFlexible) <= strtotime($endTime)) {
-                            if ($this->areMonitorsAvailable($monitors, $courseDate->date, $startTime, $endTimeForFlexible)) {
-                                $availableDurations[] = $this->convertSecondsToHourFormat($intervalInSeconds);
-                            }
+        return $durationsWithMonitors;
+    }
+
+    private function processFixedDuration($course, $courseDate, $startTime, $endTime, Request $request, $monitors): array
+    {
+        $durationInSeconds = $this->convertDurationToSeconds($course->duration);
+        $endTimeForFixed = $this->addSecondsToTime($startTime, $durationInSeconds);
+
+        if (strtotime($endTimeForFixed) <= strtotime($endTime)) {
+            $monitorAvailabilityRequest = $this->buildMonitorAvailabilityRequest($courseDate, $startTime, $endTimeForFixed, $request);
+            $availableMonitors = $this->getAvailableMonitorsForTimeRange($this->getMonitorsAvailable($monitorAvailabilityRequest), $courseDate->date, $startTime, $endTimeForFixed);
+
+            if (!empty($availableMonitors)) {
+                return [[
+                    'duration' => $this->convertSecondsToHourFormat($durationInSeconds),
+                    'monitors' => $availableMonitors,
+                ]];
+            }
+        }
+
+        return [];
+    }
+
+    private function processFlexibleDurations($course, $courseDate, $startTime, $endTime, Request $request, $monitors): array
+    {
+        $durationsWithMonitors = [];
+
+        foreach ($course->price_range as $price) {
+            foreach ($price as $participants => $priceValue) {
+                if (is_numeric($priceValue)) {
+                    $intervalInSeconds = $this->convertDurationRangeToSeconds($price['intervalo']);
+                    $endTimeForFlexible = $this->addSecondsToTime($startTime, $intervalInSeconds);
+
+                    if (strtotime($endTimeForFlexible) <= strtotime($endTime)) {
+                        $monitorAvailabilityRequest = $this->buildMonitorAvailabilityRequest($courseDate, $startTime, $endTimeForFlexible, $request);
+                        $availableMonitors = $this->getAvailableMonitorsForTimeRange($this->getMonitorsAvailable($monitorAvailabilityRequest), $courseDate->date, $startTime, $endTimeForFlexible);
+
+                        if (!empty($availableMonitors)) {
+                            $durationsWithMonitors[] = [
+                                'duration' => $this->convertSecondsToHourFormat($intervalInSeconds),
+                                'monitors' => $availableMonitors,
+                            ];
                         }
                     }
                 }
             }
         }
 
-        $uniqueDurations = array_unique($availableDurations);
+        return $durationsWithMonitors;
+    }
 
-        if (empty($uniqueDurations)) {
-            return $this->sendResponse([], 'No availability.');
+    private function buildMonitorAvailabilityRequest($courseDate, $startTime, $endTime, Request $request): Request
+    {
+        return new Request([
+            'date' => $courseDate->date,
+            'startTime' => $startTime,
+            'endTime' => $endTime,
+            'clientIds' => $request->clientIds ?? [],
+            'sportId' => $request->bookingUsers[0]['course']['sport_id'] ?? null,
+            'minimumDegreeId' => $request->bookingUsers[0]['minimumDegreeId'] ?? null,
+        ]);
+    }
+
+
+    public function getMonitorsAvailable(Request $request): array
+    {
+        $school = $this->school;
+
+        $isAnyAdultClient = false;
+        $clientLanguages = [];
+
+        if ($request->has('clientIds') && is_array($request->clientIds)) {
+            foreach ($request->clientIds as $clientId) {
+                $client = Client::find($clientId);
+                if ($client) {
+                    $clientAge = Carbon::parse($client->birth_date)->age;
+                    if ($clientAge >= 18) {
+                        $isAnyAdultClient = true;
+                    }
+
+                    // Agregar idiomas del cliente al array de idiomas
+                    for ($i = 1; $i <= 6; $i++) {
+                        $languageField = 'language' . $i . '_id';
+                        if (!empty($client->$languageField)) {
+                            $clientLanguages[] = $client->$languageField;
+                        }
+                    }
+                }
+            }
         }
 
-        return $this->sendResponse($uniqueDurations, 'Available durations fetched successfully.');
+        $clientLanguages = array_unique($clientLanguages);
+     //   dd($request->minimumDegreeId);
+        // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
+        $eligibleMonitors =
+            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {
+                $query->where('school_id', $school->id);
+
+                // Solo aplicar la condición de degree_order si minimumDegreeId no es null
+                if (!is_null($request->minimumDegreeId)) {
+                    $query->whereHas('degree', function ($q) use ($request) {
+                        $q->where('degree_order', '>=', $request->minimumDegreeId);
+                    });
+                }
+            })
+                ->where('sport_id', $request->sportId)
+                ->when($isAnyAdultClient, function ($query) {
+                    return $query->where('allow_adults', true);
+                })
+                ->with(['monitor' => function ($query) use ($school, $clientLanguages) {
+                    $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
+                        $subQuery->where('school_id', $school->id)
+                            ->where('active_school', 1);
+                    });
+
+                    // Filtrar monitores por idioma si clientLanguages está presente
+                    if (!empty($clientLanguages)) {
+                        $query->where(function ($query) use ($clientLanguages) {
+                            $query->orWhereIn('language1_id', $clientLanguages)
+                                ->orWhereIn('language2_id', $clientLanguages)
+                                ->orWhereIn('language3_id', $clientLanguages)
+                                ->orWhereIn('language4_id', $clientLanguages)
+                                ->orWhereIn('language5_id', $clientLanguages)
+                                ->orWhereIn('language6_id', $clientLanguages);
+                        });
+                    }
+                }])
+                ->get()
+                ->pluck('monitor');
+
+        $busyMonitors = BookingUser::whereDate('date', $request->date)
+            ->where(function ($query) use ($request) {
+                $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime))
+                    ->where('status', 1);
+            })->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->pluck('monitor_id')
+            ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
+                ->whereDate('end_date', '>=', $request->date)
+                ->where(function ($query) use ($request) {
+                    // Aquí incluimos la lógica para verificar si es un día entero
+                    $query->where('full_day', true)
+                        ->orWhere(function ($timeQuery) use ($request) {
+                            $timeQuery->whereTime('start_time', '<',
+                                Carbon::createFromFormat('H:i', $request->endTime))
+                                ->whereTime('end_time', '>', Carbon::createFromFormat('H:i', $request->startTime));
+                        });
+                })
+                ->pluck('monitor_id'))
+            ->merge(CourseSubgroup::whereHas('courseDate', function ($query) use ($request) {
+                $query->whereDate('date', $request->date)
+                    ->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
+                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime));
+            })
+                ->pluck('monitor_id'))
+            ->unique();
+
+        // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
+        $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);
+
+        // Eliminar los elementos nulos
+        $availableMonitors = array_filter($availableMonitors->toArray());
+
+
+        // Reindexar el array para eliminar las claves
+        $availableMonitors = array_values($availableMonitors);
+
+
+        // Paso 4: Devolver los monitores disponibles.
+        return $availableMonitors;
+
     }
 
 // Método auxiliar para comprobar días festivos
@@ -379,7 +552,7 @@ class CourseController extends SlugAuthController
 
 // Método auxiliar para encontrar monitores activos
 
-    private function getActiveMonitorsForSchool($schoolId, $date, $startTime, $endTime)
+    private function getActiveMonitorsForSchool($schoolId, $date)
     {
         $monitorSchools = MonitorsSchool::with([
             'monitor.sports' => function ($query) use ($schoolId) {
@@ -410,10 +583,27 @@ class CourseController extends SlugAuthController
         return false; // Ningún monitor está disponible en el rango
     }
 
+    // Método auxiliar para obtener monitores disponibles en un rango de tiempo
+    private function getAvailableMonitorsForTimeRange($monitors, $date, $startTime, $endTime): array
+    {
+        $availableMonitors = [];
+
+        foreach ($monitors as $monitor) {
+            if (!Monitor::isMonitorBusy($monitor['id'], $date, $startTime, $endTime)) {
+                $availableMonitors[] = [
+                    'id' => $monitor['id'],
+                    'name' => $monitor['first_name'] . ' ' . $monitor['last_name'],
+                ];
+            }
+        }
+
+        return $availableMonitors;
+    }
+
     private function addSecondsToTime($time, $seconds)
     {
         $time = strtotime($time);
-        return date('H:i:s', $time + $seconds);
+        return date('H:i', $time + $seconds);
     }
 
     private function convertDurationToSeconds($duration)

@@ -470,7 +470,7 @@ class PlannerController extends AppBaseController
                 $bookingUserModel = BookingUser::find($bookingUserId);
 
                 if ($bookingUserModel) {
-                    $bookingUserModel->update(['monitor_id' => null]);
+                    $bookingUserModel->update(['monitor_id' => null, 'accepted' => true]);
                 }
 
                 $courseSubgroupId = $bookingUserModel['course_subgroup_id'];
@@ -516,7 +516,7 @@ class PlannerController extends AppBaseController
             $courseSubgroupId = $bookingUserModel['course_subgroup_id'];
 
             if ($bookingUserModel) {
-                $bookingUserModel->update(['monitor_id' => $monitorId]);
+                $bookingUserModel->update(['monitor_id' => $monitorId, 'accepted' => true]);
             }
 
             // Si el bookingUser tiene un course_subgroup_id, actualizar el monitor_id del subgrupo

@@ -111,6 +111,7 @@ class BookingController extends SlugAuthController
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
                     'group_id' => $groupId, // Asignar el valor del grupo
+                    'accepted' => array_key_exists('course_subgroup_id', $detail) && $detail['course_subgroup_id'], // Asignar el valor del grupo
                     'deleted_at' => now(),
                 ]);
 
