@@ -101,9 +101,12 @@ class BookingController extends SlugAuthController
                 if(array_key_exists('course_subgroup_id', $detail)) {
                     $courseSubgroup = CourseSubgroup::find($detail['course_subgroup_id']);
                     $monitorId = $courseSubgroup->monitor_id;
+                    $degreeId = $courseSubgroup->degree_id;
                 } else {
                     $monitorId = array_key_exists('monitor_id', $detail) ?
                         $detail['monitor_id'] : null;
+                    $degreeId = array_key_exists('degree_id', $detail) ?
+                        $detail['degree_id'] : null;
 
                 }
 
@@ -118,6 +121,7 @@ class BookingController extends SlugAuthController
                     'course_group_id' => $detail['course_group_id'],
                     'course_subgroup_id' => $detail['course_subgroup_id'],
                     'monitor_id' =>  $monitorId,
+                    'degree_id' =>  $degreeId,
                     'date' => $detail['date'],
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
