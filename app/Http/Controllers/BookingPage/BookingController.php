@@ -107,6 +107,7 @@ class BookingController extends SlugAuthController
                     'course_date_id' => $detail['course_date_id'],
                     'course_group_id' => $detail['course_group_id'],
                     'course_subgroup_id' => $detail['course_subgroup_id'],
+                    'monitor_id' => $detail['monitor_id'],
                     'date' => $detail['date'],
                     'hour_start' => $detail['hour_start'],
                     'hour_end' => $detail['hour_end'],
