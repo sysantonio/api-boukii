@@ -421,8 +421,12 @@ class PayrexxHelpers
             // Calcular el precio total del "basket"
             $totalAmount = $basketData['pending_amount'] * 100;
 
+            Log::channel('payrexx')->info('Basket, ', $basket);
+
 
             $paymentSummary = self::generatePaymentSummary($basket);
+
+            Log::channel('payrexx')->info('Summary, ', $paymentSummary);
             $ir->setAmount($totalAmount);
            // $ir->setDescription($basketData->all());
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
