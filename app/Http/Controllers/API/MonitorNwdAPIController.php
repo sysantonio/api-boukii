@@ -13,6 +13,7 @@ use App\Models\MonitorNwd;
 use App\Repositories\MonitorNwdRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class MonitorNwdController
@@ -107,15 +108,29 @@ class MonitorNwdAPIController extends AppBaseController
     {
         $input = $request->all();
 
-        // Verificar si el monitor está ocupado antes de actualizar
-        if (Monitor::isMonitorBusy($input['monitor_id'], $input['start_date'], $input['start_time'], $input['end_time'])) {
-            return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede crear el MonitorNwd', 409);
+        try {
+            // Verificar si el monitor está ocupado antes de actualizar
+            if (Monitor::isMonitorBusy($input['monitor_id'], $input['start_date'], $input['start_time'], $input['end_time'])) {
+                return $this->sendError('El monitor está ocupado durante ese tiempo y no se puede crear el MonitorNwd', 409);
+            }
+
+            $monitorNwd = $this->monitorNwdRepository->create($input);
+
+            return $this->sendResponse($monitorNwd, 'Monitor Nwd saved successfully');
+        } catch (\Exception $e) {
+            // Loguear el error
+            Log::error('Error al guardar MonitorNwd:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Retornar error al cliente
+            return $this->sendError('Ocurrió un error al guardar el Monitor Nwd. Inténtalo nuevamente.', 500);
         }
-
-        $monitorNwd = $this->monitorNwdRepository->create($input);
-
-        return $this->sendResponse($monitorNwd, 'Monitor Nwd saved successfully');
     }
+
 
     /**
      * @OA\Get(
