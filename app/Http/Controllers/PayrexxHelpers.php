@@ -360,6 +360,7 @@ class PayrexxHelpers
 
             $totalAmount = $basketData['pending_amount'] * 100;
 
+
             $paymentSummary = self::generatePaymentSummary($basketData->all());
             $ir->setAmount($totalAmount);
            // $ir->setDescription($basketData->all());
@@ -385,6 +386,8 @@ class PayrexxHelpers
                 $ir->addField('place', $buyerUser->province);
                 $ir->addField('country',  $buyerUser->country);
             }
+
+            Log::channel('payrexx')->info('Link prepared amount: '. $totalAmount);
 
             // Launch it
             $payrexx = new Payrexx(
