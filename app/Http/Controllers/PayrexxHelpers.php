@@ -426,8 +426,12 @@ class PayrexxHelpers
 
             $paymentSummary = self::generatePaymentSummary($basket);
 
-            Log::channel('payrexx')->info('Summary, ', $paymentSummary);
+
             $ir->setAmount($totalAmount);
+
+            Log::channel('payrexx')->info('Pending Amount:', ['pending_amount' => $basketData['pending_amount']]);
+            Log::channel('payrexx')->info('Total Amount in Cents:', ['total_amount' => $totalAmount]);
+            Log::channel('payrexx')->info('InvoiceRequest Amount:', ['amount' => $ir->getAmount()]);
            // $ir->setDescription($basketData->all());
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
           //  $ir->setPurpose($basketData->all());
