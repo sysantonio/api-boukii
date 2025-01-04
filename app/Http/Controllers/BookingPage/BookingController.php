@@ -178,6 +178,7 @@ class BookingController extends SlugAuthController
 
                     foreach ($bookingUsers as $bookingUser) {
                         $bookingUser->deleted_at = null;
+                        $booking->paid = true;
                         $bookingUser->save();
                     }
                 }
