@@ -23,6 +23,7 @@ use App\Models\VouchersLog;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
@@ -70,122 +71,127 @@ class BookingController extends SlugAuthController
 
     public function store(Request $request)
     {
+        // Iniciar una transacción
+        DB::beginTransaction();
 
-        //TODO: Check OVERLAP
-        $data = $request->all();
-        // Crear la reserva (Booking)
-        $booking = Booking::create([
-            'school_id' => $data['school_id'],
-            'client_main_id' => $data['client_main_id'],
-            'price_total' => $data['price_total'],
-            'has_tva' => $data['has_tva'],
-            'price_tva' => $data['price_tva'],
-            'has_boukii_care' => $data['has_boukii_care'],
-            'price_boukii_care' => $data['price_boukii_care'],
-            'has_cancellation_insurance' => $data['has_cancellation_insurance'],
-            'price_cancellation_insurance' => $data['price_cancellation_insurance'],
-            'basket' => $data['basket'],
-            'source' => $data['source'],
-            'status' => 1,
-            'currency' => 'CHF',
+        try {
+            $data = $request->all();
 
-            // ... otros campos
-        ]);
-
-        // Crear BookingUser para cada detalle
-        $groupId = 1; // Inicia el contador de grupo
-
-        foreach ($data['cart'] as $cartItem) {
-            foreach ($cartItem['details'] as $detail) {
-
-                if(array_key_exists('course_subgroup_id', $detail)) {
-                    $courseSubgroup = CourseSubgroup::find($detail['course_subgroup_id']);
-                    $monitorId = $courseSubgroup->monitor_id;
-                    $degreeId = $courseSubgroup->degree_id;
-                } else {
-                    $monitorId = array_key_exists('monitor_id', $detail) ?
-                        $detail['monitor_id'] : null;
-                    $degreeId = array_key_exists('degree_id', $detail) ?
-                        $detail['degree_id'] : null;
-
-                }
-
-                $bookingUser = new BookingUser([
-                    'school_id' => $detail['school_id'],
-                    'booking_id' => $booking->id,
-                    'client_id' => $detail['client_id'],
-                    'price' => $detail['price'],
-                    'currency' => $detail['currency'],
-                    'course_id' => $detail['course_id'],
-                    'course_date_id' => $detail['course_date_id'],
-                    'course_group_id' => $detail['course_group_id'],
-                    'course_subgroup_id' => $detail['course_subgroup_id'],
-                    'monitor_id' =>  $monitorId,
-                    'degree_id' =>  $degreeId,
-                    'date' => $detail['date'],
-                    'hour_start' => $detail['hour_start'],
-                    'hour_end' => $detail['hour_end'],
-                    'group_id' => $groupId, // Asignar el valor del grupo
-                    'accepted' => array_key_exists('course_subgroup_id', $detail) && $detail['course_subgroup_id'], // Asignar el valor del grupo
-                    'deleted_at' => now(),
-                ]);
-
-                $bookingUser->save();
-
-                if (isset($detail['extra'])) {
-                    $tva = isset($detail['extra']['tva']) ? $detail['extra']['tva'] : 0;
-                    $price = isset($detail['extra']['price']) ? $detail['extra']['price'] : 0;
-
-                    // Calcular el precio con el TVA
-                    $priceWithTva = $price + ($price * ($tva / 100));
-
-                    $courseExtra = new CourseExtra([
-                        'course_id' => $detail['course_id'],
-                        'name' => $detail['extra']['id'],
-                        'description' => $detail['extra']['id'],
-                        'price' => $priceWithTva,
-                    ]);
-
-                    $courseExtra->save();
-
-                    BookingUserExtra::create([
-                        'booking_user_id' => $bookingUser->id,
-                        'course_extra_id' => $courseExtra->id,
-                    ]);
-                }
-            }
-            $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`
-        }
-
-
-        // Actualizar VouchersLog y el cupón si es necesario
-        if ($data['voucherAmount'] > 0) {
-            // Suponiendo que 'voucher_id' es parte de tu request
-            $voucher = Voucher::find($request->voucher['id']);
-            $voucher->remaining_balance -= $data['voucherAmount'];
-            $voucher->save();
-
-
-            VouchersLog::create([
-                'voucher_id' => $voucher->id,
-                'booking_id' => $booking->id,
-                'amount' => -$data['voucherAmount'],
+            // Crear la reserva (Booking)
+            $booking = Booking::create([
+                'school_id' => $data['school_id'],
+                'client_main_id' => $data['client_main_id'],
+                'price_total' => $data['price_total'],
+                'has_tva' => $data['has_tva'],
+                'price_tva' => $data['price_tva'],
+                'has_boukii_care' => $data['has_boukii_care'],
+                'price_boukii_care' => $data['price_boukii_care'],
+                'has_cancellation_insurance' => $data['has_cancellation_insurance'],
+                'price_cancellation_insurance' => $data['price_cancellation_insurance'],
+                'basket' => $data['basket'],
+                'source' => $data['source'],
+                'status' => 1,
+                'currency' => 'CHF',
             ]);
+
+            // Crear BookingUser para cada detalle
+            $groupId = 1; // Inicia el contador de grupo
+
+            foreach ($data['cart'] as $cartItem) {
+                foreach ($cartItem['details'] as $detail) {
+                    if (array_key_exists('course_subgroup_id', $detail) && $detail['course_subgroup_id']) {
+                        $courseSubgroup = CourseSubgroup::find($detail['course_subgroup_id']);
+                        if ($courseSubgroup) {
+                            $monitorId = $courseSubgroup->monitor_id;
+                            $degreeId = $courseSubgroup->degree_id;
+                        }
+                    } else {
+                        $monitorId = $detail['monitor_id'] ?? null;
+                        $degreeId = $detail['degree_id'] ?? null;
+                    }
+
+                    $bookingUser = new BookingUser([
+                        'school_id' => $detail['school_id'],
+                        'booking_id' => $booking->id,
+                        'client_id' => $detail['client_id'],
+                        'price' => $detail['price'],
+                        'currency' => $detail['currency'],
+                        'course_id' => $detail['course_id'],
+                        'course_date_id' => $detail['course_date_id'],
+                        'course_group_id' => $detail['course_group_id'],
+                        'course_subgroup_id' => $detail['course_subgroup_id'],
+                        'monitor_id' => $monitorId,
+                        'degree_id' => $degreeId,
+                        'date' => $detail['date'],
+                        'hour_start' => $detail['hour_start'],
+                        'hour_end' => $detail['hour_end'],
+                        'group_id' => $groupId,
+                        'accepted' => array_key_exists('course_subgroup_id', $detail) && $detail['course_subgroup_id'],
+                        'deleted_at' => now(),
+                    ]);
+
+                    $bookingUser->save();
+
+                    if (isset($detail['extra'])) {
+                        $tva = $detail['extra']['tva'] ?? 0;
+                        $price = $detail['extra']['price'] ?? 0;
+
+                        // Calcular el precio con el TVA
+                        $priceWithTva = $price + ($price * ($tva / 100));
+
+                        $courseExtra = new CourseExtra([
+                            'course_id' => $detail['course_id'],
+                            'name' => $detail['extra']['id'],
+                            'description' => $detail['extra']['id'],
+                            'price' => $priceWithTva,
+                        ]);
+
+                        $courseExtra->save();
+
+                        BookingUserExtra::create([
+                            'booking_user_id' => $bookingUser->id,
+                            'course_extra_id' => $courseExtra->id,
+                        ]);
+                    }
+                }
+                $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`
+            }
+
+            // Actualizar VouchersLog y el cupón si es necesario
+            if ($data['voucherAmount'] > 0) {
+                $voucher = Voucher::find($request->voucher['id']);
+                $voucher->remaining_balance -= $data['voucherAmount'];
+                $voucher->save();
+
+                VouchersLog::create([
+                    'voucher_id' => $voucher->id,
+                    'booking_id' => $booking->id,
+                    'amount' => -$data['voucherAmount'],
+                ]);
+            }
+
+            $client = Client::find($data['client_main_id'])->load('user');
+            BookingLog::create([
+                'booking_id' => $booking->id,
+                'action' => 'page_created',
+                'user_id' => $client->user->id,
+            ]);
+
+            $booking->deleted_at = now();
+            $booking->save();
+
+            // Confirmar la transacción
+            DB::commit();
+
+            return response()->json(['message' => 'Reserva creada con éxito', 'booking_id' => $booking->id], 201);
+
+        } catch (\Exception $e) {
+            // Revertir la transacción si ocurre un error
+            DB::rollBack();
+            return response()->json(['message' => 'Error al crear la reserva', 'error' => $e->getMessage()], 500);
         }
-
-        $client = Client::find($data['client_main_id'])->load('user');
-        BookingLog::create([
-            'booking_id' => $booking->id,
-            'action' => 'page_created',
-            'user_id' => $client->user->id,
-        ]);
-
-        $booking->deleted_at = now();
-        $booking->save();
-
-        return response()->json(['message' => 'Reserva creada con éxito', 'booking_id' => $booking->id], 201);
-
     }
+
 
     /**
      * @OA\Post(
