@@ -82,7 +82,7 @@
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                     <tr>
                                         <td class="center-on-narrow" align="center" style="font-size:16px; line-height:21px; padding:0px 0px;" >
-                                            <font face="Arial, Helvetica, sans-serif" style="font-size:16px; line-height:21px; color:var(--color-dark1);">{{ __('emails.bookingPay.scan') }}</font>
+                                            <img src="data:image/png;base64,{{ base64_encode(\QrCode::format('png')->size(110)->generate($actionURL)) }}" alt="QR Code" style="width: 110px; height: 110px;">
                                         </td>
                                     </tr>
                                 </table>

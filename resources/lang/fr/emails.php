@@ -57,7 +57,11 @@ return [
             'sincerely' => 'Cordialement,',
             'booking_notes' => ':bookingNotes',
             'school_name' => 'L\'école :schoolName',
-            'title' => 'Lien de paiement'
+            'title' => 'Lien de paiement',
+            'pay' => 'Payer la réservation',
+            'click' => 'Cliquez sur le lien',
+            'scan' => 'Scannez ce code avec votre téléphone',
+
         ],
     'bookingCancel' =>
         ['subject' => 'Annulation de votre réservation chez Boukii',

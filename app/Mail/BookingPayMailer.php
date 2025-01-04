@@ -79,7 +79,7 @@ class BookingPayMailer extends Mailable
             'courses' => $this->bookingData->parseBookedGroupedWithCourses(),
             'bookings' => $this->bookingData->bookingUsers,
             'hasCancellationInsurance' => $this->bookingData->has_cancellation_insurance,
-            'amount' => number_format($this->bookingData->price_total, 2),
+            'amount' => number_format($this->bookingData->price_total - $this->bookingData->paid_total, 2),
             'currency' => $this->bookingData->currency,
             'actionURL' => $this->payLink,
             'footerView' => $footerView
