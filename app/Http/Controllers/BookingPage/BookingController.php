@@ -96,6 +96,7 @@ class BookingController extends SlugAuthController
 
             // Crear BookingUser para cada detalle
             $groupId = 1; // Inicia el contador de grupo
+            $bookingUsers = []; // Para almacenar los objetos BookingUser
 
             foreach ($data['cart'] as $cartItem) {
                 foreach ($cartItem['details'] as $detail) {
@@ -131,6 +132,7 @@ class BookingController extends SlugAuthController
                     ]);
 
                     $bookingUser->save();
+                    $bookingUsers[] = $bookingUser;
 
                     if (isset($detail['extra'])) {
                         $tva = $detail['extra']['tva'] ?? 0;
@@ -156,7 +158,7 @@ class BookingController extends SlugAuthController
                 }
                 $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`
             }
-
+            $booking->deleted_at = now();
             // Actualizar VouchersLog y el cupón si es necesario
             if ($data['voucherAmount'] > 0) {
                 $voucher = Voucher::find($request->voucher['id']);
@@ -168,17 +170,26 @@ class BookingController extends SlugAuthController
                     'booking_id' => $booking->id,
                     'amount' => -$data['voucherAmount'],
                 ]);
-            }
 
+                // Si el voucher cubre el monto total de la reserva
+                if ($data['voucherAmount'] >= $data['price_total']) {
+                    $booking->deleted_at = null;
+
+
+                    foreach ($bookingUsers as $bookingUser) {
+                        $bookingUser->deleted_at = null;
+                        $bookingUser->save();
+                    }
+                }
+
+            }
+            $booking->save();
             $client = Client::find($data['client_main_id'])->load('user');
             BookingLog::create([
                 'booking_id' => $booking->id,
                 'action' => 'page_created',
                 'user_id' => $client->user->id,
             ]);
-
-            $booking->deleted_at = now();
-            $booking->save();
 
             // Confirmar la transacción
             DB::commit();
@@ -191,6 +202,7 @@ class BookingController extends SlugAuthController
             return response()->json(['message' => 'Error al crear la reserva', 'error' => $e->getMessage()], 500);
         }
     }
+
 
 
     /**
