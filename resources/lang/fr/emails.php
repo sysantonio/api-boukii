@@ -58,6 +58,7 @@ return [
             'booking_notes' => ':bookingNotes',
             'school_name' => 'L\'école :schoolName',
             'title' => 'Lien de paiement',
+            'paid' => 'Payé',
             'pay' => 'Payer la réservation',
             'click' => 'Cliquez sur le lien',
             'scan' => 'Scannez ce code avec votre téléphone',

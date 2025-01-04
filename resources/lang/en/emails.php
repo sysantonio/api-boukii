@@ -59,6 +59,7 @@ return [
             'school_name' => 'The :schoolName School',
             'title' => 'Payment Link',
             'pay' => 'Pay booking',
+            'paid' => 'Paid',
             'click' => 'Click on the link',
             'scan' => 'Scan this code with your phone'
         ],

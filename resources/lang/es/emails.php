@@ -58,7 +58,7 @@ return [
             'sincerely' => 'Atentamente,',
             'booking_notes' => ':bookingNotes',
             'school_name' => 'La Escuela :schoolName',
-
+            'paid' => 'Pagado',
             'title' => 'Enlace de pago',
             'pay' => 'Pagar reserva',
             'click' => 'Click en el enlace',

@@ -211,6 +211,17 @@
                                             </td>
                                         </tr>
                                     @endif
+                                    @if($booking->paid_total > 0)
+                                        <tr>
+                                            <td align="left" style="font-size:14px; line-height:19px; padding:0px 0px;" >
+                                                <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#222222;">{{ __('emails.bookingPay.paid') }}</font>
+                                            </td>
+                                            <td width="200" align="right" style="font-size:14px; line-height:19px; padding:0px 0px;" >
+                                                <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#222222;">{{$booking->paid_total}}
+                                                    {{$booking->currency}}</font>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 </table>
 
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
