@@ -466,6 +466,7 @@ class PayrexxHelpers
                 env('PAYREXX_API_BASE_DOMAIN')
             );
            // dd($ir);
+            Log::channel('payrexx')->info('InvoiceRequest Amount after changes:', ['amount' => $ir->getAmount()]);
             $invoice = $payrexx->create($ir);
             //Log::channel('payrexx')->info('Info', $invoice);
             Log::channel('payrexx')->info($invoice->getLink());
