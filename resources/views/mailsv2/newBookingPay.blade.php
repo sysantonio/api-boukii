@@ -52,7 +52,7 @@
                                                     {!! $titleTemplate !!}
                                                 </font>
                                                 <br><br>
-                                                {!! __('emails.bookingPay.reservation_request', ['reference' => $reference]) !!}
+                                                {!! __('emails.bookingPay.reservation_request', ['reference' => $reference, 'amount' => $amount, 'currency' => $currency]) !!}
                                             </font>
                                             <br><br>
                                             <font face="Arial, Helvetica, sans-serif"
