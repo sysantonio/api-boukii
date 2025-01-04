@@ -358,10 +358,71 @@ class PayrexxHelpers
                 return $carry + $item['amount'];
             }, 0);*/
 
+            $basket = [];
+
+            $basket[] = [
+                'name' => [1 => $basketData['price_base']['name']],
+                'quantity' => $basketData['price_base']['quantity'],
+                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar bonos al "basket"
+            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
+                foreach ($basketData['bonus']['bonuses'] as $bonus) {
+                    $basket[] = [
+                        'name' => [1 => $bonus['name']],
+                        'quantity' => $bonus['quantity'],
+                        'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
+                    ];
+                }
+            }
+
+            // Agregar el campo "reduction" al "basket"
+            if (isset($basketData['reduction'])) {
+                $basket[] = [
+                    'name' => [1 => $basketData['reduction']['name']],
+                    'quantity' => $basketData['reduction']['quantity'],
+                    'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
+                ];
+            }
+
+            // Agregar el campo "tva" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['tva']['name']],
+                'quantity' => $basketData['tva']['quantity'],
+                'amount' => $basketData['tva']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar "Boukii Care" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['boukii_care']['name']],
+                'quantity' => $basketData['boukii_care']['quantity'],
+                'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar "Cancellation Insurance" al "basket"
+            $basket[] = [
+                'name' => [1 => $basketData['cancellation_insurance']['name']],
+                'quantity' => $basketData['cancellation_insurance']['quantity'],
+                'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+            ];
+
+            // Agregar extras al "basket"
+            if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
+                foreach ($basketData['extras']['extras'] as $extra) {
+                    $basket[] = [
+                        'name' => [1 => $extra['name']],
+                        'quantity' => $extra['quantity'],
+                        'amount' => $extra['price'] * 100, // Convertir el precio a centavos
+                    ];
+                }
+            }
+
+            // Calcular el precio total del "basket"
             $totalAmount = $basketData['pending_amount'] * 100;
 
 
-            $paymentSummary = self::generatePaymentSummary($basketData->all());
+            $paymentSummary = self::generatePaymentSummary($basket);
             $ir->setAmount($totalAmount);
            // $ir->setDescription($basketData->all());
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
