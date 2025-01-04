@@ -341,11 +341,15 @@ class PayrexxHelpers
             // Prepare invoice: basic data
             $ir = new InvoiceRequest();
             $ir->setReferenceId($bookingData->getOrGeneratePayrexxReference());
-            $ir->setAmount($bookingData->price_total * 100);
+            //$ir->setAmount($bookingData->price_total * 100);
             $ir->setCurrency($bookingData->currency);
             $ir->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
 
 
+            // Add School's legal terms, if set
+            if ($schoolData->conditions_url) {
+                $ir->addField('terms', $schoolData->conditions_url);
+            }
             // Product data i.e. courses booked plus maybe cancellation insurance
             $ir->setTitle($schoolData->name);
 
