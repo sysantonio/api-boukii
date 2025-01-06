@@ -785,6 +785,8 @@ class StatisticsController extends AppBaseController
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
 
+
+
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
             ->whereHas('booking', function ($query) {
@@ -802,7 +804,12 @@ class StatisticsController extends AppBaseController
                 });
             })
             ->whereBetween('date', [$startDate, $endDate])
-            ->get();
+            ->get()->unique(function ($item) {
+                return $item->hour_start . $item->hour_end . $item->date . $item->monitor_id;
+            });
+
+         // dd($bookingUsersWithMonitor->pluck('duration'));
+
 
         $settings = json_decode($this->getSchool($request)->settings);
 
@@ -931,8 +938,8 @@ class StatisticsController extends AppBaseController
                     // NWD pagado
                     $monitorSummary[$monitorId]['hours_nwd_payed'] += $durationInMinutes;
                     $monitorSummary[$monitorId]['cost_nwd'] = round(($monitorSummary[$monitorId]['cost_nwd'] ?? 0) + $totalCost, 2);
-                    $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
-                    $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);
+                 /*   $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
+                    $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);*/
                 } /*else {
                     // NWD no pagado (solo acumula horas)
                     $monitorSummary[$monitorId]['hours_nwd'] += $durationInMinutes;
@@ -1059,160 +1066,165 @@ class StatisticsController extends AppBaseController
 
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
-        $sportId = $request->sport_id; // Obtener el sport_id de la request
+        $sportId = $request->sport_id;
 
-        // Obtener reservas de usuario con monitor filtradas por sport_id
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
             ->where('monitor_id', $monitorId)
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)
-            ->whereHas('course.sport', function($query) use ($sportId) {
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2);
+            })
+            ->where('status', 1)
+            ->whereHas('course.sport', function ($query) use ($sportId) {
                 if ($sportId) {
                     $query->where('id', $sportId);
                 }
             })
-            ->get();
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->unique(function ($item) {
+                return $item->hour_start . $item->hour_end . $item->date;
+            });
 
         $settings = json_decode($this->getSchool($request)->settings);
+
         $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
             ->where('school_id', $schoolId)
             ->where('monitor_id', $monitorId)
             ->where('user_nwd_subtype_id', 2)
             ->whereBetween('start_date', [$startDate, $endDate])
-            ->whereHas('monitor.monitorSportsDegrees.sport', function($query) use ($sportId) {
+            ->whereHas('monitor.monitorSportsDegrees.sport', function ($query) use ($sportId) {
                 if ($sportId) {
                     $query->where('id', $sportId);
                 }
             })
             ->get();
 
-        $currency = 'CHF';
-        if ($settings && isset($settings->taxes->currency)) {
-            $currency = $settings->taxes->currency;
-        }
+        $currency = $settings->taxes->currency ?? 'CHF';
 
-        $fullDayDuration = $this->convertDurationToHours($this->calculateDuration($season->hour_start, $season->hour_end));
         $monitorDailySummary = [];
 
+        // Procesar reservas con monitor
         foreach ($bookingUsersWithMonitor as $bookingUser) {
             $monitor = $bookingUser->monitor;
             $sport = $bookingUser->course->sport;
             $courseType = $bookingUser->course->course_type;
-            $salaryLevel = null;
-            $duration = $bookingUser->duration;
+            $durationInMinutes = $this->parseDurationToMinutes($bookingUser->duration);
+            $hourlyRate = $this->getHourlyRate($monitor, $sport->id, $schoolId);
+
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
             $date = Carbon::parse($bookingUser->date)->format('Y-m-d');
-            $hours = $this->convertDurationToHours($duration);
 
-            foreach ($monitor->monitorSportsDegrees as $degree) {
-                if ($degree->sport_id === $sport->id && $degree->school_id == $schoolId) {
-                    $salaryLevel = $degree->salary;
-                    break;
-                }
-            }
-
-            $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
             if (!isset($monitorDailySummary[$date])) {
-                $monitorDailySummary[$date] = [
-                    'date' => $date,
-                    'first_name' => $monitor->first_name,
-                    'language1_id' => $monitor->language1_id,
-                    'country' => $monitor->country,
-                    'birth_date' => $monitor->birth_date,
-                    'image' => $monitor->image,
-                    'id' => $monitor->id,
-                    'sport' => $sport,
-                    'currency' => $currency,
-                    'hours_collective' => 0,
-                    'hours_nwd' => 0,
-                    'hours_nwd_payed' => 0,
-                    'hours_private' => 0,
-                    'hours_activities' => 0,
-                    'cost_collective' => 0,
-                    'cost_nwd' => 0,
-                    'cost_private' => 0,
-                    'cost_activities' => 0,
-                    'total_hours' => 0,
-                    'total_cost' => 0,
-                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
-                ];
+                $monitorDailySummary[$date] = $this->initializeDailyMonitorSummary
+                ($monitor, $sport, $currency, $date);
             }
 
-            if ($courseType == 1) {
-                $monitorDailySummary[$date]['hours_collective'] += $hours;
-                $monitorDailySummary[$date]['cost_collective'] += $cost;
-            } elseif ($courseType == 2) {
-                $monitorDailySummary[$date]['hours_private'] += $hours;
-                $monitorDailySummary[$date]['cost_private'] += $cost;
-            } else {
-                $monitorDailySummary[$date]['hours_activities'] += $hours;
-                $monitorDailySummary[$date]['cost_activities'] += $cost;
-            }
 
-            $monitorDailySummary[$date]['total_hours'] += $hours;
-            $monitorDailySummary[$date]['total_cost'] += $cost;
+            $this->updateDailySummary($monitorDailySummary[$date], $courseType, $formattedData, $bookingUser->duration, $hourlyRate);
         }
 
+        // Procesar NWDs
         foreach ($nwds as $nwd) {
             $monitor = $nwd->monitor;
-            $salaryLevel = null;
-            $duration = $fullDayDuration;
+            $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
+            $durationInMinutes = $nwd->full_day
+                ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
+                : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
+
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
             $date = Carbon::parse($nwd->start_date)->format('Y-m-d');
-            if (!$nwd->full_day) {
-                $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
-                $hours = $this->convertDurationToHours($duration);
-            } else {
-                $hours = $duration;
-            }
 
-            foreach ($monitor->monitorSportsDegrees as $degree) {
-                if ($degree->school_id == $schoolId) {
-                    $salaryLevel = $degree->salary;
-                    $sport = $degree->sport;
-                    break;
-                }
-            }
-
-            $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
             if (!isset($monitorDailySummary[$date])) {
-                $monitorDailySummary[$date] = [
-                    'date' => $date,
-                    'first_name' => $monitor->first_name,
-                    'language1_id' => $monitor->language1_id,
-                    'country' => $monitor->country,
-                    'birth_date' => $monitor->birth_date,
-                    'image' => $monitor->image,
-                    'id' => $monitor->id,
-                    'sport' => $sport,
-                    'currency' => $currency,
-                    'hours_collective' => 0,
-                    'hours_nwd' => 0,
-                    'hours_nwd_payed' => 0,
-                    'hours_private' => 0,
-                    'hours_activities' => 0,
-                    'cost_collective' => 0,
-                    'cost_nwd' => 0,
-                    'cost_private' => 0,
-                    'cost_activities' => 0,
-                    'total_hours' => 0,
-                    'total_cost' => 0,
-                    'hour_price' => $salaryLevel ? $salaryLevel->pay : 0,
-                ];
+                $monitorDailySummary[$date] = $this->initializeDailyMonitorSummary($monitor, null, $currency, $date);
             }
 
-            if ($nwd->user_nwd_subtype_id == 2) {
-                $monitorDailySummary[$date]['hours_nwd_payed'] += $hours;
-                $monitorDailySummary[$date]['cost_nwd'] += $cost;
-            } else {
-                $monitorDailySummary[$date]['hours_nwd'] += $hours;
-            }
-            $monitorDailySummary[$date]['total_hours'] += $hours;
-            $monitorDailySummary[$date]['total_cost'] += $cost;
+
+
+            $this->updateDailySummary($monitorDailySummary[$date], 'nwd', $formattedData, $duration, $hourlyRate, $nwd->user_nwd_subtype_id == 2);
+        }
+
+        foreach ($monitorDailySummary as &$summary) {
+            $summary['hours_collective'] = $this->formatMinutesToHourMinute($summary['hours_collective'] ?? 0);
+            $summary['total_hours'] = $this->formatMinutesToHourMinute($summary['total_minutes']);
+            $summary['hours_private'] = $this->formatMinutesToHourMinute($summary['hours_private'] ?? 0);
+            $summary['hours_activities'] = $this->formatMinutesToHourMinute($summary['hours_activities'] ?? 0);
+            $summary['hours_nwd'] = $this->formatMinutesToHourMinute($summary['hours_nwd'] ?? 0);
+            $summary['hours_nwd_payed'] = $this->formatMinutesToHourMinute($summary['hours_nwd_payed'] ?? 0);
+            $summary['total_hours'] = $this->formatMinutesToHourMinute($summary['total_minutes'] ?? 0);
+            unset($summary['total_minutes']);
         }
 
         $monitorDailySummaryJson = array_values($monitorDailySummary);
         return $this->sendResponse($monitorDailySummaryJson, 'Monitor daily bookings retrieved successfully');
     }
+
+    private function updateDailySummary(&$summary, $courseType, $formattedData, $duration, $hourlyRate, $isPaid = false)
+    {
+        $summary['hour_price'] = $hourlyRate;
+
+        $durationInMinutes = $this->parseDurationToMinutes($duration);
+        $totalCost = round($formattedData['totalCost'], 2);
+
+       // dd($durationInMinutes);
+        switch ($courseType) {
+            case 1: // Collective
+                $summary['hours_collective'] += $durationInMinutes;
+                $summary['cost_collective'] += $totalCost;
+                break;
+            case 2: // Private
+                $summary['hours_private'] += $durationInMinutes;
+                $summary['cost_private'] += $totalCost;
+                break;
+            case 'nwd': // Bloques NWD
+                if ($isPaid) {
+                    $summary['hours_nwd_payed'] += $durationInMinutes;
+                    $summary['cost_nwd'] += $totalCost;
+                }
+                break;
+            default: // Activities
+                $summary['hours_activities'] += $durationInMinutes;
+                $summary['cost_activities'] += $totalCost;
+                break;
+        }
+
+        if ($courseType != 'nwd' || $isPaid) {
+            $summary['total_minutes'] += $durationInMinutes;
+            $summary['total_cost'] += $totalCost;
+        }
+    }
+
+    private function initializeDailyMonitorSummary($monitor, $sport, $currency, $date)
+    {
+        return [
+            'date' => $date,
+            'first_name' => $monitor->first_name,
+            'language1_id' => $monitor->language1_id,
+            'country' => $monitor->country,
+            'birth_date' => $monitor->birth_date,
+            'image' => $monitor->image,
+            'id' => $monitor->id,
+            'sport' => $sport,
+            'currency' => $currency,
+            'hours_collective' => 0,
+            'hours_nwd' => 0,
+            'hours_nwd_payed' => 0,
+            'hours_private' => 0,
+            'hours_activities' => 0,
+            'cost_collective' => 0,
+            'cost_nwd' => 0,
+            'cost_private' => 0,
+            'cost_activities' => 0,
+            'total_minutes' => 0,
+            'total_cost' => 0,
+            'hour_price' => 0,
+        ];
+
+    }
+
 
 
     // Función para convertir la duración en formato HH:MM:SS a horas decimales
