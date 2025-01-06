@@ -556,7 +556,7 @@ class CourseController extends SlugAuthController
     {
         $monitorSchools = MonitorsSchool::with([
             'monitor.sports' => function ($query) use ($schoolId) {
-                $query->where('monitor_sports_degrees.school_id', $schoolId);
+                $query->where('monitorSportsDegrees.school_id', $schoolId);
             },
             'monitor.courseSubgroups' => function ($query) use ($date) {
                 $query->whereHas('courseDate', function ($query) use ($date) {

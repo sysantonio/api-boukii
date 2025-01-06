@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
 use App\Traits\Utils;
@@ -771,22 +772,25 @@ class StatisticsController extends AppBaseController
 
         $schoolId = $this->getSchool($request)->id;
 
-        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+        $today = Carbon::now()->format('Y-m-d');
 
-        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
-        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
-        ->first();
+        $season = Season::whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->first();
 
         if (!$season) {
             return response()->json(['error' => 'No se encontró una temporada activa'], 404);
         }
 
-        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
 
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2);
+            })
+            ->where('status', 1)
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             }, function ($query) {
@@ -801,6 +805,7 @@ class StatisticsController extends AppBaseController
             ->get();
 
         $settings = json_decode($this->getSchool($request)->settings);
+
         $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
             ->where('school_id', $schoolId)
             ->when($request->has('monitor_id'), function ($query) use ($request) {
@@ -816,22 +821,169 @@ class StatisticsController extends AppBaseController
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get();
 
-        $currency = 'CHF'; // Valor por defecto si settings no existe o es null
+        $currency = $settings->taxes->currency ?? 'CHF';
 
-        // Verificar si settings existe y tiene la propiedad taxes->currency
-        if ($settings && isset($settings->taxes->currency)) {
-            $currency = $settings->taxes->currency;
+        $monitorSummary = $this->initializeMonitorSummary($schoolId, $request);
+
+        // Procesar reservas con monitor
+        foreach ($bookingUsersWithMonitor as $bookingUser) {
+            $monitor = $bookingUser->monitor;
+            $sport = $bookingUser->course->sport;
+            $courseType = $bookingUser->course->course_type;
+
+            $durationInMinutes = $this->parseDurationToMinutes($bookingUser->duration);
+            $hourlyRate = $this->getHourlyRate($monitor, $sport->id, $schoolId);
+
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
+            $this->updateMonitorSummary($monitorSummary, $monitor->id, $courseType, $durationInMinutes,
+                $formattedData['totalCost'], $hourlyRate);
         }
 
-        $fullDayDuration = $this->convertDurationToHours($this->calculateDuration($season->hour_start, $season->hour_end));
+        // Procesar NWDs
+        foreach ($nwds as $nwd) {
+            $monitor = $nwd->monitor;
+            $durationInMinutes = $nwd->full_day
+                ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
+                : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
 
-        // Obtener todos los monitores de la escuela
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
+            $this->updateMonitorSummary($monitorSummary, $monitor->id, 'nwd', $durationInMinutes,
+                $formattedData['totalCost'], $hourlyRate, $nwd->user_nwd_subtype_id == 2);
+        }
+
+        // Convertir las duraciones totales a formato "Xh Ym"
+        foreach ($monitorSummary as &$summary) {
+            $summary['hours_collective'] = $this->formatMinutesToHourMinute($summary['hours_collective'] ?? 0);
+            $summary['hours_private'] = $this->formatMinutesToHourMinute($summary['hours_private'] ?? 0);
+            $summary['hours_activities'] = $this->formatMinutesToHourMinute($summary['hours_activities'] ?? 0);
+            $summary['hours_nwd'] = $this->formatMinutesToHourMinute($summary['hours_nwd'] ?? 0);
+            $summary['hours_nwd_payed'] = $this->formatMinutesToHourMinute($summary['hours_nwd_payed'] ?? 0);
+            $summary['total_hours'] = $this->formatMinutesToHourMinute($summary['total_minutes'] ?? 0);
+            unset($summary['total_minutes']); // Eliminar minutos brutos si no se necesitan
+        }
+
+        return $this->sendResponse(array_values($monitorSummary), 'Monitor bookings of the season retrieved successfully');
+    }
+
+    private function calculateDurationInMinutes($startTime, $endTime)
+    {
+        // Asegúrate de que ambos tiempos sean válidos
+        if (!$startTime || !$endTime) {
+            return 0; // Si alguno de los valores no es válido, devuelve 0
+        }
+
+        try {
+            // Convierte los tiempos a instancias de Carbon
+            $start = Carbon::createFromFormat('H:i:s', $startTime);
+            $end = Carbon::createFromFormat('H:i:s', $endTime);
+
+            // Si el tiempo de fin es menor que el de inicio, asumimos que pasa al día siguiente
+            if ($end->lt($start)) {
+                $end->addDay();
+            }
+
+            // Calcula la diferencia en minutos
+            return $start->diffInMinutes($end);
+        } catch (\Exception $e) {
+            // Si ocurre un error en el formato, registra el error y devuelve 0
+            Log::error('Error calculating duration in minutes: ' . $e->getMessage());
+            Log::error('Startime: ' .$startTime);
+            Log::error('Endtime: ' .$endTime);
+            return 0;
+        }
+    }
 
 
-        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request, $schoolId) {
+    private function updateMonitorSummary(
+        &$monitorSummary,
+        $monitorId,
+        $courseType,
+        $durationInMinutes,
+        $totalCost,
+        $hourlyRate,
+        $isPaid = false
+    ) {
+        if (!isset($monitorSummary[$monitorId])) {
+            return;
+        }
+
+        // Redondear el costo total a 2 decimales
+        $totalCost = round($totalCost, 2);
+
+        // Actualizar el precio por hora
+        $monitorSummary[$monitorId]['hour_price'] = round($hourlyRate, 2);
+
+        // Acumular horas y costos según el tipo de curso o bloque
+        switch ($courseType) {
+            case 1: // Collective
+                $monitorSummary[$monitorId]['hours_collective'] += $durationInMinutes;
+                $monitorSummary[$monitorId]['cost_collective'] = round(($monitorSummary[$monitorId]['cost_collective'] ?? 0) + $totalCost, 2);
+                break;
+            case 2: // Private
+                $monitorSummary[$monitorId]['hours_private'] += $durationInMinutes;
+                $monitorSummary[$monitorId]['cost_private'] = round(($monitorSummary[$monitorId]['cost_private'] ?? 0) + $totalCost, 2);
+                break;
+            case 'nwd': // Bloques NWD
+                if ($isPaid) {
+                    // NWD pagado
+                    $monitorSummary[$monitorId]['hours_nwd_payed'] += $durationInMinutes;
+                    $monitorSummary[$monitorId]['cost_nwd'] = round(($monitorSummary[$monitorId]['cost_nwd'] ?? 0) + $totalCost, 2);
+                    $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
+                    $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);
+                } /*else {
+                    // NWD no pagado (solo acumula horas)
+                    $monitorSummary[$monitorId]['hours_nwd'] += $durationInMinutes;
+                    $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
+                }*/
+                break;
+            default: // Activities
+                $monitorSummary[$monitorId]['hours_activities'] += $durationInMinutes;
+                $monitorSummary[$monitorId]['cost_activities'] = round(($monitorSummary[$monitorId]['cost_activities'] ?? 0) + $totalCost, 2);
+                break;
+        }
+
+        // Actualizar totales generales (solo para Collective, Private y Activities, o NWD pagados)
+        if ($courseType != 'nwd' || $isPaid) {
+            $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
+            $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);
+        }
+    }
+
+
+
+    private function formatDurationAndCost($durationInMinutes, $hourlyRate)
+    {
+        $totalCost = round(($durationInMinutes / 60) * $hourlyRate, 2);
+        return [
+            'formattedDuration' => $this->formatMinutesToHourMinute($durationInMinutes),
+            'totalCost' => $totalCost,
+        ];
+    }
+
+    private function parseDurationToMinutes($duration)
+    {
+        if (strpos($duration, ':') !== false) {
+            [$hours, $minutes] = explode(':', $duration);
+            return ((int) $hours * 60) + (int) $minutes;
+        }
+        return 0;
+    }
+
+    private function formatMinutesToHourMinute($minutes)
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+        return sprintf('%dh %02dm', $hours, $remainingMinutes);
+    }
+
+
+    private function initializeMonitorSummary($schoolId, $request)
+    {
+        $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($schoolId) {
             $query->where('school_id', $schoolId)->where('active_school', 1);
-        })->when($request->has('monitor_id'), function ($query) use ($request) {
-            return $query->where('id', $request->monitor_id);
         });
 
         if ($request->has('sport_id')) {
@@ -840,203 +992,63 @@ class StatisticsController extends AppBaseController
             });
         }
 
-        $allMonitors = $totalMonitorsQuery->get();
-
-        // Inicialización de variables para almacenar resultados
+        $monitors = $totalMonitorsQuery->get();
         $monitorSummary = [];
 
-        // Recorrer cada monitor para inicializar los valores a 0
-        foreach ($allMonitors as $monitor) {
+        foreach ($monitors as $monitor) {
             $monitorSummary[$monitor->id] = [
+                'id' => $monitor->id,
                 'first_name' => $monitor->first_name,
                 'language1_id' => $monitor->language1_id,
                 'country' => $monitor->country,
                 'birth_date' => $monitor->birth_date,
                 'image' => $monitor->image,
-                'id' => $monitor->id,
-                'sport' => null,
-                'currency' => $currency,
+                'sport' => null, // Este se actualiza más adelante
+                'currency' => 'CHF', // Moneda por defecto, se puede ajustar según settings
                 'hours_collective' => 0,
-                'hours_nwd' => 0,
-                'hours_nwd_payed' => 0,
                 'hours_private' => 0,
                 'hours_activities' => 0,
-                'cost_nwd' => 0,
+                'hours_nwd' => 0,
+                'hours_nwd_payed' => 0,
                 'cost_collective' => 0,
                 'cost_private' => 0,
                 'cost_activities' => 0,
+                'cost_nwd' => 0,
                 'total_hours' => 0,
                 'total_cost' => 0,
-                'hour_price' => 0,
+                'hour_price' => 0, // Precio por hora se actualizará dinámicamente
             ];
-            $sport = null;
+
+            // Asignar el deporte relacionado si corresponde
             foreach ($monitor->monitorSportsDegrees as $degree) {
                 if ($degree->school_id == $schoolId && (!$request->has('sport_id') || $degree->sport_id == $request->sport_id)) {
-                    $salaryLevel = $degree->salary;
-                    $sport = $degree->sport;
+                    $monitorSummary[$monitor->id]['sport'] = $degree->sport;
                     break;
                 }
             }
-            $monitorSummary[$monitor->id]['sport'] = $sport;
         }
 
-        // Recorrer cada reserva de usuario con monitor
-        foreach ($bookingUsersWithMonitor as $bookingUser) {
-            $monitor = $bookingUser->monitor;
-            $sport = $bookingUser->course->sport;
-            $courseType = $bookingUser->course->course_type;
-            $salaryLevel = null;
-            $duration = $bookingUser->duration;
-
-            // Convertir la duración en horas decimales
-            $hours = $this->convertDurationToHours($duration);
-
-            // Buscar el salario y las horas según el tipo de curso
-            foreach ($monitor->monitorSportsDegrees as $degree) {
-                if ($degree->sport_id === $sport->id && $degree->school_id == $schoolId) {
-                    $salaryLevel = $degree->salary;
-                    break;
-                }
-            }
-
-            // Calcular el costo por tipo de curso
-            $cost = $salaryLevel ? ($salaryLevel->pay * $hours) : 0;
-
-            // Actualizar horas y costos según el tipo de curso
-            if ($courseType == 1) {
-                $monitorSummary[$monitor->id]['hours_collective'] += $hours;
-                $monitorSummary[$monitor->id]['cost_collective'] += $cost;
-            } elseif ($courseType == 2) {
-                $monitorSummary[$monitor->id]['hours_private'] += $hours;
-                $monitorSummary[$monitor->id]['cost_private'] += $cost;
-            } else {
-                $monitorSummary[$monitor->id]['hours_activities'] += $hours;
-                $monitorSummary[$monitor->id]['cost_activities'] += $cost;
-            }
-
-            // Actualizar las horas totales y el costo total
-            $monitorSummary[$monitor->id]['total_hours'] += $hours;
-            $monitorSummary[$monitor->id]['total_cost'] += $cost;
-            $monitorSummary[$monitor->id]['hour_price'] = $salaryLevel ? $salaryLevel->pay : 0;
-        }
-
-        foreach ($nwds as $nwd) {
-            $monitor = $nwd->monitor;
-            $salaryLevel = null;
-            $duration = $fullDayDuration;
-            if (!$nwd->full_day) {
-                $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
-                // Convertir la duración en horas decimales
-                $hours = $this->convertDurationToHours($duration);
-            } else {
-                $hours = $duration;
-            }
-
-            foreach ($monitor->monitorSportsDegrees as $degree) {
-                if ($degree->school_id == $schoolId && (!$request->has('sport_id') || $degree->sport_id == $request->sport_id)) {
-                    $salaryLevel = $degree->salary;
-                    $sport = $degree->sport;
-                    break;
-                }
-            }
-
-            // Calcular el costo si user_nwd_subtype_id es 2
-            $cost = ($nwd->user_nwd_subtype_id == 2 && $salaryLevel) ? ($salaryLevel->pay * $hours) : 0;
-
-            if ($nwd->user_nwd_subtype_id == 2) {
-                // Inicializar claves si no existen
-                if (!isset($monitorSummary[$monitor->id])) {
-                    $monitorSummary[$monitor->id] = [
-                        'first_name' => $monitor->first_name,
-                        'language1_id' => $monitor->language1_id,
-                        'country' => $monitor->country,
-                        'birth_date' => $monitor->birth_date,
-                        'image' => $monitor->image,
-                        'id' => $monitor->id,
-                        'sport' => null,
-                        'currency' => $currency,
-                        'hours_collective' => 0,
-                        'hours_nwd' => 0,
-                        'hours_nwd_payed' => 0,
-                        'hours_private' => 0,
-                        'hours_activities' => 0,
-                        'cost_nwd' => 0,
-                        'cost_collective' => 0,
-                        'cost_private' => 0,
-                        'cost_activities' => 0,
-                        'total_hours' => 0,
-                        'total_cost' => 0,
-                        'hour_price' => 0,
-                    ];
-                }
-                $monitorSummary[$monitor->id]['hours_nwd_payed'] += $hours;
-                $monitorSummary[$monitor->id]['cost_nwd'] += $cost;
-            } else {
-                // Inicializar claves si no existen
-                if (!isset($monitorSummary[$monitor->id])) {
-                    $monitorSummary[$monitor->id] = [
-                        'first_name' => $monitor->first_name,
-                        'language1_id' => $monitor->language1_id,
-                        'country' => $monitor->country,
-                        'birth_date' => $monitor->birth_date,
-                        'image' => $monitor->image,
-                        'id' => $monitor->id,
-                        'sport' => null,
-                        'currency' => $currency,
-                        'hours_collective' => 0,
-                        'hours_nwd' => 0,
-                        'hours_nwd_payed' => 0,
-                        'hours_private' => 0,
-                        'hours_activities' => 0,
-                        'cost_nwd' => 0,
-                        'cost_collective' => 0,
-                        'cost_private' => 0,
-                        'cost_activities' => 0,
-                        'total_hours' => 0,
-                        'total_cost' => 0,
-                        'hour_price' => 0,
-                    ];
-                }
-                $monitorSummary[$monitor->id]['hours_nwd'] += $hours;
-            }
-
-// Actualizar las horas totales y el costo total
-// Inicializar claves si no existen
-            if (!isset($monitorSummary[$monitor->id])) {
-                $monitorSummary[$monitor->id] = [
-                    'first_name' => $monitor->first_name,
-                    'language1_id' => $monitor->language1_id,
-                    'country' => $monitor->country,
-                    'birth_date' => $monitor->birth_date,
-                    'image' => $monitor->image,
-                    'id' => $monitor->id,
-                    'sport' => null,
-                    'currency' => $currency,
-                    'hours_collective' => 0,
-                    'hours_nwd' => 0,
-                    'hours_nwd_payed' => 0,
-                    'hours_private' => 0,
-                    'hours_activities' => 0,
-                    'cost_nwd' => 0,
-                    'cost_collective' => 0,
-                    'cost_private' => 0,
-                    'cost_activities' => 0,
-                    'total_hours' => 0,
-                    'total_cost' => 0,
-                    'hour_price' => 0,
-                ];
-            }
-            $monitorSummary[$monitor->id]['total_hours'] += $hours;
-            $monitorSummary[$monitor->id]['total_cost'] += $cost;
-            $monitorSummary[$monitor->id]['hour_price'] = $salaryLevel ? $salaryLevel->pay : 0;
-        }
-
-        $monitorSummaryJson = array_values($monitorSummary);
-        return $this->sendResponse($monitorSummaryJson, 'Monitor bookings of the season retrieved successfully');
+        return $monitorSummary;
     }
 
 
+    private function getHourlyRate($monitor, $sportId, $schoolId)
+    {
+        foreach ($monitor->monitorSportsDegrees as $degree) {
+           // Log::debug('$degree: ', $degree->toArray());
+            if($sportId) {
+                if ($degree->sport_id == $sportId && $degree->school_id == $schoolId) {
+                    return $degree->salary ? $degree->salary->pay : 0;
+                }
+            } else {
+                if ($degree->school_id == $schoolId) {
+                    return $degree->salary ? $degree->salary->pay : 0;
+                }
+            }
 
+        }
+        return 0; // Devuelve 0 si no se encuentra un salario válido
+    }
     public function getMonitorDailyBookings(Request $request, $monitorId): JsonResponse
     {
         $schoolId = $this->getSchool($request)->id;
