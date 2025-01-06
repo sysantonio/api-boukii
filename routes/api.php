@@ -5,6 +5,8 @@ use App\Models\Client;
 use App\Models\ClientSport;
 use App\Models\ClientsSchool;
 use App\Models\Course;
+use App\Models\CourseGroup;
+use App\Models\CourseSubgroup;
 use App\Models\Degree;
 use App\Models\Language;
 use App\Models\Mail;
@@ -20,6 +22,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Payrexx\Models\Request\Gateway as GatewayRequest;
@@ -472,6 +475,91 @@ Route::post('/testPayrexx', function (Request $request) {
         return 'School Data f works';
     }
 
+});
+
+Route::post('/schools/{schoolId}/normalize-courses',  function (Request $request, $schoolId) {
+    $courses = Course::with(['courseDates.courseGroups.courseSubgroups'])
+        ->where('school_id', $schoolId)
+        ->where('course_type', 1) // Solo cursos colectivos
+        ->get();
+
+    if ($courses->isEmpty()) {
+        return response()->json(['message' => 'No se encontraron cursos colectivos para esta escuela.'], 404);
+    }
+
+    foreach ($courses as $course) {
+        // Obtener todas las fechas del curso
+        $courseDates = $course->courseDates;
+
+        if ($courseDates->isEmpty()) {
+            // Si el curso no tiene fechas, pasamos al siguiente
+            Log::warning("El curso ID {$course->id} no tiene fechas.");
+            continue;
+        }
+
+        // Obtener los grupos y subgrupos de referencia (de la primera fecha)
+        $referenceGroups = $courseDates->first()->courseGroups;
+
+        foreach ($courseDates as $courseDate) {
+            foreach ($referenceGroups as $referenceGroup) {
+                // Verificar si el grupo existe en la fecha actual
+                $group = $courseDate->courseGroups->where('degree_id', $referenceGroup->degree_id)->first();
+
+                if (!$group) {
+                    // Crear el grupo si no existe
+                    $group = CourseGroup::create([
+                        'course_id' => $course->id,
+                        'course_date_id' => $courseDate->id,
+                        'degree_id' => $referenceGroup->degree_id,
+                        'age_min' => $referenceGroup->age_min,
+                        'age_max' => $referenceGroup->age_max,
+                        'teachers_min' => $referenceGroup->teachers_min,
+                        'teachers_max' => $referenceGroup->teachers_max,
+                        'auto' => $referenceGroup->auto,
+                    ]);
+                    Log::debug("El grupo has ido creado,", $group);
+                }
+
+                // Verificar los subgrupos del grupo
+                foreach ($referenceGroup->courseSubgroups as $referenceSubgroup) {
+                    // Contar subgrupos existentes del mismo `degree_id` en el grupo actual
+                    $existingSubgroupsCount = $group->courseSubgroups
+                        ->where('degree_id', $referenceSubgroup->degree_id)
+                        ->where('max_participants', $referenceSubgroup->max_participants)
+                        ->where('monitor_id', $referenceSubgroup->monitor_id)
+                        ->count();
+
+                    // Contar subgrupos de referencia del mismo `degree_id`
+                    $referenceSubgroupsCount = $referenceGroup->courseSubgroups
+                        ->where('degree_id', $referenceSubgroup->degree_id)
+                        ->where('max_participants', $referenceSubgroup->max_participants)
+                        ->where('monitor_id', $referenceSubgroup->monitor_id)
+                        ->count();
+
+                    // Crear los subgrupos faltantes para igualar las cantidades
+                    if ($existingSubgroupsCount < $referenceSubgroupsCount) {
+                        $subgroupsToCreate = $referenceSubgroupsCount - $existingSubgroupsCount;
+
+                        for ($i = 0; $i < $subgroupsToCreate; $i++) {
+                            CourseSubgroup::create([
+                                'course_id' => $course->id,
+                                'course_date_id' => $courseDate->id,
+                                'degree_id' => $referenceSubgroup->degree_id,
+                                'course_group_id' => $group->id,
+                                'monitor_id' => $referenceSubgroup->monitor_id,
+                                'max_participants' => $referenceSubgroup->max_participants,
+                            ]);
+
+                            Log::debug("Subgrupo creado para el grupo ID {$group->id} con degree_id={$referenceSubgroup->degree_id}");
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    return response()->json(['message' => 'Todos los cursos colectivos han sido normalizados correctamente.'], 200);
 });
 
 
