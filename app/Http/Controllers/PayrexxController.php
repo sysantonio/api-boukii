@@ -78,20 +78,29 @@ class PayrexxController
                                 }
                                 $buyerUser = Client::find($booking->client_main_id);
                                 if ($booking->payment_method_id == 2 && $booking->source == 'web') {
-                                    $pendingVouchers = $booking->vouchersLogs()->where('status', 'pending')->get();
+                                    $pendingVouchers = $booking->vouchersLogs()->where('status', 'pending')->orderBy('created_at', 'desc')->get();
 
-                                    foreach ($pendingVouchers as $voucherLog) {
-                                        // Encuentra el voucher asociado al log
-                                        $voucher = Voucher::find($voucherLog->voucher_id);
+                                    if ($pendingVouchers->isNotEmpty()) {
+                                        // Toma el último log pendiente
+                                        $lastVoucherLog = $pendingVouchers->first();
+
+                                        // Encuentra el voucher asociado al último log
+                                        $voucher = Voucher::find($lastVoucherLog->voucher_id);
 
                                         if ($voucher) {
-                                            // Resta el amount del log al remaining_balance del voucher
-                                            $voucher->remaining_balance -= abs($voucherLog->amount);
+                                            // Resta el amount del último log al remaining_balance del voucher
+                                            $voucher->remaining_balance -= abs($lastVoucherLog->amount);
                                             $voucher->save();
 
-                                            // Actualiza el estado del log a 'confirmed'
-                                            $voucherLog->status = null;
-                                            $voucherLog->save();
+                                            // Actualiza el estado del último log a 'confirmed'
+                                            $lastVoucherLog->status = null;
+                                            $lastVoucherLog->save();
+                                        }
+
+                                        // Elimina los demás logs pendientes
+                                        $otherLogs = $pendingVouchers->slice(1); // Excluye el primer log
+                                        foreach ($otherLogs as $log) {
+                                            $log->delete();
                                         }
                                     }
                                     // As of 2022-10-25 tell buyer user by email at this point, even before payment, and continue
