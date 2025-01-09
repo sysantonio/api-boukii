@@ -888,8 +888,14 @@ class BookingController extends AppBaseController
         }
 
         // Restar el precio del primer bookingUser al price_total de la reserva
-        $firstBookingUserPrice = $bookingUsers[0]->price;
-        $booking->price_total -= $firstBookingUserPrice;
+/*        $firstBookingUserPrice = $bookingUsers[0]->price;
+        Log::debug('Payments: ', $booking->payments->toArray());
+        $lastPayment = $booking->payments->last(); // Obtener el último pago
+        if ($lastPayment && $lastPayment->status != 'no_refund') {
+            $booking->price_total -= $firstBookingUserPrice;
+        }*/
+
+
 
         // Verificar si quedan bookingUsers activos (status distinto de 2)
         $activeBookingUsers = $booking->bookingUsers()->where('status', '!=', 2)->exists();

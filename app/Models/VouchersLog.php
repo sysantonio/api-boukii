@@ -33,6 +33,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          type="number",
  *          format="number"
  *      ),
+ *           @OA\Property(
+ *           property="status",
+ *           description="The status ",
+ *           readOnly=false,
+ *           nullable=true,
+ *           type="string",
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="The timestamp when the log entry was created",
@@ -67,7 +74,8 @@ class VouchersLog extends Model
     public $fillable = [
         'voucher_id',
         'booking_id',
-        'amount'
+        'amount',
+        'status',
     ];
 
     protected $casts = [
@@ -78,6 +86,7 @@ class VouchersLog extends Model
         'voucher_id' => 'required',
         'booking_id' => 'required',
         'amount' => 'required|numeric',
+        'status' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

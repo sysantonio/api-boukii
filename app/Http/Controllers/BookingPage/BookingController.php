@@ -162,23 +162,25 @@ class BookingController extends SlugAuthController
             // Actualizar VouchersLog y el cupón si es necesario
             if ($data['voucherAmount'] > 0) {
                 $voucher = Voucher::find($request->voucher['id']);
-                $voucher->remaining_balance -= $data['voucherAmount'];
-                $voucher->save();
+/*                $voucher->remaining_balance -= $data['voucherAmount'];
+                $voucher->save();*/
 
                 VouchersLog::create([
                     'voucher_id' => $voucher->id,
                     'booking_id' => $booking->id,
                     'amount' => -$data['voucherAmount'],
+                    'status' => $data['voucherAmount'] >= $data['price_total'] ? null : 'pending',
                 ]);
 
                 // Si el voucher cubre el monto total de la reserva
                 if ($data['voucherAmount'] >= $data['price_total']) {
                     $booking->deleted_at = null;
 
-
+                    $voucher->remaining_balance -= $data['voucherAmount'];
+                    $voucher->save();
+                    $booking->paid = true;
                     foreach ($bookingUsers as $bookingUser) {
                         $bookingUser->deleted_at = null;
-                        $booking->paid = true;
                         $bookingUser->save();
                     }
                 }

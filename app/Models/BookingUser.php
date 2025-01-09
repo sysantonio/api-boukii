@@ -286,6 +286,26 @@ class BookingUser extends Model
             }
 
             return trim($duration); // Eliminar espacios innecesarios
+        } else {
+
+            $startTime = \Carbon\Carbon::parse($this->courseDate()->hour_start);
+            $endTime = \Carbon\Carbon::parse($this->courseDate()->hour_end);
+
+            // Obtener la diferencia en horas y minutos
+            $diffInMinutes = $startTime->diffInMinutes($endTime);
+            $hours = intdiv($diffInMinutes, 60); // Horas completas
+            $minutes = $diffInMinutes % 60; // Minutos restantes
+
+            // Formatear el resultado
+            $duration = '';
+            if ($hours > 0) {
+                $duration .= $hours . 'h';
+            }
+            if ($minutes > 0) {
+                $duration .= ' ' . $minutes . 'm';
+            }
+
+            return trim($duration); // Eliminar espacios innecesarios
         }
 
         return null;
