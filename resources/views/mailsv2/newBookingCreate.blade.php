@@ -155,11 +155,26 @@
                                                                 {{ __('emails.bookingCreate.date') }}</font>
                                                         </td>
                                                         <td align="left" style="font-size:14px; line-height:19px; padding:0px 0px;">
+                                                            @php
+                                                                $uniqueBookings = []; // Array para almacenar combinaciones únicas
+                                                            @endphp
+
                                                             @foreach($course['booking_users'] as $booking)
-                                                                <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;" >
-                                                                    {{ \Carbon\Carbon::parse($booking->date)->format('F d, Y') }} - {{$booking->hour_start}} / {{$booking->hour_end}}
-                                                                </font>
-                                                                <br>
+                                                                @php
+                                                                    // Crear una clave única basada en la combinación de date, hour_start y hour_end
+                                                                    $key = $booking->date . '|' . $booking->hour_start . '|' . $booking->hour_end;
+                                                                @endphp
+
+                                                                @if(!in_array($key, $uniqueBookings))
+                                                                    @php
+                                                                        // Si la combinación no está en el array, agregarla
+                                                                        $uniqueBookings[] = $key;
+                                                                    @endphp
+                                                                    <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;">
+                                                                        {{ \Carbon\Carbon::parse($booking->date)->format('F d, Y') }} - {{$booking->hour_start}} / {{$booking->hour_end}}
+                                                                    </font>
+                                                                    <br>
+                                                                @endif
                                                             @endforeach
                                                         </td>
                                                     </tr>
@@ -190,16 +205,27 @@
                                                         <td align="left" style="font-size:14px; line-height:19px; padding:0px 0px;">
                                                             @if (count($course['booking_users']) > 0)
                                                                 @php
-                                                                    $firstBooking = $course['booking_users'][0];
-                                                                    $remainingCount = count($course['booking_users']) - 1;
+                                                                    $uniqueMonitors = []; // Array para almacenar los monitores únicos
+                                                                    $firstBooking = null;
+
+                                                                    foreach ($course['booking_users'] as $booking) {
+                                                                        if ($booking->monitor && !in_array($booking->monitor->id, $uniqueMonitors)) {
+                                                                            $uniqueMonitors[] = $booking->monitor->id;
+                                                                            if (!$firstBooking) {
+                                                                                $firstBooking = $booking; // Asignar la primera reserva con un monitor único
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    $remainingCount = count($uniqueMonitors) - 1; // Restar el primero que ya se muestra
                                                                 @endphp
 
-                                                                @if($firstBooking->monitor)
+                                                                @if ($firstBooking && $firstBooking->monitor)
                                                                     <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;">
-                                                                        <strong>{{$firstBooking->monitor->full_name}}</strong>
-                                                                        {{$firstBooking->monitor->language1->code ?? 'NDF'}} -
+                                                                        <strong>{{ $firstBooking->monitor->full_name }}</strong>
+                                                                        {{ $firstBooking->monitor->language1->code ?? 'NDF' }} -
                                                                         {{ collect(config('countries'))->firstWhere('id', $firstBooking->monitor->country)['code'] ?? 'NDF' }} -
-                                                                        {{\Carbon\Carbon::parse($firstBooking->monitor->birth_date)->age}} Años
+                                                                        {{ \Carbon\Carbon::parse($firstBooking->monitor->birth_date)->age }} Años
                                                                     </font>
                                                                 @else
                                                                     <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;">
@@ -207,7 +233,7 @@
                                                                     </font>
                                                                 @endif
 
-                                                                @if($remainingCount > 0)
+                                                                @if ($remainingCount > 0)
                                                                     <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;">
                                                                         +{{ $remainingCount }} más
                                                                     </font>
@@ -217,13 +243,16 @@
                                                                     <strong>NDF</strong>
                                                                 </font>
                                                             @endif
+
                                                         </td>
 
                                                     </tr>
                                                 </table>
                                             </td>
                                             <td valign="top" width="110" class="left-on-narrow">
+{{--
                                                 <img src="data:image/png;base64,{{ base64_encode(\QrCode::format('png')->size(110)->generate($booking->client_id)) }}" alt="QR Code" style="width: 110px; height: 110px;">
+--}}
                                             </td>
                                         </tr>
                                     </table>

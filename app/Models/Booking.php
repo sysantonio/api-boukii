@@ -581,7 +581,9 @@ class Booking extends Model
             }
             // Si el curso es de tipo 2 o 3, agrupar por course_id, date, hour_start, hour_end y monitor_id
             elseif (in_array($course->course_type, [2, 3])) {
-                $groupKey = $course->id . '_' . $bookingUser->date . '_' . $bookingUser->hour_start . '_' . $bookingUser->hour_end . '_' . ($bookingUser->monitor_id ?? 'null');
+                $groupKey = $course->id . '_' . $bookingUser->date .
+                    '_' . $bookingUser->hour_start . '_' .  $bookingUser->group_id. '_' .
+                    $bookingUser->hour_end . '_' . ($bookingUser->monitor_id ?? 'null');
             }
 
             // Si la clave del grupo aún no existe en el resultado, crearla
