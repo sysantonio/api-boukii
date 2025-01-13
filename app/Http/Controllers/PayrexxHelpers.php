@@ -42,7 +42,7 @@ class PayrexxHelpers
      * @return string empty if something failed
      */
     public static function createGatewayLinkNew($schoolData, $bookingData,
-                                             $basketData, Client $buyerUser = null, $redirectTo = null)
+                                                $basketData, Client $buyerUser = null, $redirectTo = null)
     {
         $link = '';
 
@@ -142,7 +142,7 @@ class PayrexxHelpers
         try {
             // Check that School has Payrexx credentials
             //dd($schoolData->getPayrexxInstance());
-           if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
                 throw new \Exception('No credentials for School ID=' . $schoolData->id);
             }
 
@@ -161,66 +161,101 @@ class PayrexxHelpers
             // Product basket i.e. courses booked plus maybe cancellation insurance
             $basket = [];
 
+            $totalAmount = 0;
+
+// Agregar el precio base
             $basket[] = [
                 'name' => [1 => $basketData['price_base']['name']],
                 'quantity' => $basketData['price_base']['quantity'],
-                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['price_base']['price'] * 100, // Convertir a centavos
             ];
+            $totalAmount += $basketData['price_base']['price'] * 100;
 
-            // Agregar bonos al "basket"
-            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
-                foreach ($basketData['bonus']['bonuses'] as $bonus) {
-                    $basket[] = [
-                        'name' => [1 => $bonus['name']],
-                        'quantity' => $bonus['quantity'],
-                        'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
-                    ];
-                }
-            }
-
-            // Agregar el campo "reduction" al "basket"
+// Agregar reducción
             if (isset($basketData['reduction'])) {
                 $basket[] = [
                     'name' => [1 => $basketData['reduction']['name']],
                     'quantity' => $basketData['reduction']['quantity'],
-                    'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
+                    'amount' => $basketData['reduction']['price'] * 100,
                 ];
+                $totalAmount += $basketData['reduction']['price'] * 100;
             }
 
-            // Agregar el campo "tva" al "basket"
+// Agregar el campo "tva"
             $basket[] = [
                 'name' => [1 => $basketData['tva']['name']],
                 'quantity' => $basketData['tva']['quantity'],
-                'amount' => $basketData['tva']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['tva']['price'] * 100,
             ];
+            $totalAmount += $basketData['tva']['price'] * 100;
 
-            // Agregar "Boukii Care" al "basket"
+// Agregar "Boukii Care"
             $basket[] = [
                 'name' => [1 => $basketData['boukii_care']['name']],
                 'quantity' => $basketData['boukii_care']['quantity'],
-                'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['boukii_care']['price'] * 100,
             ];
+            $totalAmount += $basketData['boukii_care']['price'] * 100;
 
-            // Agregar "Cancellation Insurance" al "basket"
+// Agregar "Cancellation Insurance"
             $basket[] = [
                 'name' => [1 => $basketData['cancellation_insurance']['name']],
                 'quantity' => $basketData['cancellation_insurance']['quantity'],
-                'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['cancellation_insurance']['price'] * 100,
             ];
+            $totalAmount += $basketData['cancellation_insurance']['price'] * 100;
 
-            // Agregar extras al "basket"
+// Agregar extras
             if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
                 foreach ($basketData['extras']['extras'] as $extra) {
                     $basket[] = [
                         'name' => [1 => $extra['name']],
                         'quantity' => $extra['quantity'],
-                        'amount' => $extra['price'] * 100, // Convertir el precio a centavos
+                        'amount' => $extra['price'] * 100,
                     ];
+                    $totalAmount += $extra['price'] * 100;
                 }
             }
 
-            // Calcular el precio total del "basket"
-            $totalAmount = $basketData['pending_amount'] * 100;
+// Agregar bonos
+            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
+                foreach ($basketData['bonus']['bonuses'] as $bonus) {
+                    $basket[] = [
+                        'name' => [1 => $bonus['name']],
+                        'quantity' => $bonus['quantity'],
+                        'amount' => $bonus['price'] * 100,
+                    ];
+                    $totalAmount += $bonus['price'] * 100;
+                }
+            }
+
+// Verificar si la suma del basket coincide con pending_amount
+            if ($totalAmount / 100 !== $basketData['pending_amount']) {
+                // Si no coincide, eliminar bonos y recalcular
+                foreach ($basket as $key => $item) {
+                    if (strpos($item['name'][1], 'BOU') !== false) {
+                        $totalAmount -= $item['amount'];
+                        unset($basket[$key]);
+
+                        // Verificar si ahora coincide
+                        if ($totalAmount / 100 === $basketData['pending_amount']) {
+                            break;
+                        }
+                    }
+                }
+
+                // Si aún no coincide, ajustar con un campo adicional
+                $adjustment = ($basketData['pending_amount'] * 100) - $totalAmount;
+
+                if ($adjustment != 0) { // Solo añadir el ajuste si es diferente de 0
+                    $basket[] = [
+                        'name' => [1 => 'Adjustment'],
+                        'quantity' => 1,
+                        'amount' => $adjustment,
+                    ];
+                    $totalAmount += $adjustment;
+                }
+            }
 
             $gr->setBasket($basket);
             $gr->setAmount($totalAmount);
@@ -257,6 +292,7 @@ class PayrexxHelpers
                 $gr->setValidity(15);
             }
 
+            Log::channel('payrexx')->info('Link prepared amount: '. $totalAmount);
 
 
             // Launch it
@@ -333,9 +369,9 @@ class PayrexxHelpers
 
         try {
             // Check that School has Payrexx credentials
-            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
-                throw new \Exception('No credentials for School ID=' . $schoolData->id);
-            }
+            /*            if (!$schoolData->getPayrexxInstance() || !$schoolData->getPayrexxKey()) {
+                            throw new \Exception('No credentials for School ID=' . $schoolData->id);
+                        }*/
 
 
             // Prepare invoice: basic data
@@ -345,7 +381,6 @@ class PayrexxHelpers
             $ir->setCurrency($bookingData->currency);
             $ir->setVatRate($schoolData->bookings_comission_cash);                  // TODO TBD as of 2022-10 all Schools are at Switzerland and there's no VAT ???
 
-
             // Add School's legal terms, if set
             if ($schoolData->conditions_url) {
                 $ir->addField('terms', $schoolData->conditions_url);
@@ -354,72 +389,109 @@ class PayrexxHelpers
             $ir->setTitle($schoolData->name);
 
             // Calcular el precio total del "basket"
-    /*        $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
-                return $carry + $item['amount'];
-            }, 0);*/
+            /*        $totalAmount = array_reduce($basketData->all(), function($carry, $item) {
+                        return $carry + $item['amount'];
+                    }, 0);*/
 
             $basket = [];
 
+            $totalAmount = 0;
+
+// Agregar el precio base
             $basket[] = [
                 'name' => [1 => $basketData['price_base']['name']],
                 'quantity' => $basketData['price_base']['quantity'],
-                'amount' => $basketData['price_base']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['price_base']['price'] * 100, // Convertir a centavos
             ];
+            $totalAmount += $basketData['price_base']['price'] * 100;
 
-            // Agregar bonos al "basket"
-            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
-                foreach ($basketData['bonus']['bonuses'] as $bonus) {
-                    $basket[] = [
-                        'name' => [1 => $bonus['name']],
-                        'quantity' => $bonus['quantity'],
-                        'amount' => $bonus['price'] * 100, // Convertir el precio a centavos
-                    ];
-                }
-            }
-
-            // Agregar el campo "reduction" al "basket"
+// Agregar reducción
             if (isset($basketData['reduction'])) {
                 $basket[] = [
                     'name' => [1 => $basketData['reduction']['name']],
                     'quantity' => $basketData['reduction']['quantity'],
-                    'amount' => $basketData['reduction']['price'] * 100, // Convertir el precio a centavos
+                    'amount' => $basketData['reduction']['price'] * 100,
                 ];
+                $totalAmount += $basketData['reduction']['price'] * 100;
             }
 
-            // Agregar el campo "tva" al "basket"
+// Agregar el campo "tva"
             $basket[] = [
                 'name' => [1 => $basketData['tva']['name']],
                 'quantity' => $basketData['tva']['quantity'],
-                'amount' => $basketData['tva']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['tva']['price'] * 100,
             ];
+            $totalAmount += $basketData['tva']['price'] * 100;
 
-            // Agregar "Boukii Care" al "basket"
+// Agregar "Boukii Care"
             $basket[] = [
                 'name' => [1 => $basketData['boukii_care']['name']],
                 'quantity' => $basketData['boukii_care']['quantity'],
-                'amount' => $basketData['boukii_care']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['boukii_care']['price'] * 100,
             ];
+            $totalAmount += $basketData['boukii_care']['price'] * 100;
 
-            // Agregar "Cancellation Insurance" al "basket"
+// Agregar "Cancellation Insurance"
             $basket[] = [
                 'name' => [1 => $basketData['cancellation_insurance']['name']],
                 'quantity' => $basketData['cancellation_insurance']['quantity'],
-                'amount' => $basketData['cancellation_insurance']['price'] * 100, // Convertir el precio a centavos
+                'amount' => $basketData['cancellation_insurance']['price'] * 100,
             ];
+            $totalAmount += $basketData['cancellation_insurance']['price'] * 100;
 
-            // Agregar extras al "basket"
+// Agregar extras
             if (isset($basketData['extras']['extras']) && count($basketData['extras']['extras']) > 0) {
                 foreach ($basketData['extras']['extras'] as $extra) {
                     $basket[] = [
                         'name' => [1 => $extra['name']],
                         'quantity' => $extra['quantity'],
-                        'amount' => $extra['price'] * 100, // Convertir el precio a centavos
+                        'amount' => $extra['price'] * 100,
                     ];
+                    $totalAmount += $extra['price'] * 100;
                 }
             }
 
-            // Calcular el precio total del "basket"
-            $totalAmount = $basketData['pending_amount'] * 100;
+// Agregar bonos
+            if (isset($basketData['bonus']['bonuses']) && count($basketData['bonus']['bonuses']) > 0) {
+                foreach ($basketData['bonus']['bonuses'] as $bonus) {
+                    $basket[] = [
+                        'name' => [1 => $bonus['name']],
+                        'quantity' => $bonus['quantity'],
+                        'amount' => $bonus['price'] * 100,
+                    ];
+                    $totalAmount += $bonus['price'] * 100;
+                }
+            }
+
+// Verificar si la suma del basket coincide con pending_amount
+            if ($totalAmount / 100 !== $basketData['pending_amount']) {
+                // Si no coincide, eliminar bonos y recalcular
+                foreach ($basket as $key => $item) {
+                    if (strpos($item['name'][1], 'BOU') !== false) {
+                        $totalAmount -= $item['amount'];
+                        unset($basket[$key]);
+
+                        // Verificar si ahora coincide
+                        if ($totalAmount / 100 === $basketData['pending_amount']) {
+                            break;
+                        }
+                    }
+                }
+
+                // Si aún no coincide, ajustar con un campo adicional
+                $adjustment = ($basketData['pending_amount'] * 100) - $totalAmount;
+
+                if ($adjustment != 0) { // Solo añadir el ajuste si es diferente de 0
+                    $basket[] = [
+                        'name' => [1 => 'Adjustment'],
+                        'quantity' => 1,
+                        'amount' => $adjustment,
+                    ];
+                    $totalAmount += $adjustment;
+                }
+            }
+
+            //$totalAmount = $basketData['pending_amount'] * 100;
 
             Log::channel('payrexx')->info('Basket, ', $basket);
 
@@ -429,12 +501,12 @@ class PayrexxHelpers
 
             $ir->setAmount($totalAmount);
 
-            Log::channel('payrexx')->info('Pending Amount:', ['pending_amount' => $basketData['pending_amount']]);
+            Log::channel('payrexx')->info('Pending Amount:', ['pending_amount' => $basket['pending_amount']]);
             Log::channel('payrexx')->info('Total Amount in Cents:', ['total_amount' => $totalAmount]);
             Log::channel('payrexx')->info('InvoiceRequest Amount:', ['amount' => $ir->getAmount()]);
-           // $ir->setDescription($basketData->all());
+            // $ir->setDescription($basketData->all());
             $ir->setName($bookingData->getOrGeneratePayrexxReference());
-          //  $ir->setPurpose($basketData->all());
+            //  $ir->setPurpose($basketData->all());
             $ir->setTitle($paymentSummary['title']);
             $ir->setPurpose('Booking: #'.$bookingData->id);
             $ir->setDescription($paymentSummary['description']);
@@ -465,7 +537,7 @@ class PayrexxHelpers
                 '',
                 env('PAYREXX_API_BASE_DOMAIN')
             );
-           // dd($ir);
+            // dd($ir);
             Log::channel('payrexx')->info('InvoiceRequest Amount after changes:', ['amount' => $ir->getAmount()]);
             $invoice = $payrexx->create($ir);
             //Log::channel('payrexx')->info('Info', $invoice);
