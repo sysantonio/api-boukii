@@ -97,12 +97,12 @@ class MailController extends AppBaseController
 
         if ($courseIds) {
             // Buscar cursos por IDs
-            $courses = Course::whereIn('id', $courseIds)->get();
+            $courses = Course::whereIn('id', $courseIds)->where('school_id',  $school->id)->get();
         } elseif ($startDate && $endDate) {
             // Buscar cursos por rango de fechas
             $courses = Course::whereHas('courseDates', function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
-            })->get();
+            })->where('school_id',  $school->id)->get();
         } else {
             return $this->sendError('No dates or ids provided');
         }
