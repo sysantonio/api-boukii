@@ -429,7 +429,7 @@ class StatisticsController extends AppBaseController
         $pricePerParticipant = $priceForInterval[$groupBookings] ?? null;
 
         if (!$pricePerParticipant) {
-            Log::debug("Precio no definido curso $bookingUser->id para $groupBookings participantes en intervalo $interval");
+            Log::debug("Precio no definido curso $course->id para $groupBookings participantes en intervalo $interval");
             return 0;
         }
 
