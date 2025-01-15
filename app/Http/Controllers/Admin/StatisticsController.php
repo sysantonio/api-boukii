@@ -251,13 +251,10 @@ class StatisticsController extends AppBaseController
             } else {
                 switch ($paymentType) {
                     case Booking::ID_CASH:
-                        $payments['boukii'] += $courseTotal;
+                        $payments['cash'] += $courseTotal;
                         break;
-                    case Booking::ID_CASH:
-                        $payments['boukii'] += $courseTotal;
-                        break;
-                    case Booking::ID_BOUKIIPAY:
-                        $payments['boukii'] += $courseTotal;
+                    case Booking::ID_OTHER:
+                        $payments['other'] += $courseTotal;
                         break;
                     case Booking::ID_BOUKIIPAY:
                         $payments['boukii'] += $courseTotal;
