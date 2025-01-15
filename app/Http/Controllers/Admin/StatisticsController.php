@@ -346,7 +346,8 @@ class StatisticsController extends AppBaseController
                 $totalPrice = $bookingUser->course->price; // Asumimos que el curso tiene un campo `fixed_price`
             }
         } else {
-            throw new Exception("Invalid course type: $courseType");
+            Log::debug("Invalid course type: $courseType");
+             return $totalPrice;
         }
 
         // Calcular los extras y sumarlos
@@ -428,7 +429,8 @@ class StatisticsController extends AppBaseController
         $pricePerParticipant = $priceForInterval[$groupBookings] ?? null;
 
         if (!$pricePerParticipant) {
-            throw new Exception("Precio no definido curso $bookingUser->id para $groupBookings participantes en intervalo $interval");
+            Log::debug("Precio no definido curso $bookingUser->id para $groupBookings participantes en intervalo $interval");
+            return 0;
         }
 
         // Calcular extras
