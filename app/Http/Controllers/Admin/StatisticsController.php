@@ -406,7 +406,7 @@ class StatisticsController extends AppBaseController
         return $totalPrice;
     }
 
-    function calculatePrivatePrice($bookingUser, $priceRange)
+    function calculatePrivatePrice($bookingUser, $priceRange, $school_id)
     {
         $course = $bookingUser->course;
         $groupId = $bookingUser->group_id;
@@ -418,6 +418,7 @@ class StatisticsController extends AppBaseController
             ->where('hour_end', $bookingUser->hour_end)
             ->where('monitor_id', $bookingUser->monitor_id)
             ->where('group_id', $groupId)
+            ->where('school_id', $bookingUser->school_id)
             ->where('status', 1)
             ->count();
 
