@@ -264,6 +264,9 @@ class StatisticsController extends AppBaseController
                         break;
                 }
             }
+            if (array_key_exists($booking->source, $payments)) {
+                $payments[$booking->source] += 1; // Incrementar el contador de origen
+            }
 
 
             /*            foreach ($course->bookings as $booking) {
