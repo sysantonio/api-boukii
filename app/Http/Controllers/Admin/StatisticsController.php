@@ -215,7 +215,7 @@ class StatisticsController extends AppBaseController
             if ($course->course_type === 2) {
                 // Si es un curso privado (tipo 2), calcular los precios de todos los bookingUsers
                 foreach ($bookingUsers as $bookingUser) {
-                    $courseTotal += calculateTotalPrice($bookingUser);
+                    $courseTotal += $this->calculateTotalPrice($bookingUser);
                 }
             } else {
                 // Si es un curso colectivo (tipo 1)
@@ -223,7 +223,7 @@ class StatisticsController extends AppBaseController
                 $firstDayBookingUsers = $bookingUsers->where('date', $firstDate);
 
                 foreach ($firstDayBookingUsers as $bookingUser) {
-                    $courseTotal += calculateTotalPrice($bookingUser);
+                    $courseTotal += $this->calculateTotalPrice($bookingUser);
                 }
             }
             // Agrupar pagos por tipo
@@ -332,15 +332,15 @@ class StatisticsController extends AppBaseController
         if ($courseType == 1) { // Colectivo
             if ($isFlexible) {
                 // Si es colectivo flexible
-                $totalPrice = calculateFlexibleCollectivePrice($bookingUser);
+                $totalPrice = $this->calculateFlexibleCollectivePrice($bookingUser);
             } else {
                 // Si es colectivo fijo
-                $totalPrice = calculateFixedCollectivePrice($bookingUser);
+                $totalPrice = $this->calculateFixedCollectivePrice($bookingUser);
             }
         } elseif ($courseType == 2) { // Privado
             if ($isFlexible) {
                 // Si es privado flexible, calcular precio por `price_range`
-                $totalPrice = calculatePrivatePrice($bookingUser, $bookingUser->course->price_range);
+                $totalPrice = $this->calculatePrivatePrice($bookingUser, $bookingUser->course->price_range);
             } else {
                 // Si es privado no flexible, usar un precio fijo
                 $totalPrice = $bookingUser->course->price; // Asumimos que el curso tiene un campo `fixed_price`
@@ -350,7 +350,7 @@ class StatisticsController extends AppBaseController
         }
 
         // Calcular los extras y sumarlos
-        $extrasPrice = calculateExtrasPrice($bookingUser);
+        $extrasPrice = $this->calculateExtrasPrice($bookingUser);
         $totalPrice += $extrasPrice;
 
         return $totalPrice;
@@ -421,7 +421,7 @@ class StatisticsController extends AppBaseController
             ->count();
 
         $duration = Carbon::parse($bookingUser->hour_end)->diffInMinutes(Carbon::parse($bookingUser->hour_start));
-        $interval = getIntervalFromDuration($duration); // Función para mapear duración al intervalo (e.g., "1h 30m").
+        $interval = $this->getIntervalFromDuration($duration); // Función para mapear duración al intervalo (e.g., "1h 30m").
 
         // Buscar el precio en el price range
         $priceForInterval = collect($priceRange)->firstWhere('intervalo', $interval);
