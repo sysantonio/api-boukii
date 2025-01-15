@@ -418,6 +418,7 @@ class StatisticsController extends AppBaseController
             ->where('hour_end', $bookingUser->hour_end)
             ->where('monitor_id', $bookingUser->monitor_id)
             ->where('group_id', $groupId)
+            ->where('booking_id', $bookingUser->booking_id)
             ->where('school_id', $bookingUser->school_id)
             ->where('status', 1)
             ->count();
