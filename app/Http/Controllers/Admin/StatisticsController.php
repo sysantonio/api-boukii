@@ -406,7 +406,7 @@ class StatisticsController extends AppBaseController
         return $totalPrice;
     }
 
-    function calculatePrivatePrice($bookingUser, $priceRange, $school_id)
+    function calculatePrivatePrice($bookingUser, $priceRange)
     {
         $course = $bookingUser->course;
         $groupId = $bookingUser->group_id;
