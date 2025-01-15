@@ -11,8 +11,10 @@ use App\Models\MonitorNwd;
 use App\Models\Season;
 use Carbon\Carbon;
 use DateTime;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Response;
 use Validator;
@@ -163,37 +165,67 @@ class StatisticsController extends AppBaseController
         $sportId = $request->input('sport_id');
         $courseType = $request->input('course_type');
 
-        // Construye la consulta base para los cursos
-        $coursesQuery = Course::with(['bookingUsers.booking.payments'])
-            ->where('school_id', $schoolId) // Filtrar por school_id
-            ->whereHas('bookingUsers.booking')
-            ->when($startDate, function ($query, $startDate) {
-                return $query->whereHas('courseDates', function ($query) use ($startDate) {
-                    $query->where('date', '>=', $startDate);
-                });
+        $bookingusersReserved = BookingUser::whereBetween('date', [$startDate, $endDate])
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // Excluir reservas canceladas
             })
-            ->when($endDate, function ($query, $endDate) {
-                return $query->whereHas('courseDates', function ($query) use ($endDate) {
-                    $query->where('date', '<=', $endDate);
-                });
-            })
-            ->when($sportId, function ($query, $sportId) {
-                return $query->where('sport_id', $sportId);
-            })
-            ->when($courseType, function ($query, $courseType) {
-                return $query->where('course_type', $courseType);
-            });
+            ->where('status', 1) // Solo reservas confirmadas
+            ->where('school_id', $request->school_id)
+            ->with('booking')
+            ->get();
 
-        // Obtén los cursos con los filtros aplicados
-        $courses = $coursesQuery->get();
+        /*        // Construye la consulta base para los cursos
+                $coursesQuery = Course::with(['bookingUsers.booking.payments'])
+                    ->where('school_id', $schoolId) // Filtrar por school_id
+                    ->whereHas('bookingUsers.booking')
+                    ->when($startDate, function ($query, $startDate) {
+                        return $query->whereHas('courseDates', function ($query) use ($startDate) {
+                            $query->where('date', '>=', $startDate);
+                        });
+                    })
+                    ->when($endDate, function ($query, $endDate) {
+                        return $query->whereHas('courseDates', function ($query) use ($endDate) {
+                            $query->where('date', '<=', $endDate);
+                        });
+                    })
+                    ->when($sportId, function ($query, $sportId) {
+                        return $query->where('sport_id', $sportId);
+                    })
+                    ->when($courseType, function ($query, $courseType) {
+                        return $query->where('course_type', $courseType);
+                    });
+
+                // Obtén los cursos con los filtros aplicados
+                $courses = $coursesQuery->get();*/
 
         // Estructura de respuesta
         $result = [];
         $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
-        foreach ($courses as $course) {
+        foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingUsers) {
+            $course = Course::find($courseId);
+            $extrasByCourse = [];
+            $courseTotal = 0;
+            if (!$course) continue;
             // Calcular la disponibilidad
             $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
+            $extrasByCourse = 0;
+            // Inicializamos el total del curso
+            $courseTotal = 0;
 
+            if ($course->course_type === 2) {
+                // Si es un curso privado (tipo 2), calcular los precios de todos los bookingUsers
+                foreach ($bookingUsers as $bookingUser) {
+                    $courseTotal += calculateTotalPrice($bookingUser);
+                }
+            } else {
+                // Si es un curso colectivo (tipo 1)
+                $firstDate = $bookingUsers->first()->date; // Tomamos la primera fecha
+                $firstDayBookingUsers = $bookingUsers->where('date', $firstDate);
+
+                foreach ($firstDayBookingUsers as $bookingUser) {
+                    $courseTotal += calculateTotalPrice($bookingUser);
+                }
+            }
             // Agrupar pagos por tipo
             $payments = [
                 'cash' => 0,
@@ -206,34 +238,65 @@ class StatisticsController extends AppBaseController
                 'admin' => 0,
             ];
 
-            foreach ($course->bookings as $booking) {
-                // Iterar sobre los pagos de la reserva
-                foreach ($booking->payments as $payment) {
-                    $paymentType = $booking->payment_method_id;
-                    $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
-                    // Sumar o restar según el método de pago
-                    switch ($paymentType) {
-                        case Booking::ID_CASH:
-                            $payments['cash'] += $amount;
-                            break;
-                        case Booking::ID_BOUKIIPAY:
+            $booking = $bookingUsers->first()->booking;
 
-                            $payments['boukii'] += $amount;
-                            break;
-                        case Booking::ID_ONLINE:
-                            $payments['online'] += $amount;
-                            break;
-                        case Booking::ID_OTHER:
-                            $payments['other'] += $amount;
-                            break;
-                    }
-                }
 
-                // Contabilizar el origen del booking
-                if (array_key_exists($booking->source, $payments)) {
-                    $payments[$booking->source] += 1; // Incrementar el contador de origen
+
+            // Sumar los pagos por método dentro de cada booking
+
+            $paymentType = $booking->payment_method_id;
+
+            if($booking->vouchersLogs()->exists()) {
+                $payments['sell_voucher'] += $courseTotal;
+            } else {
+                switch ($paymentType) {
+                    case Booking::ID_CASH:
+                        $payments['boukii'] += $courseTotal;
+                        break;
+                    case Booking::ID_CASH:
+                        $payments['boukii'] += $courseTotal;
+                        break;
+                    case Booking::ID_BOUKIIPAY:
+                        $payments['boukii'] += $courseTotal;
+                        break;
+                    case Booking::ID_BOUKIIPAY:
+                        $payments['boukii'] += $courseTotal;
+                        break;
+                    case Booking::ID_ONLINE:
+                        $payments['online'] += $courseTotal;
+                        break;
                 }
             }
+
+
+            /*            foreach ($course->bookings as $booking) {
+                            // Iterar sobre los pagos de la reserva
+                            foreach ($booking->payments as $payment) {
+                                $paymentType = $booking->payment_method_id;
+                                $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
+                                // Sumar o restar según el método de pago
+                                switch ($paymentType) {
+                                    case Booking::ID_CASH:
+                                        $payments['cash'] += $amount;
+                                        break;
+                                    case Booking::ID_BOUKIIPAY:
+
+                                        $payments['boukii'] += $amount;
+                                        break;
+                                    case Booking::ID_ONLINE:
+                                        $payments['online'] += $amount;
+                                        break;
+                                    case Booking::ID_OTHER:
+                                        $payments['other'] += $amount;
+                                        break;
+                                }
+                            }
+
+                            // Contabilizar el origen del booking
+                            if (array_key_exists($booking->source, $payments)) {
+                                $payments[$booking->source] += 1; // Incrementar el contador de origen
+                            }
+                        }*/
 
             $totalCost = array_sum($payments);
 
@@ -260,6 +323,154 @@ class StatisticsController extends AppBaseController
     }
 
 
+    function calculateTotalPrice($bookingUser)
+    {
+        $courseType = $bookingUser->course->course_type; // 1 = Colectivo, 2 = Privado
+        $isFlexible = $bookingUser->course->is_flexible; // Si es flexible o no
+        $totalPrice = 0;
+
+        if ($courseType == 1) { // Colectivo
+            if ($isFlexible) {
+                // Si es colectivo flexible
+                $totalPrice = calculateFlexibleCollectivePrice($bookingUser);
+            } else {
+                // Si es colectivo fijo
+                $totalPrice = calculateFixedCollectivePrice($bookingUser);
+            }
+        } elseif ($courseType == 2) { // Privado
+            if ($isFlexible) {
+                // Si es privado flexible, calcular precio por `price_range`
+                $totalPrice = calculatePrivatePrice($bookingUser, $bookingUser->course->price_range);
+            } else {
+                // Si es privado no flexible, usar un precio fijo
+                $totalPrice = $bookingUser->course->price; // Asumimos que el curso tiene un campo `fixed_price`
+            }
+        } else {
+            throw new Exception("Invalid course type: $courseType");
+        }
+
+        // Calcular los extras y sumarlos
+        $extrasPrice = calculateExtrasPrice($bookingUser);
+        $totalPrice += $extrasPrice;
+
+        return $totalPrice;
+    }
+
+    function calculateFixedCollectivePrice($bookingUser)
+    {
+        $course = $bookingUser->course;
+
+        // Agrupar BookingUsers por participante (course_id, participant_id)
+        $participants = BookingUser::select(
+            'client_id',
+            DB::raw('COUNT(*) as total_bookings'), // Contar cuántos BookingUsers tiene cada participante
+            DB::raw('SUM(price) as total_price') // Sumar el precio total por participante
+        )
+            ->where('course_id', $course->id)
+            ->where('client_id', $bookingUser->client_id)
+            ->groupBy('client_id')
+            ->get();
+
+
+        // Tomar el precio del curso para cada participante
+        return count($participants) ? $course->price : 0;
+    }
+
+    function calculateFlexibleCollectivePrice($bookingUser)
+    {
+        $course = $bookingUser->course;
+        $dates = BookingUser::where('course_id', $course->id)
+            ->where('client_id', $bookingUser->client_id)
+            ->pluck('date');
+
+        $totalPrice = 0;
+
+        foreach ($dates as $index => $date) {
+            $price = $course->price;
+
+            // Aplicar descuentos según el campo "discounts"
+            $discounts = json_decode($course->discounts, true);
+            if($discounts) {
+                foreach ($discounts as $discount) {
+                    if ($index + 1 == $discount['day']) {
+                        $price -= ($price * $discount['reduccion'] / 100);
+                        break;
+                    }
+                }
+            }
+
+            $totalPrice += $price;
+        }
+
+        return $totalPrice;
+    }
+
+    function calculatePrivatePrice($bookingUser, $priceRange)
+    {
+        $course = $bookingUser->course;
+        $groupId = $bookingUser->group_id;
+
+        // Agrupar BookingUsers por fecha, hora y monitor
+        $groupBookings = BookingUser::where('course_id', $course->id)
+            ->where('date', $bookingUser->date)
+            ->where('hour_start', $bookingUser->hour_start)
+            ->where('hour_end', $bookingUser->hour_end)
+            ->where('monitor_id', $bookingUser->monitor_id)
+            ->where('group_id', $groupId)
+            ->where('status', 1)
+            ->count();
+
+        $duration = Carbon::parse($bookingUser->hour_end)->diffInMinutes(Carbon::parse($bookingUser->hour_start));
+        $interval = getIntervalFromDuration($duration); // Función para mapear duración al intervalo (e.g., "1h 30m").
+
+        // Buscar el precio en el price range
+        $priceForInterval = collect($priceRange)->firstWhere('intervalo', $interval);
+        $pricePerParticipant = $priceForInterval[$groupBookings] ?? null;
+
+        if (!$pricePerParticipant) {
+            throw new Exception("Precio no definido curso $bookingUser->id para $groupBookings participantes en intervalo $interval");
+        }
+
+        // Calcular extras
+        $extraPrices = $bookingUser->bookingUserExtras->sum(function ($extra) {
+            return $extra->price;
+        });
+
+        // Calcular precio total
+        $totalPrice = $pricePerParticipant + $extraPrices;
+
+        return $totalPrice;
+    }
+    function getIntervalFromDuration($duration)
+    {
+        $mapping = [
+            15 => "15m",
+            30 => "30m",
+            45 => "45m",
+            60 => "1h",
+            75 => "1h 15m",
+            90 => "1h 30m",
+            120 => "2h",
+            180 => "3h",
+            240 => "4h",
+        ];
+
+        return $mapping[$duration] ?? null;
+    }
+
+    function calculateExtrasPrice($bookingUser)
+    {
+        $extras = $bookingUser->bookingUserExtras; // Relación con BookingUserExtras
+
+        $totalExtrasPrice = 0;
+        foreach ($extras as $extra) {
+            Log::debug('extra price:'. $extra->courseExtra->price);
+            $extraPrice = $extra->courseExtra->price ?? 0;
+            $totalExtrasPrice += $extraPrice;
+        }
+
+        return $totalExtrasPrice;
+    }
 
     public function getTotalWorkedHoursBySport(Request $request): JsonResponse
     {
@@ -808,7 +1019,7 @@ class StatisticsController extends AppBaseController
                 return $item->hour_start . $item->hour_end . $item->date . $item->monitor_id;
             });
 
-         // dd($bookingUsersWithMonitor->pluck('duration'));
+        // dd($bookingUsersWithMonitor->pluck('duration'));
 
 
         $settings = json_decode($this->getSchool($request)->settings);
@@ -938,8 +1149,8 @@ class StatisticsController extends AppBaseController
                     // NWD pagado
                     $monitorSummary[$monitorId]['hours_nwd_payed'] += $durationInMinutes;
                     $monitorSummary[$monitorId]['cost_nwd'] = round(($monitorSummary[$monitorId]['cost_nwd'] ?? 0) + $totalCost, 2);
-                 /*   $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
-                    $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);*/
+                    /*   $monitorSummary[$monitorId]['total_minutes'] = ($monitorSummary[$monitorId]['total_minutes'] ?? 0) + $durationInMinutes;
+                       $monitorSummary[$monitorId]['total_cost'] = round(($monitorSummary[$monitorId]['total_cost'] ?? 0) + $totalCost, 2);*/
                 } /*else {
                     // NWD no pagado (solo acumula horas)
                     $monitorSummary[$monitorId]['hours_nwd'] += $durationInMinutes;
@@ -1042,7 +1253,7 @@ class StatisticsController extends AppBaseController
     private function getHourlyRate($monitor, $sportId, $schoolId)
     {
         foreach ($monitor->monitorSportsDegrees as $degree) {
-           // Log::debug('$degree: ', $degree->toArray());
+            // Log::debug('$degree: ', $degree->toArray());
             if($sportId) {
                 if ($degree->sport_id == $sportId && $degree->school_id == $schoolId) {
                     return $degree->salary ? $degree->salary->pay : 0;
@@ -1169,7 +1380,7 @@ class StatisticsController extends AppBaseController
         $durationInMinutes = $this->parseDurationToMinutes($duration);
         $totalCost = round($formattedData['totalCost'], 2);
 
-       // dd($durationInMinutes);
+        // dd($durationInMinutes);
         switch ($courseType) {
             case 1: // Collective
                 $summary['hours_collective'] += $durationInMinutes;
