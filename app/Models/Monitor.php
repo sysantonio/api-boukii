@@ -537,7 +537,10 @@ class Monitor extends Model
 
                 });
         })
-            ->where('monitor_id', $monitorId)
+            ->where('monitor_id', $monitorId)->whereHas('courseGroup.course', function ($query) {
+                // Agrega la comprobación de la escuela aquí
+                $query->where('active', 1);
+            })
             ->exists();
 
         // Si el monitor está ocupado en alguno de los casos, devuelve true; de lo contrario, devuelve false.
