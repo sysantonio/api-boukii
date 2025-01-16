@@ -123,10 +123,7 @@ class PlannerController extends AppBaseController
                     $query->whereDate('date', $today)->where('active', 1);
                 }
             })
-            ->with('bookingUsers', function ($query) {
-                // Agregar la restricción para traer solo las booking_users con status = 1
-                $query->where('status', 1)->whereHas('booking');
-            });
+            ->with('bookingUsers');
 
         // Consulta para las reservas (BookingUser)
         $bookingQuery = BookingUser::with(['booking.user', 'course.courseDates', 'client.sports',
