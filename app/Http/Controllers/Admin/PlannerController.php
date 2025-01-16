@@ -122,8 +122,7 @@ class PlannerController extends AppBaseController
                     // Busca en el día de hoy para las reservas
                     $query->whereDate('date', $today)->where('active', 1);
                 }
-            })
-            ->with('bookingUsers');
+            });
 
         // Consulta para las reservas (BookingUser)
         $bookingQuery = BookingUser::with(['booking.user', 'course.courseDates', 'client.sports',
