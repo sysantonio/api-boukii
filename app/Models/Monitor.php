@@ -537,6 +537,7 @@ class Monitor extends Model
 
                 });
         })
+            ->whereHas('courseGroup')
             ->where('monitor_id', $monitorId)->whereHas('courseGroup.course', function ($query) {
                 // Agrega la comprobación de la escuela aquí
                 $query->where('active', 1);
