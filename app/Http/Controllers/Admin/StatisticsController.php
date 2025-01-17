@@ -201,8 +201,21 @@ class StatisticsController extends AppBaseController
         // Estructura de respuesta
         $result = [];
         $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
-        foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingUsers) {
+        foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingCourseUsers) {
+            // Agrupar pagos por tipo
+
             $course = Course::find($courseId);
+            $payments = [
+                'cash' => 0,
+                'other' => 0,
+                'boukii' => 0,
+                'boukii_web' => 0,
+                'online' => 0,
+                'voucher_gift' => 0,
+                'sell_voucher' => 0,
+                'web' => 0,
+                'admin' => 0,
+            ];
             $extrasByCourse = [];
             $courseTotal = 0;
             if (!$course) continue;
@@ -210,114 +223,88 @@ class StatisticsController extends AppBaseController
             $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
             $extrasByCourse = 0;
             // Inicializamos el total del curso
-            $courseTotal = 0;
+            foreach ($bookingCourseUsers->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+                $bookingTotal = 0;
 
-            if ($course->course_type === 2) {
-                // Si es un curso privado (tipo 2), calcular los precios de todos los bookingUsers
-                foreach ($bookingUsers as $bookingUser) {
-                    $courseTotal += $this->calculateTotalPrice($bookingUser);
+                // Calcular totales por tipo de curso
+                if ($course->course_type === 2) {
+                    // Agrupación lógica para cursos privados
+                    $groupedBookingUsers = $bookingGroupedUsers
+                        ->where('course_id', $course->id)
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->groupBy(function ($bookingUser) {
+                            return $bookingUser->date . '|' . $bookingUser->hour_start . '|' . $bookingUser->hour_end . '|' .
+                                $bookingUser->monitor_id . '|' . $bookingUser->group_id . '|' . $bookingUser->booking_id;
+                        });
+
+                    foreach ($groupedBookingUsers as $groupKey => $bookingUsers) {
+                        $groupTotal = 0;
+                        foreach ($bookingUsers as $bookingUser) {
+                            $groupTotal += $this->calculateTotalPrice($bookingUser);
+                        }
+                        $courseTotal += $groupTotal;
+                        $bookingTotal += $groupTotal;
+                    }
+                } else {
+                    // Lógica para cursos colectivos
+                    $firstDate = $bookingGroupedUsers->first()->date;
+                    $firstDayBookingUsers = $bookingGroupedUsers->where('date', $firstDate);
+
+                    foreach ($firstDayBookingUsers as $bookingUser) {
+                        $courseTotal += $this->calculateTotalPrice($bookingUser);
+                        $bookingTotal += $this->calculateTotalPrice($bookingUser);
+                    }
                 }
-            } else {
-                // Si es un curso colectivo (tipo 1)
-                $firstDate = $bookingUsers->first()->date; // Tomamos la primera fecha
-                $firstDayBookingUsers = $bookingUsers->where('date', $firstDate);
 
-                foreach ($firstDayBookingUsers as $bookingUser) {
-                    $courseTotal += $this->calculateTotalPrice($bookingUser);
-                }
-            }
-            // Agrupar pagos por tipo
-            $payments = [
-                'cash' => 0,
-                'other' => 0,
-                'boukii' => 0,
-                'online' => 0,
-                'voucher_gift' => 0,
-                'sell_voucher' => 0,
-                'web' => 0,
-                'admin' => 0,
-            ];
+                $booking = $bookingGroupedUsers->first()->booking;
 
-            $booking = $bookingUsers->first()->booking;
-
-
-
-            // Sumar los pagos por método dentro de cada booking
-
-            $paymentType = $booking->payment_method_id;
-
-            if($booking->vouchersLogs()->exists()) {
-                $payments['sell_voucher'] += $courseTotal;
-            } else {
-                switch ($paymentType) {
-                    case Booking::ID_CASH:
-                        $payments['cash'] += $courseTotal;
-                        break;
-                    case Booking::ID_OTHER:
-                        $payments['other'] += $courseTotal;
-                        break;
-                    case Booking::ID_BOUKIIPAY:
-                        $payments['boukii'] += $courseTotal;
-                        break;
-                    case Booking::ID_ONLINE:
-                        $payments['online'] += $courseTotal;
-                        break;
-                }
-            }
-            if (array_key_exists($booking->source, $payments)) {
-                $payments[$booking->source] += 1; // Incrementar el contador de origen
-            }
-
-
-            /*            foreach ($course->bookings as $booking) {
-                            // Iterar sobre los pagos de la reserva
-                            foreach ($booking->payments as $payment) {
-                                $paymentType = $booking->payment_method_id;
-                                $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
-                                // Sumar o restar según el método de pago
-                                switch ($paymentType) {
-                                    case Booking::ID_CASH:
-                                        $payments['cash'] += $amount;
-                                        break;
-                                    case Booking::ID_BOUKIIPAY:
-
-                                        $payments['boukii'] += $amount;
-                                        break;
-                                    case Booking::ID_ONLINE:
-                                        $payments['online'] += $amount;
-                                        break;
-                                    case Booking::ID_OTHER:
-                                        $payments['other'] += $amount;
-                                        break;
-                                }
+                // Sumar los pagos
+                $paymentType = $booking->payment_method_id;
+                if ($booking->vouchersLogs()->exists()) {
+                    $payments['sell_voucher'] += $bookingTotal;
+                } else {
+                    switch ($paymentType) {
+                        case Booking::ID_CASH:
+                            $payments['cash'] += $bookingTotal;
+                            break;
+                        case Booking::ID_OTHER:
+                            $payments['other'] += $bookingTotal;
+                            break;
+                        case Booking::ID_BOUKIIPAY:
+                            if ($booking->source === 'web') {
+                                $payments['boukii_web'] += $bookingTotal;
+                            } else {
+                                $payments['boukii'] += $bookingTotal;
                             }
+                            break;
+                        case Booking::ID_ONLINE:
+                            $payments['online'] += $bookingTotal;
+                            break;
+                    }
+                }
+            }
 
-                            // Contabilizar el origen del booking
-                            if (array_key_exists($booking->source, $payments)) {
-                                $payments[$booking->source] += 1; // Incrementar el contador de origen
-                            }
-                        }*/
-
-            $totalCost = array_sum($payments);
-
+            // Agregar la información del curso al resultado
             $result[] = [
                 'course_id' => $course->id,
                 'icon' => $course->icon,
                 'name' => $course->name,
-                'total_places' => $availability['total_places'],
-                'booked_places' => $availability['total_reservations_places'],
-                'available_places' => $availability['total_available_places'],
+                'total_places' => $course->course_type == 1 ? abs($availability['total_places']) : 'NDF',
+                'booked_places' =>  $course->course_type == 1 ? abs($availability['total_reservations_places']) : 'NDF',
+                'available_places' => $course->course_type == 1 ?  abs($availability['total_available_places']) : 'NDF',
                 'cash' => $payments['cash'],
                 'other' => $payments['other'],
                 'boukii' => $payments['boukii'],
+                'boukii_web' => $payments['boukii_web'],
                 'online' => $payments['online'],
                 'voucher_gift' => $payments['voucher_gift'],
                 'sell_voucher' => $payments['sell_voucher'],
                 'web' => $payments['web'],
                 'admin' => $payments['admin'],
-                'total_cost' => $totalCost
+                'total_cost' => $courseTotal,
             ];
         }
+
 
         return $this->sendResponse($result, 'Total worked hours by sport retrieved successfully');
     }
@@ -347,7 +334,7 @@ class StatisticsController extends AppBaseController
             }
         } else {
             Log::debug("Invalid course type: $courseType");
-             return $totalPrice;
+            return $totalPrice;
         }
 
         // Calcular los extras y sumarlos
@@ -468,7 +455,7 @@ class StatisticsController extends AppBaseController
 
         $totalExtrasPrice = 0;
         foreach ($extras as $extra) {
-            Log::debug('extra price:'. $extra->courseExtra->price);
+            //  Log::debug('extra price:'. $extra->courseExtra->price);
             $extraPrice = $extra->courseExtra->price ?? 0;
             $totalExtrasPrice += $extraPrice;
         }
