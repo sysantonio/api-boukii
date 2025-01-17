@@ -61,8 +61,10 @@ trait Utils
             } else {
                 // Verificar si $dates no está vacío
                 if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
-                    $bookings = $course->bookingUsers()->where('status', 1)->get();
-                    $totalBookingsPlaces += $bookings->count();
+                    $bookings = $course->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                        $query->where('status', '!=', 2); // Excluir reservas canceladas
+                    })->get();
+                    $totalBookingsPlaces += $bookings->count() / $dates->count();
 
                     $hoursTotalDate = $this->convertSecondsToHours(
                             $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
@@ -97,7 +99,9 @@ trait Utils
 
 
             foreach ($dates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->where('status', 1)->get();
+                $bookings = $courseDate->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                    $query->where('status', '!=', 2); // Excluir reservas canceladas
+                })->get();
                 $totalBookings += $bookings->count();
 
                 $nwds = MonitorNwd::where('start_date', $courseDate->date)
