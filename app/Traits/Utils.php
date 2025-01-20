@@ -43,8 +43,11 @@ trait Utils
             if ($course->is_flexible) {
                 foreach ($dates as $courseDate) {
                     foreach ($courseDate->courseSubgroups as $subgroup) {
-                        $bookings = $subgroup->bookingUsers()->where('status', 1)->get();
-                        $totalBookingsPlaces += $bookings->count();
+                        //dd($subgroup->course_id);
+                        $bookings = $subgroup->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                            $query->where('status', '!=', 2); // Excluir reservas canceladas
+                        })->whereBetween('date', [$startDate, $endDate])->get();
+                        $totalBookingsPlaces += $bookings->count() / $dates->count();
 
                         $hoursTotalDate = $this->convertSecondsToHours(
                                 $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
@@ -63,7 +66,9 @@ trait Utils
                 if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
                     $bookings = $course->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
                         $query->where('status', '!=', 2); // Excluir reservas canceladas
-                    })->get();
+                    })->whereBetween('date', [$startDate, $endDate])->get();
+
+
                     $totalBookingsPlaces += $bookings->count() / $dates->count();
 
                     $hoursTotalDate = $this->convertSecondsToHours(
