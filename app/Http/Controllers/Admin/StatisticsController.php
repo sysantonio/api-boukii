@@ -913,13 +913,13 @@ class StatisticsController extends AppBaseController
         if ($request->has('type')) {
             $courseType = $request->type;
             return $this->sendResponse([
-                'total_places' => $courseAvailabilityByType['total_places_type_' . $courseType],
-                'total_available_places' => $courseAvailabilityByType['total_available_places_type_' . $courseType],
-                'total_price' => $courseAvailabilityByType['total_price_type_' . $courseType],
-                'total_hours' => $courseAvailabilityByType['total_hours_type_' . $courseType],
-                'total_available_hours' => $courseAvailabilityByType['total_available_hours_type_' . $courseType],
-                'total_reservations_places' => $courseAvailabilityByType['total_reservations_places_type_' . $courseType],
-                'total_reservations_hours' => $courseAvailabilityByType['total_reservations_hours_type_' . $courseType],
+                'total_places' => round($courseAvailabilityByType['total_places_type_' . $courseType]),
+                'total_available_places' =>  round($courseAvailabilityByType['total_available_places_type_' . $courseType]),
+                'total_price' =>  round($courseAvailabilityByType['total_price_type_' . $courseType]),
+                'total_hours' => round( $courseAvailabilityByType['total_hours_type_' . $courseType]),
+                'total_available_hours' =>  round($courseAvailabilityByType['total_available_hours_type_' . $courseType]),
+                'total_reservations_places' =>  round($courseAvailabilityByType['total_reservations_places_type_' . $courseType]),
+                'total_reservations_hours' =>  round($courseAvailabilityByType['total_reservations_hours_type_' . $courseType]),
             ], 'Total available places and prices for the specified course type retrieved successfully');
         }
 
@@ -1255,7 +1255,7 @@ class StatisticsController extends AppBaseController
         foreach ($monitors as $monitor) {
             $monitorSummary[$monitor->id] = [
                 'id' => $monitor->id,
-                'first_name' => $monitor->first_name + ' ' + $monitor->last_name,
+                'first_name' => $monitor->first_name . ' ' . $monitor->last_name,
                 'language1_id' => $monitor->language1_id,
                 'country' => $monitor->country,
                 'birth_date' => $monitor->birth_date,
@@ -1421,10 +1421,10 @@ class StatisticsController extends AppBaseController
         // Procesar NWDs
         foreach ($nwds as $nwd) {
             $monitor = $nwd->monitor;
-            $duration =  $nwd->full_day ?
-                $this->calculateDurationInMinutes($season->hour_start, $season->hour_end) :
-                $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
-            $durationInMinutes = $duration;
+            $duration = $this->calculateDuration($nwd->start_time, $nwd->end_time);
+            $durationInMinutes = $nwd->full_day
+                ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
+                : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
 
             $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
             $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
@@ -1437,8 +1437,8 @@ class StatisticsController extends AppBaseController
 
 
 
-            $this->updateDailySummary($monitorDailySummary[$date], 'nwd',
-                $formattedData, $duration, $hourlyRate, $nwd->user_nwd_subtype_id == 2);
+            $this->updateDailySummary($monitorDailySummary[$date], 'nwd', $formattedData, $duration, $hourlyRate, $nwd->user_nwd_subtype_id == 2);
+
         }
 
         foreach ($monitorDailySummary as &$summary) {
@@ -1495,7 +1495,7 @@ class StatisticsController extends AppBaseController
     {
         return [
             'date' => $date,
-            'first_name' => $monitor->first_name + ' ' + $monitor->last_name,
+            'first_name' => $monitor->first_name . ' ' . $monitor->last_name,
             'language1_id' => $monitor->language1_id,
             'country' => $monitor->country,
             'birth_date' => $monitor->birth_date,
