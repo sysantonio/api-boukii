@@ -44,21 +44,23 @@ trait Utils
                 foreach ($dates as $courseDate) {
                     foreach ($courseDate->courseSubgroups as $subgroup) {
                         //dd($subgroup->course_id);
-                        $bookings = $subgroup->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
-                            $query->where('status', '!=', 2); // Excluir reservas canceladas
-                        })->whereBetween('date', [$startDate, $endDate])->get();
-                        $totalBookingsPlaces += $bookings->count() / $dates->count();
+                        if($subgroup->courseGroup) {
+                            $bookings = $subgroup->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                                $query->where('status', '!=', 2); // Excluir reservas canceladas
+                            })->whereBetween('date', [$startDate, $endDate])->get();
+                            $totalBookingsPlaces += $bookings->count() / $dates->count();
 
-                        $hoursTotalDate = $this->convertSecondsToHours(
-                                $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
-                            ) * $subgroup->max_participants;
-                        $hoursTotalBooked = $this->convertSecondsToHours(
-                                $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
-                            ) * $totalBookingsPlaces;
-                        $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
-                        $totalAvailableHours += $totalHoursAvailable;
-                        $totalPlaces += $subgroup->max_participants;
-                        $totalAvailablePlaces += max(0, $subgroup->max_participants - $totalBookingsPlaces);
+                            $hoursTotalDate = $this->convertSecondsToHours(
+                                    $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                                ) * $subgroup->max_participants;
+                            $hoursTotalBooked = $this->convertSecondsToHours(
+                                    $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
+                                ) * $totalBookingsPlaces;
+                            $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
+                            $totalAvailableHours += $totalHoursAvailable;
+                            $totalPlaces += $subgroup->max_participants / $dates->count();
+                            $totalAvailablePlaces += max(0, $subgroup->max_participants - $totalBookingsPlaces);
+                        }
                     }
                 }
             } else {

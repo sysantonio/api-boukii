@@ -190,8 +190,8 @@ class StatisticsController extends AppBaseController
                 'boukii' => 0,
                 'boukii_web' => 0,
                 'online' => 0,
-                'voucher_gift' => 0,
-                'sell_voucher' => 0,
+              /*  'voucher_gift' => 0,*/
+                'vouchers' => 0,
                 'no_paid' => 0,
                 'web' => 0,
                 'admin' => 0,
@@ -245,7 +245,7 @@ class StatisticsController extends AppBaseController
                     $payments['no_paid'] += $bookingTotal;
                 } else {
                     if ($booking->vouchersLogs()->exists()) {
-                        $payments['sell_voucher'] += $bookingTotal;
+                        $payments['vouchers'] += $bookingTotal;
                     } else {
                         switch ($paymentType) {
                             case Booking::ID_CASH:
@@ -272,7 +272,7 @@ class StatisticsController extends AppBaseController
                 }
 
             }
-
+            $currency = $settings->taxes->currency ?? 'CHF';
             // Agregar la información del curso al resultado
             $result[] = [
                 'course_id' => $course->id,
@@ -286,11 +286,12 @@ class StatisticsController extends AppBaseController
                 'boukii' => round($payments['boukii']),
                 'boukii_web' => round($payments['boukii_web']),
                 'online' => round($payments['online']),
-                'voucher_gift' => round($payments['voucher_gift']),
-                'sell_voucher' => round($payments['sell_voucher']),
+                /*'voucher_gift' => round($payments['voucher_gift']),*/
+                'vouchers' => round($payments['vouchers']),
                 'no_paid' => round($payments['no_paid']),
                 'web' => round($payments['web']),
                 'admin' => round($payments['admin']),
+                'currency' => $currency,
                 'total_cost' => round($courseTotal),
             ];
         }
@@ -767,6 +768,27 @@ class StatisticsController extends AppBaseController
         ];
     }
 
+    public function getTotalMonitorsPrice(Request $request)
+    {
+        $schoolId = $this->getSchool($request)->id;
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+
+        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
+        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
+        ->first();
+
+        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+        $startDate = $request->start_date ?? $season->start_date;
+        $endDate = $request->end_date ?? $season->end_date;
+
+        if (!$startDate || !$endDate) {
+            return $this->sendError('Start date and end date are required.');
+        }
+
+        $sportId = $request->input('sport_id');
+        $courseType = $request->input('course_type');
+    }
+
     public function getTotalPrice(Request $request)
     {
         $schoolId = $this->getSchool($request)->id;
@@ -800,38 +822,11 @@ class StatisticsController extends AppBaseController
         foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
             $booking = $bookingGroupedUsers->first()->booking;
 
-            // Sumar los pagos
-            $paymentType = $booking->payment_method_id;
-            if(!$booking->paid) {
-                $payments['no_paid'] += $bookingTotal;
-            } else {
-                if ($booking->vouchersLogs()->exists()) {
-                    $payments['sell_voucher'] += $bookingTotal;
-                } else {
-                    switch ($paymentType) {
-                        case Booking::ID_CASH:
-                            $payments['cash'] += $bookingTotal;
-                            break;
-                        case Booking::ID_OTHER:
-                            $payments['other'] += $bookingTotal;
-                            break;
-                        case Booking::ID_BOUKIIPAY:
-                            if ($booking->source === 'web') {
-                                $payments['boukii_web'] += $bookingTotal;
-                            } else {
-                                $payments['boukii'] += $bookingTotal;
-                            }
-                            break;
-                        case Booking::ID_ONLINE:
-                            $payments['online'] += $bookingTotal;
-                            break;
-                    }
-                }
-                if (array_key_exists($booking->source, $payments)) {
-                    $payments[$booking->source] += 1; // Incrementar el contador de origen
-                }
-            }
+            $totalPrice += $booking->price_total;
         }
+
+        return $this->sendResponse(round($totalPrice, 2), 'Total available places by course type retrieved successfully');
+
 
     }
 
@@ -1168,6 +1163,157 @@ class StatisticsController extends AppBaseController
 
         return $this->sendResponse(array_values($monitorSummary), 'Monitor bookings of the season retrieved successfully');
     }
+
+    public function getTotalMonitorPrice(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+            'monitor_id' => 'integer|exists:monitors,id|nullable',
+            'sport_id' => 'integer|exists:sports,id|nullable',
+        ]);
+
+        $schoolId = $this->getSchool($request)->id;
+
+        $today = Carbon::now()->format('Y-m-d');
+
+        $season = Season::whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->first();
+
+        if (!$season) {
+            return response()->json(['error' => 'No se encontró una temporada activa'], 404);
+        }
+
+        $startDate = $request->start_date ?? $season->start_date;
+        $endDate = $request->end_date ?? $season->end_date;
+
+        $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
+            ->where('school_id', $schoolId)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2);
+            })
+            ->where('status', 1)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
+            ->when($request->has('sport_id'), function ($query) use ($request) {
+                return $query->whereHas('course', function ($query) use ($request) {
+                    $query->where('sport_id', $request->sport_id);
+                });
+            })
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()->unique(function ($item) {
+                return $item->hour_start . $item->hour_end . $item->date . $item->monitor_id;
+            });
+
+        // dd($bookingUsersWithMonitor->pluck('duration'));
+
+
+        $settings = json_decode($this->getSchool($request)->settings);
+
+        $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
+            ->where('school_id', $schoolId)
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })
+            ->when($request->has('sport_id'), function ($query) use ($request) {
+                return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
+                    $query->where('sport_id', $request->sport_id);
+                });
+            })
+            ->whereBetween('start_date', [$startDate, $endDate])
+            ->get();
+
+        $subgroupsWithoutBookings = CourseSubgroup::with('monitor.monitorSportsDegrees.salary',
+            'monitor.monitorSportsDegrees.sport', 'courseDate')
+            ->whereHas('course', function($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            })
+            ->when($request->has('monitor_id'), function ($query) use ($request) {
+                return $query->where('monitor_id', $request->monitor_id);
+            }, function ($query) {
+                return $query->where('monitor_id', '!=', null);
+            })->when($request->has('sport_id'), function ($query) use ($request) {
+                return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
+                    $query->where('sport_id', $request->sport_id);
+                });
+            })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            })->whereDoesntHave('bookingUsers')
+            ->get();
+
+
+        $currency = $settings->taxes->currency ?? 'CHF';
+
+        $monitorSummary = $this->initializeMonitorSummary($schoolId, $request);
+
+        foreach ($subgroupsWithoutBookings as $subgroupsWithoutBooking) {
+            $monitor = $subgroupsWithoutBooking->monitor;
+            $sport = $subgroupsWithoutBooking->course->sport;
+            $courseType = $subgroupsWithoutBooking->course->course_type;
+            $duration = $this->calculateDuration($subgroupsWithoutBooking->courseDate->hour_start,
+                $subgroupsWithoutBooking->courseDate->hour_end);
+
+            $durationInMinutes = $this->parseDurationToMinutes($duration);
+            $hourlyRate = $this->getHourlyRate($monitor, $sport->id, $schoolId);
+
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
+
+            $this->updateMonitorSummary($monitorSummary, $monitor->id, $courseType, $durationInMinutes,
+                $formattedData['totalCost'], $hourlyRate);
+        }
+
+        // Procesar reservas con monitor
+        foreach ($bookingUsersWithMonitor as $bookingUser) {
+            $monitor = $bookingUser->monitor;
+            $sport = $bookingUser->course->sport;
+            $courseType = $bookingUser->course->course_type;
+
+            $durationInMinutes = $this->parseDurationToMinutes($bookingUser->duration);
+            $hourlyRate = $this->getHourlyRate($monitor, $sport->id, $schoolId);
+
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
+            $this->updateMonitorSummary($monitorSummary, $monitor->id, $courseType, $durationInMinutes,
+                $formattedData['totalCost'], $hourlyRate);
+        }
+
+        // Procesar NWDs
+        foreach ($nwds as $nwd) {
+            $monitor = $nwd->monitor;
+            $durationInMinutes = $nwd->full_day
+                ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
+                : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
+
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
+
+            $this->updateMonitorSummary($monitorSummary, $monitor->id, 'nwd', $durationInMinutes,
+                $formattedData['totalCost'], $hourlyRate, $nwd->user_nwd_subtype_id == 2);
+        }
+        $totalPrice = 0;
+        // Convertir las duraciones totales a formato "Xh Ym"
+        foreach ($monitorSummary as &$summary) {
+            $summary['hours_collective'] = $this->formatMinutesToHourMinute($summary['hours_collective'] ?? 0);
+            $summary['hours_private'] = $this->formatMinutesToHourMinute($summary['hours_private'] ?? 0);
+            $summary['hours_activities'] = $this->formatMinutesToHourMinute($summary['hours_activities'] ?? 0);
+            $summary['hours_nwd'] = $this->formatMinutesToHourMinute($summary['hours_nwd'] ?? 0);
+            $summary['hours_nwd_payed'] = $this->formatMinutesToHourMinute($summary['hours_nwd_payed'] ?? 0);
+            $summary['total_hours'] = $this->formatMinutesToHourMinute($summary['total_minutes'] ?? 0);
+            $totalPrice +=  $summary['total_cost'];
+            unset($summary['total_minutes']); // Eliminar minutos brutos si no se necesitan
+        }
+
+        return $this->sendResponse(round($totalPrice, 2), 'Monitor bookings of the season retrieved successfully');
+
+    }
+
 
     private function calculateDurationInMinutes($startTime, $endTime)
     {

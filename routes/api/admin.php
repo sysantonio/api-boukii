@@ -101,6 +101,13 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('statistics/bookings/sports', [\App\Http\Controllers\Admin\StatisticsController::class, 'getBookingUsersBySport'])
         ->name('api.admin.stats.bookingsSports');
 
+    Route::get('statistics/total', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalPrice'])
+        ->name('api.admin.stats.bookingsSports');
+
+
+    Route::get('statistics/monitors/total', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalMonitorPrice'])
+        ->name('api.admin.stats.bookingsSports');
+
   Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorsBookings'])
         ->name('api.admin.stats.monitors');
 
@@ -112,7 +119,6 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
     Route::get('statistics/bookings/monitors/sports', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalWorkedHoursBySport'])
         ->name('api.admin.stats.monitors.sports');
-
 
   Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorDailyBookings'])
         ->name('api.admin.stats.monitors.id');
