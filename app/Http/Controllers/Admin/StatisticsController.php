@@ -1101,7 +1101,7 @@ class StatisticsController extends AppBaseController
                 });
             })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
-            })
+            })->whereDoesntHave('bookingUsers')
             ->get();
 
 
