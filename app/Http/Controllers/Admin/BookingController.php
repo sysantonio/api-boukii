@@ -126,6 +126,9 @@ class BookingController extends AppBaseController
         DB::beginTransaction();
         try {
             $voucherAmount = array_sum(array_column($data['vouchers'], 'bonus.reducePrice'));
+            if($voucherAmount > 0){
+                $data['paid'] = $data['price_total'] <= $voucherAmount;
+            }
             // Crear la reserva (Booking)
             $booking = Booking::create([
                 'school_id' => $school['id'],
@@ -140,7 +143,7 @@ class BookingController extends AppBaseController
                 'price_cancellation_insurance' => $data['price_cancellation_insurance'],
                 'payment_method_id' => $data['payment_method_id'],
                 'paid_total' => $data['paid_total'],
-                'paid' => $data['paid'] + $voucherAmount,
+                'paid' => $data['paid'],
                 'basket' => $basketJson,
                 'source' => 'admin',
                 'status' => 1,
