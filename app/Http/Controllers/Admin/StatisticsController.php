@@ -175,30 +175,6 @@ class StatisticsController extends AppBaseController
             ->with('booking')
             ->get();
 
-        /*        // Construye la consulta base para los cursos
-                $coursesQuery = Course::with(['bookingUsers.booking.payments'])
-                    ->where('school_id', $schoolId) // Filtrar por school_id
-                    ->whereHas('bookingUsers.booking')
-                    ->when($startDate, function ($query, $startDate) {
-                        return $query->whereHas('courseDates', function ($query) use ($startDate) {
-                            $query->where('date', '>=', $startDate);
-                        });
-                    })
-                    ->when($endDate, function ($query, $endDate) {
-                        return $query->whereHas('courseDates', function ($query) use ($endDate) {
-                            $query->where('date', '<=', $endDate);
-                        });
-                    })
-                    ->when($sportId, function ($query, $sportId) {
-                        return $query->where('sport_id', $sportId);
-                    })
-                    ->when($courseType, function ($query, $courseType) {
-                        return $query->where('course_type', $courseType);
-                    });
-
-                // Obtén los cursos con los filtros aplicados
-                $courses = $coursesQuery->get();*/
-
         // Estructura de respuesta
         $result = [];
         $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
@@ -791,6 +767,74 @@ class StatisticsController extends AppBaseController
         ];
     }
 
+    public function getTotalPrice(Request $request)
+    {
+        $schoolId = $this->getSchool($request)->id;
+        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
+
+        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
+        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
+        ->first();
+
+        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+        $startDate = $request->start_date ?? $season->start_date;
+        $endDate = $request->end_date ?? $season->end_date;
+
+        if (!$startDate || !$endDate) {
+            return $this->sendError('Start date and end date are required.');
+        }
+
+        $sportId = $request->input('sport_id');
+        $courseType = $request->input('course_type');
+
+        $bookingusersReserved = BookingUser::whereBetween('date', [$startDate, $endDate])
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // Excluir reservas canceladas
+            })
+            ->where('status', 1) // Solo reservas confirmadas
+            ->where('school_id', $request->school_id)
+            ->with('booking')
+            ->get();
+
+        $totalPrice = 0;
+        foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+            $booking = $bookingGroupedUsers->first()->booking;
+
+            // Sumar los pagos
+            $paymentType = $booking->payment_method_id;
+            if(!$booking->paid) {
+                $payments['no_paid'] += $bookingTotal;
+            } else {
+                if ($booking->vouchersLogs()->exists()) {
+                    $payments['sell_voucher'] += $bookingTotal;
+                } else {
+                    switch ($paymentType) {
+                        case Booking::ID_CASH:
+                            $payments['cash'] += $bookingTotal;
+                            break;
+                        case Booking::ID_OTHER:
+                            $payments['other'] += $bookingTotal;
+                            break;
+                        case Booking::ID_BOUKIIPAY:
+                            if ($booking->source === 'web') {
+                                $payments['boukii_web'] += $bookingTotal;
+                            } else {
+                                $payments['boukii'] += $bookingTotal;
+                            }
+                            break;
+                        case Booking::ID_ONLINE:
+                            $payments['online'] += $bookingTotal;
+                            break;
+                    }
+                }
+                if (array_key_exists($booking->source, $payments)) {
+                    $payments[$booking->source] += 1; // Incrementar el contador de origen
+                }
+            }
+        }
+
+    }
+
 
     public function getTotalAvailablePlacesByCourseType(Request $request)
     {
@@ -1365,7 +1409,7 @@ class StatisticsController extends AppBaseController
                 });
             })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
-            })
+            })->whereDoesntHave('bookingUsers')
             ->get();
 
         $currency = $settings->taxes->currency ?? 'CHF';
