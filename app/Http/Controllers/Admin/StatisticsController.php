@@ -304,7 +304,7 @@ class StatisticsController extends AppBaseController
                 'sell_voucher' => $payments['sell_voucher'],
                 'web' => $payments['web'],
                 'admin' => $payments['admin'],
-                'total_cost' => $courseTotal,
+                'total_cost' => abs($courseTotal),
             ];
         }
 
