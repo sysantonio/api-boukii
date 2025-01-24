@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\CourseSubgroup;
 use App\Models\BookingUser;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,7 +24,7 @@ class UpdateMonitorForSubgroup implements ShouldQueue
     public function handle()
     {
         // Obtener todos los subgrupos con monitor_id asignado
-        $subGroups = CourseSubgroup::whereNotNull('monitor_id')->get();
+        $subGroups = CourseSubgroup::where('date', '>=', Carbon::today())->get();
 
         foreach ($subGroups as $subGroup) {
             // Buscar todas las BookingUser relacionadas con el subgrupo
