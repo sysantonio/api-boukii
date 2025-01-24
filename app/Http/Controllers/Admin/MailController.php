@@ -187,7 +187,7 @@ class MailController extends AppBaseController
         // Enviar el correo a los correos únicos
         if (!empty($uniqueEmails)) {
             $maxRecipientsPerEmail = 50; // Puedes ajustar este valor según tus necesidades
-
+            $uniqueEmails[] = 'theboukiiteam@boukii.ch';
             $chunks = array_chunk($uniqueEmails, $maxRecipientsPerEmail);
 
             foreach ($chunks as $recipientChunk) {
@@ -195,7 +195,7 @@ class MailController extends AppBaseController
                 dispatch(function () use ($school, $recipientChunk, $blankMailer) {
                     // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
                     try {
-                        Mail::to($recipientChunk)->send($blankMailer);
+                        Mail::bcc($recipientChunk)->send($blankMailer);
                     } catch (\Exception $ex) {
                         \Illuminate\Support\Facades\Log::debug('Admin/MailController SenMailer: ' .
                             $ex->getMessage());
