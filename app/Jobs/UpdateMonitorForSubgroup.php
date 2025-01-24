@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Log;
 
 class UpdateMonitorForSubgroup implements ShouldQueue
 {
@@ -34,5 +35,6 @@ class UpdateMonitorForSubgroup implements ShouldQueue
                 $bookingUser->save();
             }
         }
+        Log::info("Monitor subgroup updated");
     }
 }
