@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('Station:weatherForecast')
             ->hourly()
             ->runInBackground();
-        $schedule->job(new UpdateMonitorForSubgroup)->everyFiveMinutes()->runInBackground();
+        $schedule->job(new UpdateMonitorForSubgroup)->everyFiveMinutes();
 
 
     }
