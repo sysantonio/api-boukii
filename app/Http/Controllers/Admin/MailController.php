@@ -191,7 +191,7 @@ class MailController extends AppBaseController
             $chunks = array_chunk($uniqueEmails, $maxRecipientsPerEmail);
 
             foreach ($chunks as $recipientChunk) {
-                $blankMailer = new BlankMailer($subject, $body, $recipientChunk, [], $school);
+                $blankMailer = new BlankMailer($subject, $body, [], $recipientChunk, $school);
                 dispatch(function () use ($school, $recipientChunk, $blankMailer) {
                     // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
                     try {
