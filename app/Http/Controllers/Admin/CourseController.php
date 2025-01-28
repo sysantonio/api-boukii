@@ -250,7 +250,7 @@ class CourseController extends AppBaseController
     public function store(Request $request): JsonResponse
     {
         $school = $this->getSchool($request);
-        $request->merge(["school_id"=> $school->id]);
+        $request->merge(["school_id" => $school->id]);
 
         try {
             $request->validate([
@@ -258,6 +258,7 @@ class CourseController extends AppBaseController
                 'is_flexible' => 'required',
                 'sport_id' => 'required|exists:sports,id',
                 'school_id' => 'required|exists:schools,id',
+                'user_id' => 'required|exists:users,id',
                 'station_id' => 'nullable|exists:stations,id',
                 'name' => 'required|string|max:65535',
                 'short_description' => 'required|string|max:65535',
@@ -281,7 +282,8 @@ class CourseController extends AppBaseController
                 'course_dates' => 'required|array',
                 'course_dates.*.date' => 'required|date',
                 'course_dates.*.hour_start' => 'required|string|max:255',
-                'course_dates.*.hour_end' => 'required|string|max:255',
+                'course_dates.*.hour_end' => 'nullable|string|max:255',
+                'course_dates.*.duration' => 'nullable|string',
                 'course_dates.*.groups' => 'required_if:course_type,1|array',
                 'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
                 'course_dates.*.groups.*.age_min' => 'nullable|integer|min:0',
@@ -299,7 +301,7 @@ class CourseController extends AppBaseController
 
             $courseData = $request->all();
 
-            if(!empty($courseData['image'])) {
+            if (!empty($courseData['image'])) {
                 $base64Image = $request->input('image');
 
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
@@ -314,7 +316,7 @@ class CourseController extends AppBaseController
                     $this->sendError('did not match data URI with image data');
                 }
 
-                $imageName = 'course/image_'.time().'.'.$type;
+                $imageName = 'course/image_' . time() . '.' . $type;
                 Storage::disk('public')->put($imageName, $imageData);
                 $courseData['image'] = url(Storage::url($imageName));
             }
@@ -329,6 +331,14 @@ class CourseController extends AppBaseController
                 $weekDays = $settings ? $settings['weekDays'] : null;
 
                 foreach ($courseData['course_dates'] as $dateData) {
+                    // Validar o calcular hour_end
+                    if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
+                        $dateData['hour_end'] = $this->calculateHourEnd($dateData['hour_start'], $dateData['duration']);
+                    } elseif (empty($dateData['hour_end'])) {
+                        DB::rollback();
+                        return $this->sendError('Either hour_end or duration must be provided.');
+                    }
+
                     if ($weekDays) {
                         $date = new \DateTime($dateData['date']);
                         $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
@@ -360,13 +370,34 @@ class CourseController extends AppBaseController
                 }
             }
             DB::commit();
-            return $this->sendResponse($course,'Curso creado con éxito');
-        }catch (\Exception $e) {
+            return $this->sendResponse($course, 'Curso creado con éxito');
+        } catch (\Exception $e) {
             DB::rollback();
             return $this->sendError('An error occurred while creating the course: ' . $e->getMessage());
         }
-
     }
+
+    private function calculateHourEnd(string $hourStart, string $duration): string
+    {
+        $time = \DateTime::createFromFormat('H:i', $hourStart);
+        if (!$time) {
+            throw new \Exception('Invalid hour_start format. Expected H:i');
+        }
+
+        $matches = [];
+        if (preg_match('/(?:(\d+)h)?\s*(\d+)?min/', $duration, $matches)) {
+            $hours = isset($matches[1]) ? (int)$matches[1] : 0;
+            $minutes = isset($matches[2]) ? (int)$matches[2] : 0;
+
+            $time->modify("+{$hours} hours");
+            $time->modify("+{$minutes} minutes");
+        } else {
+            throw new \Exception('Invalid duration format. Expected formats like "2h 30min" or "15min"');
+        }
+
+        return $time->format('H:i');
+    }
+
 
     /**
      * @OA\Put(

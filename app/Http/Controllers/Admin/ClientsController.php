@@ -140,18 +140,8 @@ class ClientsController extends AppBaseController
         $with = $request->input('with', ['utilizers.clientSports.sport', 'utilizers.clientSports.degree', 'clientSports.degree', 'clientSports.sport']);
 
         $fieldSearchable = [
-            'clients.id',
-        'email',
         'first_name',
         'last_name',
-        'birth_date',
-        'phone',
-        'telephone',
-        'address',
-        'cp',
-        'city',
-        'province',
-        'country'
     ];
 
         $clientsWithUtilizers = $this->clientRepository->all(

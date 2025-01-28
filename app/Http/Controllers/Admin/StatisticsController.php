@@ -1446,9 +1446,12 @@ class StatisticsController extends AppBaseController
             $monitorSummary[$monitor->id] = [
                 'id' => $monitor->id,
                 'first_name' => $monitor->first_name . ' ' . $monitor->last_name,
+                'address' => $monitor->address,
                 'language1_id' => $monitor->language1_id,
                 'country' => $monitor->country,
                 'birth_date' => $monitor->birth_date,
+                'work_license' => $monitor->work_license,
+                'bank_details' => $monitor->bank_details,
                 'image' => $monitor->image,
                 'sport' => null, // Este se actualiza más adelante
                 'currency' => 'CHF', // Moneda por defecto, se puede ajustar según settings
