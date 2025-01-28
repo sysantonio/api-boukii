@@ -183,6 +183,15 @@ class Degree extends Model
         return $this->hasMany(\App\Models\BookingUser::class, 'degree_id');
     }
 
+    public function bookingUsersActive(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\BookingUser::class, 'course_date_id')
+            ->where('status', 1) // BookingUser debe tener status 1
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            });
+    }
+
     public function courseGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseGroup::class, 'teacher_min_degree');

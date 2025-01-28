@@ -172,7 +172,7 @@ class BookingController extends AppBaseController
                 if ($cartItem['course_type'] == 1) {
                     $subgroup = CourseSubgroup::where('course_date_id', $cartItem['course_date_id'])
                         ->where('degree_id', $cartItem['degree_id'])
-                        ->whereHas('bookingUsers', function ($query) {
+                        ->whereHas('bookingUsersActive', function ($query) {
                             $query->where('status', 1);
                         }, '<', DB::raw('max_participants'))
                         ->first();
