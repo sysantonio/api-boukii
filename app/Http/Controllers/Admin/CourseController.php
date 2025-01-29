@@ -92,7 +92,7 @@ class CourseController extends AppBaseController
 
 
                 $query->when($request->has('sports_id') && is_array($request->sports_id), function ($query) use ($request) {
-                   // dd($request->sport_id);
+                    // dd($request->sport_id);
                     $query->whereIn('sport_id', $request->sports_id);
                 });
 
@@ -208,8 +208,8 @@ class CourseController extends AppBaseController
         app()->setLocale($lang);
         // Valida el ID del curso
         $course = Course::with([
-        'courseDates.courseGroups.bookingUsers.client'
-    ])->where('school_id', $school->id)->findOrFail($courseId);
+            'courseDates.courseGroups.bookingUsers.client'
+        ])->where('school_id', $school->id)->findOrFail($courseId);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist in this school');
@@ -488,6 +488,50 @@ class CourseController extends AppBaseController
             // Actualiza los campos principales del curso
             $course->update($courseData);
 
+            if ($course->course_type !== 1 && isset($courseData['course_dates'])) {
+                // Obtener date_start y date_end del curso
+                $courseStartDate = $course->date_start;
+                $courseEndDate = $course->date_end;
+
+                // Ordenar las fechas de la request por 'date'
+                usort($courseData['course_dates'], function ($a, $b) {
+                    return strtotime($a['date']) - strtotime($b['date']);
+                });
+
+                // Obtener la primera y última fecha de la request
+                $requestFirstDate = $courseData['course_dates'][0]['date'] ?? null;
+                $requestLastDate = end($courseData['course_dates'])['date'] ?? null;
+
+                // Si las fechas en la request no coinciden con el curso, generar todas las fechas intermedias
+                if ($requestFirstDate !== $courseStartDate || $requestLastDate !== $courseEndDate) {
+                    $weekdays = $course->settings['weekdays'] ?? []; // Obtener pattern de weekdays
+                    $generatedDates = [];
+
+                    $period = new DatePeriod(
+                        new DateTime($courseStartDate),
+                        new DateInterval('P1D'),
+                        (new DateTime($courseEndDate))->modify('+1 day') // Incluir la última fecha
+                    );
+
+                    foreach ($period as $date) {
+                        $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
+
+                        // Si no hay weekdays definidos, incluir todas las fechas
+                        if (empty($weekdays) || in_array($weekday, $weekdays)) {
+                            $generatedDates[] = [
+                                'date' => $date->format('Y-m-d'),
+                                'hour_start' => $course->hour_min,
+                                'hour_end' => $course->hour_max,
+                                'course_id' => $course->id
+                            ];
+                        }
+                    }
+
+                    // Reemplazar course_dates con las nuevas fechas generadas
+                    $courseData['course_dates'] = $generatedDates;
+                }
+            }
+
             // Sincroniza las fechas
             if (isset($courseData['course_dates'])) {
                 $updatedCourseDates = [];
@@ -582,57 +626,6 @@ class CourseController extends AppBaseController
                     }
                 }
                 $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
-            }
-
-            if ($course->course_type !== 1 && isset($courseData['course_dates'])) {
-                // Obtener la primera y última fecha actuales del curso
-                $existingDates = $course->courseDates()->orderBy('date')->pluck('date')->toArray();
-                $currentFirstDate = $existingDates[0] ?? null;
-                $currentLastDate = end($existingDates) ?? null;
-
-                // Ordenar las nuevas fechas por `date`
-                usort($courseData['course_dates'], function ($a, $b) {
-                    return strtotime($a['date']) - strtotime($b['date']);
-                });
-
-                // Obtener la primera y última fecha de las nuevas course_dates
-                $newFirstDate = $courseData['course_dates'][0]['date'] ?? null;
-                $newLastDate = end($courseData['course_dates'])['date'] ?? null;
-
-                // Si no coinciden, generar las fechas intermedias
-                if ($newFirstDate !== $currentFirstDate || $newLastDate !== $currentLastDate) {
-                    $weekdays = $course->settings['weekdays'] ?? []; // Obtener patrón de weekdays
-                    $missingDates = [];
-
-                    if ($currentFirstDate && $currentLastDate) {
-                        // Generar todas las fechas intermedias siguiendo los weekdays
-                        $period = new DatePeriod(
-                            new DateTime($currentFirstDate),
-                            new DateInterval('P1D'),
-                            (new DateTime($currentLastDate))->modify('+1 day') // Incluir la última fecha
-                        );
-
-                        foreach ($period as $date) {
-                            $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
-
-                            // Si la fecha no está en la lista de course_dates y cumple con el patrón de weekdays, agregarla
-                            if (!in_array($date->format('Y-m-d'), array_column($courseData['course_dates'], 'date'))
-                                && (empty($weekdays) || in_array($weekday, $weekdays))) {
-                                $missingDates[] = [
-                                    'date' => $date->format('Y-m-d'),
-                                    'hour_start' => $course->hour_min,
-                                    'hour_end' => $course->hour_max,
-                                    'course_id' => $course->id
-                                ];
-                            }
-                        }
-                    }
-
-                    // Agregar las fechas faltantes
-                    if (!empty($missingDates)) {
-                        CourseDate::insert($missingDates);
-                    }
-                }
             }
 
             DB::commit();
