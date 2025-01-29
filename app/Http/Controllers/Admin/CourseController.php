@@ -11,6 +11,9 @@ use App\Models\CourseDate;
 use App\Models\Monitor;
 use App\Models\MonitorsSchool;
 use App\Repositories\CourseRepository;
+use DateInterval;
+use DatePeriod;
+use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -580,6 +583,58 @@ class CourseController extends AppBaseController
                 }
                 $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
             }
+
+            if ($course->course_type !== 1 && isset($courseData['course_dates'])) {
+                // Obtener la primera y última fecha actuales del curso
+                $existingDates = $course->courseDates()->orderBy('date')->pluck('date')->toArray();
+                $currentFirstDate = $existingDates[0] ?? null;
+                $currentLastDate = end($existingDates) ?? null;
+
+                // Ordenar las nuevas fechas por `date`
+                usort($courseData['course_dates'], function ($a, $b) {
+                    return strtotime($a['date']) - strtotime($b['date']);
+                });
+
+                // Obtener la primera y última fecha de las nuevas course_dates
+                $newFirstDate = $courseData['course_dates'][0]['date'] ?? null;
+                $newLastDate = end($courseData['course_dates'])['date'] ?? null;
+
+                // Si no coinciden, generar las fechas intermedias
+                if ($newFirstDate !== $currentFirstDate || $newLastDate !== $currentLastDate) {
+                    $weekdays = $course->settings['weekdays'] ?? []; // Obtener patrón de weekdays
+                    $missingDates = [];
+
+                    if ($currentFirstDate && $currentLastDate) {
+                        // Generar todas las fechas intermedias siguiendo los weekdays
+                        $period = new DatePeriod(
+                            new DateTime($currentFirstDate),
+                            new DateInterval('P1D'),
+                            (new DateTime($currentLastDate))->modify('+1 day') // Incluir la última fecha
+                        );
+
+                        foreach ($period as $date) {
+                            $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
+
+                            // Si la fecha no está en la lista de course_dates y cumple con el patrón de weekdays, agregarla
+                            if (!in_array($date->format('Y-m-d'), array_column($courseData['course_dates'], 'date'))
+                                && (empty($weekdays) || in_array($weekday, $weekdays))) {
+                                $missingDates[] = [
+                                    'date' => $date->format('Y-m-d'),
+                                    'hour_start' => $course->hour_min,
+                                    'hour_end' => $course->hour_max,
+                                    'course_id' => $course->id
+                                ];
+                            }
+                        }
+                    }
+
+                    // Agregar las fechas faltantes
+                    if (!empty($missingDates)) {
+                        CourseDate::insert($missingDates);
+                    }
+                }
+            }
+
             DB::commit();
 
             // Ahora, recorre el array de grupos de correo electrónico y envía correos
