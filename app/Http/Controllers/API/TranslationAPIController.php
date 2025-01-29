@@ -99,7 +99,9 @@ class TranslationAPIController extends AppBaseController
             if ($response->successful()) {
                 return $this->sendResponse($response->json(), 'Translation retrieved successfully');
             } else {
-                Log::error('Error translate', $response->json());
+                if ($response) {
+                    Log::error('Error translate', $response->json());
+                }
                 return $this->sendError('Error retrieving Translation', 500);
             }
         } catch (\Exception $e) {
