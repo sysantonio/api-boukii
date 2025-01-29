@@ -95,6 +95,30 @@ class CourseDate extends Model
         'deleted_at' => 'nullable'
     ];
 
+    protected $appends = ['duration'];
+    public function getDurationAttribute()
+    {
+        if (!$this->hour_start || !$this->hour_end) {
+            return null; // Retorna null si falta algún dato
+        }
+
+        // Convertir a objetos Carbon
+        $start = \Carbon\Carbon::createFromFormat('H:i', $this->hour_start);
+        $end = \Carbon\Carbon::createFromFormat('H:i', $this->hour_end);
+
+        // Calcular la diferencia en minutos
+        $minutes = $start->diffInMinutes($end);
+
+        // Formatear la duración
+        if ($minutes < 60) {
+            return "{$minutes}min";
+        } else {
+            $hours = intdiv($minutes, 60);
+            $remainingMinutes = $minutes % 60;
+            return $remainingMinutes ? "{$hours}h {$remainingMinutes}min" : "{$hours}h";
+        }
+    }
+
     public function setHourStartAttribute($value)
     {
         if ($value && \Carbon\Carbon::hasFormat($value, 'H:i')) {

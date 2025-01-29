@@ -280,6 +280,11 @@ class CourseController extends AppBaseController
                 'price_range' => 'nullable',
                 'discounts' => 'nullable',
                 'settings' => 'nullable',
+                'courseExtras' => 'nullable|array', // Los extras no son obligatorios
+                'courseExtras.*.name' => 'required_with:courseExtras|string|max:255', // Obligatorios si hay extras
+                'courseExtras.*.description' => 'nullable|string|max:255',
+                'courseExtras.*.group' => 'nullable|string|max:255',
+                'courseExtras.*.price' => 'required_with:courseExtras|numeric', // Obligatorios si hay extras
                 'course_dates' => 'required|array',
                 'course_dates.*.date' => 'required|date',
                 'course_dates.*.hour_start' => 'required|string|max:255',
@@ -325,6 +330,12 @@ class CourseController extends AppBaseController
             DB::beginTransaction();
 
             $course = Course::create($courseData);
+
+            if (!empty($data['courseExtras'])) {
+                foreach ($data['courseExtras'] as $extra) {
+                    $course->courseExtras()->create($extra);
+                }
+            }
 
             // Crear las fechas y grupos
             if (isset($courseData['course_dates'])) {
@@ -533,6 +544,9 @@ class CourseController extends AppBaseController
                     }
 
                     $dateId = isset($dateData['id']) ? $dateData['id'] : null;
+                    if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
+                        $dateData['hour_end'] = $this->calculateHourEnd($dateData['hour_start'], $dateData['duration']);
+                    }
                     $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
                     $updatedCourseDates[] = $date->id;
 
