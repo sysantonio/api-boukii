@@ -643,12 +643,15 @@ class Course extends Model
                                 AND booking_users.deleted_at IS NULL)')
                                 ->whereDoesntHave('bookingUserss', function (Builder $bookingQuery) use ($clientId) {
                                     // Excluir los subgrupos donde el cliente ya tiene una reserva
-                                    $bookingQuery->where('client_id', $clientId)
-                                        ->where('status', 1) // Solo excluir reservas activas
-                                            ->whereHas('booking', function (Builder $bookingQuery) use ($clientId) {
-                                                $bookingQuery->where('status', 1);
-                                        })
-                                        ->whereNull('deleted_at'); // Excluir si la reserva no está eliminada
+                                    $bookingQuery->where('status', 1) // Solo excluir reservas activas
+                                    ->whereNull('deleted_at')->whereHas('booking', function (Builder $bookingQuery) use ($clientId) {
+                                        $bookingQuery->where('status', 1);
+                                    }); // Excluir si la reserva no está eliminada
+
+                                    if (!is_null($clientId)) {
+                                        $bookingQuery->where('client_id', $clientId);
+
+                                    }
                                 })
                                 ->whereHas('courseGroup',
                                     function (Builder $groupQuery) use (
