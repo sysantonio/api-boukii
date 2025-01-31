@@ -637,69 +637,71 @@ class Course extends Model
                             $isAdultClient, $clientLanguages, $clientId
                         ) {
                             // Verificamos que haya al menos un subgrupo con capacidad disponible
-                            $subQuery->whereRaw('max_participants > (SELECT COUNT(*) FROM booking_users
-                                WHERE booking_users.course_subgroup_id = course_subgroups.id
-                                 AND booking_users.status = 1
-                                AND booking_users.deleted_at IS NULL)')
-                                ->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
+                            $subQuery->whereRaw('max_participants > (
+                            SELECT COUNT(*)
+                            FROM booking_users
+                            JOIN bookings ON booking_users.booking_id = bookings.id
+                            WHERE booking_users.course_subgroup_id = course_subgroups.id
+                                AND booking_users.status = 1
+                                AND booking_users.deleted_at IS NULL
+                                AND bookings.deleted_at IS NULL
+                                 )');
+                            if (!is_null($clientId)) {
+                                $subQuery->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
+                                    $bookingQuery->where('client_id', $clientId);
+                                });
+                            }
+                            $subQuery   ->whereHas('courseGroup',
+                                function (Builder $groupQuery) use (
+                                    $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                                    $isAdultClient, $clientLanguages
+                                ) {
 
+                                    // Comprobación de degree_order y rango de edad
+                                    if ($clientDegree !== null && $getLowerDegrees) {
 
-                                    if (!is_null($clientId)) {
-                                        $bookingQuery->where('client_id', $clientId);
-
+                                        $groupQuery->whereHas('degree',
+                                            function (Builder $degreeQuery) use ($clientDegree) {
+                                                $degreeQuery->where('degree_order', '<=',
+                                                    $clientDegree->degree_order);
+                                            });
+                                    } else if ($clientDegree !== null && !$getLowerDegrees) {
+                                        //TODO: Fix degree
+                                        /*$groupQuery->whereHas('degree',
+                                             function (Builder $degreeQuery) use ($clientDegree) {
+                                                 $degreeQuery->orWhere('id', $clientDegree->id);
+                                             });*/
                                     }
-                                })
-                                ->whereHas('courseGroup',
-                                    function (Builder $groupQuery) use (
-                                        $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
-                                        $isAdultClient, $clientLanguages
-                                    ) {
-
-                                        // Comprobación de degree_order y rango de edad
-                                        if ($clientDegree !== null && $getLowerDegrees) {
-
-                                            $groupQuery->whereHas('degree',
-                                                function (Builder $degreeQuery) use ($clientDegree) {
+                                    if ($clientAge !== null) {
+                                        // Filtrado por la edad del cliente si está disponible
+                                        $groupQuery->where('age_min', '<=', $clientAge)
+                                            ->where('age_max', '>=', $clientAge);
+                                    } else {
+                                        // Filtrado por min_age y max_age si clientId no está disponible
+                                        if ($max_age !== null) {
+                                            $groupQuery->where('age_min', '<=', $max_age);
+                                        }
+                                        if ($min_age !== null) {
+                                            $groupQuery->where('age_max', '>=', $min_age);
+                                        }
+                                    }
+                                    // Comprobación de degree_order y rango de edad
+                                    if (!empty($degreeOrders)) {
+                                        $groupQuery->whereHas('degree',
+                                            function (Builder $degreeQuery) use ($degreeOrders, $getLowerDegrees
+                                            ) {
+                                                if ($getLowerDegrees) {
+                                                    // Si se pide obtener grados inferiores, compara con el menor grado
                                                     $degreeQuery->where('degree_order', '<=',
-                                                        $clientDegree->degree_order);
-                                                });
-                                        } else if ($clientDegree !== null && !$getLowerDegrees) {
-                                            //TODO: Fix degree
-                                           /*$groupQuery->whereHas('degree',
-                                                function (Builder $degreeQuery) use ($clientDegree) {
-                                                    $degreeQuery->orWhere('id', $clientDegree->id);
-                                                });*/
-                                        }
-                                        if ($clientAge !== null) {
-                                            // Filtrado por la edad del cliente si está disponible
-                                            $groupQuery->where('age_min', '<=', $clientAge)
-                                                ->where('age_max', '>=', $clientAge);
-                                        } else {
-                                            // Filtrado por min_age y max_age si clientId no está disponible
-                                            if ($max_age !== null) {
-                                                $groupQuery->where('age_min', '<=', $max_age);
-                                            }
-                                            if ($min_age !== null) {
-                                                $groupQuery->where('age_max', '>=', $min_age);
-                                            }
-                                        }
-                                        // Comprobación de degree_order y rango de edad
-                                        if (!empty($degreeOrders)) {
-                                            $groupQuery->whereHas('degree',
-                                                function (Builder $degreeQuery) use ($degreeOrders, $getLowerDegrees
-                                                ) {
-                                                    if ($getLowerDegrees) {
-                                                        // Si se pide obtener grados inferiores, compara con el menor grado
-                                                        $degreeQuery->where('degree_order', '<=',
-                                                            min($degreeOrders));
-                                                    } else {
-                                                        // En caso contrario, filtra por los grados específicos
-                                                        $degreeQuery->whereIn('degree_order', $degreeOrders);
-                                                    }
-                                                });
-                                        }
+                                                        min($degreeOrders));
+                                                } else {
+                                                    // En caso contrario, filtra por los grados específicos
+                                                    $degreeQuery->whereIn('degree_order', $degreeOrders);
+                                                }
+                                            });
+                                    }
 
-                                    });
+                                });
                             $subQuery->where(function ($query) use ($isAdultClient, $clientLanguages) {
                                 $query->doesntHave('monitor') // Subgrupo sin monitor asignado
                                 ->orWhereHas('monitor', function (Builder $monitorQuery) use ($isAdultClient, $clientLanguages) {
