@@ -1,5 +1,7 @@
 <?php
 
+use App\Exports\CoursesExport;
+use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
 use App\Models\ClientSport;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Excel;
 use Payrexx\Models\Request\Gateway as GatewayRequest;
 use Payrexx\Models\Request\Transaction as TransactionRequest;
 use Payrexx\Models\Response\Transaction as TransactionResponse;
@@ -62,6 +65,99 @@ Route::any('/users-permissions', function () {
 
     return 'Permisos actualizados correctamente';
 });
+
+Route::any('/fix-subgroups', function () {
+    $subGroups = CourseSubgroup::whereHas('courseDate', function ($query) {
+        $query->where('date', '>=', Carbon::today());
+    });
+
+    foreach ($subGroups as $subGroup) {
+        // Buscar todas las BookingUser relacionadas con el subgrupo
+        $bookingUsers = BookingUser::where('course_subgroup_id', $subGroup->id)->get();
+
+        foreach ($bookingUsers as $bookingUser) {
+            // Actualizar el monitor_id de cada BookingUser
+            $bookingUser->monitor_id = $subGroup->monitor_id;
+            $bookingUser->save();
+        }
+    }
+    return 'Subgroups fixed';
+});
+Route::any('/fix-dates', function () {
+
+    DB::beginTransaction();
+
+    try {
+        // 1. Encontrar las course_dates duplicadas (mismo course_id y date)
+        $duplicates = DB::table('course_dates')
+            ->select('course_id', 'date', DB::raw('MIN(id) as keep_id'))
+            ->groupBy('course_id', 'date')
+            ->havingRaw('COUNT(*) > 1')
+            ->get();
+
+        foreach ($duplicates as $dup) {
+            $keepId = $dup->keep_id;
+
+            // 2. Obtener todas las course_dates duplicadas excepto la que se quedará
+            $toDelete = DB::table('course_dates')
+                ->where('course_id', $dup->course_id)
+                ->where('date', $dup->date)
+                ->where('id', '!=', $keepId)
+                ->pluck('id');
+
+            if ($toDelete->isEmpty()) {
+                continue;
+            }
+
+            // 3. Actualizar booking_users para apuntar al nuevo course_date_id
+            DB::table('booking_users')
+                ->whereIn('course_date_id', $toDelete)
+                ->update(['course_date_id' => $keepId]);
+
+            // 4. Actualizar course_groups y course_subgroups relacionados con booking_users
+            $bookingUserDegrees = DB::table('booking_users')
+                ->where('course_date_id', $keepId)
+                ->pluck('degree_id')
+                ->unique();
+
+            DB::table('course_groups')
+                ->whereIn('degree_id', $bookingUserDegrees)
+                ->whereIn('course_date_id', $toDelete)
+                ->update(['course_date_id' => $keepId]);
+
+            DB::table('course_subgroups')
+                ->whereIn('degree_id', $bookingUserDegrees)
+                ->whereIn('course_date_id', $toDelete)
+                ->update(['course_date_id' => $keepId]);
+
+            // 5. Eliminar los course_groups y course_subgroups de las fechas eliminadas
+            DB::table('course_groups')
+                ->whereIn('course_date_id', $toDelete)
+                ->delete();
+
+            DB::table('course_subgroups')
+                ->whereIn('course_date_id', $toDelete)
+                ->delete();
+
+            // 6. Eliminar course_dates que no tengan booking_users
+            DB::table('course_dates')
+                ->whereIn('id', $toDelete)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('booking_users')
+                        ->whereRaw('booking_users.course_date_id = course_dates.id');
+                })
+                ->delete();
+        }
+
+        DB::commit();
+        return 'Gool';
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return 'Error';
+    }
+});
+
 
 /*Route::any('/degrees-update', function () {
 
@@ -378,11 +474,11 @@ Route::any('/mailtest/{bookingId}', function ($bookingId) {
 
 
     $templateView = 'mails.bookingPay';
-    $templateView = 'mailsv2.newBookingPay';
+    $templateView = 'mailsv2.newBookingCreate';
 
     $footerView = 'mailsv2.newFooter';
 
-    $templateMail = Mail::where('type', 'booking_confirm')->where('school_id', $schoolData->id)
+    $templateMail = Mail::where('type', 'booking_create')->where('school_id', $schoolData->id)
         ->where('lang', $userLocale)->first();
 
     $voucherCode = "";
@@ -595,6 +691,507 @@ Route::get('migration/bookings', [\App\Http\Controllers\MigrationController::cla
 Route::get('migration/all', [\App\Http\Controllers\MigrationController::class, 'migrateAll'])
     ->name('api.migration.all');
 
+/*Route::post('/getCourseData', function (Request $request) {
+    $bookingusersReserved = BookingUser::whereBetween('date', [$request->startDate, $request->endDate])
+        ->whereHas('booking', function ($query) {
+            $query->where('status', '!=', 2);
+        })
+        ->where('status', 1)
+        ->where('school_id', $request->school_id)
+        ->get();
+
+    $totalPricesByType = [
+        'total_price_type_1' => 0,
+        'total_price_type_2' => 0,
+        'total_price_type_3' => 0,
+    ];
+
+    foreach ($bookingusersReserved as $bookingUser) {
+        $price = calculateTotalPrice($bookingUser);
+
+        if ($bookingUser->course->course_type == 1) {
+            $totalPricesByType['total_price_type_1'] += $price;
+        } elseif ($bookingUser->course->course_type == 2) {
+            $totalPricesByType['total_price_type_2'] += $price;
+        } else {
+            $totalPricesByType['total_price_type_3'] += $price;
+        }
+    }
+
+
+    return $totalPricesByType;
+});*/
+
+
+
+
+Route::post('/getCourseData', function (Request $request) {
+    $bookingusersReserved = BookingUser::whereBetween('date', [$request->startDate, $request->endDate])
+        ->whereHas('booking', function ($query) {
+            $query->where('status', '!=', 2); // Excluir reservas canceladas
+        })
+        ->where('status', 1) // Solo reservas confirmadas
+        ->where('school_id', $request->school_id)
+        ->get();
+
+    $result = [];
+
+    // Agrupar por booking_id
+    $bookingGroupedByBooking = $bookingusersReserved->groupBy('booking_id');
+
+    foreach ($bookingGroupedByBooking as $bookingId => $bookingUsers) {
+
+        $booking = $bookingUsers->first()->booking; // Tomamos la primera reserva para obtener la información del booking
+
+        // Crear un array de pagos desglosados por curso
+        $paymentsByCourse = [];
+        $extrasByCourse = [];
+
+        // Ahora procesamos cada BookingUser
+        foreach ($bookingUsers as $bookingUser) {
+            $course = $bookingUser->course; // Cada BookingUser tiene un curso relacionado
+
+            if (!$course) continue;
+            $extrasByCourse[$course->id] = 0;
+            // Inicializamos los pagos y extras por curso si no existen
+            if (!isset($paymentsByCourse[$course->id])) {
+                $paymentsByCourse[$course->id] = [
+                    'cash' => 0,
+                    'other' => 0,
+                    'boukii' => 0,
+                    'online' => 0,
+                    'voucher' => 0,
+                    'web' => 0,
+                    'admin' => 0,
+                ];
+
+            }
+
+            // Sumar los pagos por método
+            foreach ($booking->payments as $payment) {
+                $paymentType = $booking->payment_method_id;
+                $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
+
+                // Relacionamos el pago con el curso correspondiente
+                if ($bookingUser->course_id == $course->id) {
+                    if ($payment->notes == 'other') {
+                        $paymentsByCourse[$course->id]['other'] += $amount;
+                    } else if ($payment->notes == 'cash') {
+                        $paymentsByCourse[$course->id]['cash'] += $amount;
+                    } else if ($payment->notes == 'voucher') {
+                        $paymentsByCourse[$course->id]['voucher'] += $amount;
+                    } else if ($payment->payrexx_reference) {
+                        switch ($paymentType) {
+                            case Booking::ID_BOUKIIPAY:
+                                $paymentsByCourse[$course->id]['boukii'] += $amount;
+                                break;
+                            case Booking::ID_ONLINE:
+                                $paymentsByCourse[$course->id]['online'] += $amount;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            // Sumar los extras por curso
+            foreach ($bookingUser->bookingUserExtras as $extra) {
+                if ($bookingUser->course_id == $course->id) {
+                    $extrasByCourse[$course->id] += $extra->price;
+                }
+            }
+        }
+
+        // Ahora agrupamos los resultados por curso
+        foreach ($paymentsByCourse as $courseId => $payments) {
+            // Si ya existe un curso con este course_id, sumamos los resultados en lugar de agregarlo de nuevo
+            if (!isset($result[$courseId])) {
+                $course = Course::find($courseId);
+                $result[$courseId] = [
+                    'course_id' => $course->id,
+                    'course_name' => $course->name,
+                    'icon' => $course->icon,
+                    'dates' => $bookingUsers->where('course_id', $course->id)->pluck('date')->unique()->values()->toArray(),
+                    'payments' => $payments,
+                    'extras_total' => $extrasByCourse[$courseId],
+                    'total_cost' => array_sum($payments) + $extrasByCourse[$courseId],
+                ];
+            } else {
+                // Si ya existe el curso, sumamos los pagos y extras
+                $result[$courseId]['payments'] = array_map(function($a, $b) {
+                    return $a + $b;
+                }, $result[$courseId]['payments'], $payments);
+
+                $result[$courseId]['extras_total'] += $extrasByCourse[$courseId];
+                $result[$courseId]['total_cost'] = array_sum($result[$courseId]['payments']) + $result[$courseId]['extras_total'];
+            }
+        }
+    }
+
+    // Convertir el array asociativo a un array indexado
+    return array_values($result);
+});
+
+
+Route::post('/calculateTotalPrices', function (Request $request) {
+    $bookingusersReserved = BookingUser::whereBetween('date', [$request->startDate, $request->endDate])
+        ->whereHas('booking', function ($query) {
+            $query->where('status', '!=', 2); // Excluir reservas canceladas
+        })
+        ->where('status', 1) // Solo reservas confirmadas
+        ->where('school_id', $request->school_id)
+        ->get();
+
+    // Método 1: Usando los métodos previos para calcular los precios de los bookingusers
+    $method1Total = 0;
+    foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingUsers) {
+        $course = Course::find($courseId);
+        if (!$course) continue;
+
+        if ($course->course_type === 2) {
+            $bookingUsersGroupedByGroup = $bookingUsers->groupBy('group_id');
+
+            foreach ($bookingUsersGroupedByGroup as $groupId => $groupUsers) {
+                // Sumar el total para cada grupo
+                foreach ($groupUsers as $bookingUser) {
+                    // Suponiendo que el cálculo de precio total por bookingUser es un método que ya tienes
+                    $method1Total += calculateTotalPrice($bookingUser);
+                }
+            }
+        } else {
+            // Filtrar los bookingusers del primer día de la reserva
+            $firstDate = $bookingUsers->first()->date; // Asumimos que la primera fecha es la correcta
+            $firstDayBookingUsers = $bookingUsers->where('date', $firstDate); // Filtramos por el primer día
+
+            foreach ($firstDayBookingUsers as $bookingUser) {
+                // Suponiendo que el cálculo de precio total por bookingUser es un método que ya tienes
+                $method1Total += calculateTotalPrice($bookingUser);
+            }
+        }
+
+    }
+
+    // Método 2: Sumando price_total de todos los bookingusers para cada booking único
+    $method2Total = 0;
+    $bookingGroupedByBooking = $bookingusersReserved->groupBy('booking_id');
+    foreach ($bookingGroupedByBooking as $bookingId => $bookingUsers) {
+        $booking = $bookingUsers->first()->booking; // Tomamos la primera reserva para obtener la información del booking
+        $method2Total += $booking->price_total; // Sumamos el precio total de cada booking
+    }
+
+    // Método 3: Sumando los pagos de todos los bookingusers
+    $method3Total = 0;
+    foreach ($bookingGroupedByBooking as $bookingId => $bookingUsers) {
+        $booking = $bookingUsers->first()->booking; // Obtener la primera reserva de la agrupación
+
+        // Sumar los pagos por método, recorriendo los pagos de la reserva
+        $payments = [
+            'cash' => 0,
+            'other' => 0,
+            'boukii' => 0,
+            'online' => 0,
+            'voucher' => 0,
+            'web' => 0,
+            'admin' => 0,
+        ];
+
+        foreach ($booking->payments as $payment) {
+            $paymentAmount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
+
+            if ($payment->notes == 'other') {
+                $payments['other'] += $paymentAmount;
+            } else if ($payment->notes == 'cash') {
+                $payments['cash'] += $paymentAmount;
+            } else if ($payment->notes == 'voucher') {
+                $payments['voucher'] += $paymentAmount;
+            } else if ($payment->payrexx_reference) {
+                switch ($booking->payment_method_id) {
+                    case Booking::ID_BOUKIIPAY:
+                        $payments['boukii'] += $paymentAmount;
+
+                        break;
+                    case Booking::ID_ONLINE:
+                        $payments['online'] += $paymentAmount;
+                        break;
+                }
+            }
+
+        }
+
+        foreach ($booking->vouchersLogs as $voucher) {
+            $payments['voucher'] += abs($voucher->amount);
+        }
+
+        //dd($payments);
+
+        // Sumar el total de los pagos de la reserva
+        $method3Total += array_sum($payments);
+    }
+
+    // Comparar los resultados
+    return [
+        'method1_total' => $method1Total,
+        'method2_total' => $method2Total,
+        'method3_total' => $method3Total,
+        'discrepancies' => [
+            'method1_vs_method2' => abs($method1Total - $method2Total),
+            'method1_vs_method3' => abs($method1Total - $method3Total),
+            'method2_vs_method3' => abs($method2Total - $method3Total),
+        ],
+    ];
+});
+
+Route::get('/calculateTotalPrices1', function (Request $request) {
+    $bookingusersReserved = BookingUser::whereBetween('date', [$request->startDate, $request->endDate])
+        ->whereHas('booking', function ($query) {
+            $query->where('status', '!=', 2); // Excluir reservas canceladas
+        })
+        ->where('status', 1) // Solo reservas confirmadas
+        ->where('school_id', $request->school_id)
+        ->get();
+
+    // Método 1: Calcular el precio por curso
+    $method1Total = [];
+    $extrasByCourse = [];
+    $result = [];
+    // Agrupar los bookingUsers por course_id
+    foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingUsers) {
+        $course = Course::find($courseId);
+        if (!$course) continue;
+        $extrasByCourse[$course->id] = 0;
+        // Inicializamos el total del curso
+        $courseTotal = 0;
+
+        if ($course->course_type === 2) {
+            // Si es un curso privado (tipo 2), calcular los precios de todos los bookingUsers
+            foreach ($bookingUsers as $bookingUser) {
+                $courseTotal += calculateTotalPrice($bookingUser);
+            }
+        } else {
+            // Si es un curso colectivo (tipo 1)
+            $firstDate = $bookingUsers->first()->date; // Tomamos la primera fecha
+            $firstDayBookingUsers = $bookingUsers->where('date', $firstDate);
+
+            foreach ($firstDayBookingUsers as $bookingUser) {
+                $courseTotal += calculateTotalPrice($bookingUser);
+            }
+        }
+
+        // Sumar los pagos por método, recorriendo los pagos de la reserva
+        $paymentsByCourse[$course->id] = [
+            'cash' => 0,
+            'other' => 0,
+            'boukii' => 0,
+            'online' => 0,
+            'voucher' => 0,
+            'web' => 0,
+            'admin' => 0,
+        ];
+
+
+        foreach ($bookingUsers->groupBy('booking_id') as $bookingId => $usersInBooking) {
+            $booking = $usersInBooking->first()->booking;
+
+            // Sumar los pagos por método dentro de cada booking
+            foreach ($booking->payments as $payment) {
+                $paymentType = $payment->booking->payment_method_id;
+                $amount = $payment->status === 'paid' ? $payment->amount : ($payment->status === 'refund' ? -$payment->amount : 0);
+
+                if ($payment->notes === 'other') {
+                    $paymentsByCourse[$course->id]['other'] += $amount;
+                } elseif ($payment->notes === 'cash') {
+                    $paymentsByCourse[$course->id]['cash'] += $amount;
+                } elseif ($payment->notes === 'voucher') {
+                    $paymentsByCourse[$course->id]['voucher'] += $amount;
+                } elseif ($payment->payrexx_reference) {
+                    switch ($paymentType) {
+                        case Booking::ID_BOUKIIPAY:
+                            $paymentsByCourse[$course->id]['boukii'] += $amount;
+                            break;
+                        case Booking::ID_ONLINE:
+                            $paymentsByCourse[$course->id]['online'] += $amount;
+                            break;
+                    }
+                }
+            }
+        }
+
+        // Guardar el resultado del curso
+        $result[$course->id] = [
+            'course_id' => $course->id,
+            'course_name' => $course->name,
+            'dates' => $bookingUsers
+                ->where('course_id', $course->id)
+                ->map(function ($bookingUser) {
+                    return [
+                        'date' => $bookingUser->date->format('Y-m-d'),
+                        'hour_start' => $bookingUser->hour_start,
+                        'hour_end' => $bookingUser->hour_end,
+                    ];
+                })
+                ->unique(function ($item) {
+                    return $item['date'] . '_' . $item['hour_start'] . '_' . $item['hour_end'];
+                })
+                ->values()
+                ->toArray(),
+            'extras_total' => $extrasByCourse[$course->id] ?? 0,
+            'total_cost' => $courseTotal,
+            'payments' => $paymentsByCourse[$course->id], // Añadimos los pagos al resultado
+        ];
+
+    }
+    return (new CoursesExport($result))->download('courses_export.xlsx');
+});
+
+function calculateTotalPrice($bookingUser)
+{
+    $courseType = $bookingUser->course->course_type; // 1 = Colectivo, 2 = Privado
+    $isFlexible = $bookingUser->course->is_flexible; // Si es flexible o no
+    $totalPrice = 0;
+
+    if ($courseType == 1) { // Colectivo
+        if ($isFlexible) {
+            // Si es colectivo flexible
+            $totalPrice = calculateFlexibleCollectivePrice($bookingUser);
+        } else {
+            // Si es colectivo fijo
+            $totalPrice = calculateFixedCollectivePrice($bookingUser);
+        }
+    } elseif ($courseType == 2) { // Privado
+        if ($isFlexible) {
+            // Si es privado flexible, calcular precio por `price_range`
+            $totalPrice = calculatePrivatePrice($bookingUser, $bookingUser->course->price_range);
+        } else {
+            // Si es privado no flexible, usar un precio fijo
+            $totalPrice = $bookingUser->course->price; // Asumimos que el curso tiene un campo `fixed_price`
+        }
+    } else {
+        throw new Exception("Invalid course type: $courseType");
+    }
+
+    // Calcular los extras y sumarlos
+    $extrasPrice = calculateExtrasPrice($bookingUser);
+    $totalPrice += $extrasPrice;
+
+    return $totalPrice;
+}
+
+function calculateFixedCollectivePrice($bookingUser)
+{
+    $course = $bookingUser->course;
+
+    // Agrupar BookingUsers por participante (course_id, participant_id)
+    $participants = BookingUser::select(
+        'client_id',
+        DB::raw('COUNT(*) as total_bookings'), // Contar cuántos BookingUsers tiene cada participante
+        DB::raw('SUM(price) as total_price') // Sumar el precio total por participante
+    )
+        ->where('course_id', $course->id)
+        ->where('client_id', $bookingUser->client_id)
+        ->groupBy('client_id')
+        ->get();
+
+
+    // Tomar el precio del curso para cada participante
+    return count($participants) ? $course->price : 0;
+}
+
+function calculateFlexibleCollectivePrice($bookingUser)
+{
+    $course = $bookingUser->course;
+    $dates = BookingUser::where('course_id', $course->id)
+        ->where('client_id', $bookingUser->client_id)
+        ->pluck('date');
+
+    $totalPrice = 0;
+
+    foreach ($dates as $index => $date) {
+        $price = $course->price;
+
+        // Aplicar descuentos según el campo "discounts"
+        $discounts = json_decode($course->discounts, true);
+        if($discounts) {
+            foreach ($discounts as $discount) {
+                if ($index + 1 == $discount['day']) {
+                    $price -= ($price * $discount['reduccion'] / 100);
+                    break;
+                }
+            }
+        }
+
+        $totalPrice += $price;
+    }
+
+    return $totalPrice;
+}
+
+function calculatePrivatePrice($bookingUser, $priceRange)
+{
+    $course = $bookingUser->course;
+    $groupId = $bookingUser->group_id;
+
+    // Agrupar BookingUsers por fecha, hora y monitor
+    $groupBookings = BookingUser::where('course_id', $course->id)
+        ->where('date', $bookingUser->date)
+        ->where('hour_start', $bookingUser->hour_start)
+        ->where('hour_end', $bookingUser->hour_end)
+        ->where('monitor_id', $bookingUser->monitor_id)
+        ->where('group_id', $groupId)
+        ->where('status', 1)
+        ->count();
+
+    $duration = Carbon::parse($bookingUser->hour_end)->diffInMinutes(Carbon::parse($bookingUser->hour_start));
+    $interval = getIntervalFromDuration($duration); // Función para mapear duración al intervalo (e.g., "1h 30m").
+
+    // Buscar el precio en el price range
+    $priceForInterval = collect($priceRange)->firstWhere('intervalo', $interval);
+    $pricePerParticipant = $priceForInterval[$groupBookings] ?? null;
+
+    if (!$pricePerParticipant) {
+        throw new Exception("Precio no definido curso $bookingUser->id para $groupBookings participantes en intervalo $interval");
+    }
+
+    // Calcular extras
+    $extraPrices = $bookingUser->bookingUserExtras->sum(function ($extra) {
+        return $extra->price;
+    });
+
+    // Calcular precio total
+    $totalPrice = $pricePerParticipant + $extraPrices;
+
+    return $totalPrice;
+}
+function getIntervalFromDuration($duration)
+{
+    $mapping = [
+        15 => "15m",
+        30 => "30m",
+        45 => "45m",
+        60 => "1h",
+        75 => "1h 15m",
+        90 => "1h 30m",
+        120 => "2h",
+        180 => "3h",
+        240 => "4h",
+    ];
+
+    return $mapping[$duration] ?? null;
+}
+
+function calculateExtrasPrice($bookingUser)
+{
+    $extras = $bookingUser->bookingUserExtras; // Relación con BookingUserExtras
+
+    $totalExtrasPrice = 0;
+    foreach ($extras as $extra) {
+        Log::debug('extra price:'. $extra->courseExtra->price);
+        $extraPrice = $extra->courseExtra->price ?? 0;
+        $totalExtrasPrice += $extraPrice;
+    }
+
+    return $totalExtrasPrice;
+}
+
+
 /*Route::get('/fix-nwds', function () {
     // Obtener todos los MonitorNwds
     $monitorNwds = MonitorNwd::all();
@@ -620,19 +1217,7 @@ Route::get('migration/all', [\App\Http\Controllers\MigrationController::class, '
     }
 });
 
-Route::get('/fix-clients', function () {
-    $clients = Client::with('clientsSchools')->get();
 
-    foreach ($clients as $client) {
-        foreach ($client->clientsSchools as $clientSchool) {
-            // Actualizar el campo `accepted_at` a la fecha y hora actuales
-            $clientSchool->accepted_at = Carbon::now();
-            $clientSchool->save();
-        }
-    }
-
-    return response()->json(['message' => 'Todos los clientes activados para todas las escuelas']);
-});
 
 
 Route::get('/process-images', function () {
