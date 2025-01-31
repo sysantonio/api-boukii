@@ -641,7 +641,7 @@ class Course extends Model
                                 WHERE booking_users.course_subgroup_id = course_subgroups.id
                                  AND booking_users.status = 1
                                 AND booking_users.deleted_at IS NULL)')
-                                ->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
+                                ->whereDoesntHave('bookingUserss', function (Builder $bookingQuery) use ($clientId) {
                                     // Excluir los subgrupos donde el cliente ya tiene una reserva
                                     $bookingQuery->where('client_id', $clientId)
                                         ->where('status', 1) // Solo excluir reservas activas
