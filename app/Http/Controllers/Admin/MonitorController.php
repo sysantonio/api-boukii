@@ -223,7 +223,7 @@ class MonitorController extends AppBaseController
             $isBusy = Monitor::isMonitorBusy($id, $validatedData['date'],
                 $validatedData['hour_start'], $validatedData['hour_end']);
 
-            return $this->sendResponse(['available' => !$isBusy], 'Bookings returned successfully');
+            return $this->sendResponse(['available' => !$isBusy], 'Monitor availability returned successfully');
 
         } catch (ValidationException $e) {
             // Manejar errores de validación

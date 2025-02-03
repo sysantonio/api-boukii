@@ -347,6 +347,13 @@ class Booking extends Model
         return $this->hasMany(\App\Models\BookingUser::class, 'booking_id');
     }
 
+    public function bookingUsersActive(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\BookingUser::class, 'booking_id')
+            ->where('status', 1);// BookingUser debe tener status 1
+
+    }
+
     public function vouchersLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\VouchersLog::class, 'booking_id');

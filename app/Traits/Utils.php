@@ -48,7 +48,7 @@ trait Utils
                             $bookings = $subgroup->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
                                 $query->where('status', '!=', 2); // Excluir reservas canceladas
                             })->whereBetween('date', [$startDate, $endDate])->get();
-                            $totalBookingsPlaces += $bookings->count() / $dates->count();
+                            $totalBookingsPlaces += $bookings->count();
 
                             $hoursTotalDate = $this->convertSecondsToHours(
                                     $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)

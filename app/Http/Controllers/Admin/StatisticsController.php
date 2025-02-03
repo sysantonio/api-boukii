@@ -206,6 +206,8 @@ class StatisticsController extends AppBaseController
             // Inicializamos el total del curso
             foreach ($bookingCourseUsers->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
                 $bookingTotal = 0;
+                $booking = $bookingGroupedUsers->first()->booking;
+                if ($booking->status == 2) continue;
 
                 // Calcular totales por tipo de curso
                 if ($course->course_type === 2) {
@@ -228,8 +230,8 @@ class StatisticsController extends AppBaseController
                     }
                 } else {
                     // Lógica para cursos colectivos
-                    $firstDate = $bookingGroupedUsers->first()->date;
-                    $firstDayBookingUsers = $bookingGroupedUsers->where('date', $firstDate);
+                    $firstDate = $bookingGroupedUsers->where('course_id', $course->id)->first()->date;
+                    $firstDayBookingUsers = $bookingGroupedUsers->where('course_id', $course->id)->where('date', $firstDate);
 
                     foreach ($firstDayBookingUsers as $bookingUser) {
                         $courseTotal += $this->calculateTotalPrice($bookingUser);
@@ -237,7 +239,7 @@ class StatisticsController extends AppBaseController
                     }
                 }
 
-                $booking = $bookingGroupedUsers->first()->booking;
+                $bookingUsersGrouped = $course->bookingUsersActive->groupBy('client_id');
 
                 // Sumar los pagos
                 $paymentType = $booking->payment_method_id;
@@ -266,11 +268,28 @@ class StatisticsController extends AppBaseController
                                 break;
                         }
                     }
-                    if (array_key_exists($booking->source, $payments)) {
-                        $payments[$booking->source] += 1; // Incrementar el contador de origen
-                    }
+
                 }
 
+            }
+
+            foreach ($bookingUsersGrouped as $clientBookingUsers) {
+                // Obtener el primer `booking` de este grupo (todos tienen el mismo `booking_id`)
+                $booking = $clientBookingUsers->first()->booking;
+                $source = $booking->source; // Origen de la reserva
+
+                // Cantidad de plazas reservadas por este cliente
+                $bookingUsersCount = $clientBookingUsers->count();
+
+                // Si el curso NO es flexible, dividir por la cantidad de fechas
+                $bookingUsersCount = !$course->is_flexible ? $bookingUsersCount / max(1, $course->courseDates->count()) : $bookingUsersCount;
+
+                // Sumar al total de source correspondiente
+                if (isset($payments[$source])) {
+                    $payments[$source] += $bookingUsersCount;
+                } else {
+                    $payments[$source] = $bookingUsersCount;
+                }
             }
             $currency = $settings->taxes->currency ?? 'CHF';
             // Agregar la información del curso al resultado
