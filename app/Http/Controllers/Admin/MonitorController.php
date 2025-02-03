@@ -212,11 +212,14 @@ class MonitorController extends AppBaseController
             // Validar los parámetros
             $validatedData = $request->validate([
                 'date' => 'required|date',
-                'hour_start' => 'required|date_format:H:i:s',
-                'hour_end' => 'required|date_format:H:i:s',
+                'hour_start' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
+                'hour_end' => ['required', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             ]);
 
-            // Comprobar si el monitor está ocupado
+            // Asegurar que los valores tengan segundos (normalizar)
+            $validatedData['hour_start'] = $this->normalizeTimeFormat($validatedData['hour_start']);
+            $validatedData['hour_end'] = $this->normalizeTimeFormat($validatedData['hour_end']);
+
             $isBusy = Monitor::isMonitorBusy($id, $validatedData['date'],
                 $validatedData['hour_start'], $validatedData['hour_end']);
 
@@ -227,7 +230,14 @@ class MonitorController extends AppBaseController
              return $this->sendError($e->getMessage(), 400);
         }
 
+    }
 
+    /**
+     * Normaliza el formato de la hora asegurando que siempre tenga segundos.
+     */
+    private function normalizeTimeFormat($time)
+    {
+        return strlen($time) === 5 ? $time . ':00' : $time;
     }
 
 }
