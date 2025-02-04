@@ -327,9 +327,9 @@ class CourseController extends SlugAuthController
             $request['clientIds'] = $clientIds;
 
 
-            if (BookingUser::hasOverlappingBookings($bookingUser, [])) {
+/*            if (BookingUser::hasOverlappingBookings($bookingUser, [])) {
                 return $this->sendError('Client has booking on that date');
-            }
+            }*/
         }
 
         // Procesar duraciones
