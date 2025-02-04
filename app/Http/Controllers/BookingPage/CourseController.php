@@ -319,6 +319,19 @@ class CourseController extends SlugAuthController
             return $this->sendResponse([], 'No monitors available.');
         }
 
+        foreach ($request->bookingUsers as $bookingUser) {
+            if($bookingUser['course']['course_type'] == 2) {
+                $clientIds[] = $bookingUser['client']['id'];
+            }
+
+            $request['clientIds'] = $clientIds;
+
+
+            if (BookingUser::hasOverlappingBookings($bookingUser, [])) {
+                return $this->sendError('Client has booking on that date');
+            }
+        }
+
         // Procesar duraciones
         $durationsWithMonitors = $this->processDurations($course, $courseDate, $startTime, $endTime, $request, $monitors);
 
@@ -445,7 +458,6 @@ class CourseController extends SlugAuthController
         }
 
         $clientLanguages = array_unique($clientLanguages);
-     //   dd($request->minimumDegreeId);
         // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
         $eligibleMonitors =
             MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query) use ($school, $request) {

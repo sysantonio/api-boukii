@@ -248,7 +248,7 @@ class BookingController extends SlugAuthController
         foreach ($request->bookingUsers as $bookingUser) {
             if($bookingUser['course']['course_type'] == 2) {
                 $clientIds[] = $bookingUser['client']['id'];
-
+                $highestDegreeId = $bookingUser['degree_id'];
                 // Obtener el degree_id más alto solo una vez
                 if ($highestDegreeId === 0) {
                     $sportId = $bookingUser['course']['sport_id'];
@@ -278,6 +278,8 @@ class BookingController extends SlugAuthController
 
         if($request->bookingUsers[0]['course']['course_type'] == 2) {
             $degreeOrder = Degree::find($highestDegreeId)->degree_order ?? null;
+
+           // dd($highestDegreeId);
 
             // Crear el array con las condiciones necesarias
             $monitorAvailabilityData = [
@@ -340,7 +342,7 @@ class BookingController extends SlugAuthController
                 // Solo aplicar la condición de degree_order si minimumDegreeId no es null
                 if (!is_null($request->minimumDegreeId)) {
                     $query->whereHas('degree', function ($q) use ($request) {
-                        $q->where('degree_order', '<=', $request->minimumDegreeId);
+                        $q->where('degree_order', '>=', $request->minimumDegreeId);
                     });
                 }
             })
@@ -416,6 +418,15 @@ class BookingController extends SlugAuthController
 
     }
 
+        private function areMonitorsAvailable($monitors, $date, $startTime, $endTime): bool
+    {
+        foreach ($monitors as $monitor) {
+            if (!Monitor::isMonitorBusy($monitor->id, $date, $startTime, $endTime)) {
+                return true; // Hay al menos un monitor disponible
+            }
+        }
+        return false; // Ningún monitor está disponible en el rango
+    }
 
     /**
      * @OA\Post(
