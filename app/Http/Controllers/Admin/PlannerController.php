@@ -445,6 +445,13 @@ class PlannerController extends AppBaseController
 
                 // Actualizar el monitor_id del subgrupo
                 $courseSubgroup->update(['monitor_id' => $monitorId]);
+                $bookingUsers = BookingUser::where('course_subgroup_id', $courseSubgroup->id)->get();
+
+                foreach ($bookingUsers as $bookingUser) {
+                    // Actualizar el monitor_id de cada BookingUser
+                    $bookingUser->monitor_id = $courseSubgroup->monitor_id;
+                    $bookingUser->save();
+                }
 
             } else {
                 return $this->sendError('Subgroup cannot be found.');

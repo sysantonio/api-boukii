@@ -419,7 +419,9 @@ class ClientAPIController extends AppBaseController
                 ->where('client_id', $clientId)
                 ->update(['course_subgroup_id' => $targetSubgroup->id,
                     'course_group_id' => $targetSubgroup->course_group_id,
-                    'degree_id' => $targetSubgroup->degree_id]);
+                    'degree_id' => $targetSubgroup->degree_id,
+                    'monitor_id' => $targetSubgroup->monitor_id]
+                );
         }
     }
 }
