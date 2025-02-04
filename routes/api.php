@@ -83,6 +83,47 @@ Route::any('/fix-subgroups', function () {
     }
     return 'Subgroups fixed';
 });
+
+Route::any('/fix-bookings', function () {
+    $duplicates = DB::table('booking_users')
+        ->select('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
+        ->groupBy('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
+        ->havingRaw('COUNT(*) > 1')
+        ->get();
+
+    foreach ($duplicates as $duplicate) {
+        // Busca todos los registros duplicados
+        $bookingUsers = BookingUser::where([
+            'client_id'      => $duplicate->client_id,
+            'course_date_id' => $duplicate->course_date_id,
+            'course_id'      => $duplicate->course_id,
+            'degree_id'      => $duplicate->degree_id,
+            'date'           => $duplicate->date,
+            'hour_start'     => $duplicate->hour_start,
+            'hour_end'       => $duplicate->hour_end
+        ])->get();
+
+        // Filtra aquellos donde monitor_id es NULL
+        $toDelete = $bookingUsers->filter(fn($bu) => is_null($bu->monitor_id));
+
+        foreach ($toDelete as $booking) {
+            // Elimina el CourseSubgroup asociado si existe
+            if ($booking->course_subgroup_id) {
+                CourseSubgroup::where('id', $booking->course_subgroup_id)->delete();
+            }
+
+            // Elimina el CourseGroup asociado si existe
+            if ($booking->course_group_id) {
+                CourseGroup::where('id', $booking->course_group_id)->delete();
+            }
+
+            // Elimina el bookinguser
+            $booking->delete();
+        }
+    }
+
+    return response()->json(['message' => 'Registros duplicados eliminados'], 200);
+});
 Route::any('/fix-dates', function () {
 
     DB::beginTransaction();

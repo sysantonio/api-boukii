@@ -128,11 +128,14 @@ class CourseController extends AppBaseController
         foreach ($courses as $course) {
             if($course->course_type == 1) {
                 $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
+
+                   // dd($availability);
+
                 $course->total_reservations = $availability['total_reservations_places'];
                 $course->total_available_places = $availability['total_available_places'];
                 $course->total_places = $availability['total_places'];
             } else {
-                $course->total_reservations = $course->bookingUsers->count();
+                $course->total_reservations = $course->bookingUsersActive->count();
             }
 
         }
