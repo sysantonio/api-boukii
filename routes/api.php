@@ -85,7 +85,7 @@ Route::any('/fix-subgroups', function () {
 });
 
 Route::any('/fix-bookings', function () {
-    $duplicates = DB::table('booking_users')
+  /*  $duplicates = DB::table('booking_users')
         ->select('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
         ->groupBy('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
         ->havingRaw('COUNT(*) > 1')
@@ -122,7 +122,26 @@ Route::any('/fix-bookings', function () {
         }
     }
 
-    return response()->json(['message' => 'Registros duplicados eliminados'], 200);
+    return response()->json(['message' => 'Registros duplicados eliminados'], 200);*/
+    $date = '2025-02-04 17:50:00';
+    $date = Carbon::parse($date); // Convierte la fecha en un objeto Carbon
+
+    // Restaurar BookingUsers eliminados después de la fecha especificada
+    BookingUser::withTrashed()
+        ->where('deleted_at', '>=', $date)
+        ->restore();
+
+    // Restaurar CourseSubgroups eliminados después de la fecha especificada
+    CourseSubgroup::withTrashed()
+        ->where('deleted_at', '>=', $date)
+        ->restore();
+
+    // Restaurar CourseGroups eliminados después de la fecha especificada
+    CourseGroup::withTrashed()
+        ->where('deleted_at', '>=', $date)
+        ->restore();
+
+    return response()->json(['message' => 'Registros restaurados correctamente'], 200);
 });
 Route::any('/fix-dates', function () {
 
