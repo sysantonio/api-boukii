@@ -85,88 +85,87 @@ Route::any('/fix-subgroups', function () {
     return 'Subgroups fixed';
 });
 
-Route::any('/fix-bookings', function () {
-  /*  $duplicates = DB::table('booking_users')
-        ->select('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
-        ->groupBy('client_id', 'course_date_id', 'course_id', 'degree_id', 'date', 'hour_start', 'hour_end')
-        ->havingRaw('COUNT(*) > 1')
-        ->get();
+Route::any('/fix-bookings',
+    function () {
+        $inicioAnio = Carbon::createFromFormat('Y-m-d', date('Y') . '-01-01');
 
-    foreach ($duplicates as $duplicate) {
-        // Busca todos los registros duplicados
-        $bookingUsers = BookingUser::where([
-            'client_id'      => $duplicate->client_id,
-            'course_date_id' => $duplicate->course_date_id,
-            'course_id'      => $duplicate->course_id,
-            'degree_id'      => $duplicate->degree_id,
-            'date'           => $duplicate->date,
-            'hour_start'     => $duplicate->hour_start,
-            'hour_end'       => $duplicate->hour_end
-        ])->get();
+        // Buscar los duplicados agrupados
+        $duplicados = BookingUser::select(
+            'course_date_id',
+            'client_id',
+            'hour_start',
+            'hour_end'
+        )
+            ->whereNull('deleted_at')
+            ->groupBy('course_date_id', 'client_id', 'hour_start', 'hour_end')
+            ->havingRaw('COUNT(*) > 1')
+            ->where('school_id', '!=', 1)
+            ->where('status', 1)
+            ->where('date', '>=', $inicioAnio)
+            ->whereHas('booking', function ($query) {
+                $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->get();
 
-        // Filtra aquellos donde monitor_id es NULL
-        $toDelete = $bookingUsers->filter(fn($bu) => is_null($bu->monitor_id));
+        // Crear un array para almacenar los grupos
+        $grupos = [];
 
-        foreach ($toDelete as $booking) {
-            // Elimina el CourseSubgroup asociado si existe
-            if ($booking->course_subgroup_id) {
-                CourseSubgroup::where('id', $booking->course_subgroup_id)->delete();
+
+        foreach ($duplicados as $dup) {
+            // Obtener todas las reservas duplicadas
+            $bookingUsers = BookingUser::whereNull('deleted_at')
+                ->with('courseGroup.bookingUsers')
+                ->where('course_date_id', $dup->course_date_id)
+                ->where('client_id', $dup->client_id)
+                ->where('hour_start', $dup->hour_start)
+                ->where('hour_end', $dup->hour_end)
+                ->where('school_id', '!=', 1)
+                ->where('status', 1)
+                ->where('date', '>=', $inicioAnio)
+                ->whereHas('booking', function ($query) {
+                    $query->where('status', '!=', 2); // La Booking no debe tener status 2
+                })
+                ->get();
+            foreach ($bookingUsers as $bookingUser) {
+
+                // Si solo hay una reserva en este grupo, eliminarla junto con su grupo y subgrupos
+                if ($bookingUser->courseGroup && $bookingUser->courseGroup->bookingUsers->count() == 1) {
+                    $booking = $bookingUser; // Obtener la única reserva
+                    $courseGroupId = $booking->course_group_id;
+                    $courseSubgroupId = $booking->course_subgroup_id;
+
+                    DB::transaction(function () use ($booking, $courseGroupId, $courseSubgroupId) {
+                        // Eliminar la reserva
+                        $booking->delete();
+
+                        // Si existe un grupo asociado y ya no tiene más reservas, eliminarlo
+                        if ($courseGroupId) {
+                            $remainingBookings = BookingUser::where('course_group_id', $courseGroupId)->count();
+                            if ($remainingBookings == 0) {
+                                CourseGroup::where('id', $courseGroupId)->delete();
+                            }
+                        }
+
+                        // Si existe un subgrupo asociado y ya no tiene más reservas, eliminarlo
+                        if ($courseSubgroupId) {
+                            $remainingSubgroupBookings = BookingUser::where('course_subgroup_id', $courseSubgroupId)->count();
+                            if ($remainingSubgroupBookings == 0) {
+                                CourseSubgroup::where('id', $courseSubgroupId)->delete();
+                            }
+                        }
+                    });
+                } else {
+                    // Solo agregar al array los grupos que tienen más de una reserva
+                    $clave = "{$dup->course_date_id}-{$dup->client_id}-{$dup->hour_start}-{$dup->hour_end}";
+                    $grupos[$clave] = $bookingUsers;
+                }
             }
-
-            // Elimina el CourseGroup asociado si existe
-            if ($booking->course_group_id) {
-                CourseGroup::where('id', $booking->course_group_id)->delete();
-            }
-
-            // Elimina el bookinguser
-            $booking->delete();
         }
-    }
 
-    return response()->json(['message' => 'Registros duplicados eliminados'], 200);*/
-/*    $date = '2025-02-04 17:50:00';
-    $date = Carbon::parse($date); // Convierte la fecha en un objeto Carbon
+        return response()->json($grupos);
 
-    // Restaurar BookingUsers eliminados después de la fecha especificada
-    BookingUser::withTrashed()
-        ->where('deleted_at', '>=', $date)
-        ->restore();
 
-    // Restaurar CourseSubgroups eliminados después de la fecha especificada
-    CourseSubgroup::withTrashed()
-        ->where('deleted_at', '>=', $date)
-        ->restore();
-
-    // Restaurar CourseGroups eliminados después de la fecha especificada
-    CourseGroup::withTrashed()
-        ->where('deleted_at', '>=', $date)
-        ->restore();
-
-    return response()->json(['message' => 'Registros restaurados correctamente'], 200);*/
-    $bookingUsers = BookingUser::whereIn('course_date_id', function ($query) {
-        $query->select('id')
-            ->from('course_dates');
-    })->get();
-
-    $updatedCount = 0;
-
-    foreach ($bookingUsers as $booking) {
-        // Obtener el course_id correcto desde course_dates
-        $courseDate = CourseDate::find($booking->course_date_id);
-
-        // Verificar que el course_id sea diferente antes de actualizar
-        if ($courseDate && $booking->course_id != $courseDate->course_id) {
-            // Actualizar el course_id del bookinguser
-            $booking->update(['course_id' => $courseDate->course_id]);
-            $updatedCount++;
-        }
-    }
-
-    return response()->json([
-        'message' => 'Se actualizaron ' . $updatedCount . ' registros correctamente'
-    ], 200);
-
-});
+    });
 Route::any('/fix-dates', function () {
 
     DB::beginTransaction();
