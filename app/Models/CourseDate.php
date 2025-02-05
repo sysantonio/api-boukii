@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -178,6 +179,27 @@ class CourseDate extends Model
     public function courseSubgroups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_date_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updated(function ($courseDate) {
+            // Obtener el curso asociado
+            $course = $courseDate->course; // Asegúrate de tener la relación definida en el modelo
+
+            // Solo actualizar si el curso tiene course_type = 1
+            if ($course && $course->course_type == 1 && $courseDate->isDirty(['date', 'hour_start', 'hour_end'])) {
+                DB::table('booking_users')
+                    ->where('course_date_id', $courseDate->id)
+                    ->update([
+                        'date' => $courseDate->date,
+                        'hour_start' => $courseDate->hour_start,
+                        'hour_end' => $courseDate->hour_end
+                    ]);
+            }
+        });
     }
 
     public function getActivitylogOptions(): LogOptions
