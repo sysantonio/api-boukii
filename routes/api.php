@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\ClientSport;
 use App\Models\ClientsSchool;
 use App\Models\Course;
+use App\Models\CourseDate;
 use App\Models\CourseGroup;
 use App\Models\CourseSubgroup;
 use App\Models\Degree;
@@ -123,7 +124,7 @@ Route::any('/fix-bookings', function () {
     }
 
     return response()->json(['message' => 'Registros duplicados eliminados'], 200);*/
-    $date = '2025-02-04 17:50:00';
+/*    $date = '2025-02-04 17:50:00';
     $date = Carbon::parse($date); // Convierte la fecha en un objeto Carbon
 
     // Restaurar BookingUsers eliminados después de la fecha especificada
@@ -141,7 +142,30 @@ Route::any('/fix-bookings', function () {
         ->where('deleted_at', '>=', $date)
         ->restore();
 
-    return response()->json(['message' => 'Registros restaurados correctamente'], 200);
+    return response()->json(['message' => 'Registros restaurados correctamente'], 200);*/
+    $bookingUsers = BookingUser::whereIn('course_date_id', function ($query) {
+        $query->select('id')
+            ->from('course_dates');
+    })->get();
+
+    $updatedCount = 0;
+
+    foreach ($bookingUsers as $booking) {
+        // Obtener el course_id correcto desde course_dates
+        $courseDate = CourseDate::find($booking->course_date_id);
+
+        // Verificar que el course_id sea diferente antes de actualizar
+        if ($courseDate && $booking->course_id != $courseDate->course_id) {
+            // Actualizar el course_id del bookinguser
+            $booking->update(['course_id' => $courseDate->course_id]);
+            $updatedCount++;
+        }
+    }
+
+    return response()->json([
+        'message' => 'Se actualizaron ' . $updatedCount . ' registros correctamente'
+    ], 200);
+
 });
 Route::any('/fix-dates', function () {
 
