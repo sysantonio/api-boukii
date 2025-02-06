@@ -549,6 +549,12 @@ class CourseController extends AppBaseController
                             return $this->sendError('Date has bookings and cannot be deactivated');
                         }
                     }
+                    $dateId = isset($dateData['id']) ? $dateData['id'] : null;
+                    if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
+                        $dateData['hour_end'] = $this->calculateHourEnd($dateData['hour_start'], $dateData['duration']);
+                    }
+                    $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
+
                     if (isset($dateData['date']) && isset($dateData['id'])) {
                         $date = CourseDate::find($dateData['id']);
                         if ($date) {
@@ -575,7 +581,11 @@ class CourseController extends AppBaseController
                                     $clientEmail = $bookingUser->booking->clientMain->email;
                                     $bookingId = $bookingUser->booking_id;
 
-                                    $bookingUser->update(['date' => $providedDate]);
+                                    $bookingUser->update([
+                                        'date' => $providedDate,
+                                        'hour_start' => $date->hour_start, // Si no viene en la request, usa la actual
+                                        'hour_end' => $date->hour_end, // Lo mismo para la hora de fin
+                                    ]);
 
                                     if (array_key_exists($clientEmail, $emailGroups)) {
                                         // Verificar si el booking ID ya está en el grupo del correo electrónico
@@ -589,15 +599,9 @@ class CourseController extends AppBaseController
                                     }
                                 }
                             }
-
                         }
                     }
 
-                    $dateId = isset($dateData['id']) ? $dateData['id'] : null;
-                    if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
-                        $dateData['hour_end'] = $this->calculateHourEnd($dateData['hour_start'], $dateData['duration']);
-                    }
-                    $date = $course->courseDates()->updateOrCreate(['id' => $dateId], $dateData);
                     $updatedCourseDates[] = $date->id;
 
                     if (isset($dateData['course_groups'])) {
