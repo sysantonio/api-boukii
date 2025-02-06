@@ -69,15 +69,24 @@ class CourseController extends AppBaseController
     {
         $monitorId = $this->getMonitor($request)->id;
 
-        // Comprueba si el cliente principal tiene booking_users asociados con el ID del monitor
-        $course = Course::with( 'bookingUsers.client.sports',
-            'courseDates.courseGroups.courseSubgroups.monitor')->find($id);
+        // Cargar las relaciones
+        $course = Course::with(
+            'bookingUsersActive.client.sports',
+            'courseDates.courseGroups.courseSubgroups.monitor'
+        )->find($id);
 
         if (empty($course)) {
             return $this->sendError('Course does not exist');
         }
 
-        return $this->sendResponse($course, 'Course retrieved successfully');
+        // Convertir a array para modificar la estructura
+        $courseArray = $course->toArray();
+
+        // Renombrar la clave bookingUsersActive a booking_users
+        $courseArray['booking_users'] = $courseArray['booking_users_active'];
+        unset($courseArray['booking_users_active']);
+
+        return $this->sendResponse($courseArray, 'Course retrieved successfully');
     }
 
 }
