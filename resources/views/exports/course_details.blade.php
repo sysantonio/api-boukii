@@ -12,6 +12,7 @@
         <th>{{ __('messages.Contacto') }}</th>
         <th>{{ __('messages.Estado de Pago') }}</th>
         <th>{{ __('messages.Forfait Commandé') }}</th>
+        <th>Email</th>
     </tr>
     </thead>
     <tbody>
@@ -32,6 +33,7 @@
                 <td>{{ $bookingUser->booking->clientMain->phone }}</td>
                 <td>{{ $bookingUser->booking->paid ? __('messages.Efectuado') : __('messages.Por hacer') }}</td>
                 <td>{{ count($bookingUser->bookingUserExtras) ? $bookingUser->bookingUserExtras[0]->courseExtra->description : __('messages.No seleccionado') }}</td>
+                <td>{{ $bookingUser->client->email}}</td>
             </tr>
         @endforeach
     @endforeach
@@ -72,6 +74,7 @@
                         <td>{{ $bookingUser->booking->clientMain->phone }}</td>
                         <td>{{ $bookingUser->booking->paid ? __('messages.Efectuado') : __('messages.Por hacer') }}</td>
                         <td>{{ count($bookingUser->bookingUserExtras) ? $bookingUser->bookingUserExtras[0]->courseExtra->description : __('messages.No seleccionado') }}</td>
+                        <td>{{ $bookingUser->client->email}}</td>
                     </tr>
                 @endforeach
             @endforeach

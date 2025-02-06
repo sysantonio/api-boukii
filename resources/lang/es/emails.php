@@ -18,7 +18,7 @@ return [
             'booking_notes' => ':bookingNotes',
             'sincerely' => 'Atentamente,',
             'school_name' => 'La Escuela :schoolName',
-
+            'age' => 'Años',
             'confirmation' => 'Confirmación de Reserva',
             'reservation_request2' => 'Te enviamos este mensaje para confirmar la reserva <strong>:reference</strong> para las siguientes actividades/cursos.',
             'reservation_thanks' => 'Gracias por reservar tu curso o actividad con nosotros.',

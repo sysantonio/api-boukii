@@ -190,7 +190,7 @@
                                                                 <strong>{{$course['booking_users'][0]->client->full_name}}</strong>
                                                                 {{$course['booking_users'][0]->client->language1->code ?? 'NDF'}} -
                                                                 {{ collect(config('countries'))->firstWhere('id', $course['booking_users'][0]->client->country)['code'] ?? 'NDF' }} -
-                                                                {{\Carbon\Carbon::parse($course['booking_users'][0]->client->birth_date)->age}} Años</font>
+                                                                {{\Carbon\Carbon::parse($course['booking_users'][0]->client->birth_date)->age}}    {{ __('emails.bookingCreate.age') }}</font>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -223,7 +223,7 @@
                                                                         <strong>{{ $firstBooking->monitor->full_name }}</strong>
                                                                         {{ $firstBooking->monitor->language1->code ?? 'NDF' }} -
                                                                         {{ collect(config('countries'))->firstWhere('id', $firstBooking->monitor->country)['code'] ?? 'NDF' }} -
-                                                                        {{ \Carbon\Carbon::parse($firstBooking->monitor->birth_date)->age }} Años
+                                                                        {{ \Carbon\Carbon::parse($firstBooking->monitor->birth_date)->age }}  {{ __('emails.bookingCreate.age') }}
                                                                     </font>
                                                                 @else
                                                                     <font face="Arial, Helvetica, sans-serif" style="font-size:14px; line-height:19px; color:#000000;">

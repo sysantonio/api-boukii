@@ -18,6 +18,7 @@ return [
             'booking_notes' => ':bookingNotes',
             'sincerely' => 'Sincerely,',
             'school_name' => 'The :schoolName School',
+            'age' => 'Years of age',
             'confirmation' => 'Booking Confirmation',
             'reservation_request2' => 'We are sending you this message to confirm the booking <strong>:reference</strong> for the following activities/courses.',
             'reservation_thanks' => 'Thank you for booking your course or activity with us.',

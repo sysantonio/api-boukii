@@ -18,6 +18,7 @@ return [
             'booking_notes' => ':bookingNotes',
             'sincerely' => 'Cordiali saluti,',
             'school_name' => 'La scuola :schoolName',
+            'age' => 'Anni',
             'confirmation' => 'Conferma della prenotazione',
             'reservation_request2' => 'Ti inviamo questo messaggio per confermare la prenotazione <strong>:reference</strong> per le seguenti attività/corsi.',
             'reservation_thanks' => 'Grazie per aver prenotato il tuo corso o attività con noi.',
