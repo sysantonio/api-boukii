@@ -6,6 +6,7 @@ use App\Models\BookingUser;
 use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\Season;
+use Carbon\Carbon;
 
 trait Utils
 {
@@ -33,6 +34,15 @@ trait Utils
         }
 
         $dates = $course->courseDates;
+        $today = Carbon::today();
+        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
+        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
+        ->first();
+
+        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+        $startDate = $startDate ?? ($season ? Carbon::parse($season->start_date) : null);
+        $endDate = $endDate ?? ($season ? Carbon::parse($season->end_date) : null);
+
 
         if ($startDate && $endDate) {
             $dates = $dates->whereBetween('date', [$startDate, $endDate]);
@@ -50,6 +60,8 @@ trait Utils
                             })->whereBetween('date', [$startDate, $endDate])->get();
                             $totalBookingsPlaces += $bookings->count();
 
+
+
                             $hoursTotalDate = $this->convertSecondsToHours(
                                     $this->convertTimeRangeToSeconds($courseDate->hour_start, $courseDate->hour_end)
                                 ) * $subgroup->max_participants;
@@ -58,11 +70,12 @@ trait Utils
                                 ) * $totalBookingsPlaces;
                             $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
                             $totalAvailableHours += $totalHoursAvailable;
-                            $totalPlaces += $subgroup->max_participants / $dates->count();
-                            $totalAvailablePlaces += max(0, $subgroup->max_participants - $totalBookingsPlaces);
+                            $totalPlaces += $subgroup->max_participants;
+
                         }
                     }
                 }
+                $totalAvailablePlaces = $totalPlaces - $totalBookingsPlaces;
             } else {
                 // Verificar si $dates no está vacío
                 if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
@@ -72,7 +85,7 @@ trait Utils
 
 
                     $totalBookingsPlaces += $bookings->count() / $dates->count();
-
+                    //dd($startDate);
                     $hoursTotalDate = $this->convertSecondsToHours(
                             $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
                         ) * $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
@@ -83,7 +96,7 @@ trait Utils
                     $totalAvailableHours += $totalHoursAvailable;
                     $totalHours += $hoursTotalDate;
                     $totalPlaces += $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
-                    $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
+                   // $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
                 } else {
                     // Manejo de error: $dates está vacío o no tiene subgrupos
                     // Puedes registrar un log, lanzar una excepción o asignar valores por defecto.
@@ -93,6 +106,7 @@ trait Utils
                     $totalAvailablePlaces += 0;
                     $totalHoursAvailable += 0;
                 }
+                $totalAvailablePlaces = $totalPlaces - $totalBookingsPlaces;
             }
 
 
@@ -262,6 +276,7 @@ trait Utils
                 }
             }
         }
+
 
         return [
             'total_reservations_places' => $totalBookingsPlaces,
