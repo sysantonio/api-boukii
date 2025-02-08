@@ -26,7 +26,7 @@ class UpdateMonitorForSubgroup implements ShouldQueue
         // Obtener todos los subgrupos con monitor_id asignado
         $subGroups = CourseSubgroup::whereHas('courseDate', function ($query) {
             $query->where('date', '>=', Carbon::today());
-        });
+        })->get();
 
         foreach ($subGroups as $subGroup) {
             // Buscar todas las BookingUser relacionadas con el subgrupo
