@@ -200,6 +200,10 @@ class CourseDate extends Model
                     ]);
             }
         });
+
+        static::deleting(function ($courseDate) {
+            BookingUser::where('course_date_id', $courseDate->id)->delete();
+        });
     }
 
     public function getActivitylogOptions(): LogOptions

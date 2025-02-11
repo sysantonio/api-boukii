@@ -223,7 +223,7 @@ class StatisticsController extends AppBaseController
                     foreach ($groupedBookingUsers as $groupKey => $bookingUsers) {
                         $groupTotal = 0;
                         foreach ($bookingUsers as $bookingUser) {
-                            $groupTotal += $this->calculateTotalPrice($bookingUser);
+                            $groupTotal += $this->calculateTotalPrice($bookingUser)['totalPrice'];
                         }
                         $courseTotal += $groupTotal;
                         $bookingTotal += $groupTotal;
@@ -234,8 +234,10 @@ class StatisticsController extends AppBaseController
                     $firstDayBookingUsers = $bookingGroupedUsers->where('course_id', $course->id)->where('date', $firstDate);
 
                     foreach ($firstDayBookingUsers as $bookingUser) {
-                        $courseTotal += $this->calculateTotalPrice($bookingUser);
-                        $bookingTotal += $this->calculateTotalPrice($bookingUser);
+                        $total = $this->calculateTotalPrice($bookingUser);
+                        $courseTotal += $total['totalPrice'];
+                        $bookingTotal += $courseTotal;
+                        $extrasByCourse += $total['extrasPrice'];
                     }
                 }
 
@@ -305,6 +307,7 @@ class StatisticsController extends AppBaseController
                 'boukii' => round($payments['boukii']),
                 'boukii_web' => round($payments['boukii_web']),
                 'online' => round($payments['online']),
+                'extras' => round($extrasByCourse),
                 /*'voucher_gift' => round($payments['voucher_gift']),*/
                 'vouchers' => round($payments['vouchers']),
                 'no_paid' => round($payments['no_paid']),
@@ -351,7 +354,9 @@ class StatisticsController extends AppBaseController
         $extrasPrice = $this->calculateExtrasPrice($bookingUser);
         $totalPrice += $extrasPrice;
 
-        return $totalPrice;
+        return ['priceWithoutExtras' => $totalPrice - $extrasPrice,
+            'totalPrice' => $totalPrice,
+            'extrasPrice' => $extrasPrice];
     }
 
     function calculateFixedCollectivePrice($bookingUser)
@@ -838,11 +843,50 @@ class StatisticsController extends AppBaseController
             ->get();
 
         $totalPrice = 0;
-        foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
-            $booking = $bookingGroupedUsers->first()->booking;
+        foreach ($bookingusersReserved->groupBy('course_id') as $courseId => $bookingCourseUsers) {
+            // Agrupar pagos por tipo
 
-            $totalPrice += $booking->price_total;
+            $course = Course::find($courseId);
+            if (!$course) continue;
+            foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+                /*            $booking = $bookingGroupedUsers->first()->booking;
+
+                            $totalPrice += $booking->price_total;*/
+                if ($course->course_type === 2) {
+                    // Agrupación lógica para cursos privados
+                    $groupedBookingUsers = $bookingGroupedUsers
+                        ->where('course_id', $course->id)
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->groupBy(function ($bookingUser) {
+                            return $bookingUser->date . '|' . $bookingUser->hour_start . '|' . $bookingUser->hour_end . '|' .
+                                $bookingUser->monitor_id . '|' . $bookingUser->group_id . '|' . $bookingUser->booking_id;
+                        });
+
+                    foreach ($groupedBookingUsers as $groupKey => $bookingUsers) {
+                        $groupTotal = 0;
+                        foreach ($bookingUsers as $bookingUser) {
+                            $groupTotal += $this->calculateTotalPrice($bookingUser)['totalPrice'];
+                        }
+                        $totalPrice += $groupTotal;
+                        //$bookingTotal += $groupTotal;
+                    }
+                } else {
+                    // Lógica para cursos colectivos
+                    Log::debug('OCurse id:'. $courseId);
+                    Log::debug('bookings:', $bookingGroupedUsers->toArray());
+                    $firstDate = $bookingGroupedUsers->where('course_id', $course->id)->first()->date;
+                    $firstDayBookingUsers = $bookingGroupedUsers->where('course_id', $course->id)->where('date', $firstDate);
+
+                    foreach ($firstDayBookingUsers as $bookingUser) {
+                        $total = $this->calculateTotalPrice($bookingUser);
+                        $totalPrice += $total['totalPrice'];
+                     /*   $bookingTotal += $courseTotal;
+                        $extrasByCourse += $total['extrasPrice'];*/
+                    }
+                }
+            }
         }
+
 
         return $this->sendResponse(round($totalPrice, 2), 'Total available places by course type retrieved successfully');
 
