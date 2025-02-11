@@ -299,9 +299,12 @@ class StatisticsController extends AppBaseController
                 'course_id' => $course->id,
                 'icon' => $course->icon,
                 'name' => $course->name,
-                'total_places' => $course->course_type == 1 ? round($availability['total_places']) : 'NDF',
-                'booked_places' =>  $course->course_type == 1 ? round($availability['total_reservations_places']) : 'NDF',
-                'available_places' => $course->course_type == 1 ? round($availability['total_available_places']) : 'NDF',
+                'total_places' => $course->course_type == 1 ?
+                    round($availability['total_places']) : 'NDF',
+                'booked_places' =>  $course->course_type == 1 ?
+                    round($availability['total_reservations_places']) : round($payments['web']) + round($payments['admin']),
+                'available_places' => $course->course_type == 1 ?
+                    round($availability['total_available_places']) : 'NDF',
                 'cash' => round($payments['cash']),
                 'other' => round($payments['other']),
                 'boukii' => round($payments['boukii']),
@@ -848,10 +851,12 @@ class StatisticsController extends AppBaseController
 
             $course = Course::find($courseId);
             if (!$course) continue;
-            foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+            foreach ($bookingCourseUsers->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
                 /*            $booking = $bookingGroupedUsers->first()->booking;
 
                             $totalPrice += $booking->price_total;*/
+                $booking = $bookingGroupedUsers->first()->booking;
+                if ($booking->status == 2) continue;
                 if ($course->course_type === 2) {
                     // Agrupación lógica para cursos privados
                     $groupedBookingUsers = $bookingGroupedUsers
@@ -871,9 +876,6 @@ class StatisticsController extends AppBaseController
                         //$bookingTotal += $groupTotal;
                     }
                 } else {
-                    // Lógica para cursos colectivos
-                    Log::debug('OCurse id:'. $courseId);
-                    Log::debug('bookings:', $bookingGroupedUsers->toArray());
                     $firstDate = $bookingGroupedUsers->where('course_id', $course->id)->first()->date;
                     $firstDayBookingUsers = $bookingGroupedUsers->where('course_id', $course->id)->where('date', $firstDate);
 
