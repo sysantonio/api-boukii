@@ -236,7 +236,7 @@ class StatisticsController extends AppBaseController
                     foreach ($firstDayBookingUsers as $bookingUser) {
                         $total = $this->calculateTotalPrice($bookingUser);
                         $courseTotal += $total['totalPrice'];
-                        $bookingTotal += $courseTotal;
+                        $bookingTotal += $total['totalPrice'];
                         $extrasByCourse += $total['extrasPrice'];
                     }
                 }
