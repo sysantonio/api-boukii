@@ -137,7 +137,9 @@ class BookingController extends AppBaseController
                 'has_tva' => $data['has_tva'],
                 'has_boukii_care' => $data['has_boukii_care'],
                 'has_cancellation_insurance' => $data['has_cancellation_insurance'],
+                'has_reduction' => $data['has_reduction'],
                 'price_total' => $data['price_total'],
+                'price_reduction' => $data['price_reduction'],
                 'price_tva' => $data['price_tva'],
                 'price_boukii_care' => $data['price_boukii_care'],
                 'price_cancellation_insurance' => $data['price_cancellation_insurance'],
@@ -206,7 +208,7 @@ class BookingController extends AppBaseController
                     $voucher = Voucher::find($voucherData['bonus']['id']);
                     if ($voucher) {
                         $remaining_balance = $voucher->remaining_balance - $voucherData['bonus']['reducePrice'];
-                        $voucher->update(['remaining_balance' => $remaining_balance]);
+                        $voucher->update(['remaining_balance' => $remaining_balance, 'payed' => $remaining_balance <= 0]);
 
                         VouchersLog::create([
                             'voucher_id' => $voucher->id,
@@ -251,6 +253,10 @@ class BookingController extends AppBaseController
             Log::error('Error: '. $e->getLine());
             return $this->sendError('Error al crear la reserva: ' . $e->getMessage(), 500);
         }
+    }
+
+    public function updateBookingUsers(Request $request) {
+
     }
 
     public function update(Request $request) {
@@ -359,6 +365,10 @@ class BookingController extends AppBaseController
             DB::rollBack();
             return $this->sendError('Error al actualizar la reserva: ' . $e->getMessage(), 500);
         }
+    }
+
+    public function updatePrice(Request $request) {
+
     }
     function createBasket($bookingData) {
         // Agrupar por group_id

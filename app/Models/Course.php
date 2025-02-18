@@ -647,11 +647,24 @@ class Course extends Model
                                 AND bookings.deleted_at IS NULL
                                  )');
                             if (!is_null($clientId)) {
-                                $subQuery->whereDoesntHave('bookingUsers', function (Builder $bookingQuery) use ($clientId) {
-                                    $bookingQuery->where('client_id', $clientId);
+                                $subQuery->whereDoesntHave('courseDate', function (Builder $dateQuery) use ($clientId) {
+                                    $dateQuery->whereHas('bookingUsers', function (Builder $bookingUserQuery) use ($clientId) {
+                                        $bookingUserQuery->where('client_id', $clientId)
+                                            ->where(function ($query) {
+                                                $query->where(function ($subQuery) {
+                                                    // Excluir si hay solapamiento
+                                                    $subQuery->whereColumn('hour_start', '<', 'course_dates.hour_end')
+                                                        ->whereColumn('hour_end', '>', 'course_dates.hour_start');
+                                                })->orWhere(function ($subQuery) {
+                                                    // Excluir si son horarios idénticos
+                                                    $subQuery->whereColumn('hour_start', '=', 'course_dates.hour_start')
+                                                        ->whereColumn('hour_end', '=', 'course_dates.hour_end');
+                                                });
+                                            });
+                                    });
                                 });
                             }
-                            $subQuery   ->whereHas('courseGroup',
+                            $subQuery->whereHas('courseGroup',
                                 function (Builder $groupQuery) use (
                                     $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                                     $isAdultClient, $clientLanguages

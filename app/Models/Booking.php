@@ -470,12 +470,12 @@ class Booking extends Model
     public function getPaymentMethodStatusAttribute()
     {
         // Si la reserva está pagada y el estado es 'activa' o 'terminada'
-        if ($this->isPaid && in_array($this->cancellation_status, ['active', 'finished'])) {
+        if ($this->paid && in_array($this->cancellation_status, ['active', 'finished'])) {
             return 'paid';
         }
 
         // Si la reserva está pagada y está cancelada o parcialmente cancelada
-        if ($this->isPaid && in_array($this->cancellation_status, ['total_cancel', 'partial_cancel'])) {
+        if ($this->paid && in_array($this->cancellation_status, ['total_cancel', 'partial_cancel'])) {
             $refundPayment = $this->payments()->where('status', 'refund')->latest()->first();
             $noRefundPayment = $this->payments()->where('status', 'no_refund')->exists();
 
@@ -489,7 +489,7 @@ class Booking extends Model
         }
 
         // Si la reserva no está pagada, devolver diferentes estados según el `payment_method_id`
-        if (!$this->isPaid) {
+        if (!$this->paid) {
             switch ($this->payment_method_id) {
                 case 3:
                     return 'link_send';
