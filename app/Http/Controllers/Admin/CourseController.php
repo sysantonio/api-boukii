@@ -265,7 +265,7 @@ class CourseController extends AppBaseController
                 'is_flexible' => 'required',
                 'sport_id' => 'required|exists:sports,id',
                 'school_id' => 'required|exists:schools,id',
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'nullable|exists:users,id',
                 'station_id' => 'nullable|exists:stations,id',
                 'name' => 'required|string|max:65535',
                 'short_description' => 'required|string|max:65535',
