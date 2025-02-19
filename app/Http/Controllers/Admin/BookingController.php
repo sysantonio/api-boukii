@@ -8,6 +8,7 @@ use App\Http\Resources\API\BookingResource;
 use App\Mail\BookingCancelMailer;
 use App\Mail\BookingCreateMailer;
 use App\Mail\BookingInfoMailer;
+use App\Mail\BookingInfoUpdateMailer;
 use App\Mail\BookingPayMailer;
 use App\Models\Booking;
 use App\Models\BookingLog;
@@ -21,6 +22,7 @@ use App\Models\CourseSubgroup;
 use App\Models\Payment;
 use App\Models\Voucher;
 use App\Models\VouchersLog;
+use App\Repositories\BookingRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,9 +41,12 @@ use Validator;
 class BookingController extends AppBaseController
 {
 
-    public function __construct()
-    {
+    /** @var  BookingRepository */
+    private $bookingRepository;
 
+    public function __construct(BookingRepository $bookingRepo)
+    {
+        $this->bookingRepository = $bookingRepo;
     }
 
 
@@ -255,7 +260,76 @@ class BookingController extends AppBaseController
         }
     }
 
-    public function updateBookingUsers(Request $request) {
+    public function updatePayment(Request $request, $id) {
+        $data = $request->all();
+        $school = $this->getSchool($request);
+        $voucherAmount = array_sum(array_column($data['vouchers'], 'bonus.reducePrice'));
+
+        /** @var Booking $booking */
+        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
+
+        if (empty($booking)) {
+            return $this->sendError('Booking not found');
+        }
+        if($voucherAmount > 0){
+            $data['paid'] = $data['price_total'] <= $voucherAmount;
+        }
+        $booking = $this->bookingRepository->update($data, $id);
+
+        if($request->has('send_mail') && $request->input('send_mail')) {
+            dispatch(function () use ($booking) {
+                // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                try {
+                    Mail::to($booking->clientMain->email)->send(new BookingInfoUpdateMailer($booking->school, $booking, $booking->clientMain));
+                } catch (\Exception $ex) {
+                    \Illuminate\Support\Facades\Log::debug('Admin/BookingController updatePayment: ',
+                        $ex->getTrace());
+                }
+            })->afterResponse();
+        }
+
+        if (!empty($data['vouchers'])) {
+            foreach ($data['vouchers'] as $voucherData) {
+                $voucher = Voucher::find($voucherData['bonus']['id']);
+                if ($voucher) {
+                    $remaining_balance = $voucher->remaining_balance - $voucherData['bonus']['reducePrice'];
+                    $voucher->update(['remaining_balance' => $remaining_balance, 'payed' => $remaining_balance <= 0]);
+
+                    VouchersLog::create([
+                        'voucher_id' => $voucher->id,
+                        'booking_id' => $booking->id,
+                        'amount' => $voucherData['bonus']['reducePrice']
+                    ]);
+                }
+            }
+        }
+
+        // Crear un log inicial de la reserva
+        BookingLog::create([
+            'booking_id' => $booking->id,
+            'action' => 'updated by admin',
+            'user_id' => $data['user_id']
+        ]);
+
+        //TODO: pagos
+
+        // Crear un registro de pago si el método de pago es 1 o 4
+        if (in_array($data['payment_method_id'], [1, 4])) {
+
+            $remainingAmount = $data['price_total'] - $voucherAmount;
+
+            Payment::create([
+                'booking_id' => $booking->id,
+                'school_id' => $school['id'],
+                'amount' => $remainingAmount,
+                'status' => 'paid', // Puedes ajustar el estado según tu lógica
+                'notes' => $data['selectedPaymentOption'],
+                'payrexx_reference' => null, // Aquí puedes integrar Payrexx si lo necesitas
+                'payrexx_transaction' => null
+            ]);
+        }
+
+        return $this->sendResponse($booking, 'Booking updated successfully');
 
     }
 

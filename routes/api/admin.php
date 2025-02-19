@@ -88,6 +88,10 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         [\App\Http\Controllers\Admin\BookingController::class, 'update'])
         ->name('api.admin.bookings.update');
 
+    Route::post('bookings/update/{id}/payment',
+        [\App\Http\Controllers\Admin\BookingController::class, 'updatePayment'])
+        ->name('api.admin.bookings.updatePayment');
+
     /** Statistics */
     Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalAvailablePlacesByCourseType'])
         ->name('api.admin.stats.bookings');
