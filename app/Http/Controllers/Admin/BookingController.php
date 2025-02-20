@@ -16,6 +16,7 @@ use App\Models\BookingUser;
 use App\Models\BookingUserExtra;
 use App\Models\BookingUsers2;
 use App\Models\Client;
+use App\Models\ClientSport;
 use App\Models\CourseDate;
 use App\Models\CourseExtra;
 use App\Models\CourseSubgroup;
@@ -195,6 +196,21 @@ class BookingController extends AppBaseController
 
                 $bookingUser->save();
 
+                $client = Client::find($cartItem['client_id']);
+                $existingClientSport = $client->clientSports()
+                    ->where('sport_id', $cartItem['sport_id'])
+                    ->where('school_id', $school['id'])
+                    ->first();
+
+                if (!$existingClientSport) {
+                    ClientSport::create([
+                        'client_id' => $client->id,
+                        'sport_id' => $cartItem['sport_id'],
+                        'school_id' => $school['id'],
+                        'degree_id' => $cartItem['degree_id']
+                    ]);
+                }
+
                 // Guardar extras si existen
                 if (isset($cartItem['extras'])) {
                     foreach ($cartItem['extras'] as $extra) {
@@ -230,8 +246,6 @@ class BookingController extends AppBaseController
                 'action' => 'created by api',
                 'user_id' => $data['user_id']
             ]);
-
-            //TODO: pagos
 
             // Crear un registro de pago si el método de pago es 1 o 4
             if (in_array($data['payment_method_id'], [1, 4])) {
@@ -441,9 +455,6 @@ class BookingController extends AppBaseController
         }
     }
 
-    public function updatePrice(Request $request) {
-
-    }
     function createBasket($bookingData) {
         // Agrupar por group_id
         $groupedCartItems = $this->groupCartItemsByGroupId($bookingData['cart']);
