@@ -17,6 +17,7 @@ use App\Models\BookingUserExtra;
 use App\Models\BookingUsers2;
 use App\Models\Client;
 use App\Models\ClientSport;
+use App\Models\Course;
 use App\Models\CourseDate;
 use App\Models\CourseExtra;
 use App\Models\CourseSubgroup;
