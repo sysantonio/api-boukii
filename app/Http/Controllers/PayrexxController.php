@@ -146,6 +146,7 @@ class PayrexxController
                                 $payment->school_id = $booking->school_id;
                                 $payment->amount = ($data2->getInvoice()['totalAmount'] ?? $data['amount']) / 100;
                                 $payment->status = 'paid';
+                                $payment->notes = 'Boukii Pay';
                                 $payment->payrexx_reference = $referenceID;
                                 $payment->payrexx_transaction = $booking->payrexx_transaction;
                                 $payment->save();
@@ -190,7 +191,7 @@ class PayrexxController
                                                     true
                                                 ));
                                         } catch (\Exception $ex) {
-                                            \Illuminate\Support\Facades\Log::debug('BookingController->createBooking BookingCreateMailer: ' .
+                                            \Illuminate\Support\Facades\Log::debug('PayrexxController->processNotification BookingCreateMailer: ' .
                                                 $ex->getMessage());
                                         }
                                     })->afterResponse();
