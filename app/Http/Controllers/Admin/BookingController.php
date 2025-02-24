@@ -197,19 +197,26 @@ class BookingController extends AppBaseController
                 $bookingUser->save();
 
                 $client = Client::find($cartItem['client_id']);
-                $existingClientSport = $client->clientSports()
-                    ->where('sport_id', $cartItem['sport_id'])
-                    ->where('school_id', $school['id'])
-                    ->first();
+                $course = Course::find($cartItem['course_id']);
 
-                if (!$existingClientSport) {
-                    ClientSport::create([
-                        'client_id' => $client->id,
-                        'sport_id' => $cartItem['sport_id'],
-                        'school_id' => $school['id'],
-                        'degree_id' => $cartItem['degree_id']
-                    ]);
+                if ($course) {
+                    $sportId = $course->sport_id;
+
+                    $existingClientSport = $client->clientSports()
+                        ->where('sport_id', $sportId)
+                        ->where('school_id', $school['id'])
+                        ->first();
+
+                    if (!$existingClientSport) {
+                        ClientSport::create([
+                            'client_id' => $client->id,
+                            'sport_id' => $sportId,
+                            'school_id' => $school['id'],
+                            'degree_id' => $cartItem['degree_id']
+                        ]);
+                    }
                 }
+
 
                 // Guardar extras si existen
                 if (isset($cartItem['extras'])) {
