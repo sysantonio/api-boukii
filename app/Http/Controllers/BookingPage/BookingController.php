@@ -168,7 +168,7 @@ class BookingController extends SlugAuthController
                 VouchersLog::create([
                     'voucher_id' => $voucher->id,
                     'booking_id' => $booking->id,
-                    'amount' => -$data['voucherAmount'],
+                    'amount' => $data['voucherAmount'],
                     'status' => $data['voucherAmount'] >= $data['price_total'] ? null : 'pending',
                 ]);
 
@@ -246,16 +246,25 @@ class BookingController extends SlugAuthController
 
         // Obtiene información común para todos los bookingUsers
         foreach ($request->bookingUsers as $bookingUser) {
-            if($bookingUser['course']['course_type'] == 2) {
+            if ($bookingUser['course']['course_type'] == 2) {
                 $clientIds[] = $bookingUser['client']['id'];
-                $highestDegreeId = $bookingUser['degree_id'];
+
+                // Verificar si degree_id existe antes de acceder
+                $highestDegreeId = isset($bookingUser['degree_id']) ? $bookingUser['degree_id'] : 0;
+
                 // Obtener el degree_id más alto solo una vez
                 if ($highestDegreeId === 0) {
                     $sportId = $bookingUser['course']['sport_id'];
-                    if (isset($bookingUser['client']['sports']) && is_array($bookingUser['client']['sports'])) {
+
+                    if (!empty($bookingUser['client']['sports']) && is_array($bookingUser['client']['sports'])) {
                         $clientDegrees = $bookingUser['client']['sports'];
+
                         foreach ($clientDegrees as $clientDegree) {
-                            if ($clientDegree['pivot']['sport_id'] == $sportId && $clientDegree['pivot']['degree_id'] > $highestDegreeId) {
+                            if (
+                                isset($clientDegree['pivot']['sport_id'], $clientDegree['pivot']['degree_id']) &&
+                                $clientDegree['pivot']['sport_id'] == $sportId &&
+                                $clientDegree['pivot']['degree_id'] > $highestDegreeId
+                            ) {
                                 $highestDegreeId = $clientDegree['pivot']['degree_id'];
                             }
                         }
@@ -264,11 +273,12 @@ class BookingController extends SlugAuthController
 
                 // Obtener la fecha, hora de inicio y hora de fin solo una vez
                 if ($date === null) {
-                    $date = $bookingUser['date'];
-                    $startTime = $bookingUser['hour_start'];
-                    $endTime = $bookingUser['hour_end'];
+                    $date = $bookingUser['date'] ?? null;
+                    $startTime = $bookingUser['hour_start'] ?? null;
+                    $endTime = $bookingUser['hour_end'] ?? null;
                 }
             }
+
 
 
             if (BookingUser::hasOverlappingBookings($bookingUser, [])) {
