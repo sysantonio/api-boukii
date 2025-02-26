@@ -38,6 +38,6 @@ class UpdateMonitorForSubgroup implements ShouldQueue
                 $bookingUser->save();
             }
         }
-        Log::info("Monitor subgroup updated");
+       // Log::info("Monitor subgroup updated");
     }
 }
