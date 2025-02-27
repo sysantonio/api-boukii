@@ -11,6 +11,7 @@ use App\Models\SchoolSport;
 use App\Repositories\SchoolRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class SchoolController
@@ -209,10 +210,70 @@ class SchoolAPIController extends AppBaseController
             return $this->sendError('School not found');
         }
 
+        // Procesar imágenes en el campo settings si existen
+        if (!empty($input['settings'])) {
+            $settings = json_decode($input['settings'], true);
+
+            if (isset($settings['bookingPage'])) {
+                // Guardar imágenes de sponsors si son base64
+                if (!empty($settings['bookingPage']['sponsors']) && is_array($settings['bookingPage']['sponsors'])) {
+                    foreach ($settings['bookingPage']['sponsors'] as $key => $sponsorImage) {
+                        if ($this->isBase64Image($sponsorImage)) {
+                            $settings['bookingPage']['sponsors'][$key] = $this->saveBase64Image($sponsorImage, 'sponsors');
+                        }
+                    }
+                }
+
+                // Guardar imágenes del banner (desktopImg y mobileImg) si son base64
+                if (!empty($settings['bookingPage']['banner']['desktopImg']) && $this->isBase64Image($settings['bookingPage']['banner']['desktopImg'])) {
+                    $settings['bookingPage']['banner']['desktopImg'] = $this->saveBase64Image($settings['bookingPage']['banner']['desktopImg'], 'banners');
+                }
+                if (!empty($settings['bookingPage']['banner']['mobileImg']) && $this->isBase64Image($settings['bookingPage']['banner']['mobileImg'])) {
+                    $settings['bookingPage']['banner']['mobileImg'] = $this->saveBase64Image($settings['bookingPage']['banner']['mobileImg'], 'banners');
+                }
+            }
+
+            // Convertimos de nuevo a JSON después de modificarlo
+            $input['settings'] = json_encode($settings);
+        }
+
         $school = $this->schoolRepository->update($input, $id);
 
         return $this->sendResponse(new SchoolResource($school), 'School updated successfully');
     }
+
+    /**
+     * Función para guardar imágenes base64 y devolver la URL pública
+     */
+    private function saveBase64Image($base64Image, $folder)
+    {
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+            $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+            $type = strtolower($type[1]);
+            $imageData = base64_decode($imageData);
+
+            if ($imageData === false) {
+                return null; // Si la decodificación falla, devuelve null
+            }
+
+            // Generar un nombre único para la imagen
+            $imageName = $folder . '/image_' . time() . '_' . uniqid() . '.' . $type;
+            Storage::disk('public')->put($imageName, $imageData);
+
+            return url(Storage::url($imageName)); // Devolver la URL pública de la imagen
+        }
+
+        return null; // Si la imagen no es válida, devuelve null
+    }
+
+    /**
+     * Función para verificar si un string es una imagen en base64
+     */
+    private function isBase64Image($str)
+    {
+        return preg_match('/^data:image\/(\w+);base64,/', $str);
+    }
+
 
     /**
      * @OA\Put(
