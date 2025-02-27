@@ -4,12 +4,11 @@ namespace App\Models;
 
 use App\Mail\BookingCancelMailer;
 use App\Mail\BookingInfoMailer;
-use App\Models\OldModels\BookingUsers2;
-use App\Models\OldModels\School;
+use App\Models\School;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -368,7 +367,217 @@ class Booking extends Model
     {
          return LogOptions::defaults();
     }
-    protected $appends = ['sport', 'bonus', 'payment_method_status', 'cancellation_status', 'payment_method'];
+    protected $appends = ['sport', 'bonus', 'payment_method_status',
+        'cancellation_status', 'payment_method', 'grouped_activities'];
+
+    // Agrupa los booking_users por group_id con detalles completos
+    public function getGroupedActivitiesAttribute()
+    {
+
+        return array_values($this->bookingUsers->groupBy('group_id')->map(function ($users) {
+            $groupedActivity = [
+                'group_id' => $users->first()->group_id,
+                'sport' => optional($users->first()->course)->sport,
+                'course' => $users->first()->course,
+                'sportLevel' => $users->first()->degree,
+                'dates' => [],
+                'monitors' => [],
+                'utilizers' => [],
+                'clientObs' => $users->first()->notes,
+                'schoolObs' => $users->first()->notes_school,
+                'total' => 0,
+                'status' => 0,
+                'statusList' => []
+            ];
+
+            foreach ($users as $user) {
+                $groupedActivity['statusList'][] = $user->status;
+
+                // Añadir utilizers únicos
+                if (!$this->utilizerExists($groupedActivity['utilizers'], $user->client)) {
+                    $groupedActivity['utilizers'][] = [
+                        'id' => $user->client_id,
+                        'first_name' => $user->client->first_name,
+                        'last_name' => $user->client->last_name,
+                        'image' => $user->client->image,
+                        'birth_date' => $user->client->birth_date,
+                        'language1_id' => $user->client->language1_id,
+                        'country' => $user->client->country,
+                        'extras' => []
+                    ];
+                }
+
+                // Manejar fechas
+                $dateKey = $user->course_date_id . '_' . $user->hour_start . '_' . $user->hour_end;
+                if (!isset($groupedActivity['dates'][$dateKey])) {
+                    $groupedActivity['dates'][$dateKey] = [
+                        'id' => $user->course_date_id,
+                        'date' => $user->date,
+                        'startHour' => $user->hour_start,
+                        'endHour' => $user->hour_end,
+                        'duration' => $user->formattedDuration,
+                        'currency' => $this->currency,
+                        'monitor' => $user->monitor,
+                        'utilizers' => [],
+                        'extras' => [],
+                        'booking_users' => []
+                    ];
+                }
+
+                $groupedActivity['dates'][$dateKey]['booking_users'][] = $user;
+
+                if (!$this->utilizerExists($groupedActivity['dates'][$dateKey]['utilizers'], $user->client)) {
+                    $groupedActivity['dates'][$dateKey]['utilizers'][] = [
+                        'id' => $user->client_id,
+                        'first_name' => $user->client->first_name,
+                        'last_name' => $user->client->last_name,
+                        'image' => $user->client->image,
+                        'birth_date' => $user->client->birth_date,
+                        'language1_id' => $user->client->language1_id,
+                        'country' => $user->client->country
+                    ];
+                }
+
+                // Añadir extras por fecha
+                foreach ($user->bookingUserExtras as $extra) {
+                    $groupedActivity['dates'][$dateKey]['extras'][] = $extra->course_extra;
+                }
+
+                // Añadir monitores
+                if ($user->monitor_id && !in_array($user->monitor_id, $groupedActivity['monitors'])) {
+                    $groupedActivity['monitors'][] = $user->monitor_id;
+                }
+            }
+
+            $groupedActivity['dates'] = array_values($groupedActivity['dates']);
+            // Determinar estado del grupo
+            $uniqueStatuses = array_unique($groupedActivity['statusList']);
+            $groupedActivity['status'] = count($uniqueStatuses) === 1 ? $uniqueStatuses[0] : 3;
+
+            // Calcular precio total del grupo
+            $groupedActivity['total'] = $this->calculateActivityPrice($groupedActivity);
+
+            return $groupedActivity;
+        })->toArray());
+    }
+
+    // Verifica si un utilizer ya fue agregado
+    private function utilizerExists($utilizers, $client)
+    {
+        foreach ($utilizers as $utilizer) {
+            if ($utilizer['id'] === $client->id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Recalcula el total de la reserva
+    public function reloadPrice()
+    {
+        $total = 0;
+
+        $groupedActivities = $this->getGroupedActivitiesAttribute();
+
+        foreach ($groupedActivities as $activity) {
+            if($activity['status'] !== 2) {
+                $total += $activity['total'];
+            }
+        }
+
+        if ($this->has_cancellation_insurance) {
+            $school = School::find($this->school_id);
+            $this->cancellation_insurance_price =
+                $total * json_decode($school->settings, true)['taxes']['cancellation_insurance_percent'];
+            $total += $this->cancellation_insurance_price;
+        }
+
+        $voucherLogs = $this->vouchersLogs()->with('voucher')->get();
+
+        foreach ($voucherLogs as $log) {
+            $voucher = $log->voucher;
+
+            if ($log->amount > $total) {
+                // Registrar un nuevo log con el dinero sobrante devuelto al bono
+                $refundAmount = $log->amount - $total;
+                VouchersLog::create([
+                    'voucher_id' => $voucher->id,
+                    'booking_id' => $this->id,
+                    'amount' => -$refundAmount, // Se registra como negativo
+                    'status' => 'refund',
+                ]);
+
+                // Actualizar el saldo del bono
+                $voucher->remaining_balance += $refundAmount;
+            }
+
+            // Si el bono no se ha consumido por completo, actualizar `payed`
+            if ($voucher->remaining_balance < $voucher->quantity) {
+                $voucher->payed = false;
+            } else {
+                $voucher->payed = true;
+            }
+
+            $voucher->save();
+        }
+
+        if ($this->paid_total >= $this->price_total) {
+            $this->paid = true;
+        } else {
+            $this->paid = false;
+        }
+
+        $this->save();
+
+        return $total;
+    }
+
+    // Calcula el precio total de una actividad
+    public function calculateActivityPrice($activity)
+    {
+        $price = 0;
+
+        if ($activity['course']['course_type'] === 1) {
+            if (!$activity['course']['is_flexible']) {
+                $price = $activity['course']['price'] * count($activity['utilizers']);
+            } else {
+                $price = $activity['course']['price'] * count($activity['dates']) * count($activity['utilizers']);
+            }
+        } else {
+            foreach ($activity['dates'] as $date) {
+                $price += $this->calculateDatePrice($activity['course'], $date);
+            }
+        }
+
+        return $price;
+    }
+
+    // Calcula el precio de una fecha
+    public function calculateDatePrice($course, $date)
+    {
+        $datePrice = 0;
+
+        if (collect($date['booking_users'])->contains('status', 1)) {
+            if ($course['course_type'] === 1) {
+                $datePrice = $course['price'];
+            } elseif ($course['is_flexible']) {
+                $duration = $date['duration'];
+                $participants = count($date['utilizers']);
+                Log::debug($duration);
+                $interval = collect($course['price_range'])->firstWhere('intervalo', $duration);
+                Log::debug($interval);
+                Log::debug($participants);
+                $datePrice = $interval ? ($interval[$participants] ?? 0) : 0;
+            } else {
+                $datePrice = $course['price'] * count($date['utilizers']);
+            }
+
+            $extrasPrice = collect($date['extras'])->sum('price');
+            $datePrice += $extrasPrice;
+        }
+
+        return $datePrice;
+    }
 
     public function getBonusAttribute() {
         return $this->vouchersLogs()->exists();
