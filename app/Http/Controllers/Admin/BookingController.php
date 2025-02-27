@@ -1001,8 +1001,6 @@ class BookingController extends AppBaseController
             $booking->price_total -= $firstBookingUserPrice;
         }*/
 
-
-
         // Verificar si quedan bookingUsers activos (status distinto de 2)
         $activeBookingUsers = $booking->bookingUsers()->where('status', '!=', 2)->exists();
 
@@ -1013,11 +1011,8 @@ class BookingController extends AppBaseController
             $booking->status = 3; // Parcialmente cancelado
         }
 
-        // Comprobar si el paid_total es mayor o igual al nuevo price_total
-        if ($booking->paid_total >= $booking->price_total) {
-            $booking->paid = true;
-        } else {
-            $booking->paid = false;
+        if(!$booking->paid) {
+            $booking->reloadPrice();
         }
 
         $booking->save();
