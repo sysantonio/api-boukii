@@ -117,6 +117,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          type="boolean",
  *      ),
  *      @OA\Property(
+ *           property="highlited",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="boolean",
+ *       ),
+ *      @OA\Property(
  *          property="active",
  *          description="",
  *          readOnly=false,
@@ -153,6 +160,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *      ),
  *      @OA\Property(
  *          property="translations",
+ *          description="",
+ *          readOnly=false,
+ *          nullable=true,
+ *          type="string",
+ *      ),
+ *      @OA\Property(
+ *          property="claim_text",
  *          description="",
  *          readOnly=false,
  *          nullable=true,
@@ -286,7 +300,9 @@ class Course extends Model
         'translations',
         'price_range',
         'discounts',
-        'settings'
+        'settings',
+        'highlighted', // Nuevo campo
+        'claim_text', // Nuevo campo
     ];
 
     protected $casts = [
@@ -312,7 +328,8 @@ class Course extends Model
         'translations' => 'string',
         'price_range' => 'json',
         'discounts' => 'json',
-        'settings' => 'json'
+        'settings' => 'json',
+        'highlighted' => 'boolean'
     ];
 
     public static function rules($isUpdate = false): array
@@ -338,6 +355,7 @@ class Course extends Model
             'hour_min' => 'nullable|string|max:255',
             'hour_max' => 'nullable|string|max:255',
             'confirm_attendance' => 'required|boolean',
+            'highlighted' => 'required|boolean',
             'active' => 'required|boolean',
             'unique' => 'nullable',
             'options' => 'nullable',
@@ -346,6 +364,7 @@ class Course extends Model
             'age_min' => 'nullable',
             'age_max' => 'nullable',
             'translations' => 'nullable|string',
+            'claim_text' => 'nullable|string',
             'price_range' => 'nullable',
             'discounts' => 'nullable|string',
             'settings' => 'nullable|string',

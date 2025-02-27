@@ -10222,6 +10222,53 @@
                 }
             }
         },
+        "/vouchers/{id}/restore": {
+            "post": {
+                "tags": [
+                    "Voucher"
+                ],
+                "summary": "restoreVoucher",
+                "description": "Restore a trashed voucher",
+                "operationId": "2a8dd212123f20853a1a4e12170c8e32",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the voucher to restore",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Voucher"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Voucher not found"
+                    }
+                }
+            }
+        },
         "/vouchers/{id}": {
             "get": {
                 "tags": [
@@ -10654,6 +10701,47 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Booking"
                                             }
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "BookingPage"
+                ],
+                "summary": "createCourse",
+                "description": "Create Course",
+                "operationId": "b12dfef81aef451b7ea0d75e2ba7e8c8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Course"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Course"
                                         },
                                         "message": {
                                             "type": "string"
@@ -13006,6 +13094,11 @@
                         "type": "integer",
                         "nullable": true
                     },
+                    "group_id": {
+                        "description": "Grouped bookings ID",
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "hour_start": {
                         "description": "Start Hour",
                         "type": "string",
@@ -13104,6 +13197,11 @@
                     },
                     "course_extra_id": {
                         "description": "Course Extra ID",
+                        "type": "integer",
+                        "nullable": false
+                    },
+                    "quantity": {
+                        "description": "Quantity extras selected when group it can be more than 1",
                         "type": "integer",
                         "nullable": false
                     },
@@ -13549,6 +13647,12 @@
                         "readOnly": false,
                         "nullable": false
                     },
+                    "highlited": {
+                        "description": "",
+                        "type": "boolean",
+                        "readOnly": false,
+                        "nullable": false
+                    },
                     "active": {
                         "description": "",
                         "type": "boolean",
@@ -13580,6 +13684,12 @@
                         "nullable": true
                     },
                     "translations": {
+                        "description": "",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
+                    },
+                    "claim_text": {
                         "description": "",
                         "type": "string",
                         "readOnly": false,
@@ -13737,6 +13847,11 @@
                     },
                     "description": {
                         "description": "Description of the course extra",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "group": {
+                        "description": "group of the course extra when is activity",
                         "type": "string",
                         "nullable": true
                     },
@@ -16237,6 +16352,12 @@
                         "format": "number",
                         "readOnly": false,
                         "nullable": false
+                    },
+                    "status": {
+                        "description": "The status ",
+                        "type": "string",
+                        "readOnly": false,
+                        "nullable": true
                     },
                     "created_at": {
                         "description": "The timestamp when the log entry was created",
