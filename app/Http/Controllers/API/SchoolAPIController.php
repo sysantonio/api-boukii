@@ -217,9 +217,9 @@ class SchoolAPIController extends AppBaseController
             if (isset($settings['bookingPage'])) {
                 // Guardar imágenes de sponsors si son base64
                 if (!empty($settings['bookingPage']['sponsors']) && is_array($settings['bookingPage']['sponsors'])) {
-                    foreach ($settings['bookingPage']['sponsors'] as $key => $sponsorImage) {
-                        if ($this->isBase64Image($sponsorImage)) {
-                            $settings['bookingPage']['sponsors'][$key] = $this->saveBase64Image($sponsorImage, 'sponsors');
+                    foreach ($settings['bookingPage']['sponsors'] as $key => $sponsor) {
+                        if (isset($sponsor['img']) && $this->isBase64Image($sponsor['img'])) {
+                            $settings['bookingPage']['sponsors'][$key]['img'] = $this->saveBase64Image($sponsor['img'], 'sponsors');
                         }
                     }
                 }
