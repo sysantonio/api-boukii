@@ -563,10 +563,7 @@ class Booking extends Model
             } elseif ($course['is_flexible']) {
                 $duration = $date['duration'];
                 $participants = count($date['utilizers']);
-                Log::debug($duration);
                 $interval = collect($course['price_range'])->firstWhere('intervalo', $duration);
-                Log::debug($interval);
-                Log::debug($participants);
                 $datePrice = $interval ? ($interval[$participants] ?? 0) : 0;
             } else {
                 $datePrice = $course['price'] * count($date['utilizers']);

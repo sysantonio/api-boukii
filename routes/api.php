@@ -1266,7 +1266,7 @@ function calculateExtrasPrice($bookingUser)
 
     $totalExtrasPrice = 0;
     foreach ($extras as $extra) {
-        Log::debug('extra price:'. $extra->courseExtra->price);
+        //Log::debug('extra price:'. $extra->courseExtra->price);
         $extraPrice = $extra->courseExtra->price ?? 0;
         $totalExtrasPrice += $extraPrice;
     }
