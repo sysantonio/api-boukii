@@ -129,7 +129,8 @@ class ClientsController extends AppBaseController
         $school = $this->getSchool($request);
         $searchParameters = array_merge(
             $request->except([
-                'skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order', 'orderColumn', 'page', 'with'
+                'skip', 'limit', 'search', 'exclude', 'user', 'active',
+                'perPage', 'order', 'orderColumn', 'page', 'with'
             ]),
             ['school_id' => $school->id]
         );
@@ -145,7 +146,7 @@ class ClientsController extends AppBaseController
     ];
 
         $clientsWithUtilizers = $this->clientRepository->all(
-            searchArray: $searchParameters,
+            searchArray: [],
             search: null, // Eliminar búsqueda global por ahora
             skip: $request->input('skip'),
             limit: $request->input('limit'),

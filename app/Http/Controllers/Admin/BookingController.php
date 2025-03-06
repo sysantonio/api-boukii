@@ -256,8 +256,7 @@ class BookingController extends AppBaseController
             ]);
 
             // Crear un registro de pago si el método de pago es 1 o 4
-            if (in_array($data['payment_method_id'], [1, 4])) {
-
+            if (in_array($data['payment_method_id'], [1, 4]) && $data['payment_method_status'] !== 'unpaid') {
                 $remainingAmount = $data['price_total'] - $voucherAmount;
 
                 Payment::create([
