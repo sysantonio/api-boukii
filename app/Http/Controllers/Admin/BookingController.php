@@ -277,6 +277,7 @@ class BookingController extends AppBaseController
             DB::rollBack();
             Log::error('Error: '. $e->getFile());
             Log::error('Error: '. $e->getLine());
+            Log::error('Error: '. $e->getMessage());
             return $this->sendError('Error al crear la reserva: ' . $e->getMessage(), 500);
         }
     }
