@@ -531,6 +531,11 @@ class StatisticsController extends AppBaseController
         $hoursBySport = [];
 
         foreach ($bookingUsers as $bookingUser) {
+            if (!$bookingUser->course) {
+                \Log::warning("BookingUser sin curso", ['booking_user_id' => $bookingUser->id]);
+                continue; // Salta este registro para evitar el error
+            }
+
             $sportId = $bookingUser->course->sport_id;
             $duration = $this->convertDurationToHours($bookingUser->duration);
 
@@ -913,7 +918,8 @@ class StatisticsController extends AppBaseController
             return $this->sendError('Start date and end date are required.');
         }
 
-        $bookingUsersTotalPrice = BookingUser::where('school_id', $schoolId)
+        $bookingUsersTotalPrice = BookingUser::with('course.sport') // <--- Agregado aquí
+        ->where('school_id', $schoolId)
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             })
@@ -926,6 +932,7 @@ class StatisticsController extends AppBaseController
             ->where('date', '<=', $endDate)
             ->get();
 
+
         $totalPricesByType = [
             'total_price_type_1' => 0,
             'total_price_type_2' => 0,
@@ -933,6 +940,11 @@ class StatisticsController extends AppBaseController
         ];
 
         foreach ($bookingUsersTotalPrice as $bookingUser) {
+            if (!$bookingUser->course) {
+                \Log::warning("BookingUser sin curso", ['booking_user_id' => $bookingUser->id]);
+                continue; // Salta este registro para evitar el error
+            }
+
             if ($bookingUser->course->course_type == 1) {
                 $totalPricesByType['total_price_type_1'] += $bookingUser->price;
             } elseif ($bookingUser->course->course_type == 2) {
@@ -1188,6 +1200,11 @@ class StatisticsController extends AppBaseController
 
         // Procesar reservas con monitor
         foreach ($bookingUsersWithMonitor as $bookingUser) {
+            if (!$bookingUser->course) {
+                \Log::warning("BookingUser sin curso", ['booking_user_id' => $bookingUser->id]);
+                continue; // Salta este registro para evitar el error
+            }
+
             $monitor = $bookingUser->monitor;
             $sport = $bookingUser->course->sport;
             $courseType = $bookingUser->course->course_type;
