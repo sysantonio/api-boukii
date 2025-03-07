@@ -187,6 +187,7 @@ class CourseController extends AppBaseController
         $course = Course::with( 'station','bookingUsersActive.client.sports', 'bookingUsers.client.sports',
             'courseDates.courseSubgroups.bookingUsers.client',
             'courseDates.courseGroups.courseSubgroups.monitor',
+            'courseExtras',
             'courseDates.courseGroups.courseSubgroups.bookingUsers.client')
             ->where('school_id', $school->id)->find($id);
 
@@ -286,11 +287,11 @@ class CourseController extends AppBaseController
                 'price_range' => 'nullable',
                 'discounts' => 'nullable',
                 'settings' => 'nullable',
-                'courseExtras' => 'nullable|array', // Los extras no son obligatorios
-                'courseExtras.*.name' => 'required_with:courseExtras|string|max:255', // Obligatorios si hay extras
-                'courseExtras.*.description' => 'nullable|string|max:255',
-                'courseExtras.*.group' => 'nullable|string|max:255',
-                'courseExtras.*.price' => 'required_with:courseExtras|numeric', // Obligatorios si hay extras
+                'extras' => 'nullable|array', // Los extras no son obligatorios
+                'extras.*.name' => 'required_with:courseExtras|string|max:255', // Obligatorios si hay extras
+                'extras.*.description' => 'nullable|string|max:255',
+                'extras.*.group' => 'nullable|string|max:255',
+                'extras.*.price' => 'required_with:courseExtras|numeric', // Obligatorios si hay extras
                 'course_dates' => 'required|array',
                 'course_dates.*.date' => 'required|date',
                 'course_dates.*.hour_start' => 'required|string|max:255',
@@ -335,11 +336,31 @@ class CourseController extends AppBaseController
 
             DB::beginTransaction();
 
+            $schoolSettings = json_decode($school->settings, true) ?? [];
+            $existingExtras = $schoolSettings['extras']['forfait'] ?? [];
+
+
+
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    if (!collect($existingExtras)->contains('name', $extra['name'])) {
+                        $existingExtras[] = $extra;
+                    }
+                }
+                $schoolSettings['extras']['forfait'] = $existingExtras;
+                $school->settings = json_encode($schoolSettings);
+                $school->save();
+            }
+
             $course = Course::create($courseData);
 
-            if (!empty($data['courseExtras'])) {
-                foreach ($data['courseExtras'] as $extra) {
-                    $course->courseExtras()->create($extra);
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    $course->courseExtras()->create([
+                        'name' => $extra['product'],
+                        'description' => $extra['name'],
+                        'price' => $extra['price']
+                    ]);
                 }
             }
 

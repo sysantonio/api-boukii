@@ -368,7 +368,12 @@ class Booking extends Model
          return LogOptions::defaults();
     }
     protected $appends = ['sport', 'bonus', 'payment_method_status',
-        'cancellation_status', 'payment_method', 'grouped_activities'];
+        'cancellation_status', 'payment_method', 'grouped_activities', 'vouchers_used_amount'];
+
+    public function getVouchersUsedAmountAttribute()
+    {
+        return $this->vouchersLogs()->sum('amount');
+    }
 
     // Agrupa los booking_users por group_id con detalles completos
     public function getGroupedActivitiesAttribute()
