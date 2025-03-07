@@ -173,6 +173,8 @@ class BookingController extends AppBaseController
                     'degree_id' => $cartItem['degree_id'],
                     'hour_start' => $cartItem['hour_start'],
                     'hour_end' => $cartItem['hour_end'],
+                    'notes_school' => $cartItem['notes_school'],
+                    'notes' => $cartItem['notes'],
                     'date' => $courseDate->date,
                     'group_id' => $cartItem['group_id']
                 ]);
@@ -256,7 +258,11 @@ class BookingController extends AppBaseController
             ]);
 
             // Crear un registro de pago si el método de pago es 1 o 4
-            if (in_array($data['payment_method_id'], [1, 4]) && $data['payment_method_status'] !== 'unpaid') {
+            if (
+                isset($data['payment_method_id'], $data['payment_method_status']) &&
+                in_array($data['payment_method_id'], [1, 4]) &&
+                $data['payment_method_status'] !== 'unpaid'
+            ) {
                 $remainingAmount = $data['price_total'] - $voucherAmount;
 
                 Payment::create([
@@ -264,11 +270,12 @@ class BookingController extends AppBaseController
                     'school_id' => $school['id'],
                     'amount' => $remainingAmount,
                     'status' => 'paid', // Puedes ajustar el estado según tu lógica
-                    'notes' => $data['selectedPaymentOption'],
+                    'notes' => $data['selectedPaymentOption'] ?? null,
                     'payrexx_reference' => null, // Aquí puedes integrar Payrexx si lo necesitas
                     'payrexx_transaction' => null
                 ]);
             }
+
 
             DB::commit();
             return $this->sendResponse($booking, 'Reserva creada con éxito', 201);

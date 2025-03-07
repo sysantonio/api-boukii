@@ -147,15 +147,28 @@ class ClientsController extends AppBaseController
 
         $clientsWithUtilizers = $this->clientRepository->all(
             searchArray: [],
-            search: null, // Eliminar búsqueda global por ahora
+            search: null,
             skip: $request->input('skip'),
             limit: $request->input('limit'),
             pagination: $perPage,
-            with: $with,
+            with: [
+                'utilizers' => function ($query) use ($search, $fieldSearchable) {
+                    if ($search) {
+                        $query->where(function ($subQuery) use ($search, $fieldSearchable) {
+                            foreach ($fieldSearchable as $field) {
+                                $subQuery->orWhere($field, 'like', "%" . $search . "%");
+                            }
+                        });
+                    }
+                },
+                'utilizers.clientSports.sport',
+                'utilizers.clientSports.degree',
+                'clientSports.degree',
+                'clientSports.sport'
+            ],
             order: $order,
             orderColumn: $orderColumn,
-            additionalConditions: function ($query) use ($school, $search, $request, $fieldSearchable) {
-                // Filtrar clientes sin 'main' y relacionados con 'clientsSchools'
+            additionalConditions: function ($query) use ($school, $search, $fieldSearchable, $request) {
                 $query->whereDoesntHave('main')
                     ->whereHas('clientsSchools', function ($query) use ($school, $request) {
                         $query->where('school_id', $school->id);
@@ -164,10 +177,9 @@ class ClientsController extends AppBaseController
                         }
                     });
 
-                // Búsqueda adicional
                 if ($search) {
-                    $query->where(function ($query) use ($school, $search, $fieldSearchable) {
-                        // Buscar en utilizadores
+                    $query->where(function ($query) use ($search, $fieldSearchable) {
+                        // Buscar en utilizadores y filtrar el main que tenga utilizadores que coincidan
                         $query->whereHas('utilizers', function ($subQuery) use ($search, $fieldSearchable) {
                             $subQuery->where(function ($subSubQuery) use ($search, $fieldSearchable) {
                                 foreach ($fieldSearchable as $field) {
@@ -185,6 +197,7 @@ class ClientsController extends AppBaseController
                 }
             }
         );
+
 
 
         return response()->json($clientsWithUtilizers);
