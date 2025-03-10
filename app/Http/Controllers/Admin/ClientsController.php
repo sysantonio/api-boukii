@@ -127,48 +127,38 @@ class ClientsController extends AppBaseController
 
         // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
         $school = $this->getSchool($request);
-        $searchParameters = array_merge(
-            $request->except([
-                'skip', 'limit', 'search', 'exclude', 'user', 'active',
-                'perPage', 'order', 'orderColumn', 'page', 'with'
-            ]),
-            ['school_id' => $school->id]
-        );
+
+        // Define relaciones base que siempre queremos cargar
+        $defaultWith = [
+            'utilizers.clientSports.sport',
+            'utilizers.clientSports.degree',
+            'clientSports.degree',
+            'clientSports.sport'
+        ];
+
+        // Fusionar las relaciones proporcionadas en la request (si existen) con las predeterminadas
+        $with = array_unique(array_merge($defaultWith, $request->input('with', [])));
 
         $search = $request->input('search');
         $order = $request->input('order', 'desc');
         $orderColumn = $request->input('orderColumn', 'id');
-        $with = $request->input('with', ['utilizers.clientSports.sport', 'utilizers.clientSports.degree', 'clientSports.degree', 'clientSports.sport']);
 
         $fieldSearchable = [
-        'first_name',
-        'last_name',
-    ];
+            'first_name',
+            'last_name',
+        ];
 
         $clientsWithUtilizers = $this->clientRepository->all(
             searchArray: [],
-            search: null,
+            search: null, // Eliminamos búsqueda global por ahora
             skip: $request->input('skip'),
             limit: $request->input('limit'),
             pagination: $perPage,
-            with: [
-                'utilizers' => function ($query) use ($search, $fieldSearchable) {
-                    if ($search) {
-                        $query->where(function ($subQuery) use ($search, $fieldSearchable) {
-                            foreach ($fieldSearchable as $field) {
-                                $subQuery->orWhere($field, 'like', "%" . $search . "%");
-                            }
-                        });
-                    }
-                },
-                'utilizers.clientSports.sport',
-                'utilizers.clientSports.degree',
-                'clientSports.degree',
-                'clientSports.sport'
-            ],
+            with: $with, // Usamos el `$with` fusionado
             order: $order,
             orderColumn: $orderColumn,
-            additionalConditions: function ($query) use ($school, $search, $fieldSearchable, $request) {
+            additionalConditions: function ($query) use ($school, $search, $request, $fieldSearchable) {
+                // Filtrar clientes sin 'main' y relacionados con 'clientsSchools'
                 $query->whereDoesntHave('main')
                     ->whereHas('clientsSchools', function ($query) use ($school, $request) {
                         $query->where('school_id', $school->id);
@@ -177,9 +167,10 @@ class ClientsController extends AppBaseController
                         }
                     });
 
+                // Búsqueda adicional
                 if ($search) {
                     $query->where(function ($query) use ($search, $fieldSearchable) {
-                        // Buscar en utilizadores y filtrar el main que tenga utilizadores que coincidan
+                        // Buscar en utilizadores
                         $query->whereHas('utilizers', function ($subQuery) use ($search, $fieldSearchable) {
                             $subQuery->where(function ($subSubQuery) use ($search, $fieldSearchable) {
                                 foreach ($fieldSearchable as $field) {
@@ -198,10 +189,9 @@ class ClientsController extends AppBaseController
             }
         );
 
-
-
         return response()->json($clientsWithUtilizers);
     }
+
 
 
     /**
