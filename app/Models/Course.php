@@ -117,7 +117,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          type="boolean",
  *      ),
  *      @OA\Property(
- *           property="highlited",
+ *           property="highlighted",
  *           description="",
  *           readOnly=false,
  *           nullable=false,
@@ -416,8 +416,16 @@ class Course extends Model
             ->where('status', 1) // BookingUser debe tener status 1
             ->whereHas('booking', function ($query) {
                 $query->where('status', '!=', 2); // La Booking no debe tener status 2
+            })
+            ->where(function ($query) {
+                $query->whereNull('course_group_id') // Permitir si es null
+                ->orWhereHas('courseGroup');  // Solo si el grupo existe
+
+                $query->whereNull('course_subgroup_id') // Permitir si es null
+                ->orWhereHas('courseSubgroup'); // Solo si el subgrupo existe
             });
     }
+
 
 
 
@@ -458,7 +466,8 @@ class Course extends Model
 
     public function courseSubgroups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id');
+        return $this->hasMany(\App\Models\CourseSubgroup::class, 'course_id')
+            ->whereHas('courseGroup');
     }
 
     protected $appends = ['icon', 'minPrice', 'minDuration', 'typeString'];
@@ -642,7 +651,7 @@ class Course extends Model
             $clientDegree = Degree::find($degreeId);
         }
 
-        if ($type == 1) {
+        if ($type == 1 || $type == null) {
             // Lógica para cursos de tipo 1
             $query->whereHas('courseDates', function (Builder $subQuery) use (
                 $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
@@ -759,7 +768,7 @@ class Course extends Model
                             });
                         });
             });
-        } elseif ($type == 2 || $type == 3) {
+        } if (($type == 2 || $type == 3) || $type == null) {
             // Lógica para cursos de tipo 2
             $query->where('course_type', $type)
                 ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto

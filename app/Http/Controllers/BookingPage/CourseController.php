@@ -72,7 +72,7 @@ class CourseController extends SlugAuthController
         $startDate = $startDate->format('Y-m-d');
         $endDate = $endDate->format('Y-m-d');
 
-        $type = $request->input('course_type') ?? 1;
+        $type = $request->input('course_type');
         $sportId = $request->input('sport_id') ?? 1;
         $clientId = $request->input('client_id');
         $minAge = $request->input('min_age') ?? null;

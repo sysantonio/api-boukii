@@ -127,34 +127,31 @@ class ClientsController extends AppBaseController
 
         // Obtén el ID de la escuela y añádelo a los parámetros de búsqueda
         $school = $this->getSchool($request);
-
-        // Define relaciones base que siempre queremos cargar
-        $defaultWith = [
-            'utilizers.clientSports.sport',
-            'utilizers.clientSports.degree',
-            'clientSports.degree',
-            'clientSports.sport'
-        ];
-
-        // Fusionar las relaciones proporcionadas en la request (si existen) con las predeterminadas
-        $with = array_unique(array_merge($defaultWith, $request->input('with', [])));
+        $searchParameters = array_merge(
+            $request->except([
+                'skip', 'limit', 'search', 'exclude', 'user', 'active',
+                'perPage', 'order', 'orderColumn', 'page', 'with'
+            ]),
+            ['school_id' => $school->id]
+        );
 
         $search = $request->input('search');
         $order = $request->input('order', 'desc');
         $orderColumn = $request->input('orderColumn', 'id');
+        $with = $request->input('with', ['utilizers.clientSports.sport', 'utilizers.clientSports.degree', 'clientSports.degree', 'clientSports.sport']);
 
         $fieldSearchable = [
-            'first_name',
-            'last_name',
-        ];
+        'first_name',
+        'last_name',
+    ];
 
         $clientsWithUtilizers = $this->clientRepository->all(
             searchArray: [],
-            search: null, // Eliminamos búsqueda global por ahora
+            search: null, // Eliminar búsqueda global por ahora
             skip: $request->input('skip'),
             limit: $request->input('limit'),
             pagination: $perPage,
-            with: $with, // Usamos el `$with` fusionado
+            with: $with,
             order: $order,
             orderColumn: $orderColumn,
             additionalConditions: function ($query) use ($school, $search, $request, $fieldSearchable) {
@@ -169,7 +166,7 @@ class ClientsController extends AppBaseController
 
                 // Búsqueda adicional
                 if ($search) {
-                    $query->where(function ($query) use ($search, $fieldSearchable) {
+                    $query->where(function ($query) use ($school, $search, $fieldSearchable) {
                         // Buscar en utilizadores
                         $query->whereHas('utilizers', function ($subQuery) use ($search, $fieldSearchable) {
                             $subQuery->where(function ($subSubQuery) use ($search, $fieldSearchable) {
@@ -189,9 +186,9 @@ class ClientsController extends AppBaseController
             }
         );
 
+
         return response()->json($clientsWithUtilizers);
     }
-
 
 
     /**

@@ -13647,7 +13647,7 @@
                         "readOnly": false,
                         "nullable": false
                     },
-                    "highlited": {
+                    "highlighted": {
                         "description": "",
                         "type": "boolean",
                         "readOnly": false,
