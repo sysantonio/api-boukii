@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -530,19 +531,23 @@ class School extends Model
     public function getPayrexxInstance()
     {
         $decrypted = null;
+        if (app()->environment('local', 'staging', 'testing', 'development')) {
+           return 'pruebas'; // Asegúrate de cambiar esto por tu instancia de test
+        }
         if ($this->payrexx_instance)
         {
             try
             {
                 $decrypted = decrypt($this->payrexx_instance);
             }
-                // @codeCoverageIgnoreStart
             catch (\Illuminate\Contracts\Encryption\DecryptException $e)
             {
                 $decrypted = null;  // Data seems corrupt or tampered
             }
-            // @codeCoverageIgnoreEnd
         }
+
+        // Si estamos en local o staging, forzamos la instancia de pruebas
+
 
         return $decrypted;
     }
@@ -555,19 +560,24 @@ class School extends Model
     public function getPayrexxKey()
     {
         $decrypted = null;
+
+        // Si estamos en local o staging, forzamos la API Key de pruebas
+        if (app()->environment('local', 'staging', 'testing', 'development')) {
+            return 'vgJrvQ7AYKzpiqmreocpeGYtjFTX39'; // Asegúrate de cambiar esto por tu API Key de test
+        }
+
         if ($this->payrexx_key)
         {
             try
             {
                 $decrypted = decrypt($this->payrexx_key);
             }
-                // @codeCoverageIgnoreStart
             catch (\Illuminate\Contracts\Encryption\DecryptException $e)
             {
                 $decrypted = null;  // Data seems corrupt or tampered
             }
-            // @codeCoverageIgnoreEnd
         }
+
 
         return $decrypted;
     }
