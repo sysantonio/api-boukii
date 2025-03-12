@@ -378,12 +378,12 @@ class Booking extends Model
     // Agrupa los booking_users por group_id con detalles completos
     public function getGroupedActivitiesAttribute()
     {
-
         return array_values($this->bookingUsers->groupBy('group_id')->map(function ($users) {
             $groupedActivity = [
                 'group_id' => $users->first()->group_id,
                 'sport' => optional($users->first()->course)->sport,
                 'course' => $users->first()->course,
+                'course_name' => optional($users->first()->course)->name,
                 'sportLevel' => $users->first()->degree,
                 'dates' => [],
                 'monitors' => [],
@@ -391,12 +391,18 @@ class Booking extends Model
                 'clientObs' => $users->first()->notes,
                 'schoolObs' => $users->first()->notes_school,
                 'total' => 0,
+                'extra_price' => 0, // Precio total de los extras
+                'price_base' => 0,   // Precio base sin extras
+                'price' => 0,        // Precio total (base + extras)
+                'extras' => [],      // Lista de extras consolidada
                 'status' => 0,
-                'statusList' => []
+                'statusList' => [],
+                'items' => []        // Para mantener compatibilidad con createBasket
             ];
 
             foreach ($users as $user) {
                 $groupedActivity['statusList'][] = $user->status;
+                $groupedActivity['items'][] = $user->id; // Añadir ID del usuario para compatibilidad
 
                 // Añadir utilizers únicos
                 if (!$this->utilizerExists($groupedActivity['utilizers'], $user->client)) {
@@ -408,6 +414,25 @@ class Booking extends Model
                         'birth_date' => $user->client->birth_date,
                         'language1_id' => $user->client->language1_id,
                         'country' => $user->client->country,
+                        'client_sports' => $user->client->clientSports->map(function ($sport) {
+                            return [
+                                'id' => $sport->id,
+                                'client_id' => $sport->client_id,
+                                'sport_id' => $sport->sport_id, // Si hay más datos en clientSports
+                                'school_id' => $sport->school_id, // Si hay más datos en clientSports
+                                'degree_id' => $sport->degree_id, // Si hay más datos en clientSports
+                                'degree' => $sport->degree ? [
+                                    'id' => $sport->degree->id,
+                                    'league' => $sport->degree->league,
+                                    'level' => $sport->degree->level, // Agrega más campos si los hay
+                                    'name' => $sport->degree->name, // Agrega más campos si los hay
+                                    'annotation' => $sport->degree->annotation, // Agrega más campos si los hay
+                                    'degree_order' => $sport->degree->degree_order, // Agrega más campos si los hay
+                                    'progress' => $sport->degree->progress, // Agrega más campos si los hay
+                                    'color' => $sport->degree->color, // Agrega más campos si los hay
+                                ] : null,
+                            ];
+                        })->toArray(),
                         'extras' => []
                     ];
                 }
@@ -439,13 +464,51 @@ class Booking extends Model
                         'image' => $user->client->image,
                         'birth_date' => $user->client->birth_date,
                         'language1_id' => $user->client->language1_id,
-                        'country' => $user->client->country
+                        'country' => $user->client->country,
+                        'client_sports' => $user->client->clientSports->map(function ($sport) {
+                            return [
+                                'id' => $sport->id,
+                                'client_id' => $sport->client_id,
+                                'sport_id' => $sport->sport_id, // Si hay más datos en clientSports
+                                'school_id' => $sport->school_id, // Si hay más datos en clientSports
+                                'degree_id' => $sport->degree_id, // Si hay más datos en clientSports
+                                'degree' => $sport->degree ? [
+                                    'id' => $sport->degree->id,
+                                    'league' => $sport->degree->league,
+                                    'level' => $sport->degree->level, // Agrega más campos si los hay
+                                    'name' => $sport->degree->name, // Agrega más campos si los hay
+                                    'annotation' => $sport->degree->annotation, // Agrega más campos si los hay
+                                    'degree_order' => $sport->degree->degree_order, // Agrega más campos si los hay
+                                    'progress' => $sport->degree->progress, // Agrega más campos si los hay
+                                    'color' => $sport->degree->color, // Agrega más campos si los hay
+                                ] : null,
+                            ];
+                        })->toArray(),
                     ];
                 }
 
                 // Añadir extras por fecha
                 foreach ($user->bookingUserExtras as $extra) {
                     $groupedActivity['dates'][$dateKey]['extras'][] = $extra->course_extra;
+
+                    // Consolidar extras para el objeto principal
+                    $extraExists = false;
+                    foreach ($groupedActivity['extras'] as &$existingExtra) {
+                        if ($existingExtra['id'] === $extra->course_extra->id) {
+                            $existingExtra['quantity']++;
+                            $extraExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$extraExists) {
+                        $groupedActivity['extras'][] = [
+                            'id' => $extra->course_extra->id,
+                            'name' => $extra->course_extra->name,
+                            'price' => $extra->course_extra->price,
+                            'quantity' => 1
+                        ];
+                    }
                 }
 
                 // Añadir monitores
@@ -455,15 +518,90 @@ class Booking extends Model
             }
 
             $groupedActivity['dates'] = array_values($groupedActivity['dates']);
+
             // Determinar estado del grupo
             $uniqueStatuses = array_unique($groupedActivity['statusList']);
             $groupedActivity['status'] = count($uniqueStatuses) === 1 ? $uniqueStatuses[0] : 3;
 
-            // Calcular precio total del grupo
-            $groupedActivity['total'] = $this->calculateActivityPrice($groupedActivity);
+            // Calcular precios
+            $groupedActivity['price_base'] = $this->calculateActivityPrice($groupedActivity);
+
+            // Calcular el precio total de los extras
+            $groupedActivity['extra_price'] = 0;
+            foreach ($groupedActivity['extras'] as $extra) {
+                $groupedActivity['extra_price'] += $extra['price'] * $extra['quantity'];
+            }
+
+            // Calcular precio total (base + extras)
+            $groupedActivity['total'] = $groupedActivity['price'] = $groupedActivity['price_base'] + $groupedActivity['extra_price'];
 
             return $groupedActivity;
         })->toArray());
+    }
+    public function updateCart()
+    {
+        $bookingData = $this;
+        $groupedCartItems = $this->getGroupedActivitiesAttribute();
+
+        // Si no hay elementos en el carrito, no continuamos
+        if (empty($groupedCartItems)) {
+            return;
+        }
+
+        // Tomamos el primer grupo para la información de precios
+        $group = $groupedCartItems[0];
+
+        // Crear el objeto basket con el formato requerido
+        $basket = [
+            "payment_method_id" => $bookingData['payment_method_id'] ?? 3,
+            "price_base" => [
+                "name" => $group['course_name'] ?? '',
+                "quantity" => count($group['items'] ?? []),
+                "price" => $group['price_base'] ?? 0
+            ],
+            "bonus" => [
+                "total" => !empty($bookingData['vouchers']) ? count($bookingData['vouchers']) : 0,
+                "bonuses" => !empty($bookingData['vouchers']) ? array_map(function($voucher) {
+                    return [
+                        "name" => $voucher['bonus']['code'],
+                        "quantity" => 1,
+                        "price" => -$voucher['bonus']['reducePrice']
+                    ];
+                }, $bookingData['vouchers']) : []
+            ],
+            "reduction" => [
+                "name" => "Reduction",
+                "quantity" => 1,
+                "price" => -($bookingData['price_reduction'] ?? 0)
+            ],
+            "boukii_care" => [
+                "name" => "Boukii Care",
+                "quantity" => 1,
+                "price" => $bookingData['price_boukii_care'] ?? 0
+            ],
+            "cancellation_insurance" => [
+                "name" => "Cancellation Insurance",
+                "quantity" => 1,
+                "price" => $bookingData['price_cancellation_insurance'] ?? 0
+            ],
+            "extras" => [
+                "total" => count($group['extras'] ?? []),
+                "extras" => $group['extras'] ?? []
+            ],
+            "tva" => [
+                "name" => "TVA",
+                "quantity" => 1,
+                "price" => $bookingData['price_tva'] ?? 0
+            ],
+            "price_total" => $group['price'] ?? 0,
+            "paid_total" => $bookingData['paid_total'] ?? $group['price'] ?? 0,
+            "pending_amount" => $bookingData['pending_amount'] ?? $group['price'] ?? 0
+        ];
+
+        // Actualizar el campo basket en la base de datos con el formato JSON
+        $this->update(['basket' => json_encode($basket)]);
+
+        return $basket;
     }
 
     // Verifica si un utilizer ya fue agregado

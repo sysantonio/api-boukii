@@ -259,9 +259,9 @@ class BookingController extends AppBaseController
 
             // Crear un registro de pago si el método de pago es 1 o 4
             if (
-                isset($data['payment_method_id'], $data['payment_method_status']) &&
+                isset($data['payment_method_id']) &&
                 in_array($data['payment_method_id'], [1, 4]) &&
-                $data['payment_method_status'] !== 'unpaid'
+                $data['paid']
             ) {
                 $remainingAmount = $data['price_total'] - $voucherAmount;
 
@@ -303,7 +303,10 @@ class BookingController extends AppBaseController
         if($voucherAmount > 0){
             $data['paid'] = $data['price_total'] <= $voucherAmount;
         }
+
         $booking = $this->bookingRepository->update($data, $id);
+
+        $booking->updateCart();
 
         if($request->has('send_mail') && $request->input('send_mail')) {
             dispatch(function () use ($booking) {
@@ -781,15 +784,23 @@ class BookingController extends AppBaseController
                     ];
 
                     BookingLog::create($logData);
-                    \Mail::to($booking->clientMain->email)
-                        ->send(new BookingPayMailer(
-                            $school,
-                            $bookingData,
-                            $booking->clientMain,
-                            $payrexxLink
-                        ));
+                    dispatch(function () use ($school, $booking, $bookingData, $payrexxLink) {
+                        // N.B. try-catch because some test users enter unexistant emails, throwing Swift_TransportException
+                        try {
+                            \Mail::to($booking->clientMain->email)
+                                ->send(new BookingPayMailer(
+                                    $school,
+                                    $bookingData,
+                                    $booking->clientMain,
+                                    $payrexxLink
+                                ));
+                        } catch (\Exception $e) {
+                            Log::channel('payrexx')->error('PayrexxHelpers sendMailing payBooking Booking ID=' . $booking->id);
+                            Log::channel('payrexx')->error($e->getMessage());
+                        }
+                    });
                 } catch (\Exception $e) {
-                    Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail Booking ID=' . $booking->id);
+                    Log::channel('payrexx')->error('PayrexxHelpers sendPayEmail payBooking Booking ID=' . $booking->id);
                     Log::channel('payrexx')->error($e->getMessage());
                     return $this->sendError('Link could not be created');
                 }
