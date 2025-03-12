@@ -616,11 +616,10 @@ class Course extends Model
         return 'multiple';
     }
 
-    public function scopeWithAvailableDates(Builder $query, $type, $startDate, $endDate, $sportId = 1,
+    public function scopeWithAvailableDates(Builder $query, $type = null, $startDate, $endDate, $sportId = 1,
                                                     $clientId = null, $degreeId = null, $getLowerDegrees = false,
                                                     $degreeOrders = null, $min_age = null, $max_age = null)
     {
-
         $clientAge = null;
         $clientDegreeOrder = null;
         $clientDegree = null;
@@ -630,7 +629,6 @@ class Course extends Model
         $query->where('sport_id', $sportId);
 
         // Si se proporcionó clientId, obtener los detalles del cliente
-
         if ($clientId) {
             $client = Client::find($clientId);
             if ($client) {
@@ -651,9 +649,37 @@ class Course extends Model
             $clientDegree = Degree::find($degreeId);
         }
 
-        if ($type == 1 || $type == null) {
+        // Si no se especifica el tipo, prepara una consulta que incluya todos los tipos
+        if ($type === null) {
+            // Crea una consulta que combine todos los tipos con una condición OR
+            $query->where(function($query) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
+                // Lógica para tipo 1
+                $query->where(function($subquery) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
+                    $this->applyType1Filters($subquery, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
+                });
+
+                // Lógica para tipos 2 y 3
+                $query->orWhere(function($subquery) use ($startDate, $endDate, $clientAge, $min_age, $max_age) {
+                    $this->applyTypes2And3Filters($subquery, $startDate, $endDate, $clientAge, $min_age, $max_age);
+                });
+            });
+        } else if ($type == 1) {
             // Lógica para cursos de tipo 1
-            $query->whereHas('courseDates', function (Builder $subQuery) use (
+            $this->applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
+        } else if ($type == 2 || $type == 3) {
+            // Lógica para cursos de tipo 2 o 3
+            $query->where('course_type', $type);
+            $this->applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $min_age, $max_age);
+        }
+
+        return $query;
+    }
+
+    // Método auxiliar para aplicar filtros de tipo 1
+    private function applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId)
+    {
+        $query->where('course_type', 1)
+            ->whereHas('courseDates', function (Builder $subQuery) use (
                 $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                 $isAdultClient, $clientLanguages, $clientId
             ) {
@@ -700,7 +726,6 @@ class Course extends Model
 
                                     // Comprobación de degree_order y rango de edad
                                     if ($clientDegree !== null && $getLowerDegrees) {
-
                                         $groupQuery->whereHas('degree',
                                             function (Builder $degreeQuery) use ($clientDegree) {
                                                 $degreeQuery->where('degree_order', '<=',
@@ -768,44 +793,35 @@ class Course extends Model
                             });
                         });
             });
-        } if (($type == 2 || $type == 3) || $type == null) {
-            // Lógica para cursos de tipo 2
-            $query->where('course_type', $type)
-                ->where('sport_id', $sportId) // Asegúrate de que estás filtrando por el sport_id correcto
-                ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
-                    $subQuery->where('date', '>=', $startDate)
-                        ->where('date', '<=', $endDate);
-                    //TODO: Review availability
-//                        ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
-//                        WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
-//                        AND booking_users.deleted_at IS NULL)');
-
-                });
-
-            if ($clientAge) {
-                $query->where('age_min', '<=', $clientAge)
-                    ->where('age_max', '>=', $clientAge);
-            }
-
-            if ($clientAge) {
-                // Filtrado por la edad del cliente si está disponible
-                $query->where('age_min', '<=', $clientAge)
-                    ->where('age_max', '>=', $clientAge);
-            } else {
-                // Filtrado por min_age y max_age si clientId no está disponible
-                if ($max_age !== null) {
-                    $query->where('age_min', '<=', $max_age);
-                }
-                if ($min_age !== null) {
-                    $query->where('age_max', '>=', $min_age);
-                }
-            }
-
-        }
-        //dd($query->toSql(), $query->getBindings());
-        return $query;
     }
 
+    // Método auxiliar para aplicar filtros de tipos 2 y 3
+    private function applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $min_age, $max_age)
+    {
+        $query->whereIn('course_type', [2, 3])
+            ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
+                $subQuery->where('date', '>=', $startDate)
+                    ->where('date', '<=', $endDate);
+                //TODO: Review availability
+                // ->whereRaw('courses.max_participants > (SELECT COUNT(*) FROM booking_users
+                // WHERE booking_users.course_date_id = course_dates.id AND booking_users.status = 1
+                // AND booking_users.deleted_at IS NULL)');
+            });
+
+        if ($clientAge) {
+            // Filtrado por la edad del cliente si está disponible
+            $query->where('age_min', '<=', $clientAge)
+                ->where('age_max', '>=', $clientAge);
+        } else {
+            // Filtrado por min_age y max_age si clientId no está disponible
+            if ($max_age !== null) {
+                $query->where('age_min', '<=', $max_age);
+            }
+            if ($min_age !== null) {
+                $query->where('age_max', '>=', $min_age);
+            }
+        }
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
