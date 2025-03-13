@@ -489,25 +489,31 @@ class Booking extends Model
 
                 // Añadir extras por fecha
                 foreach ($user->bookingUserExtras as $extra) {
-                    $groupedActivity['dates'][$dateKey]['extras'][] = $extra->course_extra;
+                    // Verificar si course_extra no es null antes de acceder a sus propiedades
+                    if ($extra->course_extra) {
+                        $groupedActivity['dates'][$dateKey]['extras'][] = $extra->course_extra;
 
-                    // Consolidar extras para el objeto principal
-                    $extraExists = false;
-                    foreach ($groupedActivity['extras'] as &$existingExtra) {
-                        if ($existingExtra['id'] === $extra->course_extra->id) {
-                            $existingExtra['quantity']++;
-                            $extraExists = true;
-                            break;
+                        // Consolidar extras para el objeto principal
+                        $extraExists = false;
+                        foreach ($groupedActivity['extras'] as &$existingExtra) {
+                            if ($existingExtra['id'] === $extra->course_extra->id) {
+                                $existingExtra['quantity']++;
+                                $extraExists = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (!$extraExists) {
-                        $groupedActivity['extras'][] = [
-                            'id' => $extra->course_extra->id,
-                            'name' => $extra->course_extra->name,
-                            'price' => $extra->course_extra->price,
-                            'quantity' => 1
-                        ];
+                        if (!$extraExists) {
+                            $groupedActivity['extras'][] = [
+                                'id' => $extra->course_extra->id,
+                                'name' => $extra->course_extra->name,
+                                'price' => $extra->course_extra->price,
+                                'quantity' => 1
+                            ];
+                        }
+                    } else {
+                        // Opcional: Manejar el caso cuando course_extra es null, si es necesario
+                        // Ejemplo: Loguear el error o agregar un valor por defecto
                     }
                 }
 
