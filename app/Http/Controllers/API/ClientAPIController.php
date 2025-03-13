@@ -382,22 +382,22 @@ class ClientAPIController extends AppBaseController
                         //** Removed subgroups length, not seems to be reasonable with new features. */
                         /*if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {*/
 
-                            $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
+                        $newTargetSubgroup = $group->courseSubgroups->sortBy('id')[$targetSubgroupPosition] ?? null;
 
-                            if ($newTargetSubgroup) {
-                                $subgroupsChanged[] = $newTargetSubgroup;
-                                $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
-                            } else {
-                                DB::rollBack();
-                                Log::error('Some groups are not identical length', $group->courseSubgroups->sortBy('id')->toArray());
-                                return $this->sendError('Some groups are not identical');
-                            }
-/*                        } else {
+                        if ($newTargetSubgroup) {
+                            $subgroupsChanged[] = $newTargetSubgroup;
+                            $this->moveUsers($courseDate, $newTargetSubgroup, $request->clientIds);
+                        } else {
                             DB::rollBack();
-                            Log::error('Initial count'. $initialGroup->courseSubgroups->count() );
-                            Log::error('Sned count '. $group->courseSubgroups->count() );
-                            return $this->sendError('Some groups are not identical length');
-                        }*/
+                            Log::error('Some groups are not identical length', $group->courseSubgroups->sortBy('id')->toArray());
+                            return $this->sendError('Some groups are not identical');
+                        }
+                        /*                        } else {
+                                                    DB::rollBack();
+                                                    Log::error('Initial count'. $initialGroup->courseSubgroups->count() );
+                                                    Log::error('Sned count '. $group->courseSubgroups->count() );
+                                                    return $this->sendError('Some groups are not identical length');
+                                                }*/
                     }
 
                 }
@@ -418,9 +418,11 @@ class ClientAPIController extends AppBaseController
             BookingUser::where('course_date_id', $initialCourseDate->id)
                 ->where('client_id', $clientId)
                 ->update(['course_subgroup_id' => $targetSubgroup->id,
-                    'course_group_id' => $targetSubgroup->course_group_id,
-                    'degree_id' => $targetSubgroup->degree_id,
-                    'monitor_id' => $targetSubgroup->monitor_id]
+                        'course_group_id' => $targetSubgroup->course_group_id,
+                        'degree_id' => $targetSubgroup->degree_id,
+                        'monitor_id' => $targetSubgroup->monitor_id,
+                        'group_changed' => true
+                    ]
                 );
         }
     }
