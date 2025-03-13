@@ -29,7 +29,8 @@ class CourseRepository extends BaseRepository
         'hour_max',
         'confirm_attendance',
         'active',
-        'online'
+        'online',
+        'highlighted'
     ];
 
     public function getFieldsSearchable(): array

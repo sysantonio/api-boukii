@@ -78,6 +78,7 @@ class CourseController extends SlugAuthController
         $maxAge = $request->input('max_age') ?? null;
         $clientId = $request->input('client_id');
         $degreeOrder = $request->input('degree_order');
+        $highlighted = $request->input('highlighted') ?? false;
         $degreeOrderArray = [];
         if($degreeOrder) {
             $degreeOrderArray = explode(',', $degreeOrder);
@@ -95,6 +96,7 @@ class CourseController extends SlugAuthController
                     ->where('school_id', $this->school->id)
                     ->where('online', 1)
                     ->where('active', 1)
+                    ->where('highlighted', $highlighted)
                     ->where(function($query) use ($today) {
                         $query->where(function($subquery) use ($today) {
                             $subquery->whereNull('date_start_res')
