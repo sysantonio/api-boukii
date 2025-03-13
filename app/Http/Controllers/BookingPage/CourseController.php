@@ -74,7 +74,6 @@ class CourseController extends SlugAuthController
 
         $type = $request->has('course_type') ? $request->input('course_type') : null;
         $sportId = $request->input('sport_id') ?? 1;
-        $clientId = $request->input('client_id');
         $minAge = $request->input('min_age') ?? null;
         $maxAge = $request->input('max_age') ?? null;
         $clientId = $request->input('client_id');

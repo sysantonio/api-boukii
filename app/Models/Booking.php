@@ -367,8 +367,20 @@ class Booking extends Model
     {
          return LogOptions::defaults();
     }
-    protected $appends = ['sport', 'bonus', 'payment_method_status',
+    protected $appends = ['sport', 'bonus', 'payment_method_status', 'has_observations',
         'cancellation_status', 'payment_method', 'grouped_activities', 'vouchers_used_amount'];
+
+    public function getHasObservationsAttribute()
+    {
+        return $this->bookingUsers()
+            ->where(function ($query) {
+                $query->whereNotNull('notes')
+                    ->orWhereNotNull('notes_school');
+            })
+            ->exists();
+    }
+
+
 
     public function getVouchersUsedAmountAttribute()
     {

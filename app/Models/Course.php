@@ -625,23 +625,39 @@ class Course extends Model
         $clientDegree = null;
         $isAdultClient = false;
         $clientLanguages = [];
+        $clientAges = [];
 
         $query->where('sport_id', $sportId);
 
         // Si se proporcionó clientId, obtener los detalles del cliente
         if ($clientId) {
-            $client = Client::find($clientId);
-            if ($client) {
-                $clientAge = Carbon::parse($client->birth_date)->age;
-                $isAdultClient = $clientAge >= 18;
+            // Convertir $clientId a array si es un único valor
+            $clientIds = is_array($clientId) ? $clientId : [$clientId];
 
-                // Recolectar idiomas del cliente
-                for ($i = 1; $i <= 6; $i++) {
-                    $languageField = 'language' . $i . '_id';
-                    if (!empty($client->$languageField)) {
-                        $clientLanguages[] = $client->$languageField;
+            foreach ($clientIds as $cId) {
+                $client = Client::find($cId);
+                if ($client) {
+                    $age = Carbon::parse($client->birth_date)->age;
+                    $clientAges[] = $age;
+
+                    // Si alguno de los clientes es adulto, marcar isAdultClient como true
+                    if ($age >= 18) {
+                        $isAdultClient = true;
+                    }
+
+                    // Recolectar idiomas del cliente
+                    for ($i = 1; $i <= 6; $i++) {
+                        $languageField = 'language' . $i . '_id';
+                        if (!empty($client->$languageField) && !in_array($client->$languageField, $clientLanguages)) {
+                            $clientLanguages[] = $client->$languageField;
+                        }
                     }
                 }
+            }
+
+            // Si solo hay un cliente, mantener la variable $clientAge para compatibilidad
+            if (count($clientAges) === 1) {
+                $clientAge = $clientAges[0];
             }
         }
 
@@ -652,42 +668,42 @@ class Course extends Model
         // Si no se especifica el tipo, prepara una consulta que incluya todos los tipos
         if ($type === null) {
             // Crea una consulta que combine todos los tipos con una condición OR
-            $query->where(function($query) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
+            $query->where(function($query) use ($startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
                 // Lógica para tipo 1
-                $query->where(function($subquery) use ($startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
-                    $this->applyType1Filters($subquery, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
+                $query->where(function($subquery) use ($startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId) {
+                    $this->applyType1Filters($subquery, $startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
                 });
 
                 // Lógica para tipos 2 y 3
-                $query->orWhere(function($subquery) use ($startDate, $endDate, $clientAge, $min_age, $max_age) {
-                    $this->applyTypes2And3Filters($subquery, $startDate, $endDate, $clientAge, $min_age, $max_age);
+                $query->orWhere(function($subquery) use ($startDate, $endDate, $clientAge, $clientAges, $min_age, $max_age) {
+                    $this->applyTypes2And3Filters($subquery, $startDate, $endDate, $clientAge, $clientAges, $min_age, $max_age);
                 });
             });
         } else if ($type == 1) {
             // Lógica para cursos de tipo 1
-            $this->applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
+            $this->applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId);
         } else if ($type == 2 || $type == 3) {
             // Lógica para cursos de tipo 2 o 3
             $query->where('course_type', $type);
-            $this->applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $min_age, $max_age);
+            $this->applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $clientAges, $min_age, $max_age);
         }
 
         return $query;
     }
 
     // Método auxiliar para aplicar filtros de tipo 1
-    private function applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId)
+    private function applyType1Filters($query, $startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders, $isAdultClient, $clientLanguages, $clientId)
     {
         $query->where('course_type', 1)
             ->whereHas('courseDates', function (Builder $subQuery) use (
-                $startDate, $endDate, $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                $startDate, $endDate, $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                 $isAdultClient, $clientLanguages, $clientId
             ) {
                 $subQuery->where('date', '>=', $startDate)
                     ->where('date', '<=', $endDate)
                     ->whereHas('courseSubgroups',
                         function (Builder $subQuery) use (
-                            $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                            $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                             $isAdultClient, $clientLanguages, $clientId
                         ) {
                             // Verificamos que haya al menos un subgrupo con capacidad disponible
@@ -700,27 +716,35 @@ class Course extends Model
                                 AND booking_users.deleted_at IS NULL
                                 AND bookings.deleted_at IS NULL
                                  )');
+
+                            // Si se proporcionó clientId
                             if (!is_null($clientId)) {
-                                $subQuery->whereDoesntHave('courseDate', function (Builder $dateQuery) use ($clientId) {
-                                    $dateQuery->whereHas('bookingUsers', function (Builder $bookingUserQuery) use ($clientId) {
-                                        $bookingUserQuery->where('client_id', $clientId)
-                                            ->where(function ($query) {
-                                                $query->where(function ($subQuery) {
-                                                    // Excluir si hay solapamiento
-                                                    $subQuery->whereColumn('hour_start', '<', 'course_dates.hour_end')
-                                                        ->whereColumn('hour_end', '>', 'course_dates.hour_start');
-                                                })->orWhere(function ($subQuery) {
-                                                    // Excluir si son horarios idénticos
-                                                    $subQuery->whereColumn('hour_start', '=', 'course_dates.hour_start')
-                                                        ->whereColumn('hour_end', '=', 'course_dates.hour_end');
+                                // Convertir $clientId a array si es un único valor
+                                $clientIds = is_array($clientId) ? $clientId : [$clientId];
+
+                                foreach ($clientIds as $cId) {
+                                    $subQuery->whereDoesntHave('courseDate', function (Builder $dateQuery) use ($cId) {
+                                        $dateQuery->whereHas('bookingUsers', function (Builder $bookingUserQuery) use ($cId) {
+                                            $bookingUserQuery->where('client_id', $cId)
+                                                ->where(function ($query) {
+                                                    $query->where(function ($subQuery) {
+                                                        // Excluir si hay solapamiento
+                                                        $subQuery->whereColumn('hour_start', '<', 'course_dates.hour_end')
+                                                            ->whereColumn('hour_end', '>', 'course_dates.hour_start');
+                                                    })->orWhere(function ($subQuery) {
+                                                        // Excluir si son horarios idénticos
+                                                        $subQuery->whereColumn('hour_start', '=', 'course_dates.hour_start')
+                                                            ->whereColumn('hour_end', '=', 'course_dates.hour_end');
+                                                    });
                                                 });
-                                            });
+                                        });
                                     });
-                                });
+                                }
                             }
+
                             $subQuery->whereHas('courseGroup',
                                 function (Builder $groupQuery) use (
-                                    $clientDegree, $clientAge, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
+                                    $clientDegree, $clientAge, $clientAges, $getLowerDegrees, $min_age, $max_age, $degreeOrders,
                                     $isAdultClient, $clientLanguages
                                 ) {
 
@@ -738,8 +762,18 @@ class Course extends Model
                                                  $degreeQuery->orWhere('id', $clientDegree->id);
                                              });*/
                                     }
-                                    if ($clientAge !== null) {
-                                        // Filtrado por la edad del cliente si está disponible
+
+                                    // Filtrar por edad
+                                    if (count($clientAges) > 0) {
+                                        // Si tenemos múltiples edades, debemos encontrar cursos que sean adecuados para todos los clientes
+                                        $groupQuery->where(function($query) use ($clientAges) {
+                                            foreach ($clientAges as $age) {
+                                                $query->where('age_min', '<=', $age)
+                                                    ->where('age_max', '>=', $age);
+                                            }
+                                        });
+                                    } else if ($clientAge !== null) {
+                                        // Filtrado por la edad del cliente si está disponible (para compatibilidad)
                                         $groupQuery->where('age_min', '<=', $clientAge)
                                             ->where('age_max', '>=', $clientAge);
                                     } else {
@@ -751,6 +785,7 @@ class Course extends Model
                                             $groupQuery->where('age_max', '>=', $min_age);
                                         }
                                     }
+
                                     // Comprobación de degree_order y rango de edad
                                     if (!empty($degreeOrders)) {
                                         $groupQuery->whereHas('degree',
@@ -796,10 +831,10 @@ class Course extends Model
     }
 
     // Método auxiliar para aplicar filtros de tipos 2 y 3
-    private function applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $min_age, $max_age)
+    private function applyTypes2And3Filters($query, $startDate, $endDate, $clientAge, $clientAges, $min_age, $max_age)
     {
         $query->whereIn('course_type', [2, 3])
-            ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate, $clientAge) {
+            ->whereHas('courseDates', function (Builder $subQuery) use ($startDate, $endDate) {
                 $subQuery->where('date', '>=', $startDate)
                     ->where('date', '<=', $endDate);
                 //TODO: Review availability
@@ -808,8 +843,17 @@ class Course extends Model
                 // AND booking_users.deleted_at IS NULL)');
             });
 
-        if ($clientAge) {
-            // Filtrado por la edad del cliente si está disponible
+        // Filtrar por edad
+        if (count($clientAges) > 0) {
+            // Si tenemos múltiples edades, debemos encontrar cursos que sean adecuados para todos los clientes
+            $query->where(function($query) use ($clientAges) {
+                foreach ($clientAges as $age) {
+                    $query->where('age_min', '<=', $age)
+                        ->where('age_max', '>=', $age);
+                }
+            });
+        } else if ($clientAge !== null) {
+            // Filtrado por la edad del cliente si está disponible (para compatibilidad)
             $query->where('age_min', '<=', $clientAge)
                 ->where('age_max', '>=', $clientAge);
         } else {
