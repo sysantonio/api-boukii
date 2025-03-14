@@ -486,26 +486,26 @@ class CourseController extends AppBaseController
             $courseData = $request->all();
             $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
 
-            if(!empty($courseData['image'])) {
+            if (!empty($courseData['image'])) {
                 $base64Image = $request->input('image');
 
-                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                if (is_string($base64Image) && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                     $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
                     $type = strtolower($type[1]);
                     $imageData = base64_decode($imageData);
 
-                    if ($imageData === false) {
-                        $this->sendError('base64_decode failed');
+                    if ($imageData !== false) {
+                        $imageName = 'course/image_' . time() . '.' . $type;
+                        Storage::disk('public')->put($imageName, $imageData);
+                        $courseData['image'] = url(Storage::url($imageName));
+                    } else {
+                        // Si base64_decode falla, simplemente seguimos sin guardar la imagen
+                        unset($courseData['image']);
                     }
                 } else {
-                    $this->sendError('did not match data URI with image data');
+                    // Si no es una imagen en base64, continuar sin procesarla
+                    unset($courseData['image']);
                 }
-
-                $imageName = 'course/image_'.time().'.'.$type;
-                Storage::disk('public')->put($imageName, $imageData);
-                $courseData['image'] = url(url(Storage::url($imageName)));
-            } else {
-                $courseData = $request->except('image');
             }
 
             DB::beginTransaction();
@@ -683,6 +683,8 @@ class CourseController extends AppBaseController
             return $this->sendResponse($course, 'Course updated successfully');
         }  catch (\Exception $e) {
             DB::rollback();
+            \Illuminate\Support\Facades\Log::debug('Admin/COurseController Update: ' .
+                $e->getMessage());
             return $this->sendError('An error occurred while updating the course: ' . $e->getMessage());
         }
 
