@@ -134,7 +134,7 @@ class BookingController extends SlugAuthController
                     $bookingUser->save();
                     $bookingUsers[] = $bookingUser;
 
-                    if (isset($detail['extra'])) {
+                    if (isset($detail['extra']) && isset($detail['extra']['id'])) {
                         $tva = $detail['extra']['tva'] ?? 0;
                         $price = $detail['extra']['price'] ?? 0;
 
@@ -200,6 +200,8 @@ class BookingController extends SlugAuthController
             return response()->json(['message' => 'Reserva creada con éxito', 'booking_id' => $booking->id], 201);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::debug('BookingPage/BookingController store: ',
+                $e->getTrace());
             // Revertir la transacción si ocurre un error
             DB::rollBack();
             return response()->json(['message' => 'Error al crear la reserva', 'error' => $e->getMessage()], 500);
