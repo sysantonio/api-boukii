@@ -386,30 +386,6 @@ class Course extends Model
     }
 
     /**
-     * Get the translations as an array or null if invalid.
-     */
-    public function getTranslationsAttribute($value)
-    {
-        return $this->getJsonOrNull($value);
-    }
-
-    /**
-     * Get the price_range as an array or null if invalid.
-     */
-    public function getPriceRangeAttribute($value)
-    {
-        return $this->getJsonOrNull($value);
-    }
-
-    /**
-     * Get the discounts as an array or null if invalid.
-     */
-    public function getDiscountsAttribute($value)
-    {
-        return $this->getJsonOrNull($value);
-    }
-
-    /**
      * Get the settings as an array or null if invalid.
      */
     public function getSettingsAttribute($value)
