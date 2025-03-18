@@ -98,14 +98,14 @@ class TranslationAPIController extends AppBaseController
             // Verificar si la solicitud fue exitosa
             if ($response->successful()) {
                 return $this->sendResponse($response->json(), 'Translation retrieved successfully');
-            } else {
-                $responseJson = $response->json();
-                if (is_null($responseJson)) {
-                    Log::error('Error translate: No response body', ['status' => $response->status()]);
-                } else {
-                    Log::error('Error translate', ['response' => $responseJson]);
-                }
             }
+            $responseJson = $response->json();
+            if (is_null($responseJson)) {
+                Log::error('Error translate: No response body', ['status' => $response->status()]);
+            } else {
+                Log::error('Error translate', ['response' => $responseJson]);
+            }
+            return $this->sendError('Error retrieving Translation', 500);
         } catch (\Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
             return $this->sendError('Error retrieving Translation', 500);

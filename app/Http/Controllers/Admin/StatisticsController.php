@@ -394,9 +394,10 @@ class StatisticsController extends AppBaseController
         foreach ($dates as $index => $date) {
             $price = $course->price;
 
-            // Aplicar descuentos según el campo "discounts"
-            $discounts = json_decode($course->discounts, true);
-            if($discounts) {
+            // Verificar si $course->discounts ya es un array, si no, decodificarlo
+            $discounts = is_array($course->discounts) ? $course->discounts : json_decode($course->discounts, true);
+
+            if (!empty($discounts)) {
                 foreach ($discounts as $discount) {
                     if ($index + 1 == $discount['day']) {
                         $price -= ($price * $discount['reduccion'] / 100);

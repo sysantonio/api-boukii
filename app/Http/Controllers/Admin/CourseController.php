@@ -11,6 +11,7 @@ use App\Models\CourseDate;
 use App\Models\Monitor;
 use App\Models\MonitorsSchool;
 use App\Repositories\CourseRepository;
+use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DateTime;
@@ -129,7 +130,7 @@ class CourseController extends AppBaseController
             if($course->course_type == 1) {
                 $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
 
-                   // dd($availability);
+                // dd($availability);
 
                 $course->total_reservations = $availability['total_reservations_places'];
                 $course->total_available_places = $availability['total_available_places'];
@@ -313,6 +314,7 @@ class CourseController extends AppBaseController
             ]);
 
             $courseData = $request->all();
+            $courseData['duration'] = $this->formatDuration($courseData['duration']);
 
             if (!empty($courseData['image'])) {
                 $base64Image = $request->input('image');
@@ -364,11 +366,30 @@ class CourseController extends AppBaseController
                 }
             }
 
-            // Crear las fechas y grupos
-            if (isset($courseData['course_dates'])) {
-                $settings = isset($courseData['settings']) ? json_decode($courseData['settings'], true) : null;
-                $weekDays = $settings ? $settings['weekDays'] : null;
+            if(!isset($courseData['course_dates'])) {
+                $this->sendError('Course can not be created without course_dates');
+            }
+            $settings = isset($courseData['settings']) ? json_decode($courseData['settings'], true) : null;
+            $weekDays = $settings ? $settings['weekDays'] : null;
 
+            if ($course->course_type != 1) {
+                $periods = [];
+                foreach ($courseData['course_dates'] as $date) {
+                    $periods[] = [
+                        'date' => $date['date'],
+                        'date_end' => $date['date_end'],
+                        'hour_start' => $date['hour_start'],
+                        'hour_end' => $date['hour_end'],
+                    ];
+                }
+                $settings['periods'] = $periods;
+
+                $courseDates = $this->generateCourseDates($courseData['course_dates'], $weekDays);
+                $course->courseDates()->createMany($courseDates);
+            }
+
+            // Crear las fechas y grupos
+            if ($course->course_type === 1) {
                 foreach ($courseData['course_dates'] as $dateData) {
                     // Validar o calcular hour_end
                     if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
@@ -408,12 +429,114 @@ class CourseController extends AppBaseController
                     }
                 }
             }
+
+            $allDates = array_column($course->courseDates->toArray(), 'date');
+            sort($allDates);
+            // Obtener las duraciones recorriendo las instancias de los modelos
+            $allDurations = $course->courseDates->map(function ($courseDate) {
+                return $courseDate->duration; // Accedemos directamente al atributo calculado
+            })->toArray();
+
+            if (!empty($allDates)) {
+                sort($allDates);
+                $course->update([
+                    'date_start' => $allDates[0],
+                    'date_end' => end($allDates),
+                    'duration' => $this->formatDuration($this->getMostCommonDuration($allDurations)),
+                    'settings' => $settings
+                ]);
+            }
+
             DB::commit();
             return $this->sendResponse($course, 'Curso creado con éxito');
         } catch (\Exception $e) {
             DB::rollback();
             return $this->sendError('An error occurred while creating the course: ' . $e->getMessage());
         }
+    }
+
+    private function getMostCommonDuration(array $durations)
+    {
+        if (empty($durations)) {
+            return null;
+        }
+
+        $counted = array_count_values($durations);
+        arsort($counted); // Ordenar por frecuencia descendente
+
+        $maxFrequency = reset($counted);
+        $mostCommon = array_keys($counted, $maxFrequency);
+
+        // Si hay empate, devolver la mayor duración
+        usort($mostCommon, function ($a, $b) {
+            return strtotime($b) - strtotime($a);
+        });
+
+        return $mostCommon[0];
+    }
+
+    private function formatDuration($duration)
+    {
+        preg_match('/(\d+)(h|min)(?:\s*(\d+)?min)?/', $duration, $matches);
+
+        $hours = 0;
+        $minutes = 0;
+
+        if ($matches) {
+            if ($matches[2] === 'h') {
+                $hours = (int) $matches[1];
+                if (isset($matches[3])) {
+                    $minutes = (int) $matches[3];
+                }
+            } else {
+                $minutes = (int) $matches[1];
+            }
+        }
+
+        return $hours > 0 ? "{$hours}h {$minutes}min" : "{$minutes}min";
+    }
+
+    private function generateCourseDates(array $courseDates, array $weekDays)
+    {
+        $generatedDates = [];
+        $weekDaysMap = [
+            'monday' => 1,
+            'tuesday' => 2,
+            'wednesday' => 3,
+            'thursday' => 4,
+            'friday' => 5,
+            'saturday' => 6,
+            'sunday' => 7,
+        ];
+
+        foreach ($courseDates as $dateInfo) {
+            $startDate = new Carbon($dateInfo['date']);
+            $endDate = new Carbon($dateInfo['date_end']);
+            $hourStart = $dateInfo['hour_start'];
+            $hourEnd = $dateInfo['hour_end'];
+
+            while ($startDate->lte($endDate)) {
+                $dayOfWeek = $startDate->dayOfWeekIso; // 1 (Lunes) - 7 (Domingo)
+
+                foreach ($weekDays as $day => $isActive) {
+                    if ($isActive && $weekDaysMap[$day] == $dayOfWeek) {
+                        $generatedDates[] = [
+                            'date' => $startDate->toDateString(),
+                            'hour_start' => $hourStart,
+                            'hour_end' => $hourEnd,
+                            'duration' => array_key_exists('duration', $dateInfo) ? $dateInfo['duration'] : $this->calculateDuration($hourStart, $hourEnd),
+                            'date_end' => $startDate->toDateString(), // Ajustar si es necesario
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                }
+
+                $startDate->addDay();
+            }
+        }
+
+        return $generatedDates;
     }
 
     private function calculateHourEnd(string $hourStart, string $duration): string
@@ -512,52 +635,86 @@ class CourseController extends AppBaseController
             // Actualiza los campos principales del curso
             $course->update($courseData);
 
-            if ($course->course_type !== 1 && isset($courseData['course_dates'])) {
-                // Obtener date_start y date_end del curso
-                $courseStartDate = $course->date_start;
-                $courseEndDate = $course->date_end;
+            $settings = $courseData['settings'] ?? null;
+            $weekDays = $settings ? $settings['weekDays'] : null;
+            if ($course->course_type != 1 && isset($courseData['course_dates'])) {
+                $existingDates = $course->courseDates()->pluck('date')->toArray();
+                $newDates = $this->generateCourseDates($courseData['course_dates'], $weekDays);
 
-                // Ordenar las fechas de la request por 'date'
-                usort($courseData['course_dates'], function ($a, $b) {
-                    return strtotime($a['date']) - strtotime($b['date']);
+                $periods = [];
+                foreach ($courseData['course_dates'] as $date) {
+                    $periods[] = [
+                        'date' => $date['date'],
+                        'date_end' => $date['date_end'],
+                        'hour_start' => $date['hour_start'],
+                        'hour_end' => $date['hour_end'],
+                    ];
+                }
+                $settings['periods'] = $periods;
+
+
+                // Extraer solo las fechas de los nuevos periodos
+                $newDatesList = array_column($newDates, 'date');
+
+                // Fechas a eliminar (existen en la BD pero no en las nuevas)
+                $datesToDelete = array_diff($existingDates, $newDatesList);
+                $course->courseDates()->whereIn('date', $datesToDelete)->delete();
+
+                // Fechas a insertar (no existen en la BD)
+                $datesToInsert = array_filter($newDates, function ($date) use ($existingDates) {
+                    return !in_array($date['date'], $existingDates);
                 });
 
-                // Obtener la primera y última fecha de la request
-                $requestFirstDate = $courseData['course_dates'][0]['date'] ?? null;
-                $requestLastDate = end($courseData['course_dates'])['date'] ?? null;
+                $course->courseDates()->createMany($datesToInsert);
 
-                // Si las fechas en la request no coinciden con el curso, generar todas las fechas intermedias
-                if ($requestFirstDate !== $courseStartDate || $requestLastDate !== $courseEndDate) {
-                    $weekdays = $course->settings['weekdays'] ?? []; // Obtener pattern de weekdays
-                    $generatedDates = [];
-
-                    $period = new DatePeriod(
-                        new DateTime($courseStartDate),
-                        new DateInterval('P1D'),
-                        (new DateTime($courseEndDate))->modify('+1 day') // Incluir la última fecha
-                    );
-
-                    foreach ($period as $date) {
-                        $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
-
-                        // Si no hay weekdays definidos, incluir todas las fechas
-                        if (empty($weekdays) || in_array($weekday, $weekdays)) {
-                            $generatedDates[] = [
-                                'date' => $date->format('Y-m-d'),
-                                'hour_start' => $course->hour_min,
-                                'hour_end' => $course->hour_max,
-                                'course_id' => $course->id
-                            ];
-                        }
-                    }
-
-                    // Reemplazar course_dates con las nuevas fechas generadas
-                    $courseData['course_dates'] = $generatedDates;
-                }
             }
 
+            /* if ($course->course_type !== 1 ) {
+                 // Obtener date_start y date_end del curso
+                 $courseStartDate = $course->date_start;
+                 $courseEndDate = $course->date_end;
+
+                 // Ordenar las fechas de la request por 'date'
+                 usort($courseData['course_dates'], function ($a, $b) {
+                     return strtotime($a['date']) - strtotime($b['date']);
+                 });
+
+                 // Obtener la primera y última fecha de la request
+                 $requestFirstDate = $courseData['course_dates'][0]['date'] ?? null;
+                 $requestLastDate = end($courseData['course_dates'])['date'] ?? null;
+
+                 // Si las fechas en la request no coinciden con el curso, generar todas las fechas intermedias
+                 if ($requestFirstDate !== $courseStartDate || $requestLastDate !== $courseEndDate) {
+                     $weekdays = $course->settings['weekdays'] ?? []; // Obtener pattern de weekdays
+                     $generatedDates = [];
+
+                     $period = new DatePeriod(
+                         new DateTime($courseStartDate),
+                         new DateInterval('P1D'),
+                         (new DateTime($courseEndDate))->modify('+1 day') // Incluir la última fecha
+                     );
+
+                     foreach ($period as $date) {
+                         $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
+
+                         // Si no hay weekdays definidos, incluir todas las fechas
+                         if (empty($weekdays) || in_array($weekday, $weekdays)) {
+                             $generatedDates[] = [
+                                 'date' => $date->format('Y-m-d'),
+                                 'hour_start' => $course->hour_min,
+                                 'hour_end' => $course->hour_max,
+                                 'course_id' => $course->id
+                             ];
+                         }
+                     }
+
+                     // Reemplazar course_dates con las nuevas fechas generadas
+                     $courseData['course_dates'] = $generatedDates;
+                 }
+             }*/
+
             // Sincroniza las fechas
-            if (isset($courseData['course_dates'])) {
+            if ($course->course_type == 1 && isset($courseData['course_dates'])) {
                 $updatedCourseDates = [];
                 foreach ($courseData['course_dates'] as $dateData) {
                     // Verifica si existe 'id' antes de usarlo
@@ -654,6 +811,23 @@ class CourseController extends AppBaseController
                     }
                 }
                 $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
+            }
+
+            $allDates = array_column($course->courseDates->toArray(), 'date');
+            sort($allDates);
+            // Obtener las duraciones recorriendo las instancias de los modelos
+            $allDurations = $course->courseDates->map(function ($courseDate) {
+                return $courseDate->duration; // Accedemos directamente al atributo calculado
+            })->toArray();
+
+            if (!empty($allDates)) {
+                sort($allDates);
+                $course->update([
+                    'date_start' => $allDates[0],
+                    'date_end' => end($allDates),
+                    'duration' => $this->formatDuration($this->getMostCommonDuration($allDurations)),
+                    'settings' => $settings
+                ]);
             }
 
             DB::commit();

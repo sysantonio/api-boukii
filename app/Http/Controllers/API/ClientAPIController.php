@@ -407,7 +407,10 @@ class ClientAPIController extends AppBaseController
             $this->moveUsers($initialSubgroup, $targetSubgroup, $request->clientIds);
         }
         DB::commit();
-        return $this->sendResponse($subgroupsChanged, 'Clients transfer successfully');
+        if(count($subgroupsChanged)) {
+            return $this->sendResponse($subgroupsChanged, 'Clients transfer successfully');
+        }
+        return $this->sendError('No groups changed');
     }
 
 
