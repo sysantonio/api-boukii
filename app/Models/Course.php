@@ -385,6 +385,47 @@ class Course extends Model
         return $rules;
     }
 
+    /**
+     * Get the translations as an array or null if invalid.
+     */
+    public function getTranslationsAttribute($value)
+    {
+        return $this->getJsonOrNull($value);
+    }
+
+    /**
+     * Get the price_range as an array or null if invalid.
+     */
+    public function getPriceRangeAttribute($value)
+    {
+        return $this->getJsonOrNull($value);
+    }
+
+    /**
+     * Get the discounts as an array or null if invalid.
+     */
+    public function getDiscountsAttribute($value)
+    {
+        return $this->getJsonOrNull($value);
+    }
+
+    /**
+     * Get the settings as an array or null if invalid.
+     */
+    public function getSettingsAttribute($value)
+    {
+        return $this->getJsonOrNull($value);
+    }
+
+    /**
+     * Helper function to return the JSON or null.
+     */
+    private function getJsonOrNull($value)
+    {
+        $decoded = json_decode($value, true);
+        return (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
+    }
+
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');

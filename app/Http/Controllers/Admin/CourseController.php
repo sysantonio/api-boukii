@@ -369,7 +369,15 @@ class CourseController extends AppBaseController
             if(!isset($courseData['course_dates'])) {
                 $this->sendError('Course can not be created without course_dates');
             }
-            $settings = isset($courseData['settings']) ? json_decode($courseData['settings'], true) : null;
+            $settings = $courseData['settings'] ?? null;
+
+            if (is_string($settings)) {
+                $settings = json_decode($settings, true);
+            }
+
+            if (!is_array($settings)) {
+                $settings = []; // Si no es un array válido, inicializamos uno vacío
+            }
             $weekDays = $settings ? $settings['weekDays'] : null;
 
             if ($course->course_type != 1) {
@@ -442,7 +450,6 @@ class CourseController extends AppBaseController
                 $course->update([
                     'date_start' => $allDates[0],
                     'date_end' => end($allDates),
-                    'duration' => $this->formatDuration($this->getMostCommonDuration($allDurations)),
                     'settings' => $settings
                 ]);
             }
@@ -451,6 +458,8 @@ class CourseController extends AppBaseController
             return $this->sendResponse($course, 'Curso creado con éxito');
         } catch (\Exception $e) {
             DB::rollback();
+            \Illuminate\Support\Facades\Log::debug('An error occurred while creating the course: : ' .
+                $e->getLine());
             return $this->sendError('An error occurred while creating the course: ' . $e->getMessage());
         }
     }
@@ -636,6 +645,14 @@ class CourseController extends AppBaseController
             $course->update($courseData);
 
             $settings = $courseData['settings'] ?? null;
+
+            if (is_string($settings)) {
+                $settings = json_decode($settings, true);
+            }
+
+            if (!is_array($settings)) {
+                $settings = []; // Si no es un array válido, inicializamos uno vacío
+            }
             $weekDays = $settings ? $settings['weekDays'] : null;
             if ($course->course_type != 1 && isset($courseData['course_dates'])) {
                 $existingDates = $course->courseDates()->pluck('date')->toArray();
@@ -825,7 +842,6 @@ class CourseController extends AppBaseController
                 $course->update([
                     'date_start' => $allDates[0],
                     'date_end' => end($allDates),
-                    'duration' => $this->formatDuration($this->getMostCommonDuration($allDurations)),
                     'settings' => $settings
                 ]);
             }
