@@ -698,7 +698,7 @@ class Booking extends Model
     {
         $price = 0;
 
-        if ($activity['course']['course_type'] === 1) {
+        if (array_key_exists('course',$activity) && $activity['course']['course_type'] === 1) {
             if (!$activity['course']['is_flexible']) {
                 $price = $activity['course']['price'] * count($activity['utilizers']);
             } else {
