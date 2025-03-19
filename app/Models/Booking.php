@@ -234,9 +234,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Booking extends Model
 {
-     use LogsActivity, SoftDeletes, HasFactory;
+    use LogsActivity, SoftDeletes, HasFactory;
 
-     public $table = 'bookings';
+    public $table = 'bookings';
 
     public $fillable = [
         'school_id',
@@ -365,7 +365,7 @@ class Booking extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults();
+        return LogOptions::defaults();
     }
     protected $appends = ['sport', 'bonus', 'payment_method_status', 'has_observations',
         'cancellation_status', 'payment_method', 'grouped_activities', 'vouchers_used_amount'];
@@ -499,35 +499,48 @@ class Booking extends Model
                     ];
                 }
 
-                // Añadir extras por fecha
+                // Añadir extras por cada utilizador
                 foreach ($user->bookingUserExtras as $extra) {
-                    // Verificar si course_extra no es null antes de acceder a sus propiedades
-                    if ($extra->course_extra) {
-                        $groupedActivity['dates'][$dateKey]['extras'][] = $extra->course_extra;
+                    if ($extra->courseExtra) {
+                        // Buscar el utilizador dentro de la fecha actual
+                        foreach ($groupedActivity['dates'][$dateKey]['utilizers'] as &$utilizer) {
+                            if ($utilizer['id'] === $user->client_id) {
+                                // Verificar si el extra ya existe para este utilizador
+                                $extraExists = false;
+                                if(array_key_exists('extras', $utilizer)) {
+                                    foreach ($utilizer['extras'] as &$existingExtra) {
+                                        if ($existingExtra['id'] === $extra->courseExtra->id) {
+                                            $existingExtra['quantity']++;
+                                            $extraExists = true;
+                                            break;
+                                        }
+                                    }
+                                }
 
-                        // Consolidar extras para el objeto principal
-                        $extraExists = false;
-                        foreach ($groupedActivity['extras'] as &$existingExtra) {
-                            if ($existingExtra['id'] === $extra->course_extra->id) {
-                                $existingExtra['quantity']++;
-                                $extraExists = true;
-                                break;
+
+                                if (!$extraExists) {
+                                    $utilizer['extras'][] = [
+                                        'id' => $extra->courseExtra->id,
+                                        'name' => $extra->courseExtra->name,
+                                        'description' => $extra->courseExtra->description,
+                                        'price' => $extra->courseExtra->price,
+                                        'quantity' => 1
+                                    ];
+                                    $groupedActivity['extras'][] = [
+                                        'id' => $extra->courseExtra->id,
+                                        'name' => $extra->courseExtra->name,
+                                        'description' => $extra->courseExtra->description,
+                                        'price' => $extra->courseExtra->price,
+                                        'quantity' => 1
+                                    ];
+                                }
+
+                                break; // Evita seguir iterando después de encontrar al utilizador
                             }
                         }
-
-                        if (!$extraExists) {
-                            $groupedActivity['extras'][] = [
-                                'id' => $extra->course_extra->id,
-                                'name' => $extra->course_extra->name,
-                                'price' => $extra->course_extra->price,
-                                'quantity' => 1
-                            ];
-                        }
-                    } else {
-                        // Opcional: Manejar el caso cuando course_extra es null, si es necesario
-                        // Ejemplo: Loguear el error o agregar un valor por defecto
                     }
                 }
+
 
                 // Añadir monitores
                 if ($user->monitor_id && !in_array($user->monitor_id, $groupedActivity['monitors'])) {
@@ -727,7 +740,7 @@ class Booking extends Model
                 $interval = collect($course['price_range'])->firstWhere('intervalo', $duration);
                 $datePrice = $interval ? ($interval[$participants] ?? 0) : 0;
             } else {
-                $datePrice = $course['price'] * count($date['utilizers']);
+                $datePrice = $course['price'];
             }
 
             $extrasPrice = collect($date['extras'])->sum('price');
@@ -1151,11 +1164,11 @@ class Booking extends Model
             BookingUser::where('booking_id', $bookingData->id)->update(['status' => 2]);
 
             //TODO: que pasa si hacen una reserva con cancellation insurance y no la pagan.
-        /*    if ($bookingData->has_cancellation_insurance)
-            {
-                $bookingData->price_total = $bookingData->price_cancellation_insurance;
-                $bookingData->save();
-            }*/
+            /*    if ($bookingData->has_cancellation_insurance)
+                {
+                    $bookingData->price_total = $bookingData->price_cancellation_insurance;
+                    $bookingData->save();
+                }*/
 
             $bookingData->status = 3;
 

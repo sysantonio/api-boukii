@@ -439,18 +439,20 @@ class CourseController extends AppBaseController
             }
 
             $allDates = array_column($course->courseDates->toArray(), 'date');
-            sort($allDates);
-            // Obtener las duraciones recorriendo las instancias de los modelos
-            $allDurations = $course->courseDates->map(function ($courseDate) {
-                return $courseDate->duration; // Accedemos directamente al atributo calculado
-            })->toArray();
+            $allHourStarts = array_column($course->courseDates->toArray(), 'hour_start');
+            $allHourEnds = array_column($course->courseDates->toArray(), 'hour_end');
 
             if (!empty($allDates)) {
                 sort($allDates);
+                sort($allHourStarts);
+                rsort($allHourEnds); // Orden inverso para obtener el mayor
+
                 $course->update([
-                    'date_start' => $allDates[0],
-                    'date_end' => end($allDates),
-                    'settings' => $settings
+                    'date_start'  => $allDates[0],   // Primera fecha (mínima)
+                    'date_end'    => end($allDates), // Última fecha (máxima)
+                    'hour_min'  => $allHourStarts[0],  // Menor hora de inicio
+                    'hour_max'    => $allHourEnds[0],    // Mayor hora de fin
+                    'settings'    => $settings
                 ]);
             }
 
@@ -831,18 +833,20 @@ class CourseController extends AppBaseController
             }
 
             $allDates = array_column($course->courseDates->toArray(), 'date');
-            sort($allDates);
-            // Obtener las duraciones recorriendo las instancias de los modelos
-            $allDurations = $course->courseDates->map(function ($courseDate) {
-                return $courseDate->duration; // Accedemos directamente al atributo calculado
-            })->toArray();
+            $allHourStarts = array_column($course->courseDates->toArray(), 'hour_start');
+            $allHourEnds = array_column($course->courseDates->toArray(), 'hour_end');
 
             if (!empty($allDates)) {
                 sort($allDates);
+                sort($allHourStarts);
+                rsort($allHourEnds); // Orden inverso para obtener el mayor
+
                 $course->update([
-                    'date_start' => $allDates[0],
-                    'date_end' => end($allDates),
-                    'settings' => $settings
+                    'date_start'  => $allDates[0],   // Primera fecha (mínima)
+                    'date_end'    => end($allDates), // Última fecha (máxima)
+                    'hour_min'  => $allHourStarts[0],  // Menor hora de inicio
+                    'hour_max'    => $allHourEnds[0],    // Mayor hora de fin
+                    'settings'    => $settings
                 ]);
             }
 
