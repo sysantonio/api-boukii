@@ -134,26 +134,14 @@ class BookingController extends SlugAuthController
                     $bookingUser->save();
                     $bookingUsers[] = $bookingUser;
 
-                    if (isset($detail['extra']) && isset($detail['extra']['id'])) {
-                        $tva = $detail['extra']['tva'] ?? 0;
-                        $price = $detail['extra']['price'] ?? 0;
-
-                        // Calcular el precio con el TVA
-                        $priceWithTva = $price + ($price * ($tva / 100));
-
-                        $courseExtra = new CourseExtra([
-                            'course_id' => $detail['course_id'],
-                            'name' => $detail['extra']['id'],
-                            'description' => $detail['extra']['id'],
-                            'price' => $priceWithTva,
-                        ]);
-
-                        $courseExtra->save();
-
-                        BookingUserExtra::create([
-                            'booking_user_id' => $bookingUser->id,
-                            'course_extra_id' => $courseExtra->id,
-                        ]);
+                    if (isset($detail['extra']) && is_array($detail['extra'])) {
+                        foreach ($detail['extra'] as $extra) {
+                            BookingUserExtra::create([
+                                'booking_user_id' => $bookingUser->id,
+                                'course_extra_id' => $extra['id'],
+                                'quantity' => 1
+                            ]);
+                        }
                     }
                 }
                 $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`

@@ -644,7 +644,34 @@ class CourseController extends AppBaseController
 
             DB::beginTransaction();
             // Actualiza los campos principales del curso
+
+            $schoolSettings = json_decode($school->settings, true) ?? [];
+            $existingExtras = $schoolSettings['extras']['forfait'] ?? [];
+
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    if (!collect($existingExtras)->contains('name', $extra['name'])) {
+                        $existingExtras[] = $extra;
+                    }
+                }
+                $schoolSettings['extras']['forfait'] = $existingExtras;
+                $school->settings = json_encode($schoolSettings);
+                $school->save();
+            }
+
             $course->update($courseData);
+
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    $course->courseExtras()->updateOrCreate(
+                        ['name' => $extra['product']], // Condición para buscar si ya existe
+                        [
+                            'description' => $extra['name'],
+                            'price' => $extra['price']
+                        ]
+                    );
+                }
+            }
 
             $settings = $courseData['settings'] ?? null;
 
@@ -810,20 +837,23 @@ class CourseController extends AppBaseController
                             $updatedCourseGroups[] = $group->id;
 
                             if (isset($groupData['course_subgroups'])) {
+                                $updatedSubgroups = [];
                                 foreach ($groupData['course_subgroups'] as $subgroupData) {
-                                    // Preparar los datos de subgroup
                                     $subgroupData['course_id'] = $course->id;
                                     $subgroupData['course_date_id'] = $date->id;
 
                                     // Verifica si existe 'id' antes de usarlo
-                                    $subgroupId = isset($subgroupData['id']) ? $subgroupData['id'] : null;
+                                    $subgroupId = $subgroupData['id'] ?? null;
                                     if ($subgroupId) {
-                                        $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
+                                        $subgroup = $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
                                     } else {
-                                        $group->courseSubgroups()->create($subgroupData);
+                                        $subgroup = $group->courseSubgroups()->create($subgroupData);
                                     }
+                                    $updatedSubgroups[] = $subgroup->id;
                                 }
-                                // Considera si necesitas borrar subgrupos aquí
+
+                                // Eliminar los subgrupos que ya no están en la request
+                                $group->courseSubgroups()->whereNotIn('id', $updatedSubgroups)->delete();
                             }
                         }
                         $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete();
