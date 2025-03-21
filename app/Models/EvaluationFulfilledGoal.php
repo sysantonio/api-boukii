@@ -82,7 +82,7 @@ class EvaluationFulfilledGoal extends Model
 
     public function degreeSchoolSportGoal(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(\App\Models\Degree::class, 'degrees_school_sport_goals_id');
+        return $this->belongsTo(\App\Models\DegreesSchoolSportGoal::class, 'degrees_school_sport_goals_id');
     }
 
     public function getActivitylogOptions(): LogOptions
