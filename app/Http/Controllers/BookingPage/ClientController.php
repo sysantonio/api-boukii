@@ -167,7 +167,46 @@ class ClientController extends SlugAuthController
             'language1_id' => $request->input('language1_id')
         ]);
 
+        $input = $request->all();
+
+        if(!empty($input['password'])) {
+            $input['password'] = bcrypt($input['password']);
+        } else {
+            $input['password'] = bcrypt(Str::random(8));
+            //return $this->sendError('User cannot be created without a password');
+        }
+
+        $client = Client::where('email', $input['email'])->whereHas('clientsSchools', function ($q) {
+            $q->where('school_id', $this->school->id);
+        })->first();
+
+
+        if ($client) {
+            // Verifica si el cliente tiene un usuario asociado
+            if (!$client->user) {
+                // Si no tiene usuario, crea uno
+                $newUser = new User($input);
+                $newUser->type = 'client';
+                $newUser->save();
+                $client->user_id = $newUser->id;
+                $client->save();
+                return $this->sendResponse($client, 'Client created successfully');
+            }
+            return $this->sendError('Client already exists');
+        }
+
         // Guarda el nuevo cliente en la base de datos
+        $newClient->save();
+
+        ClientsSchool::create([
+            'client_id' => $newClient->id,
+            'school_id' => $this->school->id
+        ]);
+
+        $newUser = new User($input);
+        $newUser->type = 'client';
+        $newUser->save();
+        $newClient->user_id = $newUser->id;
         $newClient->save();
 
         // Crea un registro en ClientsUtilizer con la main_id y client_id
