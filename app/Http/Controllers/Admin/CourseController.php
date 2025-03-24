@@ -184,6 +184,7 @@ class CourseController extends AppBaseController
             'courseDates.courseSubgroups.bookingUsers.client',
             'courseDates.courseGroups.courseSubgroups.monitor',
             'courseDates.courseGroups.bookingUsers.client',
+            'courseDates.bookingUsersActive.client',
             'courseExtras',
             'courseDates.courseGroups.courseSubgroups.bookingUsers.client')
             ->where('school_id', $school->id)->find($id);
