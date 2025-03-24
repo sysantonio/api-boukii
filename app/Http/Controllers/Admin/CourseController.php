@@ -8,13 +8,9 @@ use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
 use App\Models\Course;
 use App\Models\CourseDate;
-use App\Models\Monitor;
-use App\Models\MonitorsSchool;
 use App\Repositories\CourseRepository;
+use App\Traits\Utils;
 use Carbon\Carbon;
-use DateInterval;
-use DatePeriod;
-use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +18,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Response;
 use Validator;
-use App\Traits\Utils;
 
 /**
  * Class UserController
@@ -188,6 +183,7 @@ class CourseController extends AppBaseController
         $course = Course::with( 'station','bookingUsersActive.client.sports', 'bookingUsers.client.sports',
             'courseDates.courseSubgroups.bookingUsers.client',
             'courseDates.courseGroups.courseSubgroups.monitor',
+            'courseDates.courseGroups.bookingUsers.client',
             'courseExtras',
             'courseDates.courseGroups.courseSubgroups.bookingUsers.client')
             ->where('school_id', $school->id)->find($id);
