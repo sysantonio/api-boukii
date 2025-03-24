@@ -98,7 +98,7 @@ class ClientController extends SlugAuthController
      */
     public function getUtilizers($id, Request $request): JsonResponse
     {
-        $mainClient = Client::with('utilizers')->find($id);
+        $mainClient = Client::with('utilizers.clientSports.degree')->find($id);
 
         $utilizers = $mainClient->utilizers;
 
