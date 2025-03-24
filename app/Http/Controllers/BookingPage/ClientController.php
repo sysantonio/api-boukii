@@ -164,36 +164,11 @@ class ClientController extends SlugAuthController
             'province' => $mainClient->province,
             'country' => $mainClient->country,
             'station_id' => $mainClient->station_id,
+            'password' => bcrypt(Str::random(8)),
             'language1_id' => $request->input('language1_id')
         ]);
 
-        $input = $request->all();
 
-        if(!empty($input['password'])) {
-            $input['password'] = bcrypt($input['password']);
-        } else {
-            $input['password'] = bcrypt(Str::random(8));
-            //return $this->sendError('User cannot be created without a password');
-        }
-
-        $client = Client::where('email', $input['email'])->whereHas('clientsSchools', function ($q) {
-            $q->where('school_id', $this->school->id);
-        })->first();
-
-
-        if ($client) {
-            // Verifica si el cliente tiene un usuario asociado
-            if (!$client->user) {
-                // Si no tiene usuario, crea uno
-                $newUser = new User($input);
-                $newUser->type = 'client';
-                $newUser->save();
-                $client->user_id = $newUser->id;
-                $client->save();
-                return $this->sendResponse($client, 'Client created successfully');
-            }
-            return $this->sendError('Client already exists');
-        }
 
         // Guarda el nuevo cliente en la base de datos
         $newClient->save();
@@ -203,7 +178,23 @@ class ClientController extends SlugAuthController
             'school_id' => $this->school->id
         ]);
 
-        $newUser = new User($input);
+        $newUser = new User([
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'birth_date' => $request->input('birth_date'),
+            'email' => $mainClient->email,
+            'phone' => $mainClient->phone,
+            'telephone' => $mainClient->email,
+            'address' => $mainClient->address,
+            'cp' => $mainClient->cp,
+            'city' => $mainClient->city,
+            'province' => $mainClient->province,
+            'country' => $mainClient->country,
+            'station_id' => $mainClient->station_id,
+            'password' => bcrypt(Str::random(8)),
+            'language1_id' => $request->input('language1_id')
+            ]
+        );
         $newUser->type = 'client';
         $newUser->save();
         $newClient->user_id = $newUser->id;
