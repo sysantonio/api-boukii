@@ -461,13 +461,13 @@ class Course extends Model
 
     public function courseDates(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\CourseDate::class, 'course_id');
+        return $this->hasMany(\App\Models\CourseDate::class, 'course_id')->orderBy('date', 'asc');
     }
 
     public function courseDatesActive(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseDate::class, 'course_id')
-            ->where('active', 1);
+            ->where('active', 1)->orderBy('date', 'asc');
     }
 
 
