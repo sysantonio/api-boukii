@@ -343,10 +343,10 @@ trait Utils
     private function convertDurationToSeconds($duration)
     {
         if (strpos($duration, 'h') !== false) {
-            // Si el formato es "Xh Ymin", convertirlo a segundos
-            preg_match('/(\d+)h (\d+)min/', $duration, $matches);
-            $hours = intval($matches[1]);
-            $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Si no hay minutos, establecer en 0
+            // Si el formato es "Xh" o "Xh Ymin", convertirlo a segundos
+            preg_match('/(\d+)h(?: (\d+)min)?/', $duration, $matches);
+            $hours = intval($matches[1]); // Captura la cantidad de horas
+            $minutes = isset($matches[2]) ? intval($matches[2]) : 0; // Captura los minutos si existen
             return ($hours * 3600) + ($minutes * 60);
         } elseif (strpos($duration, 'min') !== false) {
             // Si el formato es solo "Ymin", convertirlo a segundos
