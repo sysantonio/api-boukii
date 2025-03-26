@@ -644,7 +644,10 @@ class Course extends Model
         $clientLanguages = [];
         $clientAges = [];
 
-        $query->where('sport_id', $sportId);
+        if($sportId) {
+            $query->where('sport_id', $sportId);
+        }
+
 
         // Si se proporcionó clientId, obtener los detalles del cliente
         if ($clientId) {
