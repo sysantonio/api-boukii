@@ -647,10 +647,13 @@ class CourseController extends AppBaseController
 
             if (!empty($courseData['extras'])) {
                 foreach ($courseData['extras'] as $extra) {
-                    if (!collect($existingExtras)->contains('name', $extra['name'])) {
+                    $extraName = $extra['name'] ?? $extra['product']; // Usa 'name' si existe, sino 'product'
+
+                    if ($extraName && !collect($existingExtras)->contains('name', $extraName)) {
                         $existingExtras[] = $extra;
                     }
                 }
+
                 $schoolSettings['extras']['forfait'] = $existingExtras;
                 $school->settings = json_encode($schoolSettings);
                 $school->save();
@@ -660,8 +663,10 @@ class CourseController extends AppBaseController
 
             if (!empty($courseData['extras'])) {
                 foreach ($courseData['extras'] as $extra) {
+                    $productName = $extra['product'] ?? $extra['name']; // Usar 'product' si existe, sino 'name'
+
                     $course->courseExtras()->updateOrCreate(
-                        ['name' => $extra['product']], // Condición para buscar si ya existe
+                        ['name' => $productName], // Condición para buscar si ya existe
                         [
                             'description' => $extra['name'],
                             'price' => $extra['price']
@@ -695,13 +700,22 @@ class CourseController extends AppBaseController
                 }
                 $settings['periods'] = $periods;
 
-
                 // Extraer solo las fechas de los nuevos periodos
                 $newDatesList = array_column($newDates, 'date');
 
-                // Fechas a eliminar (existen en la BD pero no en las nuevas)
+                // Fechas candidatas a eliminar (existen en la BD pero no en las nuevas)
                 $datesToDelete = array_diff($existingDates, $newDatesList);
-                $course->courseDates()->whereIn('date', $datesToDelete)->delete();
+
+                // Filtrar fechas que NO tengan bookingUsersActive antes de eliminarlas
+                $datesToDelete = $course->courseDates()
+                    ->whereIn('date', $datesToDelete)
+                    ->whereDoesntHave('bookingUsersActive') // Solo elimina si no hay reservas activas
+                    ->pluck('date')
+                    ->toArray();
+
+                if (!empty($datesToDelete)) {
+                    $course->courseDates()->whereIn('date', $datesToDelete)->delete();
+                }
 
                 // Fechas a insertar (no existen en la BD)
                 $datesToInsert = array_filter($newDates, function ($date) use ($existingDates) {
@@ -709,7 +723,6 @@ class CourseController extends AppBaseController
                 });
 
                 $course->courseDates()->createMany($datesToInsert);
-
             }
 
             /* if ($course->course_type !== 1 ) {
@@ -794,9 +807,7 @@ class CourseController extends AppBaseController
                             $modelDate = $date->date->format('Y-m-d');
 
                             if ($providedDate && $providedDate !== $modelDate) {
-                                $bookingUsers = $date->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
-                                    $query->where('status', '!=', 2);
-                                })->get();
+                                $bookingUsers = $date->bookingUsersActive()->get();
 
                                 foreach ($bookingUsers as $bookingUser) {
                                     $clientEmail = $bookingUser->booking->clientMain->email;
@@ -906,6 +917,8 @@ class CourseController extends AppBaseController
             DB::rollback();
             \Illuminate\Support\Facades\Log::debug('Admin/COurseController Update: ' .
                 $e->getMessage());
+            \Illuminate\Support\Facades\Log::debug('TRace: ',
+                $e->getTrace());
             return $this->sendError('An error occurred while updating the course: ' . $e->getMessage());
         }
 
