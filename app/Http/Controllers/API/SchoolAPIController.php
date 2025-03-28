@@ -6,11 +6,17 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\API\CreateSchoolAPIRequest;
 use App\Http\Requests\API\UpdateSchoolAPIRequest;
 use App\Http\Resources\API\SchoolResource;
+use App\Models\Degree;
 use App\Models\School;
 use App\Models\SchoolSport;
+use App\Models\SchoolUser;
+use App\Models\Season;
+use App\Models\User;
 use App\Repositories\SchoolRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -109,6 +115,156 @@ class SchoolAPIController extends AppBaseController
         $school = $this->schoolRepository->create($input);
 
         return $this->sendResponse($school, 'School saved successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/schools",
+     *      summary="createSchool",
+     *      tags={"School"},
+     *      description="Create School",
+     *      @OA\RequestBody(
+     *        required=true,
+     *        @OA\JsonContent(ref="#/components/schemas/School")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/School"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function storeFull(): JsonResponse
+    {
+        $defaultSchool = School::find(1);
+        DB::beginTransaction();
+        try {
+            // Crear la nueva escuela con los datos del request y las settings de la escuela 1
+            $school = School::create([
+                'name' => 'Schweizer Skischule Churwalden',
+                'description' => 'SSS (Swiss Snow Sports)',
+                'contact_email' => 'info@skischulechurwalden.ch',
+                'contact_phone' => '081 382 10 20',
+                'contact_telephone' => '081 382 10 20',
+                'contact_address' => 'Girabodawäg 16, 7075 Churwalden, Graubünden',
+                'contact_cp' => '7075',
+                'contact_city' => 'Churwalden',
+                'contact_province' => 'Graubünden',
+                'contact_country' => 'Switzerland',
+                'fiscal_name' => 'Schweizer Skischule Churwalden',
+                'fiscal_address' => 'Girabodawäg 16, 7075 Churwalden, Graubünden',
+                'fiscal_cp' => '7075',
+                'fiscal_city' => 'Churwalden',
+                'fiscal_province' => 'Graubünden',
+                'fiscal_country' => 'Switzerland',
+                'iban' => '',
+                'logo' => 'https://www.skischulechurwalden.ch/wp-content/themes/lenzerheide/images/Logo.png',
+                'slug' => 'churwalden',
+                'cancellation_insurance_percent' => 10.0,
+                'bookings_comission_cash' => 2.40,
+                'bookings_comission_boukii_pay' => 2.40,
+                'bookings_comission_other' => 2.40,
+                'school_rate' => 1.00,
+                'has_ski' => 1,
+                'has_snowboard' => 1,
+                'has_telemark' => 1,
+                'has_rando' => 0,
+                'inscription' => 0,
+                'type' => 1,
+                'active' => 1,
+                'settings' => $defaultSchool ? $defaultSchool->settings : null, // Copia settings de la escuela 1
+            ]);
+
+            $sportIds = [1,2,3];
+            foreach ([1 => 'Ski', 2 => 'Snowboard', 3 => 'Telemark'] as $id => $name) {
+                SchoolSport::create([
+                    'sport_id' => $id,
+                    'school_id' => $school->id,
+                ]);
+                $sportIds[$id] = $id;
+            }
+
+            $degrees = Degree::where('school_id', 1)->get();
+            foreach ($degrees as $degree) {
+                if (isset($sportIds[$degree->sport_id])) {
+                    Degree::create([
+                        'league' => $degree->league,
+                        'level' => $degree->level,
+                        'name' => $degree->name,
+                        'image' => $degree->image,
+                        'annotation' => $degree->annotation,
+                        'degree_order' => $degree->degree_order,
+                        'progress' => $degree->progress,
+                        'color' => $degree->color,
+                        'age_min' => $degree->age_min,
+                        'age_max' => $degree->age_max,
+                        'active' => $degree->active,
+                        'school_id' => $school->id,
+                        'sport_id' => $sportIds[$degree->sport_id],
+                    ]);
+                }
+            }
+
+            // Crear la temporada (season)
+            Season::create([
+                'name' => 'Jahreszeit 2025-2026',
+                'start_date' => '2025-12-06',
+                'end_date' => '2026-03-29',
+                'is_active' => true,
+                'school_id' => $school->id,
+            ]);
+
+            // Crear usuarios
+            $user1 = User::create([
+                'first_name' => 'Gian',
+                'last_name' => 'Hitz',
+                'email' => 'info@skischulechurwalden.ch',
+                'password' => Hash::make('SkiSchule2025!'),
+                'school_id' => $school->id,
+                'type' => 1,
+                'active' => 1
+            ]);
+
+            SchoolUser::create([
+                'user_id' => $user1->id,
+                'school_id' => $school->id,
+            ]);
+
+            $user2 = User::create([
+                'first_name' => 'Team Boukii Churwalden',
+                'email' => 'boukiiteamchurwalden@gmail.com',
+                'password' => Hash::make('BoukiiTeam2025!'),
+                'school_id' => $school->id,
+                'type' => 1,
+                'active' => 1
+            ]);
+
+            SchoolUser::create([
+                'user_id' => $user2->id,
+                'school_id' => $school->id,
+            ]);
+
+            DB::commit();
+
+            return response()->json(['message' => 'Escuela creada exitosamente', 'school' => $school], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Error al crear la escuela', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**

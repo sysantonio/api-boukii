@@ -94,7 +94,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          format="date-time"
  *      )
  * )
- */class Season extends Model
+ */
+
+class Season extends Model
 {
       use LogsActivity, SoftDeletes, HasFactory;     public $table = 'seasons';
 

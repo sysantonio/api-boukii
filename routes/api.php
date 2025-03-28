@@ -753,6 +753,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('migration/newSchool', [\App\Http\Controllers\API\SchoolAPIController::class, 'storeFull'])
+    ->name('api.school.newschool.data');
+
 Route::get('migration/data', [\App\Http\Controllers\MigrationController::class, 'migrateInitalData'])
     ->name('api.migration.data');
 
