@@ -986,21 +986,23 @@ class CourseController extends AppBaseController
                         // Si no existe en el array agrupado, lo inicializamos
                         $groupedResults[$degreeId] = $groupResult;
                     } else {
-                        // Si ya existe, sumamos los valores numéricos
-                        $groupedResults[$degreeId]['total_places'] += $groupResult['total_places'];
-                        $groupedResults[$degreeId]['booked_places'] += $groupResult['booked_places'];
-                        $groupedResults[$degreeId]['available_places'] += $groupResult['available_places'];
-                        $groupedResults[$degreeId]['cash'] += $groupResult['cash'];
-                        $groupedResults[$degreeId]['other'] += $groupResult['other'];
-                        $groupedResults[$degreeId]['boukii'] += $groupResult['boukii'];
-                        $groupedResults[$degreeId]['boukii_web'] += $groupResult['boukii_web'];
-                        $groupedResults[$degreeId]['online'] += $groupResult['online'];
-                        $groupedResults[$degreeId]['extras'] += $groupResult['extras'];
-                        $groupedResults[$degreeId]['vouchers'] += $groupResult['vouchers'];
-                        $groupedResults[$degreeId]['no_paid'] += $groupResult['no_paid'];
-                        $groupedResults[$degreeId]['web'] += $groupResult['web'];
-                        $groupedResults[$degreeId]['admin'] += $groupResult['admin'];
-                        $groupedResults[$degreeId]['total_cost'] += $groupResult['total_cost'];
+                        if($course->is_flexible) {
+                            // Si ya existe, sumamos los valores numéricos
+                            $groupedResults[$degreeId]['total_places'] += $groupResult['total_places'];
+                            $groupedResults[$degreeId]['booked_places'] += $groupResult['booked_places'];
+                            $groupedResults[$degreeId]['available_places'] += $groupResult['available_places'];
+                            $groupedResults[$degreeId]['cash'] += $groupResult['cash'];
+                            $groupedResults[$degreeId]['other'] += $groupResult['other'];
+                            $groupedResults[$degreeId]['boukii'] += $groupResult['boukii'];
+                            $groupedResults[$degreeId]['boukii_web'] += $groupResult['boukii_web'];
+                            $groupedResults[$degreeId]['online'] += $groupResult['online'];
+                            $groupedResults[$degreeId]['extras'] += $groupResult['extras'];
+                            $groupedResults[$degreeId]['vouchers'] += $groupResult['vouchers'];
+                            $groupedResults[$degreeId]['no_paid'] += $groupResult['no_paid'];
+                            $groupedResults[$degreeId]['web'] += $groupResult['web'];
+                            $groupedResults[$degreeId]['admin'] += $groupResult['admin'];
+                            $groupedResults[$degreeId]['total_cost'] += $groupResult['total_cost'];
+                        }
                     }
                 }
 
