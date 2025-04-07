@@ -50,6 +50,14 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *           nullable=false,
  *           type="boolean",
  *       ),
+ *       @OA\Property(
+ *            property="block_price",
+ *            description="",
+ *            readOnly=false,
+ *            nullable=false,
+ *            type="number",
+ *            format="number"
+ *        ),
  *      @OA\Property(
  *          property="updated_at",
  *          description="",
@@ -86,6 +94,7 @@ class MonitorsSchool extends Model
         'station_id',
         'active_school',
         'status_updated_at',
+        'block_price',
         'accepted_at'
     ];
 
@@ -100,6 +109,7 @@ class MonitorsSchool extends Model
         'school_id' => 'required',
         'station_id' => 'nullable',
         'active_school' => 'nullable',
+        'block_price' => 'nullable',
         'updated_at' => 'nullable',
         'created_at' => 'nullable',
         'deleted_at' => 'nullable',
