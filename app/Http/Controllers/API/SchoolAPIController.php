@@ -8,9 +8,12 @@ use App\Http\Requests\API\UpdateSchoolAPIRequest;
 use App\Http\Resources\API\SchoolResource;
 use App\Models\Degree;
 use App\Models\School;
+use App\Models\SchoolColor;
 use App\Models\SchoolSport;
 use App\Models\SchoolUser;
 use App\Models\Season;
+use App\Models\Station;
+use App\Models\StationsSchool;
 use App\Models\User;
 use App\Repositories\SchoolRepository;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class SchoolController
@@ -148,122 +152,145 @@ class SchoolAPIController extends AppBaseController
      *      )
      * )
      */
-    public function storeFull(): JsonResponse
+    public function storeFull(Request $request): JsonResponse
     {
-        $defaultSchool = School::find(1);
+        $defaultSchool = School::find(2); // Cambiado a escuela 2 como default
         DB::beginTransaction();
+        $description = $request->input('description', $defaultSchool?->description ?? 'École sans description');
+        // Generar slug a partir del nombre
+        $name = $request->input('name', 'École sans nom');
+        $slug = Str::slug($name);
         try {
-            // Crear la nueva escuela con los datos del request y las settings de la escuela 1
-            $school = School::create([
-                'name' => 'Schweizer Skischule Churwalden',
-                'description' => 'SSS (Swiss Snow Sports)',
-                'contact_email' => 'info@skischulechurwalden.ch',
-                'contact_phone' => '081 382 10 20',
-                'contact_telephone' => '081 382 10 20',
-                'contact_address' => 'Girabodawäg 16, 7075 Churwalden, Graubünden',
-                'contact_cp' => '7075',
-                'contact_city' => 'Churwalden',
-                'contact_province' => 'Graubünden',
-                'contact_country' => 'Switzerland',
-                'fiscal_name' => 'Schweizer Skischule Churwalden',
-                'fiscal_address' => 'Girabodawäg 16, 7075 Churwalden, Graubünden',
-                'fiscal_cp' => '7075',
-                'fiscal_city' => 'Churwalden',
-                'fiscal_province' => 'Graubünden',
-                'fiscal_country' => 'Switzerland',
-                'iban' => '',
-                'logo' => 'https://www.skischulechurwalden.ch/wp-content/themes/lenzerheide/images/Logo.png',
-                'slug' => 'churwalden',
-                'cancellation_insurance_percent' => 10.0,
-                'bookings_comission_cash' => 2.40,
-                'bookings_comission_boukii_pay' => 2.40,
-                'bookings_comission_other' => 2.40,
-                'school_rate' => 1.00,
-                'has_ski' => 1,
-                'has_snowboard' => 1,
-                'has_telemark' => 1,
-                'has_rando' => 0,
-                'inscription' => 0,
+            // 1. Crear nueva escuela
+            $school = School::create(array_merge([
                 'type' => 1,
                 'active' => 1,
-                'settings' => $defaultSchool ? $defaultSchool->settings : null, // Copia settings de la escuela 1
+                'settings' => $defaultSchool?->settings,
+                'name' => $name,
+                'slug' => $slug,
+                'description' => $description,
+            ], $request->only([
+                'logo',
+                'contact_email', 'contact_phone', 'contact_telephone',
+                'contact_address', 'contact_cp', 'contact_city', 'contact_province', 'contact_country',
+                'fiscal_name', 'fiscal_address', 'fiscal_cp', 'fiscal_city', 'fiscal_province', 'fiscal_country',
+                'iban', 'cancellation_insurance_percent', 'bookings_comission_cash',
+                'bookings_comission_boukii_pay', 'bookings_comission_other', 'school_rate',
+                'has_ski', 'has_snowboard', 'has_telemark', 'has_rando', 'inscription'
+            ])));
+
+            // 2. Relacionar deporte Ski (ID 1)
+            SchoolSport::create([
+                'sport_id' => 1,
+                'school_id' => $school->id,
             ]);
 
-            $sportIds = [1,2,3];
-            foreach ([1 => 'Ski', 2 => 'Snowboard', 3 => 'Telemark'] as $id => $name) {
-                SchoolSport::create([
-                    'sport_id' => $id,
-                    'school_id' => $school->id,
-                ]);
-                $sportIds[$id] = $id;
-            }
-
-            $degrees = Degree::where('school_id', 1)->get();
+            // 3. Copiar degrees desde escuela 2
+            $degrees = Degree::where('school_id', 2)->get();
             foreach ($degrees as $degree) {
-                if (isset($sportIds[$degree->sport_id])) {
-                    Degree::create([
-                        'league' => $degree->league,
-                        'level' => $degree->level,
-                        'name' => $degree->name,
-                        'image' => $degree->image,
-                        'annotation' => $degree->annotation,
-                        'degree_order' => $degree->degree_order,
-                        'progress' => $degree->progress,
-                        'color' => $degree->color,
-                        'age_min' => $degree->age_min,
-                        'age_max' => $degree->age_max,
-                        'active' => $degree->active,
-                        'school_id' => $school->id,
-                        'sport_id' => $sportIds[$degree->sport_id],
-                    ]);
-                }
+                Degree::create($degree->replicate()->fill([
+                    'school_id' => $school->id,
+                ])->toArray());
             }
 
-            // Crear la temporada (season)
-            Season::create([
-                'name' => 'Jahreszeit 2025-2026',
-                'start_date' => '2025-12-06',
-                'end_date' => '2026-03-29',
-                'is_active' => true,
-                'school_id' => $school->id,
-            ]);
+            // 4. Copiar school_colors
+            $colors = SchoolColor::where('school_id', 2)->get();
+            foreach ($colors as $color) {
+                SchoolColor::create($color->replicate()->fill([
+                    'school_id' => $school->id,
+                ])->toArray());
+            }
 
-            // Crear usuarios
+            // 5. Crear usuarios
+            $adminEmail = $request->input('admin_email');
+            $schoolSlug = strtolower(Str::slug($school->name));
+            $boukiiEmail = 'boukiiteam' . $schoolSlug . '@gmail.com';
+
             $user1 = User::create([
-                'first_name' => 'Gian',
-                'last_name' => 'Hitz',
-                'email' => 'info@skischulechurwalden.ch',
-                'password' => Hash::make('SkiSchule2025!'),
-                'school_id' => $school->id,
+                'first_name' => $request->input('admin_first_name', 'Admin'),
+                'last_name' => $request->input('admin_last_name', 'User'),
+                'username' => Str::before($adminEmail, '@'),
+                'email' => $adminEmail,
+                'password' => Hash::make('School' . date('Y') . '!'),
                 'type' => 1,
                 'active' => 1
-            ]);
-
-            SchoolUser::create([
-                'user_id' => $user1->id,
-                'school_id' => $school->id,
             ]);
 
             $user2 = User::create([
-                'first_name' => 'Team Boukii Churwalden',
-                'email' => 'boukiiteamchurwalden@gmail.com',
-                'password' => Hash::make('BoukiiTeam2025!'),
-                'school_id' => $school->id,
+                'first_name' => 'Boukii Team ' . $school->name,
+                'last_name' => '',
+                'username' => 'boukiiteam' . $schoolSlug,
+                'email' => $boukiiEmail,
+                'password' => Hash::make('Boukii' . date('Y') . '!'),
                 'type' => 1,
                 'active' => 1
             ]);
 
-            SchoolUser::create([
-                'user_id' => $user2->id,
+            foreach ([$user1, $user2] as $user) {
+                SchoolUser::create([
+                    'user_id' => $user->id,
+                    'school_id' => $school->id,
+                ]);
+            }
+
+            // 6. Crear season
+            Season::create([
+                'name' => $request->input('season_name', 'Temporada 1'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'is_active' => true,
+                'hour_start' => $request->input('hour_start', '09:00:00'),
+                'hour_end' => $request->input('hour_end', '18:00:00'),
+                'vacation_days' => json_encode([]),
                 'school_id' => $school->id,
             ]);
 
-            DB::commit();
+            // 7. Crear estación
+            $station = Station::create([
+                'name' => $request->input('station_name', $school->name),
+                'cp' => $request->input('station_cp', $school->contact_cp),
+                'city' => $request->input('station_city', $school->contact_city),
+                'country' => $request->input('station_country', $school->contact_country),
+                'province' => $request->input('station_province', $school->contact_province),
+                'address' => $request->input('station_address', $school->contact_address),
+                'image' => $request->input('station_image', ''),
+                'map' => $request->input('station_map', ''),
+                'latitude' => $request->input('station_latitude', '0.000000'),
+                'longitude' => $request->input('station_longitude', '0.000000'),
+                'show_details' => $request->input('station_show_details', true),
+                'active' => $request->input('station_active', true),
+                'accuweather' => $request->input('station_accuweather', null),
+                'num_hanger' => $request->input('num_hanger', 0),
+                'num_chairlift' => $request->input('num_chairlift', 0),
+                'num_cabin' => $request->input('num_cabin', 0),
+                'num_cabin_large' => $request->input('num_cabin_large', 0),
+                'num_fonicular' => $request->input('num_fonicular', 0),
+            ]);
 
-            return response()->json(['message' => 'Escuela creada exitosamente', 'school' => $school], 201);
+            StationsSchool::create([
+                'station_id' => $station->id,
+                'school_id' => $school->id,
+            ]);
+
+            // 8. Guardar Payrexx si viene
+            if ($request->filled('payrexx')) {
+                $school->payrexx = encrypt($request->input('payrexx'));
+                $school->save();
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Escuela creada correctamente',
+                'school' => $school,
+                'users' => [$user1->email => 'School' . date('Y') . '!', $user2->email => 'Boukii' . date('Y') . '!']
+            ], 201);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Error al crear la escuela', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error al crear la escuela',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
