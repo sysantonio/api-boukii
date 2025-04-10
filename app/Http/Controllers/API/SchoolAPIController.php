@@ -202,7 +202,7 @@ class SchoolAPIController extends AppBaseController
             }
 
             // 5. Crear usuarios
-            $adminEmail = $request->input('admin_email');
+            $adminEmail = $request->input('admin_email', $school->contact_email);
             $schoolSlug = strtolower(Str::slug($school->name));
             $boukiiEmail = 'boukiiteam' . $schoolSlug . '@gmail.com';
 
