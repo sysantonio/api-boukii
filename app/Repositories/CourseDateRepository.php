@@ -8,11 +8,13 @@ use App\Repositories\BaseRepository;
 class CourseDateRepository extends BaseRepository
 {
     protected $fieldSearchable = [
-'id',
+        'id',
         'course_id',
         'date',
         'hour_start',
-        'hour_end'
+        'hour_end',
+        'interval_id',
+        'order'
     ];
 
     public function getFieldsSearchable(): array

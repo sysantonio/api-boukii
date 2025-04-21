@@ -298,6 +298,8 @@ class CourseController extends AppBaseController
                 'course_dates.*.date' => 'required|date',
                 'course_dates.*.hour_start' => 'required|string|max:255',
                 'course_dates.*.hour_end' => 'nullable|string|max:255',
+                'course_dates.*.interval_id' => 'nullable|integer|min:1',
+                'course_dates.*.order' => 'nullable|integer|min:1',
                 'course_dates.*.duration' => 'nullable|string',
                 'course_dates.*.groups' => 'required_if:course_type,1|array',
                 'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
