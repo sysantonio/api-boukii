@@ -1238,7 +1238,7 @@ class StatisticsController extends AppBaseController
                 ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
                 : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
 
-            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId, $nwd);
             $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
 
             $this->updateMonitorSummary($monitorSummary, $monitor->id, 'nwd', $durationInMinutes,
@@ -1391,7 +1391,7 @@ class StatisticsController extends AppBaseController
                 ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
                 : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
 
-            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId, $nwd);
             $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
 
             $this->updateMonitorSummary($monitorSummary, $monitor->id, 'nwd', $durationInMinutes,
@@ -1582,11 +1582,26 @@ class StatisticsController extends AppBaseController
     }
 
     //TODO: Monitor new field for nwd
-    private function getHourlyRate($monitor, $sportId, $schoolId)
+    private function getHourlyRate($monitor, $sportId, $schoolId, $nwd=null)
     {
+        if ($nwd) {
+            // Buscar el block_price del monitor para esa escuela
+            $monitorSchool = $monitor->monitorsSchools
+                ->firstWhere('school_id', $schoolId);
+
+            if ($monitorSchool && $monitorSchool->block_price > 0) {
+                return $monitorSchool->block_price;
+            }
+
+            // Si no hay block_price, usar el precio del bloqueo
+            if (isset($nwd->price) && $nwd->price > 0) {
+                return $nwd->price;
+            }
+        }
+
+        // 2. Si no aplica lo anterior, buscar salario por degree
         foreach ($monitor->monitorSportsDegrees as $degree) {
-            // Log::debug('$degree: ', $degree->toArray());
-            if($sportId) {
+            if ($sportId) {
                 if ($degree->sport_id == $sportId && $degree->school_id == $schoolId) {
                     return $degree->salary ? $degree->salary->pay : 0;
                 }
@@ -1595,9 +1610,9 @@ class StatisticsController extends AppBaseController
                     return $degree->salary ? $degree->salary->pay : 0;
                 }
             }
-
         }
-        return 0; // Devuelve 0 si no se encuentra un salario válido
+
+        return 0; // Si no se encuentra nada
     }
     public function getMonitorDailyBookings(Request $request, $monitorId): JsonResponse
     {
@@ -1723,7 +1738,7 @@ class StatisticsController extends AppBaseController
                 ? $this->calculateDurationInMinutes($season->hour_start, $season->hour_end)
                 : $this->calculateDurationInMinutes($nwd->start_time, $nwd->end_time);
 
-            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId);
+            $hourlyRate = $this->getHourlyRate($monitor, null, $schoolId, $nwd);
             $formattedData = $this->formatDurationAndCost($durationInMinutes, $hourlyRate);
 
             $date = Carbon::parse($nwd->start_date)->format('Y-m-d');
