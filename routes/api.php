@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\CoursesExport;
+use App\Exports\UsedVouchersExport;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
@@ -66,6 +67,20 @@ Route::any('/users-permissions', function () {
 
     return 'Permisos actualizados correctamente';
 });
+
+Route::get('/export/vouchers-used', function (Request $request) {
+    $request->validate([
+        'from' => 'required|date',
+        'to' => 'required|date|after_or_equal:from',
+    ]);
+
+    $from = $request->input('from');
+    $to = $request->input('to');
+
+    return (new UsedVouchersExport($from, $to))->download('courses_export.xlsx');
+});
+
+
 
 Route::any('/fix-subgroups', function () {
     $subGroups = CourseSubgroup::whereHas('courseDate', function ($query) {
