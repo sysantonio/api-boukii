@@ -7,10 +7,11 @@ use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\Season;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 trait Utils
 {
-    public function getCourseAvailability($course, $monitorsGrouped, $startDate = null, $endDate = null)
+    public function getCourseAvailability($course, $monitorsGrouped, $startDate = null, $endDate = null, $onlyWeekends = false)
     {
         if (!$course) {
             return null; // o manejar como prefieras
@@ -45,7 +46,11 @@ trait Utils
 
 
         if ($startDate && $endDate) {
-            $dates = $dates->whereBetween('date', [$startDate, $endDate]);
+            $dates = $dates->filter(function ($date) use ($startDate, $endDate, $onlyWeekends) {
+                $isInRange = Carbon::parse($date->date)->between($startDate, $endDate);
+                $isWeekend = in_array(Carbon::parse($date->date)->dayOfWeek, [CarbonInterface::SATURDAY, CarbonInterface::SUNDAY]);
+                return $isInRange && (!$onlyWeekends || $isWeekend);
+            });
         }
 
         // Cursos de tipo 1
@@ -57,7 +62,9 @@ trait Utils
                         if($subgroup->courseGroup) {
                             $bookings = $subgroup->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
                                 $query->where('status', '!=', 2); // Excluir reservas canceladas
-                            })->whereBetween('date', [$startDate, $endDate])->get();
+                            })->whereBetween('date', [$startDate, $endDate])
+                                ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
+                                ->get();
                             $totalBookingsPlaces += $bookings->count();
 
 
@@ -81,7 +88,9 @@ trait Utils
                 if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
                     $bookings = $course->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
                         $query->where('status', '!=', 2); // Excluir reservas canceladas
-                    })->whereBetween('date', [$startDate, $endDate])->get();
+                    })->whereBetween('date', [$startDate, $endDate])
+                        ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
+                        ->get();
 
 
                     $totalBookingsPlaces += $bookings->count() / $dates->count();
@@ -120,7 +129,8 @@ trait Utils
 
 
             foreach ($dates as $courseDate) {
-                $bookings = $courseDate->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
+                $bookings = $courseDate->bookingUsers()->where('status', 1)->when($onlyWeekends, fn($q) => $q->onlyWeekends())
+                    ->whereHas('booking', function ($query) {
                     $query->where('status', '!=', 2); // Excluir reservas canceladas
                 })->get();
                 $totalBookings += $bookings->count();
@@ -128,11 +138,14 @@ trait Utils
                 $nwds = MonitorNwd::where('start_date', $courseDate->date)
                     ->where('user_nwd_subtype_id', 2)
                     ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
                     ->get();
 
                 $bookingUsers = BookingUser::whereIn('monitor_id',
                     collect($monitorsGrouped[$course->sport_id])->pluck('id'))
-                    ->where('date', $courseDate->date)->where('course_id', $course->id) ->whereHas('booking', function ($query) {
+                    ->where('date', $courseDate->date)
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
+                    ->where('course_id', $course->id) ->whereHas('booking', function ($query) {
                         $query->where('status', '!=', 2); // La Booking no debe tener status 2
                     })->where('status', 1)
                     ->get();
@@ -142,6 +155,7 @@ trait Utils
                     ->whereHas('booking', function ($query) {
                         $query->where('status', '!=', 2); // La Booking no debe tener status 2
                     })->where('status', 1)
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
                     ->where('date', $courseDate->date)->where('course_id', '!=', $course->id)->get();
 
                 $season = Season::whereDate('start_date', '<=', $courseDate->date) // Fecha de inicio menor o igual a hoy

@@ -11,6 +11,7 @@ use App\Models\Monitor;
 use App\Models\MonitorNwd;
 use App\Models\Season;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use DateTime;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -97,6 +98,7 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         // Obtener los monitores totales filtrados por escuela y deporte si se proporciona
         $totalMonitorsQuery = Monitor::whereHas('monitorsSchools', function ($query) use ($request, $schoolId) {
@@ -127,8 +129,8 @@ class StatisticsController extends AppBaseController
                     $query->where('sport_id', $request->sport_id);
                 });
             })
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->pluck('monitor_id');
 
         // Obtener los monitores no disponibles y filtrarlos por los IDs de los monitores totales
@@ -139,9 +141,9 @@ class StatisticsController extends AppBaseController
             }, function ($query) {
                 return $query->where('monitor_id', '!=', null);
             })
-            ->where('start_date', '>=', $startDate)
-            ->where('start_date', '<=', $endDate)
-            ->whereIn('monitor_id', $totalMonitors) // Filtrar por los IDs de los monitores totales
+            ->whereBetween('start_date', [$startDate, $endDate])
+            ->whereIn('monitor_id', $totalMonitors)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->pluck('monitor_id');
 
         $activeMonitors = $bookingUsersCollective->merge($nwds)->unique()->count();
@@ -165,6 +167,7 @@ class StatisticsController extends AppBaseController
         $endDate = $request->end_date ?? $season->end_date;
         $sportId = $request->input('sport_id');
         $courseType = $request->input('course_type');
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         $bookingusersReserved = BookingUser::whereBetween('date', [$startDate, $endDate])
             ->whereHas('booking', function ($query) {
@@ -173,6 +176,7 @@ class StatisticsController extends AppBaseController
             ->where('status', 1) // Solo reservas confirmadas
             ->where('school_id', $request->school_id)
             ->with('booking')
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->get();
 
         // Estructura de respuesta
@@ -200,7 +204,7 @@ class StatisticsController extends AppBaseController
             $courseTotal = 0;
             if (!$course) continue;
             // Calcular la disponibilidad
-            $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
+            $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate, $onlyWeekends);
             $extrasByCourse = 0;
 
             // Inicializamos el total del curso
@@ -215,6 +219,11 @@ class StatisticsController extends AppBaseController
                     $groupedBookingUsers = $bookingGroupedUsers
                         ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate])
+                        ->when($onlyWeekends, function ($collection) {
+                            return $collection->filter(function ($item) {
+                                return in_array(Carbon::parse($item->date)->dayOfWeek, [CarbonInterface::SATURDAY, CarbonInterface::SUNDAY]);
+                            });
+                        })
                         ->groupBy(function ($bookingUser) {
                             return $bookingUser->date . '|' . $bookingUser->hour_start . '|' . $bookingUser->hour_end . '|' .
                                 $bookingUser->monitor_id . '|' . $bookingUser->group_id . '|' . $bookingUser->booking_id;
@@ -495,17 +504,18 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         // Obtener monitor_id si está presente en la request
         $monitorId = $request->monitor_id;
         $sportId = $request->sport_id; // Obtener sport_id si está presente en la request
 
-        $hoursBySport = $this->calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId, $sportId);
+        $hoursBySport = $this->calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId, $sportId, $onlyWeekends);
 
         return $this->sendResponse($hoursBySport, 'Total worked hours by sport retrieved successfully');
     }
 
-    private function calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId = null, $sportId = null)
+    private function calculateTotalWorkedHoursBySport($schoolId, $startDate, $endDate, $monitorId = null, $sportId = null, $onlyWeekends=false)
     {
         $bookingUsersQuery = BookingUser::with('course.sport')
             ->whereHas('booking', function ($query) {
@@ -513,7 +523,8 @@ class StatisticsController extends AppBaseController
             })
             ->where('status', 1)
             ->where('school_id', $schoolId)
-            ->whereBetween('date', [$startDate, $endDate]);
+            ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
 
         // Aplicar filtro por monitor_id si está presente
         if ($monitorId) {
@@ -565,9 +576,10 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         $totalWorkedHours = $this->calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season,
-            $request->monitor_id, $request->sport_id);
+            $request->monitor_id, $request->sport_id, $onlyWeekends);
 
         return $this->sendResponse($totalWorkedHours, 'Total worked hours retrieved successfully');
     }
@@ -586,6 +598,7 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($season->start_date);
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($season->end_date);
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         // Determinar el intervalo de agrupación
         $interval = $this->determineInterval($startDate, $endDate);
@@ -600,6 +613,7 @@ class StatisticsController extends AppBaseController
                 return $query->where('monitor_id', $monitorId);
             })
             ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->get();
 
         // Agrupar los datos por el intervalo determinado y luego por el tipo de curso
@@ -632,6 +646,7 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($season->start_date);
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($season->end_date);
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         // Determinar el intervalo de agrupación
         $interval = $this->determineInterval($startDate, $endDate);
@@ -646,6 +661,7 @@ class StatisticsController extends AppBaseController
                 return $query->where('monitor_id', $monitorId);
             })
             ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->get();
 
         // Agrupar los datos por el intervalo determinado y luego por el deporte
@@ -702,7 +718,7 @@ class StatisticsController extends AppBaseController
     }
 
 
-    private function calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season, $monitor, $sportId = null)
+    private function calculateTotalWorkedHours($schoolId, $startDate, $endDate, $season, $monitor, $sportId = null, $onlyWeekends = false)
     {
         $bookingUsers = BookingUser::with('monitor')
             ->where('school_id', $schoolId)
@@ -715,6 +731,7 @@ class StatisticsController extends AppBaseController
                 });
             })
             ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->get();
 
         $nwds = MonitorNwd::with('monitor')
@@ -724,6 +741,7 @@ class StatisticsController extends AppBaseController
                 return $query->where('monitor_id', $monitor);
             })
             ->whereBetween('start_date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->when($sportId, function ($query) use ($sportId) {
                 return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($sportId) {
                     $query->where('sport_id', $sportId);
@@ -731,9 +749,10 @@ class StatisticsController extends AppBaseController
             })
             ->get();
 
-        $courses = Course::whereHas('courseDates', function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('date', [$startDate, $endDate]);
-        })
+            $courses = Course::whereHas('courseDates', function ($query) use ($startDate, $endDate, $onlyWeekends) {
+                $query->whereBetween('date', [$startDate, $endDate])
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
+            })
             ->where('school_id', $schoolId)
             ->when($sportId, function ($query) use ($sportId) {
                 return $query->where('sport_id', $sportId);
@@ -801,27 +820,6 @@ class StatisticsController extends AppBaseController
         ];
     }
 
-    public function getTotalMonitorsPrice(Request $request)
-    {
-        $schoolId = $this->getSchool($request)->id;
-        $today = Carbon::now()->format('Y-m-d'); // Obtiene la fecha actual en formato YYYY-MM-DD
-
-        $season = Season::whereDate('start_date', '<=', $today) // Fecha de inicio menor o igual a hoy
-        ->whereDate('end_date', '>=', $today)   // Fecha de fin mayor o igual a hoy
-        ->first();
-
-        // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
-        $startDate = $request->start_date ?? $season->start_date;
-        $endDate = $request->end_date ?? $season->end_date;
-
-        if (!$startDate || !$endDate) {
-            return $this->sendError('Start date and end date are required.');
-        }
-
-        $sportId = $request->input('sport_id');
-        $courseType = $request->input('course_type');
-    }
-
     public function getTotalPrice(Request $request)
     {
         $schoolId = $this->getSchool($request)->id;
@@ -834,6 +832,7 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         if (!$startDate || !$endDate) {
             return $this->sendError('Start date and end date are required.');
@@ -843,6 +842,7 @@ class StatisticsController extends AppBaseController
         $courseType = $request->input('course_type');
 
         $bookingusersReserved = BookingUser::whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->whereHas('booking', function ($query) {
                 $query->where('status', '!=', 2); // Excluir reservas canceladas
             })
@@ -868,6 +868,11 @@ class StatisticsController extends AppBaseController
                     $groupedBookingUsers = $bookingGroupedUsers
                         ->where('course_id', $course->id)
                         ->whereBetween('date', [$startDate, $endDate])
+                        ->when($onlyWeekends, function ($collection) {
+                            return $collection->filter(function ($item) {
+                                return in_array(Carbon::parse($item->date)->dayOfWeek, [CarbonInterface::SATURDAY, CarbonInterface::SUNDAY]);
+                            });
+                        })
                         ->groupBy(function ($bookingUser) {
                             return $bookingUser->date . '|' . $bookingUser->hour_start . '|' . $bookingUser->hour_end . '|' .
                                 $bookingUser->monitor_id . '|' . $bookingUser->group_id . '|' . $bookingUser->booking_id;
@@ -914,6 +919,7 @@ class StatisticsController extends AppBaseController
         // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         if (!$startDate || !$endDate) {
             return $this->sendError('Start date and end date are required.');
@@ -921,6 +927,7 @@ class StatisticsController extends AppBaseController
 
         $bookingUsersTotalPrice = BookingUser::with('course.sport') // <--- Agregado aquí
         ->where('school_id', $schoolId)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             })
@@ -956,8 +963,9 @@ class StatisticsController extends AppBaseController
         }
 
         // Obtener todos los cursos dentro del rango de fechas
-        $courses = Course::whereHas('courseDates', function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('date', [$startDate, $endDate]);
+        $courses = Course::whereHas('courseDates', function ($query) use ($startDate, $endDate, $onlyWeekends) {
+            $query->whereBetween('date', [$startDate, $endDate])
+                ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
         })->where('school_id', $schoolId)
             ->when($request->has('type'), function ($query) use ($request) {
                 return $query->where('course_type', $request->type);
@@ -1117,9 +1125,11 @@ class StatisticsController extends AppBaseController
 
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
 
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->whereHas('booking', function ($query) {
                 $query->where('status', '!=', 2);
             })
@@ -1146,6 +1156,7 @@ class StatisticsController extends AppBaseController
 
         $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
             ->where('school_id', $schoolId)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             }, function ($query) {
@@ -1172,8 +1183,9 @@ class StatisticsController extends AppBaseController
                 return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
                     $query->where('sport_id', $request->sport_id);
                 });
-            })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
+            })->whereHas('courseDate', function($query) use ($startDate, $endDate, $onlyWeekends) {
+                $query->whereBetween('date', [$startDate, $endDate])
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
             })->whereDoesntHave('bookingUsers')
             ->get();
 
@@ -1271,8 +1283,11 @@ class StatisticsController extends AppBaseController
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
 
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
+
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
             ->where('school_id', $schoolId)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->whereHas('booking', function ($query) {
                 $query->where('status', '!=', 2);
             })
@@ -1299,6 +1314,7 @@ class StatisticsController extends AppBaseController
 
         $nwds = MonitorNwd::with(['monitor.monitorSportsDegrees.salary', 'monitor.monitorSportsDegrees.sport'])
             ->where('school_id', $schoolId)
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->when($request->has('monitor_id'), function ($query) use ($request) {
                 return $query->where('monitor_id', $request->monitor_id);
             }, function ($query) {
@@ -1325,8 +1341,9 @@ class StatisticsController extends AppBaseController
                 return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
                     $query->where('sport_id', $request->sport_id);
                 });
-            })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
+            })->whereHas('courseDate', function($query) use ($startDate, $endDate, $onlyWeekends) {
+                $query->whereBetween('date', [$startDate, $endDate])
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
             })->whereDoesntHave('bookingUsers')
             ->get();
 
@@ -1564,7 +1581,7 @@ class StatisticsController extends AppBaseController
         return $monitorSummary;
     }
 
-
+    //TODO: Monitor new field for nwd
     private function getHourlyRate($monitor, $sportId, $schoolId)
     {
         foreach ($monitor->monitorSportsDegrees as $degree) {
@@ -1592,6 +1609,7 @@ class StatisticsController extends AppBaseController
 
         $startDate = $request->start_date ?? $season->start_date;
         $endDate = $request->end_date ?? $season->end_date;
+        $onlyWeekends = $request->boolean('onlyWeekends', false); // default false
         $sportId = $request->sport_id;
 
         $bookingUsersWithMonitor = BookingUser::with(['monitor.monitorSportsDegrees.salary', 'course.sport'])
@@ -1607,6 +1625,7 @@ class StatisticsController extends AppBaseController
                 }
             })
             ->whereBetween('date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->get()
             ->unique(function ($item) {
                 return $item->hour_start . $item->hour_end . $item->date;
@@ -1619,6 +1638,7 @@ class StatisticsController extends AppBaseController
             ->where('monitor_id', $monitorId)
             ->where('user_nwd_subtype_id', 2)
             ->whereBetween('start_date', [$startDate, $endDate])
+            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
             ->whereHas('monitor.monitorSportsDegrees.sport', function ($query) use ($sportId) {
                 if ($sportId) {
                     $query->where('id', $sportId);
@@ -1639,8 +1659,9 @@ class StatisticsController extends AppBaseController
                 return $query->whereHas('monitor.monitorSportsDegrees.monitorSportAuthorizedDegrees.degree', function ($query) use ($request) {
                     $query->where('sport_id', $request->sport_id);
                 });
-            })->whereHas('courseDate', function($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
+            })->whereHas('courseDate', function($query) use ($startDate, $endDate, $onlyWeekends) {
+                $query->whereBetween('date', [$startDate, $endDate])
+                    ->when($onlyWeekends, fn($q) => $q->onlyWeekends());
             })->whereDoesntHave('bookingUsers')
             ->get();
 

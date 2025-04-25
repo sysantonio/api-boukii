@@ -168,6 +168,11 @@ class CourseDate extends Model
         return $value ? \Carbon\Carbon::createFromFormat('H:i:s', $value)->format('H:i') : null; // Manejar valor null
     }
 
+    public function scopeOnlyWeekends($query)
+    {
+        return $query->whereRaw('WEEKDAY(date) IN (5, 6)');
+    }
+
     public function course(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Course::class, 'course_id');

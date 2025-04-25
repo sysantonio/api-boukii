@@ -181,6 +181,12 @@ class MonitorNwd extends Model
         return $this->belongsTo(\App\Models\Station::class, 'station_id');
     }
 
+    // En BookingUser.php
+    public function scopeOnlyWeekends($query)
+    {
+        return $query->whereRaw('WEEKDAY(start_date) IN (5, 6)');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
          return LogOptions::defaults();
