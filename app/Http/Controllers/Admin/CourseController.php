@@ -6,22 +6,22 @@ use App\Exports\CourseDetailsExport;
 use App\Http\Controllers\AppBaseController;
 use App\Mail\BookingInfoUpdateMailer;
 use App\Models\Booking;
+use App\Models\BookingUser;
 use App\Models\Course;
 use App\Models\CourseDate;
-use App\Models\Monitor;
-use App\Models\MonitorsSchool;
+use App\Models\Season;
 use App\Repositories\CourseRepository;
-use DateInterval;
-use DatePeriod;
-use DateTime;
+use App\Traits\Utils;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Response;
 use Validator;
-use App\Traits\Utils;
 
 /**
  * Class UserController
@@ -129,7 +129,7 @@ class CourseController extends AppBaseController
             if($course->course_type == 1) {
                 $availability = $this->getCourseAvailability($course, $monitorsBySportAndDegree);
 
-                   // dd($availability);
+                // dd($availability);
 
                 $course->total_reservations = $availability['total_reservations_places'];
                 $course->total_available_places = $availability['total_available_places'];
@@ -187,6 +187,8 @@ class CourseController extends AppBaseController
         $course = Course::with( 'station','bookingUsersActive.client.sports', 'bookingUsers.client.sports',
             'courseDates.courseSubgroups.bookingUsers.client',
             'courseDates.courseGroups.courseSubgroups.monitor',
+            'courseDates.courseGroups.bookingUsers.client',
+            'courseDates.bookingUsersActive.client',
             'courseExtras',
             'courseDates.courseGroups.courseSubgroups.bookingUsers.client')
             ->where('school_id', $school->id)->find($id);
@@ -296,6 +298,8 @@ class CourseController extends AppBaseController
                 'course_dates.*.date' => 'required|date',
                 'course_dates.*.hour_start' => 'required|string|max:255',
                 'course_dates.*.hour_end' => 'nullable|string|max:255',
+                'course_dates.*.interval_id' => 'nullable|integer|min:1',
+                'course_dates.*.order' => 'nullable|integer|min:1',
                 'course_dates.*.duration' => 'nullable|string',
                 'course_dates.*.groups' => 'required_if:course_type,1|array',
                 'course_dates.*.groups.*.degree_id' => 'required|exists:degrees,id',
@@ -313,6 +317,7 @@ class CourseController extends AppBaseController
             ]);
 
             $courseData = $request->all();
+            $courseData['duration'] = $this->formatDuration($courseData['duration']);
 
             if (!empty($courseData['image'])) {
                 $base64Image = $request->input('image');
@@ -364,11 +369,39 @@ class CourseController extends AppBaseController
                 }
             }
 
-            // Crear las fechas y grupos
-            if (isset($courseData['course_dates'])) {
-                $settings = isset($courseData['settings']) ? json_decode($courseData['settings'], true) : null;
-                $weekDays = $settings ? $settings['weekDays'] : null;
+            if(!isset($courseData['course_dates'])) {
+                $this->sendError('Course can not be created without course_dates');
+            }
+            $settings = $courseData['settings'] ?? null;
 
+            if (is_string($settings)) {
+                $settings = json_decode($settings, true);
+            }
+
+            if (!is_array($settings)) {
+                $settings = []; // Si no es un array válido, inicializamos uno vacío
+            }
+            $weekDays = $settings ? $settings['weekDays'] : null;
+
+            if ($course->course_type != 1) {
+                $periods = [];
+                foreach ($courseData['course_dates'] as $date) {
+                    $periods[] = [
+                        'date' => $date['date'],
+                        'date_end' => $date['date_end'],
+                        'hour_start' => $date['hour_start'],
+                        'hour_end' => $date['hour_end'],
+                    ];
+                }
+                $settings['periods'] = $periods;
+
+                $courseDates = $this->generateCourseDates($courseData['course_dates'], $weekDays);
+                $course->courseDates()->createMany($courseDates);
+            }
+
+            // Crear las fechas y grupos
+            if ($course->course_type === 1) {
+                $hasWeekDays = is_array($weekDays) && count(array_filter($weekDays)) > 0;
                 foreach ($courseData['course_dates'] as $dateData) {
                     // Validar o calcular hour_end
                     if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
@@ -378,7 +411,7 @@ class CourseController extends AppBaseController
                         return $this->sendError('Either hour_end or duration must be provided.');
                     }
 
-                    if ($weekDays) {
+                    if ($hasWeekDays) {
                         $date = new \DateTime($dateData['date']);
                         $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
 
@@ -408,12 +441,117 @@ class CourseController extends AppBaseController
                     }
                 }
             }
+
+            $allDates = array_column($course->courseDates->toArray(), 'date');
+            $allHourStarts = array_column($course->courseDates->toArray(), 'hour_start');
+            $allHourEnds = array_column($course->courseDates->toArray(), 'hour_end');
+
+            if (!empty($allDates)) {
+                sort($allDates);
+                sort($allHourStarts);
+                rsort($allHourEnds); // Orden inverso para obtener el mayor
+
+                $course->update([
+                    'date_start'  => $allDates[0],   // Primera fecha (mínima)
+                    'date_end'    => end($allDates), // Última fecha (máxima)
+                    'hour_min'  => $allHourStarts[0],  // Menor hora de inicio
+                    'hour_max'    => $allHourEnds[0],    // Mayor hora de fin
+                    'settings'    => $settings
+                ]);
+            }
+
             DB::commit();
             return $this->sendResponse($course, 'Curso creado con éxito');
         } catch (\Exception $e) {
             DB::rollback();
+            \Illuminate\Support\Facades\Log::debug('An error occurred while creating the course: : ' .
+                $e->getLine());
             return $this->sendError('An error occurred while creating the course: ' . $e->getMessage());
         }
+    }
+
+    private function getMostCommonDuration(array $durations)
+    {
+        if (empty($durations)) {
+            return null;
+        }
+
+        $counted = array_count_values($durations);
+        arsort($counted); // Ordenar por frecuencia descendente
+
+        $maxFrequency = reset($counted);
+        $mostCommon = array_keys($counted, $maxFrequency);
+
+        // Si hay empate, devolver la mayor duración
+        usort($mostCommon, function ($a, $b) {
+            return strtotime($b) - strtotime($a);
+        });
+
+        return $mostCommon[0];
+    }
+
+    private function formatDuration($duration)
+    {
+        preg_match('/(\d+)(h|min)(?:\s*(\d+)?min)?/', $duration, $matches);
+
+        $hours = 0;
+        $minutes = 0;
+
+        if ($matches) {
+            if ($matches[2] === 'h') {
+                $hours = (int) $matches[1];
+                if (isset($matches[3])) {
+                    $minutes = (int) $matches[3];
+                }
+            } else {
+                $minutes = (int) $matches[1];
+            }
+        }
+
+        return $hours > 0 ? "{$hours}h {$minutes}min" : "{$minutes}min";
+    }
+
+    private function generateCourseDates(array $courseDates, array $weekDays)
+    {
+        $generatedDates = [];
+        $weekDaysMap = [
+            'monday' => 1,
+            'tuesday' => 2,
+            'wednesday' => 3,
+            'thursday' => 4,
+            'friday' => 5,
+            'saturday' => 6,
+            'sunday' => 7,
+        ];
+
+        foreach ($courseDates as $dateInfo) {
+            $startDate = new Carbon($dateInfo['date']);
+            $endDate = new Carbon($dateInfo['date_end']);
+            $hourStart = $dateInfo['hour_start'];
+            $hourEnd = $dateInfo['hour_end'];
+
+            while ($startDate->lte($endDate)) {
+                $dayOfWeek = $startDate->dayOfWeekIso; // 1 (Lunes) - 7 (Domingo)
+
+                foreach ($weekDays as $day => $isActive) {
+                    if ($isActive && $weekDaysMap[$day] == $dayOfWeek) {
+                        $generatedDates[] = [
+                            'date' => $startDate->toDateString(),
+                            'hour_start' => $hourStart,
+                            'hour_end' => $hourEnd,
+                            'duration' => array_key_exists('duration', $dateInfo) ? $dateInfo['duration'] : $this->calculateDuration($hourStart, $hourEnd),
+                            'date_end' => $startDate->toDateString(), // Ajustar si es necesario
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                }
+
+                $startDate->addDay();
+            }
+        }
+
+        return $generatedDates;
     }
 
     private function calculateHourEnd(string $hourStart, string $duration): string
@@ -486,78 +624,160 @@ class CourseController extends AppBaseController
             $courseData = $request->all();
             $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
 
-            if(!empty($courseData['image'])) {
+            if (!empty($courseData['image'])) {
                 $base64Image = $request->input('image');
 
-                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                if (is_string($base64Image) && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                     $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
                     $type = strtolower($type[1]);
                     $imageData = base64_decode($imageData);
 
-                    if ($imageData === false) {
-                        $this->sendError('base64_decode failed');
+                    if ($imageData !== false) {
+                        $imageName = 'course/image_' . time() . '.' . $type;
+                        Storage::disk('public')->put($imageName, $imageData);
+                        $courseData['image'] = url(Storage::url($imageName));
+                    } else {
+                        // Si base64_decode falla, simplemente seguimos sin guardar la imagen
+                        unset($courseData['image']);
                     }
                 } else {
-                    $this->sendError('did not match data URI with image data');
+                    // Si no es una imagen en base64, continuar sin procesarla
+                    unset($courseData['image']);
                 }
-
-                $imageName = 'course/image_'.time().'.'.$type;
-                Storage::disk('public')->put($imageName, $imageData);
-                $courseData['image'] = url(url(Storage::url($imageName)));
-            } else {
-                $courseData = $request->except('image');
             }
 
             DB::beginTransaction();
             // Actualiza los campos principales del curso
+
+            $schoolSettings = json_decode($school->settings, true) ?? [];
+            $existingExtras = $schoolSettings['extras']['forfait'] ?? [];
+
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    $extraName = $extra['name'] ?? $extra['product']; // Usa 'name' si existe, sino 'product'
+
+                    if ($extraName && !collect($existingExtras)->contains('name', $extraName)) {
+                        $existingExtras[] = $extra;
+                    }
+                }
+
+                $schoolSettings['extras']['forfait'] = $existingExtras;
+                $school->settings = json_encode($schoolSettings);
+                $school->save();
+            }
+
             $course->update($courseData);
 
-            if ($course->course_type !== 1 && isset($courseData['course_dates'])) {
-                // Obtener date_start y date_end del curso
-                $courseStartDate = $course->date_start;
-                $courseEndDate = $course->date_end;
+            if (!empty($courseData['extras'])) {
+                foreach ($courseData['extras'] as $extra) {
+                    $productName = $extra['product'] ?? $extra['name']; // Usar 'product' si existe, sino 'name'
 
-                // Ordenar las fechas de la request por 'date'
-                usort($courseData['course_dates'], function ($a, $b) {
-                    return strtotime($a['date']) - strtotime($b['date']);
-                });
-
-                // Obtener la primera y última fecha de la request
-                $requestFirstDate = $courseData['course_dates'][0]['date'] ?? null;
-                $requestLastDate = end($courseData['course_dates'])['date'] ?? null;
-
-                // Si las fechas en la request no coinciden con el curso, generar todas las fechas intermedias
-                if ($requestFirstDate !== $courseStartDate || $requestLastDate !== $courseEndDate) {
-                    $weekdays = $course->settings['weekdays'] ?? []; // Obtener pattern de weekdays
-                    $generatedDates = [];
-
-                    $period = new DatePeriod(
-                        new DateTime($courseStartDate),
-                        new DateInterval('P1D'),
-                        (new DateTime($courseEndDate))->modify('+1 day') // Incluir la última fecha
+                    $course->courseExtras()->updateOrCreate(
+                        ['name' => $productName], // Condición para buscar si ya existe
+                        [
+                            'description' => $extra['name'],
+                            'price' => $extra['price']
+                        ]
                     );
-
-                    foreach ($period as $date) {
-                        $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
-
-                        // Si no hay weekdays definidos, incluir todas las fechas
-                        if (empty($weekdays) || in_array($weekday, $weekdays)) {
-                            $generatedDates[] = [
-                                'date' => $date->format('Y-m-d'),
-                                'hour_start' => $course->hour_min,
-                                'hour_end' => $course->hour_max,
-                                'course_id' => $course->id
-                            ];
-                        }
-                    }
-
-                    // Reemplazar course_dates con las nuevas fechas generadas
-                    $courseData['course_dates'] = $generatedDates;
                 }
             }
 
+            $settings = $courseData['settings'] ?? null;
+
+            if (is_string($settings)) {
+                $settings = json_decode($settings, true);
+            }
+
+            if (!is_array($settings)) {
+                $settings = []; // Si no es un array válido, inicializamos uno vacío
+            }
+            $weekDays = $settings ? $settings['weekDays'] : null;
+            if ($course->course_type != 1 && isset($courseData['course_dates'])) {
+                $existingDates = $course->courseDates()->pluck('date')->toArray();
+                $newDates = $this->generateCourseDates($courseData['course_dates'], $weekDays);
+
+                $periods = [];
+                foreach ($courseData['course_dates'] as $date) {
+                    $periods[] = [
+                        'date' => $date['date'],
+                        'date_end' => $date['date_end'],
+                        'hour_start' => $date['hour_start'],
+                        'hour_end' => $date['hour_end'],
+                    ];
+                }
+                $settings['periods'] = $periods;
+
+                // Extraer solo las fechas de los nuevos periodos
+                $newDatesList = array_column($newDates, 'date');
+
+                // Fechas candidatas a eliminar (existen en la BD pero no en las nuevas)
+                $datesToDelete = array_diff($existingDates, $newDatesList);
+
+                // Filtrar fechas que NO tengan bookingUsersActive antes de eliminarlas
+                $datesToDelete = $course->courseDates()
+                    ->whereIn('date', $datesToDelete)
+                    ->whereDoesntHave('bookingUsersActive') // Solo elimina si no hay reservas activas
+                    ->pluck('date')
+                    ->toArray();
+
+                if (!empty($datesToDelete)) {
+                    $course->courseDates()->whereIn('date', $datesToDelete)->delete();
+                }
+
+                // Fechas a insertar (no existen en la BD)
+                $datesToInsert = array_filter($newDates, function ($date) use ($existingDates) {
+                    return !in_array($date['date'], $existingDates);
+                });
+
+                $course->courseDates()->createMany($datesToInsert);
+            }
+
+            /* if ($course->course_type !== 1 ) {
+                 // Obtener date_start y date_end del curso
+                 $courseStartDate = $course->date_start;
+                 $courseEndDate = $course->date_end;
+
+                 // Ordenar las fechas de la request por 'date'
+                 usort($courseData['course_dates'], function ($a, $b) {
+                     return strtotime($a['date']) - strtotime($b['date']);
+                 });
+
+                 // Obtener la primera y última fecha de la request
+                 $requestFirstDate = $courseData['course_dates'][0]['date'] ?? null;
+                 $requestLastDate = end($courseData['course_dates'])['date'] ?? null;
+
+                 // Si las fechas en la request no coinciden con el curso, generar todas las fechas intermedias
+                 if ($requestFirstDate !== $courseStartDate || $requestLastDate !== $courseEndDate) {
+                     $weekdays = $course->settings['weekdays'] ?? []; // Obtener pattern de weekdays
+                     $generatedDates = [];
+
+                     $period = new DatePeriod(
+                         new DateTime($courseStartDate),
+                         new DateInterval('P1D'),
+                         (new DateTime($courseEndDate))->modify('+1 day') // Incluir la última fecha
+                     );
+
+                     foreach ($period as $date) {
+                         $weekday = $date->format('N'); // 1 = Lunes, 7 = Domingo
+
+                         // Si no hay weekdays definidos, incluir todas las fechas
+                         if (empty($weekdays) || in_array($weekday, $weekdays)) {
+                             $generatedDates[] = [
+                                 'date' => $date->format('Y-m-d'),
+                                 'hour_start' => $course->hour_min,
+                                 'hour_end' => $course->hour_max,
+                                 'course_id' => $course->id
+                             ];
+                         }
+                     }
+
+                     // Reemplazar course_dates con las nuevas fechas generadas
+                     $courseData['course_dates'] = $generatedDates;
+                 }
+             }*/
+
             // Sincroniza las fechas
-            if (isset($courseData['course_dates'])) {
+            if ($course->course_type == 1 && isset($courseData['course_dates'])) {
                 $updatedCourseDates = [];
                 foreach ($courseData['course_dates'] as $dateData) {
                     // Verifica si existe 'id' antes de usarlo
@@ -594,9 +814,7 @@ class CourseController extends AppBaseController
                             $modelDate = $date->date->format('Y-m-d');
 
                             if ($providedDate && $providedDate !== $modelDate) {
-                                $bookingUsers = $date->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
-                                    $query->where('status', '!=', 2);
-                                })->get();
+                                $bookingUsers = $date->bookingUsersActive()->get();
 
                                 foreach ($bookingUsers as $bookingUser) {
                                     $clientEmail = $bookingUser->booking->clientMain->email;
@@ -634,26 +852,47 @@ class CourseController extends AppBaseController
                             $updatedCourseGroups[] = $group->id;
 
                             if (isset($groupData['course_subgroups'])) {
+                                $updatedSubgroups = [];
                                 foreach ($groupData['course_subgroups'] as $subgroupData) {
-                                    // Preparar los datos de subgroup
                                     $subgroupData['course_id'] = $course->id;
                                     $subgroupData['course_date_id'] = $date->id;
 
                                     // Verifica si existe 'id' antes de usarlo
-                                    $subgroupId = isset($subgroupData['id']) ? $subgroupData['id'] : null;
+                                    $subgroupId = $subgroupData['id'] ?? null;
                                     if ($subgroupId) {
-                                        $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
+                                        $subgroup = $group->courseSubgroups()->updateOrCreate(['id' => $subgroupId], $subgroupData);
                                     } else {
-                                        $group->courseSubgroups()->create($subgroupData);
+                                        $subgroup = $group->courseSubgroups()->create($subgroupData);
                                     }
+                                    $updatedSubgroups[] = $subgroup->id;
                                 }
-                                // Considera si necesitas borrar subgrupos aquí
+
+                                // Eliminar los subgrupos que ya no están en la request
+                                $group->courseSubgroups()->whereNotIn('id', $updatedSubgroups)->delete();
                             }
                         }
                         $date->courseGroups()->whereNotIn('id', $updatedCourseGroups)->delete();
                     }
                 }
                 $course->courseDates()->whereNotIn('id', $updatedCourseDates)->delete();
+            }
+
+            $allDates = array_column($course->courseDates->toArray(), 'date');
+            $allHourStarts = array_column($course->courseDates->toArray(), 'hour_start');
+            $allHourEnds = array_column($course->courseDates->toArray(), 'hour_end');
+
+            if (!empty($allDates)) {
+                sort($allDates);
+                sort($allHourStarts);
+                rsort($allHourEnds); // Orden inverso para obtener el mayor
+
+                $course->update([
+                    'date_start'  => $allDates[0],   // Primera fecha (mínima)
+                    'date_end'    => end($allDates), // Última fecha (máxima)
+                    'hour_min'  => $allHourStarts[0],  // Menor hora de inicio
+                    'hour_max'    => $allHourEnds[0],    // Mayor hora de fin
+                    'settings'    => $settings
+                ]);
             }
 
             DB::commit();
@@ -683,9 +922,534 @@ class CourseController extends AppBaseController
             return $this->sendResponse($course, 'Course updated successfully');
         }  catch (\Exception $e) {
             DB::rollback();
+            \Illuminate\Support\Facades\Log::debug('Admin/COurseController Update: ' .
+                $e->getMessage());
+            \Illuminate\Support\Facades\Log::debug('TRace: ',
+                $e->getTrace());
             return $this->sendError('An error occurred while updating the course: ' . $e->getMessage());
         }
 
+    }
+
+    public function getSellStats($id, Request $request): JsonResponse
+    {
+
+        try {
+            $schoolId = $this->getSchool($request)->id;
+            $today = Carbon::now()->format('Y-m-d');
+
+            // Obtener la temporada actual
+            $season = Season::whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+
+            // Utiliza start_date y end_date de la request si están presentes, sino usa las fechas de la temporada
+            $startDate = $request->start_date ?? $season->start_date;
+            $endDate = $request->end_date ?? $season->end_date;
+
+            // Verificar que el curso existe
+            $course = Course::findOrFail($id); // Suponiendo que tienes el ID del curso que deseas editar
+            if (!$course) {
+                return $this->sendError('Course not found', [], 404);
+            }
+
+            // Obtener reservas para el curso específico
+            $bookingusersReserved = BookingUser::whereBetween('date', [$startDate, $endDate])
+                ->whereHas('booking', function ($query) {
+                    $query->where('status', '!=', 2); // Excluir reservas canceladas
+                })
+                ->where('status', 1) // Solo reservas confirmadas
+                ->where('school_id', $schoolId)
+                ->where('course_id', $id)
+                ->with('booking')
+                ->get();
+
+            // Estructura de respuesta
+            $result = [];
+            $monitorsGrouped = $this->getGroupedMonitors($schoolId, $request->monitor_id, $request->sport_id);
+
+            // Si el curso es de tipo 1 (colectivo), dividir por grupos
+            if ($course->course_type === 1) {
+                // Obtener todos los grupos del curso
+                $courseGroups = $course->courseGroups ?? [];
+
+                foreach ($courseGroups as $group) {
+                    $groupResult = $this->processCourseGroup($course, $group, $bookingusersReserved, $monitorsGrouped, $startDate, $endDate);
+                    if ($groupResult) {
+                        $result[] = $groupResult;
+                    }
+                }
+
+                $groupedResults = [];
+
+                foreach ($result as $groupResult) {
+                    $degreeId = $groupResult['degree_id'];
+
+                    if (!isset($groupedResults[$degreeId])) {
+                        // Si no existe en el array agrupado, lo inicializamos
+                        $groupedResults[$degreeId] = $groupResult;
+                    } else {
+                        if($course->is_flexible) {
+                            // Si ya existe, sumamos los valores numéricos
+                            $groupedResults[$degreeId]['total_places'] += $groupResult['total_places'];
+                            $groupedResults[$degreeId]['booked_places'] += $groupResult['booked_places'];
+                            $groupedResults[$degreeId]['available_places'] += $groupResult['available_places'];
+                            $groupedResults[$degreeId]['cash'] += $groupResult['cash'];
+                            $groupedResults[$degreeId]['other'] += $groupResult['other'];
+                            $groupedResults[$degreeId]['boukii'] += $groupResult['boukii'];
+                            $groupedResults[$degreeId]['boukii_web'] += $groupResult['boukii_web'];
+                            $groupedResults[$degreeId]['online'] += $groupResult['online'];
+                            $groupedResults[$degreeId]['extras'] += $groupResult['extras'];
+                            $groupedResults[$degreeId]['vouchers'] += $groupResult['vouchers'];
+                            $groupedResults[$degreeId]['no_paid'] += $groupResult['no_paid'];
+                            $groupedResults[$degreeId]['web'] += $groupResult['web'];
+                            $groupedResults[$degreeId]['admin'] += $groupResult['admin'];
+                            $groupedResults[$degreeId]['total_cost'] += $groupResult['total_cost'];
+                        }
+                    }
+                }
+
+                // Convertimos el array asociativo en un array indexado
+                $result = array_values($groupedResults);
+
+
+            } else {
+                // Para cursos tipo 2 (privados), procesamos todo el curso como una unidad
+                $courseResult = $this->processCourse($course, $bookingusersReserved, $monitorsGrouped, $startDate, $endDate);
+                if ($courseResult) {
+                    $result[] = $courseResult;
+                }
+            }
+        } catch (ModelNotFoundException $e) {
+            Log::error($e->getMessage(), $e->getTrace());
+            return $this->sendError('Error retrieving course data', 500);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage(), $e->getTrace());
+            return $this->sendError('Error retrieving course data', 500);
+        }
+
+        return $this->sendResponse($result, 'Course details sells retrieved successfully');
+    }
+
+    // Método para procesar un grupo específico de un curso
+    private function processCourseGroup($course, $group, $bookingusersReserved, $monitorsGrouped, $startDate, $endDate): ?array
+    {
+        // Filtrar booking users solo para este grupo
+        $groupBookingUsers = $bookingusersReserved->filter(function($bookingUser) use ($group) {
+            return $bookingUser->course_group_id == $group->id;
+        });
+
+        if ($groupBookingUsers->isEmpty()) {
+            return null;
+        }
+
+        // Inicializar estructura de pagos
+        $payments = [
+            'cash' => 0,
+            'other' => 0,
+            'boukii' => 0,
+            'boukii_web' => 0,
+            'online' => 0,
+            'vouchers' => 0,
+            'no_paid' => 0,
+            'web' => 0,
+            'admin' => 0,
+        ];
+
+        $extrasByGroup = 0;
+        $groupTotal = 0;
+
+        // Calcular la disponibilidad para este grupo
+        $availability = $this->getGroupAvailability($group, $monitorsGrouped, $startDate, $endDate);
+
+        // Procesar pagos y totales para el grupo
+        foreach ($groupBookingUsers->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+            $bookingTotal = 0;
+            $booking = $bookingGroupedUsers->first()->booking;
+            if ($booking->status == 2) continue;
+
+            // Lógica para cursos colectivos por grupo
+            $firstDate = $bookingGroupedUsers->first()->date;
+            $firstDayBookingUsers = $bookingGroupedUsers->where('date', $firstDate);
+
+            foreach ($firstDayBookingUsers as $bookingUser) {
+                $total = $this->calculateTotalPrice($bookingUser);
+                $groupTotal += $total['totalPrice'];
+                $bookingTotal += $total['totalPrice'];
+                $extrasByGroup += $total['extrasPrice'];
+            }
+
+            // Sumar los pagos
+            $paymentType = $booking->payment_method_id;
+            if (!$booking->paid) {
+                $payments['no_paid'] += $bookingTotal;
+            } else {
+                if ($booking->vouchersLogs()->exists()) {
+                    $payments['vouchers'] += $bookingTotal;
+                } else {
+                    switch ($paymentType) {
+                        case Booking::ID_CASH:
+                            $payments['cash'] += $bookingTotal;
+                            break;
+                        case Booking::ID_OTHER:
+                            $payments['other'] += $bookingTotal;
+                            break;
+                        case Booking::ID_BOUKIIPAY:
+                            if ($booking->source === 'web') {
+                                $payments['boukii_web'] += $bookingTotal;
+                            } else {
+                                $payments['boukii'] += $bookingTotal;
+                            }
+                            break;
+                        case Booking::ID_ONLINE:
+                            $payments['online'] += $bookingTotal;
+                            break;
+                    }
+                }
+            }
+        }
+
+        // Procesar fuente de reservas (web/admin)
+        $bookingUsersGrouped = $groupBookingUsers->groupBy('client_id');
+        foreach ($bookingUsersGrouped as $clientBookingUsers) {
+            $booking = $clientBookingUsers->first()->booking;
+            $source = $booking->source;
+
+            $bookingUsersCount = $clientBookingUsers->count();
+            $bookingUsersCount = !$course->is_flexible ? $bookingUsersCount / max(1, $course->courseDates->count()) : $bookingUsersCount;
+
+            if (isset($payments[$source])) {
+                $payments[$source] += $bookingUsersCount;
+            } else {
+                $payments[$source] = $bookingUsersCount;
+            }
+        }
+
+        // Obtener la configuración de moneda
+        $currency = $course && $course->currency ? $course->currency : 'CHF';
+
+        // Retornar resultado para este grupo
+        return [
+            'course_id' => $course->id,
+            'group_id' => $group->id,
+            'degree_id' => $group->degree->id,
+            'group_name' => $group->degree->name,
+            'icon' => $course->icon,
+            'name' => $course->name,
+            'total_places' => round($availability['total_places']),
+            'booked_places' => round($availability['total_reservations_places']),
+            'available_places' => round($availability['total_available_places']),
+            'cash' => round($payments['cash']),
+            'other' => round($payments['other']),
+            'boukii' => round($payments['boukii']),
+            'boukii_web' => round($payments['boukii_web']),
+            'online' => round($payments['online']),
+            'extras' => round($extrasByGroup),
+            'vouchers' => round($payments['vouchers']),
+            'no_paid' => round($payments['no_paid']),
+            'web' => round($payments['web']),
+            'admin' => round($payments['admin']),
+            'currency' => $currency,
+            'total_cost' => round($groupTotal),
+        ];
+    }
+
+    function calculateTotalPrice($bookingUser)
+    {
+        $courseType = $bookingUser->course->course_type; // 1 = Colectivo, 2 = Privado
+        $isFlexible = $bookingUser->course->is_flexible; // Si es flexible o no
+        $totalPrice = 0;
+
+        if ($courseType == 1) { // Colectivo
+            if ($isFlexible) {
+                // Si es colectivo flexible
+                $totalPrice = $this->calculateFlexibleCollectivePrice($bookingUser);
+            } else {
+                // Si es colectivo fijo
+                $totalPrice = $this->calculateFixedCollectivePrice($bookingUser);
+            }
+        } elseif ($courseType == 2) { // Privado
+            if ($isFlexible) {
+                // Si es privado flexible, calcular precio por `price_range`
+                $totalPrice = $this->calculatePrivatePrice($bookingUser, $bookingUser->course->price_range);
+            } else {
+                // Si es privado no flexible, usar un precio fijo
+                $totalPrice = $bookingUser->course->price; // Asumimos que el curso tiene un campo `fixed_price`
+            }
+        } else {
+            Log::debug("Invalid course type: $courseType");
+            return $totalPrice;
+        }
+
+        // Calcular los extras y sumarlos
+        $extrasPrice = $this->calculateExtrasPrice($bookingUser);
+        $totalPrice += $extrasPrice;
+
+        return ['priceWithoutExtras' => $totalPrice - $extrasPrice,
+            'totalPrice' => $totalPrice,
+            'extrasPrice' => $extrasPrice];
+    }
+
+    function calculateFixedCollectivePrice($bookingUser)
+    {
+        $course = $bookingUser->course;
+
+        // Agrupar BookingUsers por participante (course_id, participant_id)
+        $participants = BookingUser::select(
+            'client_id',
+            DB::raw('COUNT(*) as total_bookings'), // Contar cuántos BookingUsers tiene cada participante
+            DB::raw('SUM(price) as total_price') // Sumar el precio total por participante
+        )
+            ->where('course_id', $course->id)
+            ->where('client_id', $bookingUser->client_id)
+            ->groupBy('client_id')
+            ->get();
+
+
+        // Tomar el precio del curso para cada participante
+        return count($participants) ? $course->price : 0;
+    }
+
+    function calculateFlexibleCollectivePrice($bookingUser)
+    {
+        $course = $bookingUser->course;
+        $dates = BookingUser::where('course_id', $course->id)
+            ->where('client_id', $bookingUser->client_id)
+            ->pluck('date');
+
+        $totalPrice = 0;
+
+        foreach ($dates as $index => $date) {
+            $price = $course->price;
+
+            // Verificar si $course->discounts ya es un array, si no, decodificarlo
+            $discounts = is_array($course->discounts) ? $course->discounts : json_decode($course->discounts, true);
+
+            if (!empty($discounts)) {
+                foreach ($discounts as $discount) {
+                    if ($index + 1 == $discount['day']) {
+                        $price -= ($price * $discount['reduccion'] / 100);
+                        break;
+                    }
+                }
+            }
+
+            $totalPrice += $price;
+        }
+
+        return $totalPrice;
+    }
+
+    function calculatePrivatePrice($bookingUser, $priceRange)
+    {
+        $course = $bookingUser->course;
+        $groupId = $bookingUser->group_id;
+
+        // Agrupar BookingUsers por fecha, hora y monitor
+        $groupBookings = BookingUser::where('course_id', $course->id)
+            ->where('date', $bookingUser->date)
+            ->where('hour_start', $bookingUser->hour_start)
+            ->where('hour_end', $bookingUser->hour_end)
+            ->where('monitor_id', $bookingUser->monitor_id)
+            ->where('group_id', $groupId)
+            ->where('booking_id', $bookingUser->booking_id)
+            ->where('school_id', $bookingUser->school_id)
+            ->where('status', 1)
+            ->count();
+
+        $duration = Carbon::parse($bookingUser->hour_end)->diffInMinutes(Carbon::parse($bookingUser->hour_start));
+        $interval = $this->getIntervalFromDuration($duration); // Función para mapear duración al intervalo (e.g., "1h 30m").
+
+        // Buscar el precio en el price range
+        $priceForInterval = collect($priceRange)->firstWhere('intervalo', $interval);
+        $pricePerParticipant = $priceForInterval[$groupBookings] ?? null;
+
+        if (!$pricePerParticipant) {
+            Log::debug("Precio no definido curso $course->id para $groupBookings participantes en intervalo $interval");
+            return 0;
+        }
+
+        // Calcular extras
+        $extraPrices = $bookingUser->bookingUserExtras->sum(function ($extra) {
+            return $extra->price;
+        });
+
+        // Calcular precio total
+        $totalPrice = $pricePerParticipant + $extraPrices;
+
+        return $totalPrice;
+    }
+    function getIntervalFromDuration($duration)
+    {
+        $mapping = [
+            15 => "15m",
+            30 => "30m",
+            45 => "45m",
+            60 => "1h",
+            75 => "1h 15m",
+            90 => "1h 30m",
+            120 => "2h",
+            180 => "3h",
+            240 => "4h",
+        ];
+
+        return $mapping[$duration] ?? null;
+    }
+
+    function calculateExtrasPrice($bookingUser)
+    {
+        $extras = $bookingUser->bookingUserExtras; // Relación con BookingUserExtras
+
+        $totalExtrasPrice = 0;
+        foreach ($extras as $extra) {
+            //  Log::debug('extra price:'. $extra->courseExtra->price);
+            $extraPrice = $extra->courseExtra->price ?? 0;
+            $totalExtrasPrice += $extraPrice;
+        }
+
+        return $totalExtrasPrice;
+    }
+
+// Método para procesar un curso completo (usado para cursos privados)
+    private function processCourse($course, $bookingusersReserved, $monitorsGrouped, $startDate, $endDate)
+    {
+        // Inicializar estructura de pagos
+        $payments = [
+            'cash' => 0,
+            'other' => 0,
+            'boukii' => 0,
+            'boukii_web' => 0,
+            'online' => 0,
+            'vouchers' => 0,
+            'no_paid' => 0,
+            'web' => 0,
+            'admin' => 0,
+        ];
+
+        $extrasByCourse = 0;
+        $courseTotal = 0;
+
+        // Calcular la disponibilidad
+        $availability = $this->getCourseAvailability($course, $monitorsGrouped, $startDate, $endDate);
+
+        // Procesar pagos y totales
+        foreach ($bookingusersReserved->groupBy('booking_id') as $bookingId => $bookingGroupedUsers) {
+            $bookingTotal = 0;
+            $booking = $bookingGroupedUsers->first()->booking;
+            if ($booking->status == 2) continue;
+
+            // Calcular totales para cursos privados
+            $groupedBookingUsers = $bookingGroupedUsers
+                ->whereBetween('date', [$startDate, $endDate])
+                ->groupBy(function ($bookingUser) {
+                    return $bookingUser->date . '|' . $bookingUser->hour_start . '|' . $bookingUser->hour_end . '|' .
+                        $bookingUser->monitor_id . '|' . $bookingUser->group_id . '|' . $bookingUser->booking_id;
+                });
+
+            foreach ($groupedBookingUsers as $groupKey => $bookingUsers) {
+                $groupTotal = 0;
+                foreach ($bookingUsers as $bookingUser) {
+                    $total = $this->calculateTotalPrice($bookingUser);
+                    $groupTotal += $total['totalPrice'];
+                    $extrasByCourse += $total['extrasPrice'];
+                }
+                $courseTotal += $groupTotal;
+                $bookingTotal += $groupTotal;
+            }
+
+            // Sumar los pagos
+            $paymentType = $booking->payment_method_id;
+            if (!$booking->paid) {
+                $payments['no_paid'] += $bookingTotal;
+            } else {
+                if ($booking->vouchersLogs()->exists()) {
+                    $payments['vouchers'] += $bookingTotal;
+                } else {
+                    switch ($paymentType) {
+                        case Booking::ID_CASH:
+                            $payments['cash'] += $bookingTotal;
+                            break;
+                        case Booking::ID_OTHER:
+                            $payments['other'] += $bookingTotal;
+                            break;
+                        case Booking::ID_BOUKIIPAY:
+                            if ($booking->source === 'web') {
+                                $payments['boukii_web'] += $bookingTotal;
+                            } else {
+                                $payments['boukii'] += $bookingTotal;
+                            }
+                            break;
+                        case Booking::ID_ONLINE:
+                            $payments['online'] += $bookingTotal;
+                            break;
+                    }
+                }
+            }
+        }
+
+        // Procesar fuente de reservas (web/admin)
+        $bookingUsersGrouped = $course->bookingUsersActive->groupBy('client_id');
+        foreach ($bookingUsersGrouped as $clientBookingUsers) {
+            $booking = $clientBookingUsers->first()->booking;
+            $source = $booking->source;
+
+            $bookingUsersCount = $clientBookingUsers->count();
+            $bookingUsersCount = !$course->is_flexible ? $bookingUsersCount / max(1, $course->courseDates->count()) : $bookingUsersCount;
+
+            if (isset($payments[$source])) {
+                $payments[$source] += $bookingUsersCount;
+            } else {
+                $payments[$source] = $bookingUsersCount;
+            }
+        }
+
+        // Obtener la configuración de moneda
+        $currency = $course && $course->currency ? $course->currency : 'CHF';
+
+        // Retornar resultado para este curso
+        return [
+            'course_id' => $course->id,
+            'icon' => $course->icon,
+            'name' => $course->name,
+            'total_places' => $course->course_type == 1 ? round($availability['total_places']) : 'NDF',
+            'booked_places' => $course->course_type == 1 ?
+                round($availability['total_reservations_places']) : round($payments['web']) + round($payments['admin']),
+            'available_places' => $course->course_type == 1 ?
+                round($availability['total_available_places']) : 'NDF',
+            'cash' => round($payments['cash']),
+            'other' => round($payments['other']),
+            'boukii' => round($payments['boukii']),
+            'boukii_web' => round($payments['boukii_web']),
+            'online' => round($payments['online']),
+            'extras' => round($extrasByCourse),
+            'vouchers' => round($payments['vouchers']),
+            'no_paid' => round($payments['no_paid']),
+            'web' => round($payments['web']),
+            'admin' => round($payments['admin']),
+            'currency' => $currency,
+            'total_cost' => round($courseTotal),
+        ];
+    }
+
+// Método para calcular la disponibilidad de un grupo específico
+    private function getGroupAvailability($group, $monitorsGrouped, $startDate, $endDate)
+    {
+        // Implementar lógica para calcular la disponibilidad específica del grupo
+        // Similar a getCourseAvailability pero enfocado en un solo grupo
+        // Puedes adaptar esta función según tus necesidades específicas
+
+        $totalPlaces = $group->max_students ?? 0;
+        $totalReservationsPlaces = $group->bookingUsers()
+            ->whereBetween('date', [$startDate, $endDate])
+            ->count();
+
+        $totalAvailablePlaces = max(0, $totalPlaces - $totalReservationsPlaces);
+
+        return [
+            'total_places' => $totalPlaces,
+            'total_reservations_places' => $totalReservationsPlaces,
+            'total_available_places' => $totalAvailablePlaces
+        ];
     }
 
 }
