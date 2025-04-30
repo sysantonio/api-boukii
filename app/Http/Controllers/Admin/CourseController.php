@@ -401,6 +401,7 @@ class CourseController extends AppBaseController
 
             // Crear las fechas y grupos
             if ($course->course_type === 1) {
+                $hasWeekDays = is_array($weekDays) && count(array_filter($weekDays)) > 0;
                 foreach ($courseData['course_dates'] as $dateData) {
                     // Validar o calcular hour_end
                     if (empty($dateData['hour_end']) && !empty($dateData['duration'])) {
@@ -410,7 +411,7 @@ class CourseController extends AppBaseController
                         return $this->sendError('Either hour_end or duration must be provided.');
                     }
 
-                    if ($weekDays) {
+                    if ($hasWeekDays) {
                         $date = new \DateTime($dateData['date']);
                         $dayOfWeek = strtolower($date->format('l')); // Get the day of the week in lowercase
 
