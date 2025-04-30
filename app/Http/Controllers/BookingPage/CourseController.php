@@ -73,12 +73,12 @@ class CourseController extends SlugAuthController
         $endDate = $endDate->format('Y-m-d');
 
         $type = $request->has('course_type') ? $request->input('course_type') : null;
-        $sportId = $request->input('sport_id') ?? 1;
+        $sportId = $request->input('sport_id') ?? null;
         $minAge = $request->input('min_age') ?? null;
         $maxAge = $request->input('max_age') ?? null;
         $clientId = $request->input('client_id');
         $degreeOrder = $request->input('degree_order');
-        $highlighted = $request->input('highlighted') ?? false;
+        $highlighted = $request->input('highlighted') ?? null;
         $degreeOrderArray = [];
         if($degreeOrder) {
             $degreeOrderArray = explode(',', $degreeOrder);
@@ -96,7 +96,9 @@ class CourseController extends SlugAuthController
                     ->where('school_id', $this->school->id)
                     ->where('online', 1)
                     ->where('active', 1)
-                    ->where('highlighted', $highlighted)
+                    ->when(isset($highlighted), function ($query) use ($highlighted) {
+                        return $query->where('highlighted', $highlighted);
+                    })
                     ->where(function($query) use ($today) {
                         $query->where(function($subquery) use ($today) {
                             $subquery->whereNull('date_start_res')

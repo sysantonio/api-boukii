@@ -6,12 +6,22 @@ use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\API\CreateSchoolAPIRequest;
 use App\Http\Requests\API\UpdateSchoolAPIRequest;
 use App\Http\Resources\API\SchoolResource;
+use App\Models\Degree;
 use App\Models\School;
+use App\Models\SchoolColor;
 use App\Models\SchoolSport;
+use App\Models\SchoolUser;
+use App\Models\Season;
+use App\Models\Station;
+use App\Models\StationsSchool;
+use App\Models\User;
 use App\Repositories\SchoolRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class SchoolController
@@ -109,6 +119,179 @@ class SchoolAPIController extends AppBaseController
         $school = $this->schoolRepository->create($input);
 
         return $this->sendResponse($school, 'School saved successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/schools",
+     *      summary="createSchool",
+     *      tags={"School"},
+     *      description="Create School",
+     *      @OA\RequestBody(
+     *        required=true,
+     *        @OA\JsonContent(ref="#/components/schemas/School")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(
+     *                  property="success",
+     *                  type="boolean"
+     *              ),
+     *              @OA\Property(
+     *                  property="data",
+     *                  ref="#/components/schemas/School"
+     *              ),
+     *              @OA\Property(
+     *                  property="message",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     */
+    public function storeFull(Request $request): JsonResponse
+    {
+        $defaultSchool = School::find(2); // Cambiado a escuela 2 como default
+        DB::beginTransaction();
+        $description = $request->input('description', $defaultSchool?->description ?? 'École sans description');
+        // Generar slug a partir del nombre
+        $name = $request->input('name', 'École sans nom');
+        $slug = Str::slug($name);
+        try {
+            // 1. Crear nueva escuela
+            $school = School::create(array_merge([
+                'type' => 1,
+                'active' => 1,
+                'settings' => $defaultSchool?->settings,
+                'name' => $name,
+                'slug' => $slug,
+                'description' => $description,
+            ], $request->only([
+                'logo',
+                'contact_email', 'contact_phone', 'contact_telephone',
+                'contact_address', 'contact_cp', 'contact_city', 'contact_province', 'contact_country',
+                'fiscal_name', 'fiscal_address', 'fiscal_cp', 'fiscal_city', 'fiscal_province', 'fiscal_country',
+                'iban', 'cancellation_insurance_percent', 'bookings_comission_cash',
+                'bookings_comission_boukii_pay', 'bookings_comission_other', 'school_rate',
+                'has_ski', 'has_snowboard', 'has_telemark', 'has_rando', 'inscription'
+            ])));
+
+            // 2. Relacionar deporte Ski (ID 1)
+            SchoolSport::create([
+                'sport_id' => 1,
+                'school_id' => $school->id,
+            ]);
+
+            // 3. Copiar degrees desde escuela 2
+            $degrees = Degree::where('school_id', 2)->get();
+            foreach ($degrees as $degree) {
+                Degree::create($degree->replicate()->fill([
+                    'school_id' => $school->id,
+                ])->toArray());
+            }
+
+            // 4. Copiar school_colors
+            $colors = SchoolColor::where('school_id', 2)->get();
+            foreach ($colors as $color) {
+                SchoolColor::create($color->replicate()->fill([
+                    'school_id' => $school->id,
+                ])->toArray());
+            }
+
+            // 5. Crear usuarios
+            $adminEmail = $request->input('admin_email', $school->contact_email);
+            $schoolSlug = strtolower(Str::slug($school->name));
+            $boukiiEmail = 'boukiiteam' . $schoolSlug . '@gmail.com';
+
+            $user1 = User::create([
+                'first_name' => $request->input('admin_first_name', 'Admin'),
+                'last_name' => $request->input('admin_last_name', 'User'),
+                'username' => Str::before($adminEmail, '@'),
+                'email' => $adminEmail,
+                'password' => Hash::make('School' . date('Y') . '!'),
+                'type' => 1,
+                'active' => 1
+            ]);
+
+            $user2 = User::create([
+                'first_name' => 'Boukii Team ' . $school->name,
+                'last_name' => '',
+                'username' => 'boukiiteam' . $schoolSlug,
+                'email' => $boukiiEmail,
+                'password' => Hash::make('Boukii' . date('Y') . '!'),
+                'type' => 1,
+                'active' => 1
+            ]);
+
+            foreach ([$user1, $user2] as $user) {
+                SchoolUser::create([
+                    'user_id' => $user->id,
+                    'school_id' => $school->id,
+                ]);
+            }
+
+            // 6. Crear season
+            Season::create([
+                'name' => $request->input('season_name', 'Temporada 1'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'is_active' => true,
+                'hour_start' => $request->input('hour_start', '09:00:00'),
+                'hour_end' => $request->input('hour_end', '18:00:00'),
+                'vacation_days' => json_encode([]),
+                'school_id' => $school->id,
+            ]);
+
+            // 7. Crear estación
+            $station = Station::create([
+                'name' => $request->input('station_name', $school->name),
+                'cp' => $request->input('station_cp', $school->contact_cp),
+                'city' => $request->input('station_city', $school->contact_city),
+                'country' => $request->input('station_country', $school->contact_country),
+                'province' => $request->input('station_province', $school->contact_province),
+                'address' => $request->input('station_address', $school->contact_address),
+                'image' => $request->input('station_image', ''),
+                'map' => $request->input('station_map', ''),
+                'latitude' => $request->input('station_latitude', '0.000000'),
+                'longitude' => $request->input('station_longitude', '0.000000'),
+                'show_details' => $request->input('station_show_details', true),
+                'active' => $request->input('station_active', true),
+                'accuweather' => $request->input('station_accuweather', null),
+                'num_hanger' => $request->input('num_hanger', 0),
+                'num_chairlift' => $request->input('num_chairlift', 0),
+                'num_cabin' => $request->input('num_cabin', 0),
+                'num_cabin_large' => $request->input('num_cabin_large', 0),
+                'num_fonicular' => $request->input('num_fonicular', 0),
+            ]);
+
+            StationsSchool::create([
+                'station_id' => $station->id,
+                'school_id' => $school->id,
+            ]);
+
+            // 8. Guardar Payrexx si viene
+            if ($request->filled('payrexx')) {
+                $school->payrexx = encrypt($request->input('payrexx'));
+                $school->save();
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Escuela creada correctamente',
+                'school' => $school,
+                'users' => [$user1->email => 'School' . date('Y') . '!', $user2->email => 'Boukii' . date('Y') . '!']
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al crear la escuela',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

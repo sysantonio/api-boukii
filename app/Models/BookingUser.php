@@ -424,6 +424,12 @@ class BookingUser extends Model
         return $query->where('monitor_id', $monitor);
     }
 
+    // En BookingUser.php
+    public function scopeOnlyWeekends($query)
+    {
+        return $query->whereRaw('WEEKDAY(date) IN (5, 6)');
+    }
+
     public static function hasOverlappingBookings($bookingUser, $bookingUserIds)
     {
 

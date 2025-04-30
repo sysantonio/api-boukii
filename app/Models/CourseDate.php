@@ -19,6 +19,18 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          nullable=false
  *      ),
  *      @OA\Property(
+ *           property="interval_id",
+ *           description="ID of the interval",
+ *           type="integer",
+ *           nullable=true
+ *       ),
+ *      @OA\Property(
+ *            property="order",
+ *            description="ID order of the interval",
+ *            type="integer",
+ *            nullable=true
+ *        ),
+ *      @OA\Property(
  *          property="date",
  *          description="Date of the course session",
  *          type="string",
@@ -78,6 +90,8 @@ class CourseDate extends Model
         'date',
         'hour_start',
         'hour_end',
+        'interval_id',
+        'order',
         'active'
     ];
 
@@ -90,6 +104,8 @@ class CourseDate extends Model
         'date' => 'required',
         'hour_start' => 'required',
         'hour_end' => 'required',
+        'interval_id' => 'nullable',
+        'order' => 'nullable',
         'active' => 'boolean',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
@@ -150,6 +166,11 @@ class CourseDate extends Model
     public function getHourEndAttribute($value)
     {
         return $value ? \Carbon\Carbon::createFromFormat('H:i:s', $value)->format('H:i') : null; // Manejar valor null
+    }
+
+    public function scopeOnlyWeekends($query)
+    {
+        return $query->whereRaw('WEEKDAY(date) IN (5, 6)');
     }
 
     public function course(): \Illuminate\Database\Eloquent\Relations\BelongsTo

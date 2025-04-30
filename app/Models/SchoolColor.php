@@ -35,6 +35,14 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *            type="boolean",
  *            nullable=false
  *        ),
+ *           @OA\Property(
+ *           property="price",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="number",
+ *           format="number"
+ *       ),
  *      @OA\Property(
  *          property="created_at",
  *          description="",
@@ -69,7 +77,8 @@ class SchoolColor extends Model
         'school_id',
         'name',
         'color',
-        'default'
+        'default',
+        'price'
     ];
 
     protected $casts = [
@@ -83,6 +92,7 @@ class SchoolColor extends Model
         'name' => 'required|string|max:100',
         'color' => 'nullable|string|max:45',
         'default' => 'nullable',
+        'price' => 'nullable',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'

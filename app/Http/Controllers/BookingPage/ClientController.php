@@ -98,7 +98,7 @@ class ClientController extends SlugAuthController
      */
     public function getUtilizers($id, Request $request): JsonResponse
     {
-        $mainClient = Client::with('utilizers')->find($id);
+        $mainClient = Client::with('utilizers.clientSports.degree')->find($id);
 
         $utilizers = $mainClient->utilizers;
 
@@ -164,10 +164,40 @@ class ClientController extends SlugAuthController
             'province' => $mainClient->province,
             'country' => $mainClient->country,
             'station_id' => $mainClient->station_id,
+            'password' => bcrypt(Str::random(8)),
             'language1_id' => $request->input('language1_id')
         ]);
 
+
+
         // Guarda el nuevo cliente en la base de datos
+        $newClient->save();
+
+        ClientsSchool::create([
+            'client_id' => $newClient->id,
+            'school_id' => $this->school->id
+        ]);
+
+        $newUser = new User([
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'birth_date' => $request->input('birth_date'),
+            'email' => $mainClient->email,
+            'phone' => $mainClient->phone,
+            'telephone' => $mainClient->email,
+            'address' => $mainClient->address,
+            'cp' => $mainClient->cp,
+            'city' => $mainClient->city,
+            'province' => $mainClient->province,
+            'country' => $mainClient->country,
+            'station_id' => $mainClient->station_id,
+            'password' => bcrypt(Str::random(8)),
+            'language1_id' => $request->input('language1_id')
+            ]
+        );
+        $newUser->type = 'client';
+        $newUser->save();
+        $newClient->user_id = $newUser->id;
         $newClient->save();
 
         // Crea un registro en ClientsUtilizer con la main_id y client_id

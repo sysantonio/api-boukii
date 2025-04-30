@@ -134,57 +134,43 @@ class BookingController extends SlugAuthController
                     $bookingUser->save();
                     $bookingUsers[] = $bookingUser;
 
-                    if (isset($detail['extra']) && isset($detail['extra']['id'])) {
-                        $tva = $detail['extra']['tva'] ?? 0;
-                        $price = $detail['extra']['price'] ?? 0;
-
-                        // Calcular el precio con el TVA
-                        $priceWithTva = $price + ($price * ($tva / 100));
-
-                        $courseExtra = new CourseExtra([
-                            'course_id' => $detail['course_id'],
-                            'name' => $detail['extra']['id'],
-                            'description' => $detail['extra']['id'],
-                            'price' => $priceWithTva,
-                        ]);
-
-                        $courseExtra->save();
-
-                        BookingUserExtra::create([
-                            'booking_user_id' => $bookingUser->id,
-                            'course_extra_id' => $courseExtra->id,
-                        ]);
+                    if (isset($detail['extra']) && is_array($detail['extra'])) {
+                        foreach ($detail['extra'] as $extra) {
+                            BookingUserExtra::create([
+                                'booking_user_id' => $bookingUser->id,
+                                'course_extra_id' => $extra['id'],
+                                'quantity' => 1
+                            ]);
+                        }
                     }
                 }
                 $groupId++; // Incrementar el `group_id` para el siguiente `cartItem`
             }
             $booking->deleted_at = now();
-            // Actualizar VouchersLog y el cupón si es necesario
-            if ($data['voucherAmount'] > 0) {
-                $voucher = Voucher::find($request->voucher['id']);
-/*                $voucher->remaining_balance -= $data['voucherAmount'];
-                $voucher->save();*/
 
-                VouchersLog::create([
-                    'voucher_id' => $voucher->id,
-                    'booking_id' => $booking->id,
-                    'amount' => $data['voucherAmount'],
-                    'status' => $data['voucherAmount'] >= $data['price_total'] ? null : 'pending',
-                ]);
+            if (!empty($data['vouchers'])) {
+                foreach ($data['vouchers'] as $voucherData) {
+                    $voucher = Voucher::find($voucherData['id']);
+                    if ($voucher) {
+                        $remaining_balance = $voucher->remaining_balance - $voucherData['reducePrice'];
+                        $voucher->update(['remaining_balance' => $remaining_balance, 'payed' => $remaining_balance <= 0]);
 
-                // Si el voucher cubre el monto total de la reserva
+                        VouchersLog::create([
+                            'voucher_id' => $voucher->id,
+                            'booking_id' => $booking->id,
+                            'amount' => $voucherData['reducePrice']
+                        ]);
+                    }
+                }
                 if ($data['voucherAmount'] >= $data['price_total']) {
                     $booking->deleted_at = null;
 
-                    $voucher->remaining_balance -= $data['voucherAmount'];
-                    $voucher->save();
                     $booking->paid = true;
                     foreach ($bookingUsers as $bookingUser) {
                         $bookingUser->deleted_at = null;
                         $bookingUser->save();
                     }
                 }
-
             }
             $booking->save();
             $client = Client::find($data['client_main_id'])->load('user');

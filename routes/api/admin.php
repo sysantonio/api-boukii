@@ -27,6 +27,8 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
     Route::get('/courses/{id}/export/{lang}', [App\Http\Controllers\Admin\CourseController::class, 'exportDetails']);
 
+    Route::get('/courses/{id}/sells/', [App\Http\Controllers\Admin\CourseController::class, 'getSellStats']);
+
     Route::get('getPlanner', [\App\Http\Controllers\Admin\PlannerController::class, 'getPlanner'])
         ->name('api.admin.planner');
 

@@ -378,7 +378,7 @@ class ClientAPIController extends AppBaseController
                 $groups = $courseDate->courseGroups->where('degree_id', $targetGroup->degree_id);
 
                 foreach ($groups as $group) {
-                    if (Carbon::parse($courseDate->date)->gte($today)) {
+                    /*if (Carbon::parse($courseDate->date)->gte($today)) {*/
                         //** Removed subgroups length, not seems to be reasonable with new features. */
                         /*if ($group->courseSubgroups->count() == $initialGroup->courseSubgroups->count()) {*/
 
@@ -398,7 +398,7 @@ class ClientAPIController extends AppBaseController
                                                     Log::error('Sned count '. $group->courseSubgroups->count() );
                                                     return $this->sendError('Some groups are not identical length');
                                                 }*/
-                    }
+                   /* }*/
 
                 }
 
@@ -407,7 +407,10 @@ class ClientAPIController extends AppBaseController
             $this->moveUsers($initialSubgroup, $targetSubgroup, $request->clientIds);
         }
         DB::commit();
-        return $this->sendResponse($subgroupsChanged, 'Clients transfer successfully');
+        if(count($subgroupsChanged)) {
+            return $this->sendResponse($subgroupsChanged, 'Clients transfer successfully');
+        }
+        return $this->sendError('No groups changed');
     }
 
 

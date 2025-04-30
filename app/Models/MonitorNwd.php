@@ -88,6 +88,14 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          nullable=true
  *      ),
  *      @OA\Property(
+ *           property="price",
+ *           description="",
+ *           readOnly=false,
+ *           nullable=false,
+ *           type="number",
+ *           format="number"
+ *       ),
+ *      @OA\Property(
  *          property="created_at",
  *          description="Creation timestamp",
  *          type="string",
@@ -126,7 +134,8 @@ class MonitorNwd extends Model
         'default',
         'description',
         'color',
-        'user_nwd_subtype_id'
+        'user_nwd_subtype_id',
+        'price'
     ];
 
     protected $casts = [
@@ -148,6 +157,7 @@ class MonitorNwd extends Model
         'end_time' => 'nullable',
         'full_day' => 'required|boolean',
         'default' => 'nullable',
+        'price' => 'nullable',
         'description' => 'nullable|string|max:65535',
         'color' => 'nullable|string|max:45',
         'user_nwd_subtype_id' => 'nullable',
@@ -169,6 +179,12 @@ class MonitorNwd extends Model
     public function station(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Station::class, 'station_id');
+    }
+
+    // En BookingUser.php
+    public function scopeOnlyWeekends($query)
+    {
+        return $query->whereRaw('WEEKDAY(start_date) IN (5, 6)');
     }
 
     public function getActivitylogOptions(): LogOptions

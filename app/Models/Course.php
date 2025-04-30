@@ -385,6 +385,23 @@ class Course extends Model
         return $rules;
     }
 
+    /**
+     * Get the settings as an array or null if invalid.
+     */
+    public function getSettingsAttribute($value)
+    {
+        return $this->getJsonOrNull($value);
+    }
+
+    /**
+     * Helper function to return the JSON or null.
+     */
+    private function getJsonOrNull($value)
+    {
+        $decoded = json_decode($value, true);
+        return (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
+    }
+
     public function sport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Sport::class, 'sport_id');
@@ -444,13 +461,13 @@ class Course extends Model
 
     public function courseDates(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(\App\Models\CourseDate::class, 'course_id');
+        return $this->hasMany(\App\Models\CourseDate::class, 'course_id')->orderBy('date', 'asc');
     }
 
     public function courseDatesActive(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\CourseDate::class, 'course_id')
-            ->where('active', 1);
+            ->where('active', 1)->orderBy('date', 'asc');
     }
 
 
@@ -627,7 +644,10 @@ class Course extends Model
         $clientLanguages = [];
         $clientAges = [];
 
-        $query->where('sport_id', $sportId);
+        if($sportId) {
+            $query->where('sport_id', $sportId);
+        }
+
 
         // Si se proporcionó clientId, obtener los detalles del cliente
         if ($clientId) {
