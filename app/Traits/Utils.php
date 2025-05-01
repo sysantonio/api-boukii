@@ -137,12 +137,12 @@ trait Utils
 
                 $nwds = MonitorNwd::where('start_date', $courseDate->date)
                     ->where('user_nwd_subtype_id', 2)
-                    ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    ->whereIn('monitor_id', collect($monitorsGrouped[$course->sport_id] ?? [])->pluck('id'))
                     ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
                     ->get();
 
                 $bookingUsers = BookingUser::whereIn('monitor_id',
-                    collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    collect($monitorsGrouped[$course->sport_id] ?? [])->pluck('id'))
                     ->where('date', $courseDate->date)
                     ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
                     ->where('course_id', $course->id) ->whereHas('booking', function ($query) {
@@ -151,7 +151,7 @@ trait Utils
                     ->get();
 
                 $bookingUsersOtherCourses = BookingUser::whereIn('monitor_id',
-                    collect($monitorsGrouped[$course->sport_id])->pluck('id'))
+                    collect($monitorsGrouped[$course->sport_id] ?? [])->pluck('id'))
                     ->whereHas('booking', function ($query) {
                         $query->where('status', '!=', 2); // La Booking no debe tener status 2
                     })->where('status', 1)
