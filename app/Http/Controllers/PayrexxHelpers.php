@@ -529,6 +529,8 @@ class PayrexxHelpers
             }
 
             Log::channel('payrexx')->info('Link prepared amount: '. $totalAmount);
+            Log::channel('payrexx')->info('Payrex Intstance: '. $schoolData->getPayrexxInstance());
+            Log::channel('payrexx')->info('Payrexx key: '. $schoolData->getPayrexxKey());
 
             // Launch it
             $payrexx = new Payrexx(
