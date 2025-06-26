@@ -8,6 +8,8 @@ use App\Models\MonitorNwd;
 use App\Models\Season;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 trait Utils
 {
@@ -84,37 +86,66 @@ trait Utils
                 }
                 $totalAvailablePlaces = $totalPlaces - $totalBookingsPlaces;
             } else {
-                // Verificar si $dates no está vacío
-                if (!empty($dates) && isset($dates[0]->courseSubgroups[0])) {
-                    $bookings = $course->bookingUsers()->where('status', 1)->whereHas('booking', function ($query) {
-                        $query->where('status', '!=', 2); // Excluir reservas canceladas
-                    })->whereBetween('date', [$startDate, $endDate])
-                        ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
-                        ->get();
+                // ✅ VERIFICAR QUE DATES NO ESTÉ VACÍO ANTES DE ACCEDER
+                if ($dates->count() > 0) {
+
+                    // ✅ VERIFICAR QUE TENGA SUBGRUPOS
+                    $firstDate = $dates->first();
+                    if ($firstDate->courseSubgroups && $firstDate->courseSubgroups->count() > 0) {
+
+                        $bookings = $course->bookingUsers()->where('status', 1)
+                            ->whereHas('booking', function ($query) {
+                                $query->where('status', '!=', 2);
+                            })
+                            ->whereBetween('date', [$startDate, $endDate])
+                            ->when($onlyWeekends, fn($q) => $q->onlyWeekends())
+                            ->get();
+
+                        $totalBookingsPlaces += $bookings->count() / $dates->count();
+
+                        $hoursTotalDate = $this->convertSecondsToHours(
+                                $this->convertTimeRangeToSeconds($firstDate->hour_start, $firstDate->hour_end)
+                            ) * $firstDate->courseSubgroups->first()->max_participants * $firstDate->courseSubgroups->count();
+
+                        $hoursTotalBooked = $this->convertSecondsToHours(
+                                $this->convertTimeRangeToSeconds($firstDate->hour_start, $firstDate->hour_end)
+                            ) * $totalBookingsPlaces;
+
+                        $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
+                        $totalAvailableHours += $totalHoursAvailable;
+                        $totalHours += $hoursTotalDate;
+                        $totalPlaces += $firstDate->courseSubgroups->first()->max_participants * $firstDate->courseSubgroups->count();
 
 
-                    $totalBookingsPlaces += $bookings->count() / $dates->count();
-                    //dd($startDate);
-                    $hoursTotalDate = $this->convertSecondsToHours(
-                            $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
-                        ) * $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
-                    $hoursTotalBooked = $this->convertSecondsToHours(
-                            $this->convertTimeRangeToSeconds($dates[0]->hour_start, $dates[0]->hour_end)
-                        ) * $totalBookingsPlaces;
-                    $totalHoursAvailable = $hoursTotalDate - $hoursTotalBooked;
-                    $totalAvailableHours += $totalHoursAvailable;
-                    $totalHours += $hoursTotalDate;
-                    $totalPlaces += $dates[0]->courseSubgroups[0]->max_participants * count($dates[0]->courseSubgroups);
-                   // $totalAvailablePlaces += max(0, $totalPlaces - $totalBookingsPlaces);
+                    } else {
+                        \Log::warning("No subgroups found for course {$course->id}");
+                        // Sin subgrupos, no hay disponibilidad
+                        $totalHours = 0;
+                        $totalPlaces = 0;
+                        $totalAvailablePlaces = 0;
+                        $totalHoursAvailable = 0;
+                    }
                 } else {
-                    // Manejo de error: $dates está vacío o no tiene subgrupos
-                    // Puedes registrar un log, lanzar una excepción o asignar valores por defecto.
+                    \Log::warning("No dates found after filter for course {$course->id}");
 
-                    $totalHours += 0;
-                    $totalPlaces += 0;
-                    $totalAvailablePlaces += 0;
-                    $totalHoursAvailable += 0;
+                    // ✅ DEBUG: ¿POR QUÉ NO HAY FECHAS?
+                    \Log::info("Checking why dates are filtered out:");
+                    foreach ($course->courseDates as $courseDate) {
+                        $dateCarbon = Carbon::parse($courseDate->date);
+                        $isInRange = $dateCarbon->between($startDate, $endDate);
+                        $isWeekend = in_array($dateCarbon->dayOfWeek, [CarbonInterface::SATURDAY, CarbonInterface::SUNDAY]);
+                        $passesFilter = $isInRange && (!$onlyWeekends || $isWeekend);
+
+                        \Log::info("Date {$courseDate->date}: in_range={$isInRange}, is_weekend={$isWeekend}, passes_filter={$passesFilter}");
+                    }
+
+                    // Sin fechas válidas, no hay disponibilidad
+                    $totalHours = 0;
+                    $totalPlaces = 0;
+                    $totalAvailablePlaces = 0;
+                    $totalHoursAvailable = 0;
                 }
+
                 $totalAvailablePlaces = $totalPlaces - $totalBookingsPlaces;
             }
 
@@ -441,5 +472,134 @@ trait Utils
     }
 
 
+    public function calculateTotalPrice(BookingUser $bookingUser, ?Collection $bookingGroupedUsers = null): array
+    {
+        $course = $bookingUser->course;
+        $courseType = $course->course_type;
+        $isFlexible = $course->is_flexible;
+
+        $totalPrice = 0;
+
+        if ($courseType === 1) { // Colectivo
+            $totalPrice = $isFlexible
+                ? $this->calculateFlexibleCollectivePrice($bookingUser, $bookingGroupedUsers)
+                : $this->calculateFixedCollectivePrice($bookingUser);
+
+        } elseif ($courseType === 2) { // Privado
+            $totalPrice = $isFlexible
+                ? $this->calculatePrivatePrice($bookingUser, $course->price_range ?? [])
+                : ($course->price ?? 0);
+        } else {
+            Log::warning("Tipo de curso inválido: {$courseType}");
+            return [
+                'priceWithoutExtras' => 0,
+                'totalPrice' => 0,
+                'extrasPrice' => 0,
+                'cancellationInsurancePrice' => 0,
+            ];
+        }
+
+        $extrasPrice = $this->calculateExtrasPrice($bookingUser);
+        $cancellationInsurancesPrice = 0;
+
+        if ($bookingUser->booking && $bookingUser->booking->has_cancellation_insurance) {
+            $cancellationInsurancesPrice = ($totalPrice + $extrasPrice) * 0.10;
+        }
+
+        $finalPrice = $totalPrice + $extrasPrice + $cancellationInsurancesPrice;
+
+        return [
+            'priceWithoutExtras' => $totalPrice,
+            'totalPrice' => $finalPrice,
+            'extrasPrice' => $extrasPrice,
+            'cancellationInsurancePrice' => $cancellationInsurancesPrice,
+        ];
+    }
+
+    public function calculateFixedCollectivePrice(BookingUser $bookingUser): float
+    {
+        return $bookingUser->course->price ?? 0;
+    }
+
+    public function calculateFlexibleCollectivePrice(BookingUser $bookingUser, ?Collection $bookingGroupedUsers = null): float
+    {
+        $course = $bookingUser->course;
+
+        $dates = $bookingGroupedUsers
+            ? $bookingGroupedUsers->where('client_id', $bookingUser->client_id)->pluck('date')->unique()
+            : BookingUser::where('course_id', $course->id)
+                ->where('client_id', $bookingUser->client_id)
+                ->pluck('date')
+                ->unique();
+
+        $discounts = is_array($course->discounts) ? $course->discounts : json_decode($course->discounts ?? '[]', true);
+
+        $total = 0;
+        foreach ($dates as $i => $date) {
+            $price = $course->price;
+
+            foreach ($discounts as $discount) {
+                if (($i + 1) === (int) $discount['day']) {
+                    $price -= ($price * ((float)$discount['reduccion'] / 100));
+                    break;
+                }
+            }
+
+            $total += $price;
+        }
+
+        return $total;
+    }
+
+    public function calculatePrivatePrice(BookingUser $bookingUser, array $priceRange): float
+    {
+        $course = $bookingUser->course;
+
+        $groupCount = BookingUser::where('course_id', $course->id)
+            ->where('date', $bookingUser->date)
+            ->where('hour_start', $bookingUser->hour_start)
+            ->where('hour_end', $bookingUser->hour_end)
+            ->where('monitor_id', $bookingUser->monitor_id)
+            ->where('group_id', $bookingUser->group_id)
+            ->where('booking_id', $bookingUser->booking_id)
+            ->where('school_id', $bookingUser->school_id)
+            ->where('status', 1)
+            ->count();
+
+        $duration = Carbon::parse($bookingUser->hour_end)->diffInMinutes(Carbon::parse($bookingUser->hour_start));
+        $interval = $this->getIntervalFromDuration($duration);
+
+        $priceData = collect($priceRange)->firstWhere('intervalo', $interval);
+        $pricePerParticipant = $priceData[$groupCount] ?? null;
+
+        if (!$pricePerParticipant) {
+            Log::debug("Precio no definido para curso {$course->id} con $groupCount participantes en intervalo $interval");
+            return 0;
+        }
+
+        return $pricePerParticipant;
+    }
+
+    public function calculateExtrasPrice(BookingUser $bookingUser): float
+    {
+        return $bookingUser->bookingUserExtras->sum(function ($extra) {
+            return $extra->courseExtra->price ?? 0;
+        });
+    }
+
+    public function getIntervalFromDuration(int $duration): ?string
+    {
+        return [
+            15 => "15m",
+            30 => "30m",
+            45 => "45m",
+            60 => "1h",
+            75 => "1h 15m",
+            90 => "1h 30m",
+            120 => "2h",
+            180 => "3h",
+            240 => "4h",
+        ][$duration] ?? null;
+    }
 
 }

@@ -23,6 +23,7 @@ use App\Models\OldModels\UserSport;
 use App\Models\Station;
 use App\Models\StationService;
 use App\Models\User;
+use App\Traits\Utils;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -98,6 +99,38 @@ Route::any('/fix-subgroups', function () {
         }
     }
     return 'Subgroups fixed';
+});
+
+Route::get('/debug-booking-users', function () {
+    $from = '2025-01-01';
+    $to = '2025-06-30';
+    $schoolId = 2;
+
+    $users = BookingUser::whereHas('booking', function ($q) use ($schoolId) {
+        $q->where('school_id', $schoolId)->where('status', '!=', 'cancelled');
+    })
+        ->whereBetween('date', [$from, $to])
+        ->with(['course', 'booking', 'bookingUserExtras.courseExtra'])
+        ->get();
+
+    $debug = [];
+
+    foreach ($users as $user) {
+        $calc = (new class { use Utils; })->calculateTotalPrice($user);
+
+        $debug[] = [
+            'id' => $user->id,
+            'course_id' => $user->course_id,
+            'client_id' => $user->client_id,
+            'date' => $user->date,
+            'base' => $calc['priceWithoutExtras'],
+            'extras' => $calc['extrasPrice'],
+            'insurance' => $calc['cancellationInsurancePrice'],
+            'total' => $calc['totalPrice'],
+        ];
+    }
+
+    return response()->json($debug);
 });
 
 Route::any('/fix-bookings',
