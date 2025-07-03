@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\UpdateMonitorForSubgroup;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Cache;
 
 class Kernel extends ConsoleKernel
 {
@@ -21,7 +22,16 @@ class Kernel extends ConsoleKernel
             ->runInBackground();
         $schedule->job(new UpdateMonitorForSubgroup)->everyFiveMinutes();
 
+        // Pre-calcular dashboards cada 5 minutos para escuelas activas
+        $schedule->command('dashboard:precalculate')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
 
+        // Limpiar cache viejo cada hora
+        $schedule->call(function () {
+            Cache::flush(); // En producción, implementar limpieza más selectiva
+        })->hourly();
     }
 
     /**

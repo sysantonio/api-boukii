@@ -59,4 +59,12 @@ class AppBaseController extends Controller
         $user->load('schools');
         return $user->schools[0];
     }
+
+    public function ensureSchoolInRequest($request): void
+    {
+        if (!$request->has('school_id')) {
+            $school = $this->getSchool($request);
+            $request->merge(['school_id' => $school->id]);
+        }
+    }
 }

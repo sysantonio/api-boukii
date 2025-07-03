@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Services\BookingPriceCalculatorService;
 use App\Mail\BookingCancelMailer;
 use App\Mail\BookingInfoMailer;
 use App\Models\School;
@@ -814,7 +815,7 @@ class Booking extends Model
 
     public function getCancellationStatusAttribute()
     {
-        $status = '';
+        $status = 'active';
         $statusPayment = '';
 
         // Si el estado de la reserva es "totalmente cancelada"
@@ -1196,6 +1197,400 @@ class Booking extends Model
                 }
             })->afterResponse();
         }
+    }
+    // ... código existente ...
+
+    /**
+     * Servicio de cálculo de precios
+     */
+    protected $priceCalculator;
+
+    public function getPriceCalculator()
+    {
+        if (!$this->priceCalculator) {
+            $this->priceCalculator = app(BookingPriceCalculatorService::class);
+        }
+        return $this->priceCalculator;
+    }
+
+    /**
+     * Calcula el precio total actual de la reserva
+     */
+    public function calculateCurrentTotal($options = [])
+    {
+        return $this->getPriceCalculator()->calculateBookingTotal($this, $options);
+    }
+
+    /**
+     * Recalcula y actualiza el precio total
+     */
+    public function recalculateAndUpdatePrice($options = [])
+    {
+        $calculation = $this->calculateCurrentTotal($options);
+        $newTotal = $calculation['total_final'];
+
+        $this->update(['price_total' => $newTotal]);
+
+        return [
+            'old_total' => $this->getOriginal('price_total'),
+            'new_total' => $newTotal,
+            'calculation' => $calculation
+        ];
+    }
+
+    /**
+     * Verifica la consistencia del precio almacenado
+     */
+    public function checkPriceConsistency($tolerance = 0.01)
+    {
+        $calculation = $this->calculateCurrentTotal();
+        $calculatedPrice = $calculation['total_final'];
+        $storedPrice = $this->price_total;
+
+        // ✅ NUEVA LÓGICA: Si price_total ya incluye descuentos de vouchers
+        if ($this->priceIncludesVoucherDiscounts()) {
+            // Comparar con el precio neto (calculado - vouchers)
+            $voucherAnalysis = $this->getPriceCalculator()->analyzeVouchersForBalance($this);
+            $expectedStoredPrice = $calculatedPrice - $voucherAnalysis['total_used'];
+
+            $discrepancy = abs($expectedStoredPrice - $storedPrice);
+
+            return [
+                'is_consistent' => $discrepancy <= $tolerance,
+                'stored_price' => $storedPrice,
+                'calculated_price' => $calculatedPrice,
+                'expected_stored_price' => $expectedStoredPrice,
+                'vouchers_in_stored_price' => true,
+                'voucher_discount' => $voucherAnalysis['total_used'],
+                'discrepancy' => $discrepancy,
+                'explanation' => 'Price_total ya incluye descuento de vouchers',
+                'calculation_details' => $calculation
+            ];
+        }
+
+        // Lógica original para cuando price_total NO incluye vouchers
+        $discrepancy = abs($calculatedPrice - $storedPrice);
+
+        return [
+            'is_consistent' => $discrepancy <= $tolerance,
+            'stored_price' => $storedPrice,
+            'calculated_price' => $calculatedPrice,
+            'vouchers_in_stored_price' => false,
+            'discrepancy' => $discrepancy,
+            'calculation_details' => $calculation
+        ];
+    }
+
+    /**
+     * Obtiene el precio de actividades sin conceptos adicionales
+     */
+    public function getActivitiesPrice($excludeCourses = [])
+    {
+        $activeBookingUsers = $this->bookingUsers
+            ->where('status', '!=', 2)
+            ->filter(function ($bookingUser) use ($excludeCourses) {
+                return !in_array((int)$bookingUser->course_id, $excludeCourses);
+            });
+
+        return $this->getPriceCalculator()->calculateActivitiesPrice($activeBookingUsers);
+    }
+
+    /**
+     * Calcula el balance actual de pagos
+     */
+    public function getCurrentBalance()
+    {
+        $totalPaid = $this->payments->whereIn('status', ['paid'])->sum('amount');
+        $totalRefunded = $this->payments->whereIn('status', ['refund', 'partial_refund'])->sum('amount');
+        $totalNoRefund = $this->payments->whereIn('status', ['no_refund'])->sum('amount');
+
+        // ✅ CORREGIDO: Analizar vouchers correctamente
+        $voucherAnalysis = $this->getPriceCalculator()->analyzeVouchersForBalance($this);
+        $totalVouchersUsed = $voucherAnalysis['total_used'];
+        $totalVouchersRefunded = $voucherAnalysis['total_refunded'];
+
+        return [
+            'total_paid' => $totalPaid,
+            'total_refunded' => $totalRefunded,
+            'total_vouchers_used' => $totalVouchersUsed,
+            'total_vouchers_refunded' => $totalVouchersRefunded,
+            'total_no_refund' => $totalNoRefund,
+            'current_balance' => $totalPaid + $totalVouchersUsed - $totalRefunded - $totalVouchersRefunded - $totalNoRefund,
+            'received' => $totalPaid + $totalVouchersUsed,
+            'processed' => $totalRefunded + $totalVouchersRefunded + $totalNoRefund
+        ];
+    }
+
+    /**
+     * CORREGIDO: Calcula el importe pendiente considerando vouchers
+     */
+    public function getPendingAmount()
+    {
+        $calculation = $this->calculateCurrentTotal();
+        $expectedTotal = $calculation['total_final'];
+        $balance = $this->getCurrentBalance();
+
+        return max(0, $expectedTotal - $balance['current_balance']);
+    }
+
+    /**
+     * NUEVO: Método para detectar si price_total ya incluye descuentos de vouchers
+     */
+    public function priceIncludesVoucherDiscounts(): bool
+    {
+        $vouchersLogs = $this->vouchersLogs;
+        if ($vouchersLogs->isEmpty()) {
+            return false;
+        }
+
+        // Calcular vouchers aplicados como descuento
+        $totalVoucherDiscount = 0;
+        foreach ($vouchersLogs as $log) {
+            $analysis = $this->getPriceCalculator()->determineVoucherLogType($log, $log->voucher, $this);
+            if ($analysis['type'] === 'payment') {
+                $totalVoucherDiscount += $analysis['amount'];
+            }
+        }
+
+        // Si price_total + voucher_discount está cerca del calculated_total,
+        // significa que price_total ya tiene vouchers descontados
+        $calculatedTotal = $this->calculateCurrentTotal(['exclude_voucher_discounts' => true])['total_final'];
+        $priceWithVoucherDiscount = $this->price_total + $totalVoucherDiscount;
+
+        return abs($priceWithVoucherDiscount - $calculatedTotal) < 1.0;
+    }
+
+    /**
+     * Verifica si la reserva está completamente pagada
+     */
+    public function isFullyPaid($tolerance = 0.01)
+    {
+        return $this->getPendingAmount() <= $tolerance;
+    }
+
+    /**
+     * Recalcula vouchers según el precio actual
+     */
+    public function recalculateVouchers()
+    {
+        $calculation = $this->calculateCurrentTotal();
+        $totalPrice = $calculation['total_final'];
+
+        return $this->getPriceCalculator()->recalculateVouchers($this, $totalPrice);
+    }
+
+    /**
+     * NUEVO: Verificar consistencia basada en realidad financiera
+     */
+    public function checkFinancialReality($tolerance = 0.50)
+    {
+        return $this->getPriceCalculator()->analyzeFinancialReality($this, [
+            'exclude_courses' => [260, 243] // Cursos excluidos estándar
+        ]);
+    }
+
+    /**
+     * ACTUALIZADO: Resumen financiero basado en realidad
+     */
+    public function getFinancialSummary()
+    {
+        $realityAnalysis = $this->checkFinancialReality();
+
+        return [
+            'booking_id' => $this->id,
+            'status' => $this->status,
+            'stored_price_total' => $this->price_total, // Solo informativo
+            'calculated_price' => $realityAnalysis['calculated_total'],
+            'financial_reality' => $realityAnalysis['financial_reality'],
+            'reality_check' => $realityAnalysis['reality_check'],
+            'is_consistent' => $realityAnalysis['reality_check']['is_consistent'],
+            'main_discrepancy' => $realityAnalysis['reality_check']['main_discrepancy'] ?? 0,
+            'recommendation' => $realityAnalysis['recommendation'],
+            'pending_amount' => max(0, $realityAnalysis['calculated_total'] - $realityAnalysis['financial_reality']['net_balance']),
+            'is_fully_paid' => $realityAnalysis['reality_check']['is_consistent'] && $this->status == 1,
+            'client' => [
+                'name' => $this->clientMain->first_name . ' ' . $this->clientMain->last_name,
+                'email' => $this->clientMain->email
+            ],
+            'analysis_method' => 'financial_reality',
+            'created_at' => $this->created_at,
+            'currency' => $this->currency
+        ];
+    }
+
+    /**
+     * Aplica descuentos automáticos según reglas de negocio
+     */
+    public function applyAutomaticDiscounts()
+    {
+        // Ejemplo: descuento por múltiples actividades
+        $activeUsers = $this->bookingUsers->where('status', '!=', 2);
+        $uniqueCourses = $activeUsers->pluck('course_id')->unique()->count();
+
+        if ($uniqueCourses >= 3 && !$this->has_reduction) {
+            $activitiesPrice = $this->getActivitiesPrice();
+            $discountPercentage = 0.10; // 10% de descuento
+            $discountAmount = $activitiesPrice * $discountPercentage;
+
+            $this->update([
+                'has_reduction' => true,
+                'price_reduction' => $discountAmount
+            ]);
+
+            return [
+                'applied' => true,
+                'type' => 'multiple_courses_discount',
+                'discount_amount' => $discountAmount,
+                'courses_count' => $uniqueCourses
+            ];
+        }
+
+        return ['applied' => false];
+    }
+
+    /**
+     * Valida que todos los precios estén correctamente calculados
+     */
+    public function validateAllPrices()
+    {
+        $errors = [];
+        $warnings = [];
+
+        // Validar precio total
+        $consistency = $this->checkPriceConsistency();
+        if (!$consistency['is_consistent']) {
+            $errors[] =
+                "Precio total inconsistente: almacenado {$consistency['stored_price']}, calculado {$consistency['calculated_price']}";
+        }
+
+        // Validar vouchers
+        $totalVoucherAmount = abs($this->vouchersLogs->sum('amount'));
+        if ($totalVoucherAmount > $this->price_total) {
+            $errors[] = "El total de vouchers ({$totalVoucherAmount}) excede el precio total ({$this->price_total})";
+        }
+
+        // Validar seguro de cancelación
+        if ($this->has_cancellation_insurance && $this->price_cancellation_insurance <= 0) {
+            $warnings[] = "Seguro de cancelación activado pero sin precio";
+        }
+
+        // Validar estado vs pagos
+        if ($this->paid && $this->getPendingAmount() > 0.01) {
+            $errors[] = "Marcada como pagada pero tiene importe pendiente";
+        }
+
+        return [
+            'is_valid' => empty($errors),
+            'errors' => $errors,
+            'warnings' => $warnings,
+            'validated_at' => now()
+        ];
+    }
+
+    /**
+     * Scope para reservas con discrepancias de precio
+     */
+    public function scopeWithPriceDiscrepancies($query, $tolerance = 0.01)
+    {
+        return $query->get()->filter(function ($booking) use ($tolerance) {
+            $consistency = $booking->checkPriceConsistency($tolerance);
+            return !$consistency['is_consistent'];
+        });
+    }
+
+    /**
+     * Scope para reservas con problemas de balance
+     */
+    public function scopeWithBalanceIssues($query)
+    {
+        return $query->get()->filter(function ($booking) {
+            if ($booking->status == 1) {
+                // Reservas activas que deberían estar pagadas
+                return $booking->paid && $booking->getPendingAmount() > 0.01;
+            } elseif ($booking->status == 2) {
+                // Reservas canceladas con dinero sin procesar
+                $balance = $booking->getCurrentBalance();
+                return $balance['received'] > 0 && $balance['current_balance'] > 0.01;
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Método para exportar datos de cálculo para debugging
+     */
+    public function exportCalculationData()
+    {
+        return [
+            'booking_id' => $this->id,
+            'status' => $this->status,
+            'stored_data' => [
+                'price_total' => $this->price_total,
+                'has_cancellation_insurance' => $this->has_cancellation_insurance,
+                'price_cancellation_insurance' => $this->price_cancellation_insurance,
+                'has_reduction' => $this->has_reduction,
+                'price_reduction' => $this->price_reduction,
+                'has_boukii_care' => $this->has_boukii_care,
+                'price_boukii_care' => $this->price_boukii_care,
+                'has_tva' => $this->has_tva,
+                'price_tva' => $this->price_tva
+            ],
+            'calculated_data' => $this->calculateCurrentTotal(),
+            'balance_data' => $this->getCurrentBalance(),
+            'booking_users' => $this->bookingUsers->map(function ($bu) {
+                return [
+                    'id' => $bu->id,
+                    'course_id' => $bu->course_id,
+                    'course_name' => $bu->course->name ?? 'N/A',
+                    'course_type' => $bu->course->course_type ?? 'N/A',
+                    'client_id' => $bu->client_id,
+                    'status' => $bu->status,
+                    'date' => $bu->date,
+                    'price' => $bu->price,
+                    'extras_count' => $bu->bookingUserExtras->count()
+                ];
+            }),
+            'vouchers' => $this->vouchersLogs->map(function ($vl) {
+                return [
+                    'id' => $vl->id,
+                    'voucher_id' => $vl->voucher_id,
+                    'amount' => $vl->amount,
+                    'voucher_code' => $vl->voucher->code ?? 'N/A'
+                ];
+            }),
+            'payments' => $this->payments->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'amount' => $p->amount,
+                    'status' => $p->status,
+                    'notes' => $p->notes,
+                    'created_at' => $p->created_at
+                ];
+            })
+        ];
+    }
+
+    public function getProportionalPaymentMethods($groupPrice, $totalPrice)
+    {
+        $result = [
+            'cash' => 0,
+            'card' => 0,
+            'online' => 0,
+            'transfer' => 0,
+            'other' => 0
+        ];
+
+        $validPayments = $this->payments->where('status', 'paid');
+        $factor = $groupPrice / ($totalPrice ?: 1);
+
+        foreach ($validPayments as $payment) {
+            $method = $this->resolvePaymentMethod($payment);
+            if (!isset($result[$method])) $method = 'other';
+
+            $result[$method] += $payment->amount * $factor;
+        }
+
+        return array_map(fn($v) => round($v, 2), $result);
     }
 
     // Constant PaymentMethod IDs as of 2022-1021:

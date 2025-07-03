@@ -2,6 +2,8 @@
 
 use App\Exports\CoursesExport;
 use App\Exports\UsedVouchersExport;
+use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Models\Booking;
 use App\Models\BookingUser;
 use App\Models\Client;
@@ -100,6 +102,20 @@ Route::any('/fix-subgroups', function () {
     }
     return 'Subgroups fixed';
 });
+
+// Descargar archivo exportado
+Route::get('/admin/finance/download-export/{filename}', [FinanceController::class, 'downloadExport'])
+    ->name('finance.download-export');
+
+
+Route::get('/debug-books', [StatisticsController::class, 'debugSpecificBookings']);
+Route::get('/debug-test-detection', [FinanceController::class, 'debugTestDetection']);
+Route::get('/finance/season-dashboard', [FinanceController::class, 'getSeasonFinancialDashboard']);
+Route::get('/finance/export-dashboard', [FinanceController::class, 'exportSeasonDashboard']);
+
+Route::get('/debug-bookings', [\App\Http\Controllers\Admin\FinanceController::class, 'getCompleteFinancialAnalysis']);
+Route::get('bookings/{id}/financial-debug', [FinanceController::class, 'getBookingFinancialDebug'])
+    ->name('bookings.financial-debug');
 
 Route::get('/debug-booking-users', function () {
     $from = '2025-01-01';

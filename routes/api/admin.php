@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\FinanceControllerRefactor;
 use App\Http\Controllers\Admin\StatisticsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -142,51 +144,235 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
     Route::get('weather/week', [\App\Http\Controllers\Admin\HomeController::class, 'get5DaysForecastByStation'])
         ->name('api.admin.weatherweek');
 
-    // Main Analytics Endpoints
-    Route::get('/analytics/summary', [AnalyticsController::class, 'getSummary']);
-    Route::get('/analytics/courses', [AnalyticsController::class, 'getCourseAnalytics']);
-    Route::get('/analytics/revenue', [AnalyticsController::class, 'getRevenueAnalytics']);
-    Route::get('/analytics/payment-details', [AnalyticsController::class, 'getPaymentDetails']);
+    // ==================== STATISTICS LEGACY (mantener para compatibilidad) ====================
 
-    // Financial Dashboard
-    Route::get('/analytics/financial-dashboard', [AnalyticsController::class, 'getFinancialDashboard']);
+    Route::get('statistics/monitors/total', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalMonitorPrice'])
+        ->name('api.admin.stats.bookingsSports');
 
-    // Pending Payments Management
-    Route::get('/analytics/pending-payments', [AnalyticsController::class, 'getPendingPayments']);
+    Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorsBookings'])
+        ->name('api.admin.stats.monitors');
 
-    // Performance Comparison
-    Route::get('/analytics/performance-comparison', [AnalyticsController::class, 'getPerformanceComparison']);
+    Route::get('statistics/bookings/monitors/active', [\App\Http\Controllers\Admin\StatisticsController::class, 'getActiveMonitors'])
+        ->name('api.admin.stats.monitors.active');
 
-    // Legacy Statistics Endpoints (for backward compatibility)
-    Route::get('/statistics/bookings/monitors/active', [StatisticsController::class, 'getActiveMonitors']);
-    Route::get('/statistics/bookings/monitors', [StatisticsController::class, 'getMonitorsBookings']);
-    Route::get('/statistics/bookings/monitors/hours', [StatisticsController::class, 'getTotalWorkedHours']);
-    Route::get('/statistics/bookings/monitors/sports', [StatisticsController::class, 'getTotalWorkedHoursBySport']);
-    Route::get('/statistics/bookings/monitors/total', [StatisticsController::class, 'getTotalMonitorPrice']);
+    Route::get('statistics/bookings/monitors/hours', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalWorkedHours'])
+        ->name('api.admin.stats.monitors.hours');
+
+    Route::get('statistics/bookings/monitors/sports', [\App\Http\Controllers\Admin\StatisticsController::class, 'getTotalWorkedHoursBySport'])
+        ->name('api.admin.stats.monitors.sports');
+
+    Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsController::class, 'getMonitorDailyBookings'])
+        ->name('api.admin.stats.monitors.id');
     Route::get('/statistics/bookings/dates', [StatisticsController::class, 'getBookingUsersByDateRange']);
     Route::get('/statistics/bookings/sports', [StatisticsController::class, 'getBookingUsersBySport']);
     Route::get('/statistics/bookings/sells', [StatisticsController::class, 'getCoursesWithDetails']);
     Route::get('/statistics/bookings', [StatisticsController::class, 'getTotalAvailablePlacesByCourseType']);
     Route::get('/statistics/total', [StatisticsController::class, 'getTotalPrice']);
 
-    // Monitor specific analytics
-    Route::get('/analytics/monitors/{monitorId}/daily', [AnalyticsController::class, 'getMonitorDailyAnalytics']);
-    Route::get('/analytics/monitors/{monitorId}/performance', [AnalyticsController::class, 'getMonitorPerformance']);
+// Grupo principal de analytics - AHORA APUNTA A FinanceControllerRefactor
+    Route::group(['prefix' => 'analytics'], function () {
 
-    // Real-time analytics
-    Route::get('/analytics/realtime/dashboard', [AnalyticsController::class, 'getRealtimeDashboard']);
-    Route::get('/analytics/realtime/bookings', [AnalyticsController::class, 'getRealtimeBookings']);
+        // ===== ENDPOINTS PRINCIPALES PARA EL FRONTEND =====
+        Route::get('/summary', [FinanceControllerRefactor::class, 'getSummary'])
+            ->name('analytics.summary');
 
-    // Export endpoints
-    Route::post('/analytics/export/csv', [AnalyticsController::class, 'exportToCSV']);
-    Route::post('/analytics/export/pdf', [AnalyticsController::class, 'exportToPDF']);
-    Route::post('/analytics/export/excel', [AnalyticsController::class, 'exportToExcel']);
+        Route::get('/courses', [FinanceControllerRefactor::class, 'getCourseAnalytics'])
+            ->name('analytics.courses');
 
-    // Custom analytics queries
-    Route::post('/analytics/custom-query', [AnalyticsController::class, 'executeCustomQuery']);
+        Route::get('/revenue', [FinanceControllerRefactor::class, 'getRevenueAnalytics'])
+            ->name('analytics.revenue');
 
-    // Analytics preferences/settings
-    Route::get('/analytics/preferences', [AnalyticsController::class, 'getAnalyticsPreferences']);
-    Route::post('/analytics/preferences', [AnalyticsController::class, 'saveAnalyticsPreferences']);
+        Route::get('/payment-details', [FinanceControllerRefactor::class, 'getPaymentDetails'])
+            ->name('analytics.payment-details');
+
+        Route::get('/financial-dashboard', [FinanceControllerRefactor::class, 'getFinancialDashboard'])
+            ->name('analytics.financial-dashboard');
+
+        Route::get('/performance-comparison', [FinanceControllerRefactor::class, 'getPerformanceComparison'])
+            ->name('analytics.performance-comparison');
+
+        // ===== EXPORTACIONES =====
+        Route::post('/export/csv', [FinanceControllerRefactor::class, 'exportToCSV'])
+            ->name('analytics.export-csv');
+
+        Route::post('/export/excel', [FinanceControllerRefactor::class, 'exportToExcel'])
+            ->name('analytics.export-excel');
+
+        Route::post('/export/pdf', [FinanceControllerRefactor::class, 'exportToPDF'])
+            ->name('analytics.export-pdf');
+
+        Route::get('/download/{filename}', [FinanceControllerRefactor::class, 'downloadExport'])
+            ->name('analytics.download-export');
+
+        // ===== ENDPOINTS ADICIONALES (futuro) =====
+
+        // Análisis de ingresos detallado
+        Route::get('/revenue-by-period', [FinanceControllerRefactor::class, 'getRevenueByPeriod'])
+            ->name('analytics.revenue-by-period');
+
+        // Análisis detallado de cursos
+        Route::get('/courses-detailed', [FinanceControllerRefactor::class, 'getDetailedCourseAnalytics'])
+            ->name('analytics.courses-detailed');
+
+        // Análisis de eficiencia de monitores
+        Route::get('/monitors-efficiency', [FinanceControllerRefactor::class, 'getMonitorEfficiencyAnalytics'])
+            ->name('analytics.monitors-efficiency');
+
+        // Análisis de conversión y abandono
+        Route::get('/conversion-analysis', [FinanceControllerRefactor::class, 'getConversionAnalysis'])
+            ->name('analytics.conversion-analysis');
+
+        // Tendencias y predicciones
+        Route::get('/trends-prediction', [FinanceControllerRefactor::class, 'getTrendsAndPredictions'])
+            ->name('analytics.trends-prediction');
+
+        // Métricas en tiempo real
+        Route::get('/realtime-metrics', [FinanceControllerRefactor::class, 'getRealtimeMetrics'])
+            ->name('analytics.realtime-metrics');
+
+        // Análisis por deportes
+        Route::get('/sports-performance', [FinanceControllerRefactor::class, 'getSportsPerformanceAnalytics'])
+            ->name('analytics.sports-performance');
+
+        // Análisis de temporadas
+        Route::get('/seasonal-comparison', [FinanceControllerRefactor::class, 'getSeasonalComparison'])
+            ->name('analytics.seasonal-comparison');
+
+        // Análisis de clientes
+        Route::get('/customer-insights', [FinanceControllerRefactor::class, 'getCustomerInsights'])
+            ->name('analytics.customer-insights');
+
+        // Análisis de capacidad
+        Route::get('/capacity-analysis', [FinanceControllerRefactor::class, 'getCapacityAnalysis'])
+            ->name('analytics.capacity-analysis');
+
+        // KPIs específicos de monitor
+        Route::get('/monitors/{monitorId}/daily', [FinanceControllerRefactor::class, 'getMonitorDailyAnalytics'])
+            ->name('analytics.monitor-daily');
+
+        Route::get('/monitors/{monitorId}/performance', [FinanceControllerRefactor::class, 'getMonitorPerformance'])
+            ->name('analytics.monitor-performance');
+
+        // Dashboards específicos
+        Route::get('/executive-dashboard', [FinanceControllerRefactor::class, 'getExecutiveDashboard'])
+            ->name('analytics.executive-dashboard');
+
+        Route::get('/operational-dashboard', [FinanceControllerRefactor::class, 'getOperationalDashboard'])
+            ->name('analytics.operational-dashboard');
+
+        // Análisis de precios y rentabilidad
+        Route::get('/pricing-analysis', [FinanceControllerRefactor::class, 'getPricingAnalysis'])
+            ->name('analytics.pricing-analysis');
+
+        // Análisis de satisfacción
+        Route::get('/satisfaction-metrics', [FinanceControllerRefactor::class, 'getSatisfactionMetrics'])
+            ->name('analytics.satisfaction-metrics');
+
+        // Configuración y preferencias
+        Route::get('/preferences', [FinanceControllerRefactor::class, 'getAnalyticsPreferences'])
+            ->name('analytics.get-preferences');
+
+        Route::post('/preferences', [FinanceControllerRefactor::class, 'saveAnalyticsPreferences'])
+            ->name('analytics.save-preferences');
+
+        // Consultas personalizadas
+        Route::post('/custom-query', [FinanceControllerRefactor::class, 'executeCustomQuery'])
+            ->name('analytics.custom-query');
+
+    });
+
+    Route::group(['prefix' => 'finance'], function () {
+
+        Route::get('/season-dashboard', [FinanceController::class, 'getSeasonFinancialDashboard']);
+
+/*        Route::get('/season-dashboard', [FinanceControllerRefactor::class, 'getSeasonFinancialDashboard'])
+            ->name('finance.season-dashboard');*/
+
+        Route::get('/export-dashboard', [FinanceControllerRefactor::class, 'exportSeasonDashboard'])
+            ->name('finance.export-dashboard');
+
+        Route::get('/download-export/{filename}', [FinanceControllerRefactor::class, 'downloadExport'])
+            ->name('finance.download-export');
+
+    });
+
+    Route::group(['prefix' => 'integrations'], function () {
+
+        // Sincronización con Payrexx
+        Route::post('/payrexx/sync', [FinanceControllerRefactor::class, 'syncPayrexxData'])
+            ->name('integrations.payrexx-sync');
+
+        // Exportación a Google Analytics
+        Route::post('/google-analytics/export', [FinanceControllerRefactor::class, 'exportToGoogleAnalytics'])
+            ->name('integrations.google-analytics-export');
+
+        // Webhook para datos en tiempo real
+        Route::post('/webhook/realtime-update', [FinanceControllerRefactor::class, 'handleRealtimeWebhook'])
+            ->name('integrations.realtime-webhook');
+
+    });
+
+    Route::group(['prefix' => 'analytics-admin'], function () {
+
+        // Permisos de acceso a analytics
+        Route::get('/permissions', [FinanceControllerRefactor::class, 'getAnalyticsPermissions'])
+            ->name('analytics-admin.permissions');
+
+        Route::post('/permissions', [FinanceControllerRefactor::class, 'updateAnalyticsPermissions'])
+            ->name('analytics-admin.update-permissions');
+
+        // Configuración del sistema
+        Route::get('/system-config', [FinanceControllerRefactor::class, 'getSystemConfig'])
+            ->name('analytics-admin.system-config');
+
+        Route::post('/system-config', [FinanceControllerRefactor::class, 'updateSystemConfig'])
+            ->name('analytics-admin.update-system-config');
+
+        // Logs y auditoría
+        Route::get('/audit-logs', [FinanceControllerRefactor::class, 'getAuditLogs'])
+            ->name('analytics-admin.audit-logs');
+
+        // Performance monitoring
+        Route::get('/performance-metrics', [FinanceControllerRefactor::class, 'getPerformanceMetrics'])
+            ->name('analytics-admin.performance-metrics');
+
+    });
 
 });
+
+// API pública para dashboards embebidos (con autenticación API)
+Route::group(['prefix' => 'public-analytics', 'middleware' => 'api_token'], function () {
+
+    Route::get('/embed/dashboard/{token}', [FinanceControllerRefactor::class, 'getEmbeddedDashboard'])
+        ->name('public-analytics.embedded-dashboard');
+
+    Route::get('/embed/kpis/{token}', [FinanceControllerRefactor::class, 'getEmbeddedKpis'])
+        ->name('public-analytics.embedded-kpis');
+
+});
+
+// Rutas para desarrollo y debug (solo en entorno de desarrollo)
+if (app()->environment(['local', 'development'])) {
+
+    Route::group(['prefix' => 'debug-analytics'], function () {
+
+        Route::get('/test-data-generation', [FinanceControllerRefactor::class, 'generateTestData'])
+            ->name('debug.generate-test-data');
+
+        Route::get('/performance-test', [FinanceControllerRefactor::class, 'performanceTest'])
+            ->name('debug.performance-test');
+
+        Route::get('/validate-calculations', [FinanceControllerRefactor::class, 'validateCalculations'])
+            ->name('debug.validate-calculations');
+
+        // Debug específico para detección de reservas de prueba
+        Route::get('/debug-test-detection/{schoolId}', [FinanceControllerRefactor::class, 'debugTestBookingDetection'])
+            ->name('debug.test-detection');
+
+        // Debug financiero de reserva específica
+        Route::get('/debug-booking-financials/{bookingId}', [FinanceControllerRefactor::class, 'debugBookingFinancials'])
+            ->name('debug.booking-financials');
+
+    });
+
+}
