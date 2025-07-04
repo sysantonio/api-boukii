@@ -653,6 +653,7 @@ class FinanceControllerRefactor extends AppBaseController
      */
     public function exportSeasonDashboard(Request $request): JsonResponse
     {
+        $this->ensureSchoolInRequest($request);
         $request->validate([
             'format' => 'required|in:csv,pdf,excel'
         ]);

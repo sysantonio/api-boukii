@@ -1183,6 +1183,138 @@ class FinanceController extends AppBaseController
         return $stats;
     }
 
+    public function getBookingDetails(Request $request): JsonResponse
+    {
+/*        $request->validate([
+            'only_pending' => 'boolean',
+            'only_cancelled' => 'boolean',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date'
+        ]);*/
+
+        try {
+            $this->ensureSchoolInRequest($request);
+            $dateRange = $this->getSeasonDateRange($request);
+            $bookings = $this->getSeasonBookingsOptimized($request, $dateRange, 'balanced');
+
+            // Filtrar reservas que solo tienen cursos excluidos
+            $filteredBookings = $this->filterBookingsWithExcludedCourses($bookings, self::EXCLUDED_COURSES);
+
+            $bookingDetails = [];
+
+            foreach ($filteredBookings as $booking) {
+                $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
+                $isPending = $quickAnalysis['calculated_amount'] > $quickAnalysis['received_amount'] + 0.50;
+                $isCancelled = $booking->status == 2;
+
+                // Filtrar según criterios
+                if ($request->boolean('only_pending') && !$isPending) continue;
+                if ($request->boolean('only_cancelled') && !$isCancelled) continue;
+
+                $bookingDetails[] = [
+                    'id' => $booking->id,
+                    'client_name' => $booking->clientMain->first_name . ' ' . $booking->clientMain->last_name,
+                    'client_email' => $booking->clientMain->email,
+                    'booking_date' => $booking->created_at->format('Y-m-d'),
+                    'amount' => round($quickAnalysis['calculated_amount'], 2),
+                    'received_amount' => round($quickAnalysis['received_amount'], 2),
+                    'pending_amount' => round($quickAnalysis['calculated_amount'] - $quickAnalysis['received_amount'], 2),
+                    'status' => $booking->status == 1 ? 'active' : ($booking->status == 2 ? 'cancelled' : 'partial'),
+                    'has_issues' => $quickAnalysis['has_issues']
+                ];
+            }
+
+            return $this->sendResponse([
+                'bookings' => $bookingDetails,
+                'total_count' => count($bookingDetails),
+                'filter_applied' => $request->only('only_pending', 'only_cancelled')
+            ], 'Detalles de reservas obtenidos exitosamente');
+
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo detalles de reservas: ' . $e->getMessage());
+            return $this->sendError('Error obteniendo detalles: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * NUEVO ENDPOINT: Exportar reservas pendientes
+     */
+    public function exportPendingBookings(Request $request): JsonResponse
+    {
+        $this->ensureSchoolInRequest($request);
+        $request->merge(['only_pending' => true, 'format' => 'csv']);
+        return $this->exportBookingDetails($request, 'reservas_pendientes');
+    }
+
+    /**
+     * NUEVO ENDPOINT: Exportar reservas canceladas
+     */
+    public function exportCancelledBookings(Request $request): JsonResponse
+    {
+        $this->ensureSchoolInRequest($request);
+        $request->merge(['only_cancelled' => true, 'format' => 'csv']);
+        return $this->exportBookingDetails($request, 'reservas_canceladas');
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Exportar detalles de reservas
+     */
+    private function exportBookingDetails(Request $request, string $filename_prefix): JsonResponse
+    {
+        try {
+            $detailsResponse = $this->getBookingDetails($request);
+            $detailsData = json_decode($detailsResponse->content(), true)['data'];
+
+            $csvContent = "\xEF\xBB\xBF"; // BOM for UTF-8
+            $csvContent .= "LISTADO DE RESERVAS - " . strtoupper($filename_prefix) . "\n";
+            $csvContent .= "Generado: " . now()->format('Y-m-d H:i:s') . "\n\n";
+
+            // Headers
+            $csvContent .= '"ID","Cliente","Email","Fecha","Importe","Recibido","Pendiente","Estado"' . "\n";
+
+            // Data
+            foreach ($detailsData['bookings'] as $booking) {
+                $row = [
+                    $booking['id'],
+                    $booking['client_name'],
+                    $booking['client_email'],
+                    $booking['booking_date'],
+                    number_format($booking['amount'], 2) . ' EUR',
+                    number_format($booking['received_amount'], 2) . ' EUR',
+                    number_format($booking['pending_amount'], 2) . ' EUR',
+                    $booking['status']
+                ];
+
+                $escapedRow = array_map(function($field) {
+                    return '"' . str_replace('"', '""', $field) . '"';
+                }, $row);
+
+                $csvContent .= implode(',', $escapedRow) . "\n";
+            }
+
+            $filename = $filename_prefix . '_' . date('Y-m-d_H-i') . '.csv';
+            $tempPath = storage_path('temp/' . $filename);
+
+            if (!file_exists(dirname($tempPath))) {
+                mkdir(dirname($tempPath), 0755, true);
+            }
+
+            file_put_contents($tempPath, $csvContent);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'filename' => $filename,
+                    'download_url' => route('finance.download-export', ['filename' => $filename])
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error exportando detalles de reservas: ' . $e->getMessage());
+            return $this->sendError('Error en exportación: ' . $e->getMessage(), 500);
+        }
+    }
+
     /**
      * NUEVO MÉTODO: Análisis detallado de reservas de test
      */

@@ -99,39 +99,39 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         ->name('api.admin.bookings.updatePayment');
 
     /** Statistics */
-/*    Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalAvailablePlacesByCourseType'])
-        ->name('api.admin.stats.bookings');
+    /*    Route::get('statistics/bookings', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalAvailablePlacesByCourseType'])
+            ->name('api.admin.stats.bookings');
 
-    Route::get('statistics/bookings/sells', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getCoursesWithDetails'])
-        ->name('api.admin.stats.bookings.sells');
+        Route::get('statistics/bookings/sells', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getCoursesWithDetails'])
+            ->name('api.admin.stats.bookings.sells');
 
-    Route::get('statistics/bookings/dates', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getBookingUsersByDateRange'])
-        ->name('api.admin.stats.bookingsDates');
+        Route::get('statistics/bookings/dates', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getBookingUsersByDateRange'])
+            ->name('api.admin.stats.bookingsDates');
 
-    Route::get('statistics/bookings/sports', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getBookingUsersBySport'])
-        ->name('api.admin.stats.bookingsSports');
+        Route::get('statistics/bookings/sports', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getBookingUsersBySport'])
+            ->name('api.admin.stats.bookingsSports');
 
-    Route::get('statistics/total', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalPrice'])
-        ->name('api.admin.stats.bookingsSports');
+        Route::get('statistics/total', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalPrice'])
+            ->name('api.admin.stats.bookingsSports');
 
 
-    Route::get('statistics/monitors/total', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalMonitorPrice'])
-        ->name('api.admin.stats.bookingsSports');
+        Route::get('statistics/monitors/total', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalMonitorPrice'])
+            ->name('api.admin.stats.bookingsSports');
 
-  Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getMonitorsBookings'])
-        ->name('api.admin.stats.monitors');
+      Route::get('statistics/bookings/monitors', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getMonitorsBookings'])
+            ->name('api.admin.stats.monitors');
 
-    Route::get('statistics/bookings/monitors/active', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getActiveMonitors'])
-        ->name('api.admin.stats.monitors.active');
+        Route::get('statistics/bookings/monitors/active', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getActiveMonitors'])
+            ->name('api.admin.stats.monitors.active');
 
-    Route::get('statistics/bookings/monitors/hours', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalWorkedHours'])
-        ->name('api.admin.stats.monitors.hours');
+        Route::get('statistics/bookings/monitors/hours', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalWorkedHours'])
+            ->name('api.admin.stats.monitors.hours');
 
-    Route::get('statistics/bookings/monitors/sports', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalWorkedHoursBySport'])
-        ->name('api.admin.stats.monitors.sports');
+        Route::get('statistics/bookings/monitors/sports', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getTotalWorkedHoursBySport'])
+            ->name('api.admin.stats.monitors.sports');
 
-  Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getMonitorDailyBookings'])
-        ->name('api.admin.stats.monitors.id');*/
+      Route::get('statistics/bookings/monitors/{id}', [\App\Http\Controllers\Admin\StatisticsControllerOld::class, 'getMonitorDailyBookings'])
+            ->name('api.admin.stats.monitors.id');*/
 
 
     /** Mailing */
@@ -285,8 +285,12 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
         Route::get('/season-dashboard', [FinanceController::class, 'getSeasonFinancialDashboard']);
 
-/*        Route::get('/season-dashboard', [FinanceControllerRefactor::class, 'getSeasonFinancialDashboard'])
-            ->name('finance.season-dashboard');*/
+        /*        Route::get('/season-dashboard', [FinanceControllerRefactor::class, 'getSeasonFinancialDashboard'])
+                    ->name('finance.season-dashboard');*/
+
+        Route::get('/booking-details', [FinanceController::class, 'getBookingDetails']);
+        Route::get('/export-pending-bookings', [FinanceController::class, 'exportPendingBookings']);
+        Route::get('/export-cancelled-bookings', [FinanceController::class, 'exportCancelledBookings']);
 
         Route::get('/export-dashboard', [FinanceControllerRefactor::class, 'exportSeasonDashboard'])
             ->name('finance.export-dashboard');
