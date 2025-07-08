@@ -285,6 +285,7 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
 
         Route::get('/season-dashboard', [FinanceController::class, 'getSeasonFinancialDashboard']);
 
+        Route::get('/season-dashboard/export', [FinanceController::class, 'exportRealSalesReport']);
         /*        Route::get('/season-dashboard', [FinanceControllerRefactor::class, 'getSeasonFinancialDashboard'])
                     ->name('finance.season-dashboard');*/
 
@@ -295,8 +296,30 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         Route::get('/export-dashboard', [FinanceControllerRefactor::class, 'exportSeasonDashboard'])
             ->name('finance.export-dashboard');
 
-        Route::get('/download-export/{filename}', [FinanceControllerRefactor::class, 'downloadExport'])
-            ->name('finance.download-export');
+        Route::post('/export-real-sales', [FinanceController::class, 'exportRealSalesReport'])
+            ->name('finance.export-real-sales');
+
+
+
+        // ==================== NUEVAS RUTAS PARA COURSE STATISTICS ====================
+
+        Route::prefix('courses')->group(function () {
+
+            // Estadísticas detalladas de un curso específico
+            Route::get('/{courseId}/statistics', [FinanceController::class, 'getCourseStatistics'])
+                ->where('courseId', '[0-9]+')
+                ->name('api.admin.courses.statistics');
+
+            // Exportar estadísticas de curso
+            Route::get('/{courseId}/statistics/export', [FinanceController::class, 'exportCourseStatistics'])
+                ->where('courseId', '[0-9]+')
+                ->name('api.admin.courses.statistics.export');
+
+            // Opcional: Comparar curso con similares
+            Route::get('/{courseId}/statistics/compare', [FinanceController::class, 'compareCourseWithSimilar'])
+                ->where('courseId', '[0-9]+')
+                ->name('api.admin.courses.statistics.compare');
+        });
 
     });
 

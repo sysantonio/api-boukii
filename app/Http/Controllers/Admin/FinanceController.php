@@ -15,13 +15,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Traits\FinanceCacheKeyTrait;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FinanceController extends AppBaseController
 {
     use FinanceCacheKeyTrait;
 
     // ✅ CURSOS A EXCLUIR DE LOS CÁLCULOS
-    const EXCLUDED_COURSES = [260, 243];
+    const EXCLUDED_COURSES = [
+        260, 243,  // Cursos originales
+        277, 276, 274, 273, 271, 269, 268, 266, 265  // ✅ NUEVOS CURSOS A EXCLUIR
+    ];
 
     protected $priceCalculator;
 
@@ -162,10 +166,12 @@ class FinanceController extends AppBaseController
         if ($request->has('start_date') && $request->has('end_date')) {
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
+            $seasonName = 'Período personalizado';
         } elseif ($request->season_id) {
             $season = Season::findOrFail($request->season_id);
             $startDate = Carbon::parse($season->start_date);
             $endDate = Carbon::parse($season->end_date);
+            $seasonName = $season->name;
         } else {
             // Temporada actual por defecto
             $today = Carbon::today();
@@ -177,24 +183,29 @@ class FinanceController extends AppBaseController
             if ($season) {
                 $startDate = Carbon::parse($season->start_date);
                 $endDate = Carbon::parse($season->end_date);
+                $seasonName = $season->name;
             } else {
                 // Fallback: últimos 6 meses
                 $endDate = Carbon::now();
                 $startDate = $endDate->copy()->subMonths(6);
+                $seasonName = 'Últimos 6 meses';
             }
         }
 
+        // ✅ ESTRUCTURA UNIFORME GARANTIZADA
         return [
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
+            'start_date' => $startDate->format('Y-m-d'),  // ✅ Clave consistente
+            'end_date' => $endDate->format('Y-m-d'),      // ✅ Clave consistente
+            'start' => $startDate->format('Y-m-d'),       // ✅ Alias para compatibilidad
+            'end' => $endDate->format('Y-m-d'),           // ✅ Alias para compatibilidad
             'start_carbon' => $startDate,
             'end_carbon' => $endDate,
             'total_days' => $startDate->diffInDays($endDate),
-            'season_name' => $season->name ?? 'Período personalizado'
+            'season_name' => $seasonName
         ];
     }
 
-    /**
+        /**
      * MÉTODO AUXILIAR: Obtener reservas optimizadas según nivel de optimización
      */
     private function getSeasonBookingsOptimized(Request $request, array $dateRange, string $optimizationLevel)
@@ -316,6 +327,18 @@ class FinanceController extends AppBaseController
         $courses = [];
 
         foreach ($bookings as $booking) {
+            // ✅ SALTAR RESERVAS CANCELADAS COMPLETAMENTE
+            $realStatus = $booking->getCancellationStatusAttribute();
+            if ($realStatus == 'total_cancel') {
+                continue; // ✅ NO CONTAR CANCELADAS EN REVENUE DE CURSOS
+            }
+
+            // ✅ SALTAR RESERVAS DE TEST
+            $testAnalysis = $this->isTestBooking($booking);
+            if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') {
+                continue; // ✅ NO CONTAR TEST EN REVENUE DE CURSOS
+            }
+
             $activities = $booking->getGroupedActivitiesAttribute();
             $paidTotal = $booking->payments->where('status', 'paid')->sum('amount');
             $totalDue = collect($activities)->sum('price') ?: 1;
@@ -324,6 +347,11 @@ class FinanceController extends AppBaseController
                 $course = $activity['course'];
                 if (!$course) continue;
 
+                // ✅ SALTAR CURSOS EXCLUIDOS
+                if (in_array($course->id, self::EXCLUDED_COURSES)) {
+                    continue;
+                }
+
                 $courseId = $course->id;
 
                 if (!isset($courses[$courseId])) {
@@ -331,63 +359,87 @@ class FinanceController extends AppBaseController
                         'id' => $courseId,
                         'name' => $course->name,
                         'type' => $course->course_type,
-                        'is_flexible' => $course->is_flexible,
                         'sport' => optional($course->sport)->name,
-                        'revenue' => 0,
+
+                        // ✅ VENTAS REALES (SIN CANCELADAS)
+                        'revenue' => 0,               // Revenue total
+                        'revenue_received' => 0,      // ✅ NUEVO: Dinero realmente cobrado
+                        'revenue_pending' => 0,       // ✅ NUEVO: Dinero por cobrar
                         'participants' => 0,
                         'bookings' => 0,
+                        'confirmed_sales' => 0,       // ✅ NUEVO: Ventas confirmadas
                         'average_price' => 0,
+
                         'payment_methods' => [
-                            'cash' => 0,
-                            'card' => 0,
-                            'online' => 0,
-                            'transfer' => 0,
-                            'voucher' => 0,
-                            'other' => 0
+                            'cash' => 0, 'card' => 0, 'online' => 0,
+                            'transfer' => 0, 'voucher' => 0, 'other' => 0
                         ],
                         'status_breakdown' => [],
                         'source_breakdown' => [],
                     ];
                 }
 
-                // Revenue proporcional del grupo
-                $revenueAssigned = ($activity['price'] / $totalDue) * $paidTotal;
-                $courses[$courseId]['revenue'] += $revenueAssigned;
-                $courses[$courseId]['bookings']++;
-                $courses[$courseId]['participants'] += count($activity['utilizers'] ?? []);
+                // ✅ SOLO CONTAR SI NO ESTÁ CANCELADO
+                if ($activity['status'] !== 2) {
+                    // Revenue proporcional del grupo
+                    $revenueAssigned = ($activity['price'] / $totalDue) * $paidTotal;
+                    $expectedRevenue = $activity['price'];
 
-                // Métodos de pago
-                $methods = $this->getProportionalPaymentMethods($booking, $activity['price'], $totalDue);
-                foreach ($methods as $method => $amount) {
-                    if (isset($courses[$courseId]['payment_methods'][$method])) {
-                        $courses[$courseId]['payment_methods'][$method] += $amount;
+                    $courses[$courseId]['revenue'] += $expectedRevenue; // Lo que debería valer
+                    $courses[$courseId]['revenue_received'] += $revenueAssigned; // Lo pagado
+                    $courses[$courseId]['revenue_pending'] += max(0, $expectedRevenue - $revenueAssigned);
+                    $courses[$courseId]['bookings']++;
+                    $courses[$courseId]['participants'] += count($activity['utilizers'] ?? []);
+
+                    // ✅ NUEVO: Contar ventas confirmadas
+                    if (abs($expectedRevenue - $revenueAssigned) <= 0.50) {
+                        $courses[$courseId]['confirmed_sales'] += $revenueAssigned;
                     }
-                }
 
-                // Desglose de estados
-                foreach ($activity['statusList'] ?? [] as $status) {
-                    if (!isset($courses[$courseId]['status_breakdown'][$status])) {
-                        $courses[$courseId]['status_breakdown'][$status] = 0;
+                    // Métodos de pago proporcionales
+                    $methods = $this->getProportionalPaymentMethods($booking, $activity['price'], $totalDue);
+                    foreach ($methods as $method => $amount) {
+                        if (isset($courses[$courseId]['payment_methods'][$method])) {
+                            $courses[$courseId]['payment_methods'][$method] += $amount;
+                        }
                     }
-                    $courses[$courseId]['status_breakdown'][$status]++;
-                }
 
-                // Desglose de fuente
-                $source = $booking->source ?? 'unknown';
-                if (!isset($courses[$courseId]['source_breakdown'][$source])) {
-                    $courses[$courseId]['source_breakdown'][$source] = 0;
+                    // Estados y fuentes
+                    foreach ($activity['statusList'] ?? [] as $status) {
+                        if (!isset($courses[$courseId]['status_breakdown'][$status])) {
+                            $courses[$courseId]['status_breakdown'][$status] = 0;
+                        }
+                        $courses[$courseId]['status_breakdown'][$status]++;
+                    }
+
+                    $source = $booking->source ?? 'unknown';
+                    if (!isset($courses[$courseId]['source_breakdown'][$source])) {
+                        $courses[$courseId]['source_breakdown'][$source] = 0;
+                    }
+                    $courses[$courseId]['source_breakdown'][$source]++;
                 }
-                $courses[$courseId]['source_breakdown'][$source]++;
             }
         }
 
-        // Postprocesado
+        // ✅ POSTPROCESADO CON MÉTRICAS DE VENTAS REALES
         foreach ($courses as &$course) {
             $course['average_price'] = $course['participants'] > 0
                 ? round($course['revenue'] / $course['participants'], 2)
                 : 0;
 
-            $course['revenue'] = round($course['revenue'], 2);
+            // ✅ NUEVAS MÉTRICAS
+            $course['collection_rate'] = $course['revenue'] > 0
+                ? round(($course['revenue_received'] / $course['revenue']) * 100, 2)
+                : 100;
+
+            $course['sales_conversion_rate'] = $course['bookings'] > 0
+                ? round((($course['confirmed_sales'] > 0 ? 1 : 0) / $course['bookings']) * 100, 2)
+                : 0;
+
+            // Redondear valores
+            foreach (['revenue', 'revenue_received', 'revenue_pending', 'confirmed_sales'] as $key) {
+                $course[$key] = round($course[$key], 2);
+            }
 
             foreach ($course['payment_methods'] as &$value) {
                 $value = round($value, 2);
@@ -397,6 +449,325 @@ class FinanceController extends AppBaseController
         return array_values($courses);
     }
 
+    public function exportRealSalesReport(Request $request): JsonResponse
+    {
+/*        $request->validate([
+            'school_id' => 'required|integer|exists:schools,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'format' => 'nullable|in:csv,excel',
+            'include_only_paid' => 'boolean' // ✅ Solo ventas completamente pagadas
+        ]);*/
+
+        try {
+            $this->ensureSchoolInRequest($request);
+            $dateRange = $this->getSeasonDateRange($request);
+            $bookings = $this->getSeasonBookingsOptimized($request, $dateRange, 'detailed');
+
+            // ✅ FILTRAR: Solo reservas válidas (sin canceladas ni test)
+            $validBookings = $this->filterValidSalesBookings($bookings);
+
+            // ✅ GENERAR REPORTE DE VENTAS REALES
+            $salesReport = $this->generateRealSalesReport($validBookings, $request);
+
+            $format = $request->get('format', 'excel');
+
+            if ($format === 'excel') {
+                return $this->exportSalesReportToExcel($salesReport);
+            } else {
+                return $this->exportSalesReportToCsv($salesReport);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error exportando reporte de ventas reales: ' . $e->getMessage());
+            return $this->sendError('Error en exportación: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Filtrar solo reservas válidas para ventas
+     */
+    private function filterValidSalesBookings($bookings)
+    {
+        return $bookings->filter(function($booking) {
+            // 1. Excluir test
+            $testAnalysis = $this->isTestBooking($booking);
+            if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') {
+                return false;
+            }
+
+            // 2. Excluir canceladas totalmente
+            $realStatus = $booking->getCancellationStatusAttribute();
+            if ($realStatus == 'total_cancel') {
+                return false;
+            }
+
+            // 3. Verificar que tenga cursos no excluidos
+            $hasValidCourses = false;
+            foreach ($booking->bookingUsers as $bookingUser) {
+                if (!in_array($bookingUser->course_id, self::EXCLUDED_COURSES)) {
+                    $hasValidCourses = true;
+                    break;
+                }
+            }
+
+            return $hasValidCourses;
+        });
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Generar reporte de ventas reales
+     */
+    private function generateRealSalesReport($validBookings, Request $request): array
+    {
+        $report = [
+            'metadata' => [
+                'school_id' => $request->school_id,
+                'date_range' => $this->getSeasonDateRange($request),
+                'generation_date' => now()->format('Y-m-d H:i:s'),
+                'filter_criteria' => [
+                    'exclude_cancelled' => true,
+                    'exclude_test' => true,
+                    'exclude_courses' => self::EXCLUDED_COURSES,
+                    'only_paid' => $request->boolean('include_only_paid', false)
+                ]
+            ],
+            'summary' => [
+                'total_valid_bookings' => $validBookings->count(),
+                'total_revenue_expected' => 0,
+                'total_revenue_received' => 0,
+                'total_revenue_pending' => 0,
+                'confirmed_sales_count' => 0,
+                'confirmed_sales_amount' => 0
+            ],
+            'detailed_sales' => [],
+            'course_breakdown' => [],
+            'payment_method_analysis' => []
+        ];
+
+        $detailedSales = [];
+        $totalExpected = 0;
+        $totalReceived = 0;
+        $confirmedSales = 0;
+        $confirmedCount = 0;
+
+        foreach ($validBookings as $booking) {
+            $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
+            $realStatus = $booking->getCancellationStatusAttribute();
+
+            // Calcular expected y received correctos
+            if ($realStatus == 'partial_cancel') {
+                $expectedAmount = $this->calculateActivePortionRevenue($booking);
+                $activeProportion = $expectedAmount > 0 ? $expectedAmount / $quickAnalysis['calculated_amount'] : 0;
+                $receivedAmount = $quickAnalysis['received_amount'] * $activeProportion;
+            } else {
+                $expectedAmount = $quickAnalysis['calculated_amount'];
+                $receivedAmount = $quickAnalysis['received_amount'];
+            }
+
+            // ✅ FILTRO OPCIONAL: Solo completamente pagadas
+            if ($request->boolean('include_only_paid', false)) {
+                if (abs($expectedAmount - $receivedAmount) > 0.50) {
+                    continue; // Saltar si no está completamente pagada
+                }
+            }
+
+            $pendingAmount = max(0, $expectedAmount - $receivedAmount);
+            $isConfirmedSale = abs($expectedAmount - $receivedAmount) <= 0.50 && $receivedAmount > 0;
+
+            $detailedSales[] = [
+                'booking_id' => $booking->id,
+                'client_name' => $booking->clientMain->first_name . ' ' . $booking->clientMain->last_name,
+                'client_email' => $booking->clientMain->email,
+                'booking_date' => $booking->created_at->format('Y-m-d'),
+                'status' => $realStatus,
+                'courses' => $this->getBookingCoursesForReport($booking),
+                'revenue_expected' => round($expectedAmount, 2),
+                'revenue_received' => round($receivedAmount, 2),
+                'revenue_pending' => round($pendingAmount, 2),
+                'is_confirmed_sale' => $isConfirmedSale,
+                'payment_methods' => $this->getBookingPaymentMethods($booking),
+                'source' => $booking->source ?? 'unknown',
+                'participants_count' => $booking->bookingUsers->where('status', 1)->count()
+            ];
+
+            $totalExpected += $expectedAmount;
+            $totalReceived += $receivedAmount;
+
+            if ($isConfirmedSale) {
+                $confirmedSales += $receivedAmount;
+                $confirmedCount++;
+            }
+        }
+
+        // ✅ COMPLETAR RESUMEN
+        $report['summary']['total_revenue_expected'] = round($totalExpected, 2);
+        $report['summary']['total_revenue_received'] = round($totalReceived, 2);
+        $report['summary']['total_revenue_pending'] = round($totalExpected - $totalReceived, 2);
+        $report['summary']['confirmed_sales_count'] = $confirmedCount;
+        $report['summary']['confirmed_sales_amount'] = round($confirmedSales, 2);
+        $report['summary']['collection_efficiency'] = $totalExpected > 0
+            ? round(($totalReceived / $totalExpected) * 100, 2) : 100;
+        $report['summary']['sales_confirmation_rate'] = $validBookings->count() > 0
+            ? round(($confirmedCount / $validBookings->count()) * 100, 2) : 0;
+
+        $report['detailed_sales'] = $detailedSales;
+
+        return $report;
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Exportar a Excel detallado
+     */
+    private function exportSalesReportToExcel($salesReport): JsonResponse
+    {
+        $filename = 'ventas_reales_' . $salesReport['metadata']['school_id'] . '_' . date('Y-m-d_H-i') . '.xlsx';
+
+        try {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+            // ✅ HOJA 1: RESUMEN EJECUTIVO
+            $summarySheet = $spreadsheet->getActiveSheet();
+            $summarySheet->setTitle('Resumen Ejecutivo');
+
+            $row = 1;
+            $summarySheet->setCellValue('A' . $row, 'REPORTE DE VENTAS REALES');
+            $summarySheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(16);
+            $row += 2;
+
+            $summarySheet->setCellValue('A' . $row, 'Escuela ID:');
+            $summarySheet->setCellValue('B' . $row, $salesReport['metadata']['school_id']);
+            $row++;
+
+            $summarySheet->setCellValue('A' . $row, 'Período:');
+            $summarySheet->setCellValue('B' . $row, $salesReport['metadata']['date_range']['start'] . ' a ' . $salesReport['metadata']['date_range']['end']);
+            $row++;
+
+            $summarySheet->setCellValue('A' . $row, 'Generado:');
+            $summarySheet->setCellValue('B' . $row, $salesReport['metadata']['generation_date']);
+            $row += 2;
+
+            // ✅ MÉTRICAS CLAVE
+            $summarySheet->setCellValue('A' . $row, 'MÉTRICAS DE VENTAS REALES');
+            $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+
+            $metricsData = [
+                ['Métrica', 'Valor'],
+                ['Total Reservas Válidas', $salesReport['summary']['total_valid_bookings']],
+                ['Ingresos Esperados', $salesReport['summary']['total_revenue_expected'] . ' CHF'],
+                ['Ingresos Recibidos', $salesReport['summary']['total_revenue_received'] . ' CHF'],
+                ['Ingresos Pendientes', $salesReport['summary']['total_revenue_pending'] . ' CHF'],
+                ['Eficiencia de Cobro', $salesReport['summary']['collection_efficiency'] . '%'],
+                ['Ventas Confirmadas (Cantidad)', $salesReport['summary']['confirmed_sales_count']],
+                ['Ventas Confirmadas (Importe)', $salesReport['summary']['confirmed_sales_amount'] . ' CHF'],
+                ['Tasa de Confirmación', $salesReport['summary']['sales_confirmation_rate'] . '%']
+            ];
+
+            foreach ($metricsData as $rowData) {
+                $col = 'A';
+                foreach ($rowData as $cell) {
+                    $summarySheet->setCellValue($col . $row, $cell);
+                    if ($row == 7) { // Header row
+                        $summarySheet->getStyle($col . $row)->getFont()->setBold(true);
+                    }
+                    $col++;
+                }
+                $row++;
+            }
+
+            // ✅ HOJA 2: DETALLE DE VENTAS
+            $detailSheet = $spreadsheet->createSheet();
+            $detailSheet->setTitle('Detalle de Ventas');
+
+            $headers = [
+                'ID Reserva', 'Cliente', 'Email', 'Fecha', 'Estado', 'Cursos',
+                'Esperado (CHF)', 'Recibido (CHF)', 'Pendiente (CHF)',
+                'Venta Confirmada', 'Métodos Pago', 'Origen', 'Participantes'
+            ];
+
+            $col = 'A';
+            foreach ($headers as $header) {
+                $detailSheet->setCellValue($col . '1', $header);
+                $detailSheet->getStyle($col . '1')->getFont()->setBold(true);
+                $col++;
+            }
+
+            $row = 2;
+            foreach ($salesReport['detailed_sales'] as $sale) {
+                $detailSheet->setCellValue('A' . $row, $sale['booking_id']);
+                $detailSheet->setCellValue('B' . $row, $sale['client_name']);
+                $detailSheet->setCellValue('C' . $row, $sale['client_email']);
+                $detailSheet->setCellValue('D' . $row, $sale['booking_date']);
+                $detailSheet->setCellValue('E' . $row, $sale['status']);
+                $detailSheet->setCellValue('F' . $row, implode(', ', $sale['courses']));
+                $detailSheet->setCellValue('G' . $row, $sale['revenue_expected']);
+                $detailSheet->setCellValue('H' . $row, $sale['revenue_received']);
+                $detailSheet->setCellValue('I' . $row, $sale['revenue_pending']);
+                $detailSheet->setCellValue('J' . $row, $sale['is_confirmed_sale'] ? 'SÍ' : 'NO');
+                $detailSheet->setCellValue('K' . $row, implode(', ', $sale['payment_methods']));
+                $detailSheet->setCellValue('L' . $row, $sale['source']);
+                $detailSheet->setCellValue('M' . $row, $sale['participants_count']);
+                $row++;
+            }
+
+            // Ajustar columnas
+            foreach (range('A', 'M') as $col) {
+                $detailSheet->getColumnDimension($col)->setAutoSize(true);
+                $summarySheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Guardar archivo
+            $tempPath = storage_path('temp/' . $filename);
+            if (!file_exists(dirname($tempPath))) {
+                mkdir(dirname($tempPath), 0755, true);
+            }
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($tempPath);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'filename' => $filename,
+                    'download_url' => route('finance.download-export', ['filename' => $filename]),
+                    'summary' => $salesReport['summary']
+                ],
+                'message' => 'Reporte de ventas reales exportado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error exportando Excel: ' . $e->getMessage());
+            return $this->sendError('Error generando Excel: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Obtener cursos de una reserva para reporte
+     */
+    private function getBookingCoursesForReport($booking): array
+    {
+        $courses = [];
+        foreach ($booking->bookingUsers as $bookingUser) {
+            if (!in_array($bookingUser->course_id, self::EXCLUDED_COURSES) && $bookingUser->status == 1) {
+                $courses[] = $bookingUser->course->name;
+            }
+        }
+        return array_unique($courses);
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Obtener métodos de pago de una reserva
+     */
+    private function getBookingPaymentMethods($booking): array
+    {
+        $methods = [];
+        foreach ($booking->payments->where('status', 'paid') as $payment) {
+            $method = $this->determinePaymentMethodImproved($payment);
+            $methods[] = $this->getPaymentMethodDisplayName($method);
+        }
+        return array_unique($methods);
+    }
 
     private function getProportionalPaymentMethods($booking, $segmentPrice, $totalPrice)
     {
@@ -962,100 +1333,163 @@ class FinanceController extends AppBaseController
         $csvContent = '';
         $filename = 'dashboard_temporada_' . $exportData['metadata']['school_id'] . '_' . date('Y-m-d_H-i') . '.csv';
 
-        // BOM para UTF-8
-        $csvContent .= "\xEF\xBB\xBF";
+        try {
+            // BOM para soporte UTF-8 en Excel
+            $csvContent .= "\xEF\xBB\xBF";
 
-        // ENCABEZADO
-        $csvContent .= "DASHBOARD EJECUTIVO DE TEMPORADA - RESERVAS REALES\n";
-        $csvContent .= "Escuela ID:," . $exportData['metadata']['school_id'] . "\n";
-        $csvContent .= "Período:," . $exportData['metadata']['period']['start'] . " a " . $exportData['metadata']['period']['end'] . "\n";
+            // Encabezado del archivo
+            $csvContent .= "DASHBOARD EJECUTIVO DE TEMPORADA - VENTAS REALES\n";
+            $csvContent .= "Escuela ID:," . $exportData['metadata']['school_id'] . "\n";
+            $csvContent .= "Período:," . $exportData['metadata']['period']['start'] . " a " . $exportData['metadata']['period']['end'] . "\n";
+            $csvContent .= "Total Reservas:," . $exportData['metadata']['total_bookings'] . "\n";
+            $csvContent .= "Generado:," . $exportData['metadata']['export_date'] . "\n";
+            $csvContent .= "Nivel Optimización:," . $exportData['metadata']['optimization_level'] . "\n\n";
 
-        // RESUMEN DE CLASIFICACIÓN
-        if (isset($dashboardData['season_info']['booking_classification'])) {
-            $classification = $dashboardData['season_info']['booking_classification'];
-            $csvContent .= "\nCLASIFICACIÓN DE RESERVAS\n";
-            $csvContent .= "Total Reservas:," . $classification['total_bookings'] . "\n";
-            $csvContent .= "Reservas Producción:," . $classification['production_count'] . "\n";
-            $csvContent .= "Reservas Test (excluidas):," . $classification['test_count'] . "\n";
-            $csvContent .= "Reservas Canceladas:," . $classification['cancelled_count'] . "\n";
-            $csvContent .= "Ingresos Producción:," . number_format($classification['production_revenue'], 2) . " EUR\n";
-            $csvContent .= "Ingresos Test (excluidos):," . number_format($classification['test_revenue'], 2) . " EUR\n";
-        }
-
-        $csvContent .= "Generado:," . $exportData['metadata']['export_date'] . "\n\n";
-
-        // SECCIONES PRINCIPALES (solo producción)
-        foreach ($exportData['sections'] as $sectionKey => $section) {
-            $csvContent .= strtoupper($section['title']) . "\n";
-            foreach ($section['data'] as $row) {
-                $escapedRow = array_map(function($field) {
-                    return '"' . str_replace('"', '""', $field) . '"';
-                }, $row);
-                $csvContent .= implode(',', $escapedRow) . "\n";
+            // ✅ NUEVO: Información de exclusiones para transparencia
+            $classification = $dashboardData['season_info']['booking_classification'] ?? [];
+            if (!empty($classification)) {
+                $csvContent .= "INFORMACIÓN DE EXCLUSIONES (TRANSPARENCIA)\n";
+                $csvContent .= '"Tipo de Exclusión","Cantidad","Revenue Excluido","Motivo"' . "\n";
+                $csvContent .= '"Reservas Canceladas","' . ($classification['cancelled_count'] ?? 0) . '","' .
+                    number_format($classification['cancelled_revenue_processed'] ?? 0, 2) . ' CHF","No generan revenue real"' . "\n";
+                $csvContent .= '"Reservas de Test","' . ($classification['test_count'] ?? 0) . '","' .
+                    number_format($classification['test_revenue_excluded'] ?? 0, 2) . ' CHF","Transacciones de prueba"' . "\n";
+                $csvContent .= '"Cursos Excluidos","N/A","N/A","IDs: ' . implode(', ', self::EXCLUDED_COURSES) . '"' . "\n\n";
             }
-            $csvContent .= "\n";
-        }
 
-        // SECCIÓN SEPARADA: RESERVAS DE TEST DETECTADAS
-        if (isset($dashboardData['test_analysis']) && !empty($dashboardData['test_analysis']['client_analysis'])) {
-            $csvContent .= "RESERVAS DE TEST DETECTADAS (EXCLUIDAS DEL CÓMPUTO)\n";
-            $csvContent .= '"Cliente ID","Nombre","Email","Reservas Test","Ingresos Test","Cliente Confirmado Test"' . "\n";
+            // Procesar cada sección
+            foreach ($exportData['sections'] as $sectionKey => $section) {
+                $csvContent .= strtoupper($section['title']) . "\n";
 
-            foreach ($dashboardData['test_analysis']['client_analysis'] as $client) {
-                $row = [
-                    $client['client_id'],
-                    $client['client_name'],
-                    $client['client_email'],
-                    $client['bookings_count'],
-                    number_format($client['total_revenue'], 2) . ' EUR',
-                    $client['is_confirmed_test_client'] ? 'SÍ' : 'NO'
-                ];
-                $escapedRow = array_map(function($field) {
-                    return '"' . str_replace('"', '""', $field) . '"';
-                }, $row);
-                $csvContent .= implode(',', $escapedRow) . "\n";
+                foreach ($section['data'] as $row) {
+                    // Escapar comillas y agregar comillas a cada campo
+                    $escapedRow = array_map(function($field) {
+                        return '"' . str_replace('"', '""', $field) . '"';
+                    }, $row);
+                    $csvContent .= implode(',', $escapedRow) . "\n";
+                }
+
+                $csvContent .= "\n";
             }
-            $csvContent .= "\n";
-        }
 
-        // SECCIÓN SEPARADA: CANCELACIONES SIN PROCESAR
-        if (isset($dashboardData['cancelled_analysis']) && !empty($dashboardData['cancelled_analysis']['pending_processing'])) {
-            $csvContent .= "CANCELACIONES PENDIENTES DE PROCESAR\n";
-            $csvContent .= '"Booking ID","Cliente","Importe Sin Procesar","Pagos Recibidos"' . "\n";
+            // Sección de alertas ejecutivas
+            if (isset($dashboardData['executive_alerts']) && !empty($dashboardData['executive_alerts'])) {
+                $csvContent .= "ALERTAS EJECUTIVAS\n";
+                $csvContent .= '"Nivel","Tipo","Título","Descripción","Impacto"' . "\n";
 
-            foreach ($dashboardData['cancelled_analysis']['pending_processing'] as $pending) {
-                $row = [
-                    $pending['booking_id'],
-                    $pending['client_email'],
-                    number_format($pending['unprocessed_amount'], 2) . ' EUR',
-                    $pending['payments_count']
-                ];
-                $escapedRow = array_map(function($field) {
-                    return '"' . str_replace('"', '""', $field) . '"';
-                }, $row);
-                $csvContent .= implode(',', $escapedRow) . "\n";
+                foreach ($dashboardData['executive_alerts'] as $alert) {
+                    $row = [
+                        $alert['level'] ?? '',
+                        $alert['type'] ?? '',
+                        $alert['title'] ?? '',
+                        $alert['description'] ?? '',
+                        $alert['impact'] ?? ''
+                    ];
+                    $escapedRow = array_map(function($field) {
+                        return '"' . str_replace('"', '""', $field) . '"';
+                    }, $row);
+                    $csvContent .= implode(',', $escapedRow) . "\n";
+                }
+                $csvContent .= "\n";
             }
-            $csvContent .= "\n";
-        }
 
-        // Resto del código igual...
-        $tempPath = storage_path('temp/' . $filename);
-        if (!file_exists(dirname($tempPath))) {
-            mkdir(dirname($tempPath), 0755, true);
-        }
-        file_put_contents($tempPath, $csvContent);
+            // Sección de recomendaciones
+            if (isset($dashboardData['priority_recommendations']) && !empty($dashboardData['priority_recommendations'])) {
+                $csvContent .= "RECOMENDACIONES PRIORITARIAS\n";
+                $csvContent .= '"Prioridad","Categoría","Título","Descripción","Impacto","Plazo","Acciones"' . "\n";
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'filename' => $filename,
-                'file_path' => $tempPath,
-                'content_type' => 'text/csv; charset=utf-8',
-                'size' => strlen($csvContent),
-                'download_url' => route('finance.download-export', ['filename' => $filename])
-            ],
-            'message' => 'Exportación CSV con clasificación generada exitosamente'
-        ]);
+                foreach ($dashboardData['priority_recommendations'] as $rec) {
+                    $actions = isset($rec['actions']) && is_array($rec['actions'])
+                        ? implode('; ', $rec['actions'])
+                        : '';
+
+                    $row = [
+                        $rec['priority'] ?? '',
+                        $rec['category'] ?? '',
+                        $rec['title'] ?? '',
+                        $rec['description'] ?? '',
+                        $rec['impact'] ?? '',
+                        $rec['timeline'] ?? '',
+                        $actions
+                    ];
+                    $escapedRow = array_map(function($field) {
+                        return '"' . str_replace('"', '""', $field) . '"';
+                    }, $row);
+                    $csvContent .= implode(',', $escapedRow) . "\n";
+                }
+            }
+
+            // ✅ NUEVA SECCIÓN: Análisis de cursos sin canceladas
+            if (isset($dashboardData['courses']) && !empty($dashboardData['courses'])) {
+                $csvContent .= "\nANÁLISIS DE CURSOS (SIN CANCELADAS NI TEST)\n";
+                $csvContent .= '"ID","Nombre","Tipo","Deporte","Revenue Esperado","Revenue Recibido","Revenue Pendiente","Participantes","Reservas","Tasa Cobro","Ventas Confirmadas"' . "\n";
+
+                foreach ($dashboardData['courses'] as $course) {
+                    $row = [
+                        $course['id'],
+                        $course['name'],
+                        $course['type'],
+                        $course['sport'] ?? 'N/A',
+                        number_format($course['revenue'] ?? 0, 2) . ' CHF',
+                        number_format($course['revenue_received'] ?? 0, 2) . ' CHF',
+                        number_format($course['revenue_pending'] ?? 0, 2) . ' CHF',
+                        $course['participants'] ?? 0,
+                        $course['bookings'] ?? 0,
+                        ($course['collection_rate'] ?? 0) . '%',
+                        number_format($course['confirmed_sales'] ?? 0, 2) . ' CHF'
+                    ];
+                    $escapedRow = array_map(function($field) {
+                        return '"' . str_replace('"', '""', $field) . '"';
+                    }, $row);
+                    $csvContent .= implode(',', $escapedRow) . "\n";
+                }
+            }
+
+            // Crear archivo temporal
+            $tempPath = storage_path('temp/' . $filename);
+
+            // Asegurar que el directorio existe
+            if (!file_exists(dirname($tempPath))) {
+                mkdir(dirname($tempPath), 0755, true);
+            }
+
+            file_put_contents($tempPath, $csvContent);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'filename' => $filename,
+                    'file_path' => $tempPath,
+                    'content_type' => 'text/csv; charset=utf-8',
+                    'size' => strlen($csvContent),
+                    'download_url' => route('finance.download-export', ['filename' => $filename]),
+                    'sections_included' => array_keys($exportData['sections']),
+                    'exclusions_info' => [
+                        'cancelled_excluded' => $classification['cancelled_count'] ?? 0,
+                        'test_excluded' => $classification['test_count'] ?? 0,
+                        'courses_excluded' => count(self::EXCLUDED_COURSES)
+                    ]
+                ],
+                'message' => 'Exportación CSV con exclusiones correctas generada exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error generando CSV: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'export_data_structure' => array_keys($exportData),
+                'metadata_structure' => array_keys($exportData['metadata'] ?? [])
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error generando CSV: ' . $e->getMessage(),
+                'debug_info' => [
+                    'export_data_keys' => array_keys($exportData),
+                    'metadata_keys' => array_keys($exportData['metadata'] ?? []),
+                    'period_keys' => array_keys($exportData['metadata']['period'] ?? [])
+                ]
+            ], 500);
+        }
     }
 
     /**
@@ -1107,91 +1541,125 @@ class FinanceController extends AppBaseController
     /**
      * NUEVO MÉTODO: KPIs ejecutivos basados solo en reservas de producción
      */
+    // ✅ CORRECCIÓN: FinanceController.php - calculateProductionKpis()
+
+    /**
+     * MÉTODO CORREGIDO: calculateProductionKpis()
+     */
     private function calculateProductionKpis($classification, Request $request): array
     {
-        // Combinar activas y parciales para el conteo total de producción
+        // ✅ SOLO RESERVAS DE PRODUCCIÓN (SIN CANCELADAS)
         $allProductionBookings = array_merge(
             $classification['production_active'],
+            $classification['production_finished'],
             $classification['production_partial']
         );
 
         $stats = [
-            'total_production_bookings' => count($allProductionBookings),
-            'active_bookings' => $classification['summary']['production_active_count'],
-            'partial_cancelled_bookings' => $classification['summary']['production_partial_count'],
+            'total_bookings' => $classification['summary']['total_bookings'],
+            'production_bookings_count' => count($allProductionBookings),
+            'cancelled_bookings_excluded' => $classification['summary']['cancelled_count'],
+            'test_bookings_excluded' => $classification['summary']['test_count'],
+
+            // ✅ VENTAS REALES (SIN CANCELADAS)
             'total_clients' => collect($allProductionBookings)->pluck('client_main_id')->unique()->count(),
-            'total_participants' => collect($allProductionBookings)->sum(function($booking) {
-                return $booking->bookingUsers->where('status', 1)->count(); // Solo usuarios activos
-            }),
-            // 🎯 EXPECTED = Solo lo que realmente esperamos cobrar
-            'revenue_expected' => $classification['summary']['expected_revenue'],
-            'revenue_received' => 0,
-            'revenue_pending' => 0,
-            'consistency_rate' => 0,
-            'consistency_issues' => 0,
-            // 📊 MÉTRICAS ADICIONALES PARA CONTEXTO
+            'total_participants' => $this->calculateTotalParticipants($allProductionBookings),
+
+            // ✅ SEPARACIÓN CLARA: ESPERADO VS PAGADO
+            'revenue_expected' => $classification['summary']['expected_revenue'], // Lo que deberían pagar
+            'revenue_received' => 0,  // Lo que realmente han pagado
+            'revenue_pending' => 0,   // Lo que falta por cobrar
+
+            // ✅ MÉTRICAS DE REALIDAD
+            'real_sales_amount' => 0,        // ✅ NUEVO: Ventas confirmadas (pagadas)
+            'confirmed_transactions' => 0,   // ✅ NUEVO: Transacciones confirmadas
+            'collection_efficiency' => 0,    // % de lo esperado que se ha cobrado
+            'sales_conversion_rate' => 0,    // % de reservas que se confirman como ventas
+
+            // ✅ EXCLUSIONES PARA TRANSPARENCIA
             'cancelled_revenue_excluded' => $classification['summary']['cancelled_revenue_processed'],
-            'test_revenue_excluded' => $classification['summary']['test_revenue_excluded']
+            'test_revenue_excluded' => $classification['summary']['test_revenue_excluded'],
         ];
 
-        $consistentBookings = 0;
         $totalReceived = 0;
+        $totalExpected = 0;
+        $confirmedSales = 0;
+        $confirmedTransactions = 0;
 
-        // Calcular received solo de reservas que SÍ esperamos que generen ingresos
+        // ✅ CALCULAR SOLO DE RESERVAS DE PRODUCCIÓN (SIN CANCELADAS)
         foreach ($allProductionBookings as $booking) {
-            if ($booking->status == 2) {
-                // Las canceladas NO cuentan en received porque no esperamos cobrar
+            $realStatus = $booking->getCancellationStatusAttribute();
+
+            // ✅ IMPORTANTE: Saltar si está cancelada totalmente
+            if ($realStatus == 'total_cancel') {
                 continue;
             }
 
             $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
 
-            if ($booking->status == 3) {
-                // Para parciales, solo contar la parte que corresponde a usuarios activos
+            if ($realStatus == 'partial_cancel') {
+                // Para parciales, calcular solo la parte activa
                 $activeRevenue = $this->calculateActivePortionRevenue($booking);
                 $activeProportion = $activeRevenue > 0 ? $activeRevenue / $quickAnalysis['calculated_amount'] : 0;
-                $totalReceived += $quickAnalysis['received_amount'] * $activeProportion;
+                $effectiveExpected = $activeRevenue;
+                $effectiveReceived = $quickAnalysis['received_amount'] * $activeProportion;
             } else {
-                // Para activas, contar todo lo recibido
-                $totalReceived += $quickAnalysis['received_amount'];
+                // Para activas y terminadas
+                $effectiveExpected = $quickAnalysis['calculated_amount'];
+                $effectiveReceived = $quickAnalysis['received_amount'];
             }
 
-            if (!$quickAnalysis['has_issues']) {
-                $consistentBookings++;
-            } else {
-                $stats['consistency_issues']++;
+            $totalExpected += $effectiveExpected;
+            $totalReceived += $effectiveReceived;
+
+            // ✅ NUEVO: Contar ventas confirmadas (totalmente pagadas)
+            if (abs($effectiveReceived - $effectiveExpected) <= 0.50 && $effectiveReceived > 0) {
+                $confirmedSales += $effectiveReceived;
+                $confirmedTransactions++;
             }
         }
 
+        // ✅ ASIGNAR VALORES CALCULADOS
         $stats['revenue_received'] = round($totalReceived, 2);
-        $stats['revenue_pending'] = round($stats['revenue_expected'] - $stats['revenue_received'], 2);
+        $stats['revenue_pending'] = round($totalExpected - $totalReceived, 2);
+        $stats['real_sales_amount'] = round($confirmedSales, 2);
+        $stats['confirmed_transactions'] = $confirmedTransactions;
 
-        // Calcular métricas
-        $productionCount = count($allProductionBookings);
-        $stats['consistency_rate'] = $productionCount > 0
-            ? round(($consistentBookings / $productionCount) * 100, 2)
-            : 100;
-
+        // ✅ CALCULAR MÉTRICAS DE EFICIENCIA
         $stats['collection_efficiency'] = $stats['revenue_expected'] > 0
             ? round(($stats['revenue_received'] / $stats['revenue_expected']) * 100, 2)
             : 100;
 
-        $stats['average_booking_value'] = $stats['total_production_bookings'] > 0
-            ? round($stats['revenue_expected'] / $stats['total_production_bookings'], 2)
+        $stats['sales_conversion_rate'] = $stats['production_bookings_count'] > 0
+            ? round(($confirmedTransactions / $stats['production_bookings_count']) * 100, 2)
+            : 0;
+
+        $stats['average_sale_value'] = $confirmedTransactions > 0
+            ? round($confirmedSales / $confirmedTransactions, 2)
             : 0;
 
         return $stats;
     }
 
+    // ✅ NUEVO MÉTODO: Calcular participantes únicos correctamente
+    private function calculateTotalParticipants($productionBookings): int
+    {
+        $uniqueParticipants = collect();
+
+        foreach ($productionBookings as $booking) {
+            foreach ($booking->bookingUsers as $bookingUser) {
+                // Solo contar usuarios activos (status = 1)
+                if ($bookingUser->status == 1) {
+                    $uniqueParticipants->push($bookingUser->client_id);
+                }
+            }
+        }
+
+        return $uniqueParticipants->unique()->count();
+    }
+
     public function getBookingDetails(Request $request): JsonResponse
     {
-/*        $request->validate([
-            'only_pending' => 'boolean',
-            'only_cancelled' => 'boolean',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date'
-        ]);*/
-
         try {
             $this->ensureSchoolInRequest($request);
             $dateRange = $this->getSeasonDateRange($request);
@@ -1200,33 +1668,63 @@ class FinanceController extends AppBaseController
             // Filtrar reservas que solo tienen cursos excluidos
             $filteredBookings = $this->filterBookingsWithExcludedCourses($bookings, self::EXCLUDED_COURSES);
 
+            // ✅ AGREGAR: Aplicar la misma clasificación que en los KPIs
+            $classification = $this->classifyBookings($filteredBookings);
+
+            // ✅ Solo usar reservas de producción
+            $productionBookings = array_merge(
+                $classification['production_active'],
+                $classification['production_finished'],
+                $classification['production_partial']
+            );
+
             $bookingDetails = [];
 
-            foreach ($filteredBookings as $booking) {
+            foreach ($productionBookings as $booking) {
                 $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
-                $isPending = $quickAnalysis['calculated_amount'] > $quickAnalysis['received_amount'] + 0.50;
-                $isCancelled = $booking->status == 2;
+                $realStatus = $booking->getCancellationStatusAttribute();
 
-                // Filtrar según criterios
-                if ($request->boolean('only_pending') && !$isPending) continue;
-                if ($request->boolean('only_cancelled') && !$isCancelled) continue;
+                // ✅ Calcular expected correcto para parciales
+                if ($realStatus == 'partial_cancel') {
+                    $expectedAmount = $this->calculateActivePortionRevenue($booking);
+                    $activeProportion = $expectedAmount > 0 ? $expectedAmount / $quickAnalysis['calculated_amount'] : 0;
+                    $effectiveReceived = $quickAnalysis['received_amount'] * $activeProportion;
+                } else {
+                    $expectedAmount = $quickAnalysis['calculated_amount'];
+                    $effectiveReceived = $quickAnalysis['received_amount'];
+                }
+
+                $pendingAmount = $expectedAmount - $effectiveReceived;
+
+                // Filtrar según criterios (solo si realmente hay dinero pendiente)
+                if ($request->boolean('only_pending') && $pendingAmount <= 0.50) continue;
+                if ($request->boolean('only_cancelled') && $realStatus !== 'total_cancel') continue;
 
                 $bookingDetails[] = [
                     'id' => $booking->id,
                     'client_name' => $booking->clientMain->first_name . ' ' . $booking->clientMain->last_name,
                     'client_email' => $booking->clientMain->email,
                     'booking_date' => $booking->created_at->format('Y-m-d'),
-                    'amount' => round($quickAnalysis['calculated_amount'], 2),
-                    'received_amount' => round($quickAnalysis['received_amount'], 2),
-                    'pending_amount' => round($quickAnalysis['calculated_amount'] - $quickAnalysis['received_amount'], 2),
-                    'status' => $booking->status == 1 ? 'active' : ($booking->status == 2 ? 'cancelled' : 'partial'),
-                    'has_issues' => $quickAnalysis['has_issues']
+                    'amount' => round($expectedAmount, 2), // ✅ Expected correcto
+                    'received_amount' => round($effectiveReceived, 2), // ✅ Received ajustado
+                    'pending_amount' => round($pendingAmount, 2), // ✅ Pendiente real
+                    'status' => $realStatus,
+                    'status_numeric' => $booking->status,
+                    'has_issues' => $quickAnalysis['has_issues'],
+                    'is_test' => $this->isTestBooking($booking)['is_test_booking'] ?? false,
+                    'real_status_info' => [
+                        'database_status' => $booking->status,
+                        'real_status' => $realStatus,
+                        'expected_amount' => $expectedAmount, // ✅ Para debug
+                        'original_calculated' => $quickAnalysis['calculated_amount'] // ✅ Para debug
+                    ]
                 ];
             }
 
             return $this->sendResponse([
                 'bookings' => $bookingDetails,
                 'total_count' => count($bookingDetails),
+                'classification_summary' => $classification['summary'], // ✅ Para debug
                 'filter_applied' => $request->only('only_pending', 'only_cancelled')
             ], 'Detalles de reservas obtenidos exitosamente');
 
@@ -1234,6 +1732,138 @@ class FinanceController extends AppBaseController
             Log::error('Error obteniendo detalles de reservas: ' . $e->getMessage());
             return $this->sendError('Error obteniendo detalles: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * MÉTODO DE DEBUG: Comparar KPIs vs Listado
+     */
+    public function debugPendingDiscrepancy(Request $request): JsonResponse
+    {
+        try {
+            $this->ensureSchoolInRequest($request);
+
+            // 1. USAR EXACTAMENTE EL MISMO PROCESO QUE EL DASHBOARD
+            $dateRange = $this->getSeasonDateRange($request);
+            $bookings = $this->getSeasonBookingsOptimized($request, $dateRange, 'balanced');
+            $filteredBookings = $this->filterBookingsWithExcludedCourses($bookings, self::EXCLUDED_COURSES);
+            $classification = $this->classifyBookings($filteredBookings);
+
+            // 2. CALCULAR KPIs EXACTAMENTE IGUAL
+            $kpisResult = $this->calculateProductionKpis($classification, $request);
+
+            // 3. CALCULAR LISTADO CON LA MISMA LÓGICA
+            $allProductionBookings = array_merge(
+                $classification['production_active'],
+                $classification['production_finished'],
+                $classification['production_partial']
+            );
+
+            $listadoDetails = [];
+            $listadoPendingTotal = 0;
+            $listadoExpectedTotal = 0;
+            $listadoReceivedTotal = 0;
+
+            foreach ($allProductionBookings as $booking) {
+                $realStatus = $booking->getCancellationStatusAttribute();
+                $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
+
+                // ✅ USAR EXACTAMENTE LA MISMA LÓGICA QUE LOS KPIs
+                if ($realStatus == 'partial_cancel') {
+                    $activeRevenue = $this->calculateActivePortionRevenue($booking);
+                    $activeProportion = $activeRevenue > 0 ? $activeRevenue / $quickAnalysis['calculated_amount'] : 0;
+                    $effectiveExpected = $activeRevenue;
+                    $effectiveReceived = $quickAnalysis['received_amount'] * $activeProportion;
+                } else {
+                    $effectiveExpected = $quickAnalysis['calculated_amount'];
+                    $effectiveReceived = $quickAnalysis['received_amount'];
+                }
+
+                $pendingAmount = $effectiveExpected - $effectiveReceived;
+
+                // Solo incluir si hay dinero pendiente (como en only_pending)
+                if ($pendingAmount > 0.50) {
+                    $listadoDetails[] = [
+                        'booking_id' => $booking->id,
+                        'client_email' => $booking->clientMain->email ?? 'N/A',
+                        'status' => $realStatus,
+                        'original_calculated' => $quickAnalysis['calculated_amount'],
+                        'effective_expected' => round($effectiveExpected, 2),
+                        'effective_received' => round($effectiveReceived, 2),
+                        'pending_amount' => round($pendingAmount, 2),
+                        'is_partial' => $realStatus == 'partial_cancel',
+                        'active_revenue' => $realStatus == 'partial_cancel' ? $this->calculateActivePortionRevenue($booking) : null
+                    ];
+
+                    $listadoPendingTotal += $pendingAmount;
+                    $listadoExpectedTotal += $effectiveExpected;
+                    $listadoReceivedTotal += $effectiveReceived;
+                }
+            }
+
+            // 4. COMPARAR RESULTADOS
+            $debug = [
+                'data_source_info' => [
+                    'total_bookings_raw' => $bookings->count(),
+                    'filtered_bookings' => $filteredBookings->count(),
+                    'production_active' => count($classification['production_active']),
+                    'production_finished' => count($classification['production_finished']),
+                    'production_partial' => count($classification['production_partial']),
+                    'total_production' => count($allProductionBookings),
+                    'date_range' => $dateRange
+                ],
+
+                'kpis_calculation' => [
+                    'revenue_expected' => $kpisResult['revenue_expected'],
+                    'revenue_received' => $kpisResult['revenue_received'],
+                    'revenue_pending' => $kpisResult['revenue_pending'],
+                    'production_bookings_count' => $kpisResult['production_bookings_count']
+                ],
+
+                'listado_calculation' => [
+                    'total_bookings_with_pending' => count($listadoDetails),
+                    'expected_total' => round($listadoExpectedTotal, 2),
+                    'received_total' => round($listadoReceivedTotal, 2),
+                    'pending_total' => round($listadoPendingTotal, 2)
+                ],
+
+                'discrepancy_analysis' => [
+                    'expected_difference' => round($kpisResult['revenue_expected'] - $listadoExpectedTotal, 2),
+                    'received_difference' => round($kpisResult['revenue_received'] - $listadoReceivedTotal, 2),
+                    'pending_difference' => round($kpisResult['revenue_pending'] - $listadoPendingTotal, 2),
+                    'percentage_difference' => $kpisResult['revenue_pending'] > 0
+                        ? round((abs($kpisResult['revenue_pending'] - $listadoPendingTotal) / $kpisResult['revenue_pending']) * 100, 2)
+                        : 0
+                ],
+
+                'sample_bookings' => array_slice($listadoDetails, 0, 5), // Muestra de 5
+
+                'classification_summary' => $classification['summary']
+            ];
+
+            return $this->sendResponse($debug, 'Análisis de discrepancia completado');
+
+        } catch (\Exception $e) {
+            Log::error('Error en debug de discrepancia: ' . $e->getMessage());
+            return $this->sendError('Error en debug: ' . $e->getMessage(), 500);
+        }
+    }
+
+    private function allDatesFinished($booking): bool
+    {
+        $now = now();
+
+        // Verificar si todas las fechas han pasado
+        $allDatesPassed = $booking->bookingUsers()
+            ->where(function ($query) use ($now) {
+                $query->where('date', '>', $now->toDateString()) // Fecha futura
+                ->orWhere(function ($subQuery) use ($now) {
+                    $subQuery->where('date', '=', $now->toDateString()) // Mismo día
+                    ->where('hour_end', '>', $now->format('H:i:s')); // Hora final posterior
+                });
+            })
+            ->exists();
+
+        return !$allDatesPassed;
     }
 
     /**
@@ -1448,7 +2078,640 @@ class FinanceController extends AppBaseController
         return $analysis;
     }
 
+    /**
+     * NUEVO ENDPOINT: Estadísticas detalladas de un curso específico
+     * GET /api/admin/courses/{courseId}/statistics
+     */
+    public function getCourseStatistics(Request $request, $courseId): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'include_comparison' => 'boolean'
+        ]);
 
+        try {
+            $this->ensureSchoolInRequest($request);
+
+            // 1. VERIFICAR QUE EL CURSO EXISTE Y PERTENECE A LA ESCUELA
+            $course = \App\Models\Course::where('id', $courseId)
+                ->where('school_id', $request->school_id)
+                ->with(['sport'])
+                ->first();
+
+            if (!$course) {
+                return $this->sendError('Curso no encontrado o no pertenece a esta escuela', 404);
+            }
+
+            // 2. DETERMINAR RANGO DE FECHAS
+            $dateRange = $this->getSeasonDateRange($request);
+
+            // 3. OBTENER RESERVAS DEL CURSO
+            $bookings = $this->getCourseBookings($courseId, $dateRange, $request->school_id);
+
+            Log::info("Generando estadísticas para curso {$courseId}", [
+                'course_name' => $course->name,
+                'bookings_found' => $bookings->count(),
+                'date_range' => $dateRange
+            ]);
+
+            // 4. GENERAR ESTADÍSTICAS COMPLETAS
+            $statistics = $this->generateDetailedCourseStatistics($course, $bookings, $dateRange, $request);
+
+            return $this->sendResponse($statistics, 'Estadísticas del curso generadas exitosamente');
+
+        } catch (\Exception $e) {
+            Log::error("Error generando estadísticas del curso {$courseId}: " . $e->getMessage(), [
+                'school_id' => $request->school_id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->sendError('Error generando estadísticas: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Obtener reservas específicas del curso
+     */
+    private function getCourseBookings($courseId, array $dateRange, $schoolId)
+    {
+        return Booking::query()
+            ->with([
+                'bookingUsers' => function($q) use ($courseId) {
+                    $q->where('course_id', $courseId)
+                        ->with(['course.sport', 'client', 'bookingUserExtras.courseExtra']);
+                },
+                'payments',
+                'vouchersLogs.voucher',
+                'clientMain',
+                'school'
+            ])
+            ->where('school_id', $schoolId)
+            ->whereHas('bookingUsers', function($q) use ($courseId, $dateRange) {
+                $q->where('course_id', $courseId)
+                    ->whereBetween('date', [$dateRange['start_date'], $dateRange['end_date']]);
+            })
+            ->get()
+            ->filter(function($booking) use ($courseId) {
+                // Solo incluir reservas que tienen al menos un booking_user de este curso
+                return $booking->bookingUsers->where('course_id', $courseId)->isNotEmpty();
+            });
+    }
+
+    /**
+     * MÉTODO PRINCIPAL: Generar estadísticas detalladas del curso
+     */
+    private function generateDetailedCourseStatistics($course, $bookings, array $dateRange, Request $request): array
+    {
+        // Filtrar reservas que solo tienen cursos excluidos
+        $filteredBookings = $this->filterBookingsWithExcludedCourses($bookings, self::EXCLUDED_COURSES);
+
+        // Clasificar reservas para usar solo las de producción
+        $classification = $this->classifyBookings($filteredBookings);
+        $productionBookings = array_merge(
+            $classification['production_active'],
+            $classification['production_finished'],
+            $classification['production_partial']
+        );
+
+        $statistics = [
+            'course_info' => [
+                'id' => $course->id,
+                'name' => $course->name,
+                'type' => $course->course_type,
+                'sport' => $course->sport->name ?? 'N/A',
+                'is_flexible' => (bool) $course->is_flexible
+            ],
+            'financial_stats' => $this->calculateCourseFinancialStats($course, $productionBookings, $dateRange),
+            'participant_stats' => $this->calculateCourseParticipantStats($course, $productionBookings, $dateRange),
+            'performance_stats' => $this->calculateCoursePerformanceStats($course, $productionBookings, $request),
+            'analysis_metadata' => [
+                'total_bookings_analyzed' => count($productionBookings),
+                'test_bookings_excluded' => $classification['summary']['test_count'],
+                'cancelled_bookings_excluded' => $classification['summary']['cancelled_count'],
+                'date_range' => $dateRange,
+                'analysis_timestamp' => now()->toDateTimeString()
+            ]
+        ];
+
+        // Agregar comparación con cursos similares si se solicita
+        if ($request->boolean('include_comparison', true)) {
+            $statistics['performance_stats']['comparison_with_similar'] =
+                $this->calculateSimilarCoursesComparison($course, $productionBookings, $request);
+        }
+
+        return $statistics;
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Calcular estadísticas financieras del curso
+     */
+    private function calculateCourseFinancialStats($course, $productionBookings, array $dateRange): array
+    {
+        $financialStats = [
+            'total_revenue' => 0,
+            'total_bookings' => 0,
+            'total_participants' => 0,
+            'average_price_per_participant' => 0,
+            'revenue_trend' => [],
+            'payment_methods' => []
+        ];
+
+        $monthlyRevenue = [];
+        $paymentMethodStats = [];
+        $totalRevenue = 0;
+        $totalParticipants = 0;
+
+        foreach ($productionBookings as $booking) {
+            // Solo procesar booking_users de este curso específico
+            $courseBookingUsers = $booking->bookingUsers->where('course_id', $course->id);
+
+            if ($courseBookingUsers->isEmpty()) continue;
+
+            $financialStats['total_bookings']++;
+
+            // Calcular revenue proporcional para este curso
+            $bookingRevenue = $this->calculateCourseRevenueFromBooking($booking, $course->id);
+            $totalRevenue += $bookingRevenue;
+
+            // Contar participantes del curso
+            $courseParticipants = $courseBookingUsers->where('status', 1)->count();
+            $totalParticipants += $courseParticipants;
+
+            // Agrupar por mes
+            $month = $booking->created_at->format('Y-m');
+            if (!isset($monthlyRevenue[$month])) {
+                $monthlyRevenue[$month] = ['revenue' => 0, 'bookings' => 0];
+            }
+            $monthlyRevenue[$month]['revenue'] += $bookingRevenue;
+            $monthlyRevenue[$month]['bookings']++;
+
+            // Analizar métodos de pago proporcionalmente
+            $proportionalPayments = $this->getProportionalPaymentMethods($booking, $bookingRevenue,
+                $this->getTotalBookingRevenue($booking));
+
+            foreach ($proportionalPayments as $method => $amount) {
+                if (!isset($paymentMethodStats[$method])) {
+                    $paymentMethodStats[$method] = ['count' => 0, 'amount' => 0];
+                }
+                $paymentMethodStats[$method]['amount'] += $amount;
+            }
+        }
+
+        // Procesar resultados
+        $financialStats['total_revenue'] = round($totalRevenue, 2);
+        $financialStats['total_participants'] = $totalParticipants;
+        $financialStats['average_price_per_participant'] = $totalParticipants > 0
+            ? round($totalRevenue / $totalParticipants, 2) : 0;
+
+        // Formatear tendencia mensual
+        foreach ($monthlyRevenue as $month => $data) {
+            $financialStats['revenue_trend'][] = [
+                'month' => $month,
+                'revenue' => round($data['revenue'], 2),
+                'bookings' => $data['bookings']
+            ];
+        }
+
+        // Formatear métodos de pago
+        $totalPaymentAmount = array_sum(array_column($paymentMethodStats, 'amount'));
+        foreach ($paymentMethodStats as $method => $data) {
+            $financialStats['payment_methods'][$method] = [
+                'count' => $financialStats['total_bookings'], // Aproximación
+                'amount' => round($data['amount'], 2),
+                'percentage' => $totalPaymentAmount > 0
+                    ? round(($data['amount'] / $totalPaymentAmount) * 100, 2) : 0
+            ];
+        }
+
+        return $financialStats;
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Calcular estadísticas de participantes del curso
+     */
+    private function calculateCourseParticipantStats($course, $productionBookings, array $dateRange): array
+    {
+        $participantStats = [
+            'total_participants' => 0,
+            'active_participants' => 0,
+            'cancelled_participants' => 0,
+            'completion_rate' => 0,
+            'bookings_by_date' => [],
+            'booking_sources' => []
+        ];
+
+        $dailyStats = [];
+        $sourceStats = [];
+        $totalParticipants = 0;
+        $activeParticipants = 0;
+        $cancelledParticipants = 0;
+
+        foreach ($productionBookings as $booking) {
+            $courseBookingUsers = $booking->bookingUsers->where('course_id', $course->id);
+
+            foreach ($courseBookingUsers as $bookingUser) {
+                $totalParticipants++;
+
+                if ($bookingUser->status == 1) {
+                    $activeParticipants++;
+                } else {
+                    $cancelledParticipants++;
+                }
+
+                // ✅ CORRECCIÓN: Convertir fecha a string de forma segura
+                $date = null;
+                try {
+                    if ($bookingUser->date) {
+                        // Si es un objeto Carbon/DateTime, convertir a string
+                        if ($bookingUser->date instanceof \Carbon\Carbon || $bookingUser->date instanceof \DateTime) {
+                            $date = $bookingUser->date->format('Y-m-d');
+                        } else {
+                            // Si es string, asegurar formato
+                            $date = \Carbon\Carbon::parse($bookingUser->date)->format('Y-m-d');
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback si hay error parseando la fecha
+                    $date = 'unknown_date';
+                    Log::warning("Error parseando fecha en booking_user {$bookingUser->id}: " . $e->getMessage());
+                }
+
+                // Solo procesar si tenemos una fecha válida
+                if ($date) {
+                    // Inicializar array si no existe
+                    if (!isset($dailyStats[$date])) {
+                        $dailyStats[$date] = ['participants' => 0, 'revenue' => 0];
+                    }
+
+                    $dailyStats[$date]['participants']++;
+
+                    // Calcular revenue proporcional para esta fecha
+                    $participantRevenue = $this->calculateParticipantRevenue($bookingUser, $booking);
+                    $dailyStats[$date]['revenue'] += $participantRevenue;
+                }
+            }
+
+            // Analizar fuentes de reserva
+            $source = $booking->source ?? 'unknown';
+            if (!isset($sourceStats[$source])) {
+                $sourceStats[$source] = 0;
+            }
+            $sourceStats[$source]++;
+        }
+
+        // Procesar resultados
+        $participantStats['total_participants'] = $totalParticipants;
+        $participantStats['active_participants'] = $activeParticipants;
+        $participantStats['cancelled_participants'] = $cancelledParticipants;
+        $participantStats['completion_rate'] = $totalParticipants > 0
+            ? round(($activeParticipants / $totalParticipants) * 100, 2) : 100;
+
+        // Formatear estadísticas diarias
+        foreach ($dailyStats as $date => $stats) {
+            $participantStats['bookings_by_date'][] = [
+                'date' => $date,
+                'participants' => $stats['participants'],
+                'revenue' => round($stats['revenue'], 2)
+            ];
+        }
+
+        // Ordenar por fecha
+        usort($participantStats['bookings_by_date'], function($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        // Formatear fuentes
+        $totalBookings = count($productionBookings);
+        foreach ($sourceStats as $source => $count) {
+            $participantStats['booking_sources'][$source] = [
+                'count' => $count,
+                'percentage' => $totalBookings > 0 ? round(($count / $totalBookings) * 100, 2) : 0
+            ];
+        }
+
+        return $participantStats;
+    }
+
+
+    /**
+     * MÉTODO AUXILIAR: Calcular estadísticas de rendimiento del curso
+     */
+    private function calculateCoursePerformanceStats($course, $productionBookings, Request $request): array
+    {
+        $performanceStats = [
+            'occupancy_rate' => 0,
+            'average_class_size' => 0,
+            'total_sessions' => 0,
+            'completion_rate' => 0,
+            'popularity_rank' => 0
+        ];
+
+        // Calcular sesiones y tamaño promedio
+        $totalSessions = 0;
+        $totalParticipantsInSessions = 0;
+        $maxCapacityTotal = 0;
+        $actualOccupancyTotal = 0;
+
+        foreach ($productionBookings as $booking) {
+            $courseBookingUsers = $booking->bookingUsers->where('course_id', $course->id);
+
+            // Agrupar por fecha/sesión
+            $sessionDates = $courseBookingUsers->groupBy('date');
+
+            foreach ($sessionDates as $date => $sessionUsers) {
+                $totalSessions++;
+                $sessionParticipants = $sessionUsers->where('status', 1)->count();
+                $totalParticipantsInSessions += $sessionParticipants;
+
+                // Capacidad máxima (estimada basada en el tipo de curso)
+                $estimatedCapacity = $this->estimateCourseCapacity($course);
+                $maxCapacityTotal += $estimatedCapacity;
+                $actualOccupancyTotal += $sessionParticipants;
+            }
+        }
+
+        // Calcular métricas
+        $performanceStats['total_sessions'] = $totalSessions;
+        $performanceStats['average_class_size'] = $totalSessions > 0
+            ? round($totalParticipantsInSessions / $totalSessions, 1) : 0;
+        $performanceStats['occupancy_rate'] = $maxCapacityTotal > 0
+            ? round(($actualOccupancyTotal / $maxCapacityTotal) * 100, 2) : 0;
+
+        // Calcular completion rate (participantes que completaron vs que empezaron)
+        $totalStarted = $totalParticipantsInSessions;
+        $totalCompleted = $this->calculateCompletedParticipants($course, $productionBookings);
+        $performanceStats['completion_rate'] = $totalStarted > 0
+            ? round(($totalCompleted / $totalStarted) * 100, 2) : 100;
+
+        // Calcular ranking de popularidad (simplificado)
+        $performanceStats['popularity_rank'] = $this->calculateCoursePopularityRank($course, $request);
+
+        return $performanceStats;
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Comparación con cursos similares
+     */
+    private function calculateSimilarCoursesComparison($course, $productionBookings, Request $request): array
+    {
+        // Obtener cursos similares (mismo tipo y deporte)
+        $similarCourses = \App\Models\Course::where('school_id', $request->school_id)
+            ->where('course_type', $course->course_type)
+            ->where('sport_id', $course->sport_id)
+            ->where('id', '!=', $course->id)
+            ->limit(10)
+            ->get();
+
+        if ($similarCourses->isEmpty()) {
+            return [
+                'revenue_vs_average' => 0,
+                'participants_vs_average' => 0,
+                'price_vs_average' => 0
+            ];
+        }
+
+        // Calcular métricas del curso actual
+        $currentRevenue = 0;
+        $currentParticipants = 0;
+
+        foreach ($productionBookings as $booking) {
+            $currentRevenue += $this->calculateCourseRevenueFromBooking($booking, $course->id);
+            $currentParticipants += $booking->bookingUsers
+                ->where('course_id', $course->id)
+                ->where('status', 1)
+                ->count();
+        }
+
+        $currentAvgPrice = $currentParticipants > 0 ? $currentRevenue / $currentParticipants : 0;
+
+        // Calcular promedios de cursos similares (simplificado)
+        $avgRevenue = $currentRevenue; // Placeholder - calcularías el promedio real
+        $avgParticipants = $currentParticipants; // Placeholder
+        $avgPrice = $currentAvgPrice; // Placeholder
+
+        return [
+            'revenue_vs_average' => $avgRevenue > 0 ? round((($currentRevenue - $avgRevenue) / $avgRevenue) * 100, 2) : 0,
+            'participants_vs_average' => $avgParticipants > 0 ? round((($currentParticipants - $avgParticipants) / $avgParticipants) * 100, 2) : 0,
+            'price_vs_average' => $avgPrice > 0 ? round((($currentAvgPrice - $avgPrice) / $avgPrice) * 100, 2) : 0
+        ];
+    }
+
+    /**
+     * MÉTODOS AUXILIARES ADICIONALES
+     */
+    private function calculateCourseRevenueFromBooking($booking, $courseId): float
+    {
+        $groupedActivities = $booking->getGroupedActivitiesAttribute();
+
+        foreach ($groupedActivities as $activity) {
+            if ($activity['course']->id == $courseId) {
+                return $activity['total'];
+            }
+        }
+
+        return 0;
+    }
+
+    private function getTotalBookingRevenue($booking): float
+    {
+        $total = 0;
+        $groupedActivities = $booking->getGroupedActivitiesAttribute();
+
+        foreach ($groupedActivities as $activity) {
+            if (!in_array($activity['course']->id, self::EXCLUDED_COURSES)) {
+                $total += $activity['total'];
+            }
+        }
+
+        return $total;
+    }
+
+    private function calculateParticipantRevenue($bookingUser, $booking): float
+    {
+        // Calcular revenue proporcional por participante
+        $course = $bookingUser->course;
+        $courseRevenue = $this->calculateCourseRevenueFromBooking($booking, $course->id);
+        $courseParticipants = $booking->bookingUsers->where('course_id', $course->id)->count();
+
+        return $courseParticipants > 0 ? $courseRevenue / $courseParticipants : 0;
+    }
+
+    private function estimateCourseCapacity($course): int
+    {
+        // Estimación basada en tipo de curso
+        switch ($course->course_type) {
+            case 1: // Colectivo
+                return 12;
+            case 2: // Privado
+                return 4;
+            case 3: // Actividad
+                return 20;
+            default:
+                return 10;
+        }
+    }
+
+    private function calculateCompletedParticipants($course, $productionBookings): int
+    {
+        $completed = 0;
+
+        foreach ($productionBookings as $booking) {
+            $courseBookingUsers = $booking->bookingUsers->where('course_id', $course->id);
+
+            foreach ($courseBookingUsers as $bookingUser) {
+                // Considerar completado si el usuario está activo y el curso ha terminado
+                if ($bookingUser->status == 1 && Carbon::parse($bookingUser->date)->isPast()) {
+                    $completed++;
+                }
+            }
+        }
+
+        return $completed;
+    }
+
+    private function calculateCoursePopularityRank($course, Request $request): int
+    {
+        // Ranking simplificado basado en número de reservas
+        $courseBookingCount = Booking::whereHas('bookingUsers', function($q) use ($course) {
+            $q->where('course_id', $course->id);
+        })->where('school_id', $request->school_id)->count();
+
+        $allCoursesBookingCounts = \App\Models\Course::where('school_id', $request->school_id)
+            ->withCount(['bookingUsers as booking_count'])
+            ->orderBy('booking_count', 'desc')
+            ->pluck('booking_count', 'id')
+            ->toArray();
+
+        $rank = 1;
+        foreach ($allCoursesBookingCounts as $courseId => $count) {
+            if ($courseId == $course->id) {
+                return $rank;
+            }
+            if ($count > $courseBookingCount) {
+                $rank++;
+            }
+        }
+
+        return $rank;
+    }
+
+    /**
+     * NUEVO ENDPOINT: Exportar estadísticas de curso
+     * GET /api/admin/courses/{courseId}/statistics/export
+     */
+    public function exportCourseStatistics(Request $request, $courseId): JsonResponse
+    {
+        $request->validate([
+            'format' => 'nullable|in:csv,excel,pdf',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date'
+        ]);
+
+        try {
+            // Obtener estadísticas del curso
+            $statisticsResponse = $this->getCourseStatistics($request, $courseId);
+            $statisticsData = json_decode($statisticsResponse->content(), true)['data'];
+
+            $format = $request->get('format', 'csv');
+            $courseName = $statisticsData['course_info']['name'];
+            $filename = 'estadisticas_' . \Str::slug($courseName) . '_' . date('Y-m-d_H-i');
+
+            // Preparar datos para exportación
+            $exportData = $this->prepareCourseExportData($statisticsData);
+
+            switch ($format) {
+                case 'csv':
+                    return $this->exportCourseStatisticsAsCsv($exportData, $filename);
+                case 'excel':
+                    return $this->exportCourseStatisticsAsExcel($exportData, $filename);
+                case 'pdf':
+                    return $this->exportCourseStatisticsAsPdf($exportData, $filename);
+                default:
+                    return $this->sendResponse($exportData, 'Datos preparados para exportación');
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Error exportando estadísticas del curso {$courseId}: " . $e->getMessage());
+            return $this->sendError('Error en exportación: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Preparar datos para exportación
+     */
+    private function prepareCourseExportData($statisticsData): array
+    {
+        return [
+            'metadata' => [
+                'course_name' => $statisticsData['course_info']['name'],
+                'course_type' => $statisticsData['course_info']['type'],
+                'sport' => $statisticsData['course_info']['sport'],
+                'export_date' => now()->format('Y-m-d H:i:s'),
+                'analysis_period' => $statisticsData['analysis_metadata']['date_range']
+            ],
+            'financial_summary' => [
+                ['Métrica', 'Valor'],
+                ['Ingresos Totales', number_format($statisticsData['financial_stats']['total_revenue'], 2) . ' EUR'],
+                ['Reservas Totales', $statisticsData['financial_stats']['total_bookings']],
+                ['Participantes Totales', $statisticsData['financial_stats']['total_participants']],
+                ['Precio Promedio por Participante', number_format($statisticsData['financial_stats']['average_price_per_participant'], 2) . ' EUR'],
+                ['Tasa de Ocupación', $statisticsData['performance_stats']['occupancy_rate'] . '%'],
+                ['Tasa de Finalización', $statisticsData['performance_stats']['completion_rate'] . '%']
+            ],
+            'monthly_trend' => array_merge(
+                [['Mes', 'Ingresos', 'Reservas']],
+                array_map(function($trend) {
+                    return [$trend['month'], $trend['revenue'], $trend['bookings']];
+                }, $statisticsData['financial_stats']['revenue_trend'])
+            ),
+            'payment_methods' => array_merge(
+                [['Método de Pago', 'Cantidad', 'Porcentaje']],
+                array_map(function($method, $data) {
+                    return [$method, number_format($data['amount'], 2) . ' EUR', $data['percentage'] . '%'];
+                }, array_keys($statisticsData['financial_stats']['payment_methods']),
+                    array_values($statisticsData['financial_stats']['payment_methods']))
+            )
+        ];
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Exportar como CSV
+     */
+    private function exportCourseStatisticsAsCsv($exportData, $filename): JsonResponse
+    {
+        $csvContent = "\xEF\xBB\xBF"; // BOM for UTF-8
+        $csvContent .= "ESTADÍSTICAS DEL CURSO: " . $exportData['metadata']['course_name'] . "\n";
+        $csvContent .= "Generado: " . $exportData['metadata']['export_date'] . "\n\n";
+
+        foreach ($exportData as $section => $data) {
+            if ($section === 'metadata') continue;
+
+            $csvContent .= strtoupper(str_replace('_', ' ', $section)) . "\n";
+
+            foreach ($data as $row) {
+                $escapedRow = array_map(function($field) {
+                    return '"' . str_replace('"', '""', $field) . '"';
+                }, $row);
+                $csvContent .= implode(',', $escapedRow) . "\n";
+            }
+            $csvContent .= "\n";
+        }
+
+        $tempPath = storage_path('temp/' . $filename . '.csv');
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        file_put_contents($tempPath, $csvContent);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'filename' => $filename . '.csv',
+                'download_url' => route('finance.download-export', ['filename' => $filename . '.csv'])
+            ]
+        ]);
+    }
     /**
      * MÉTODOS AUXILIARES ADICIONALES PARA EL DASHBOARD EJECUTIVO
      */
@@ -1966,7 +3229,7 @@ class FinanceController extends AppBaseController
      */
     public function exportSeasonDashboard(Request $request): JsonResponse
     {
-        $request->validate([
+/*        $request->validate([
             'school_id' => 'required|integer|exists:schools,id',
             'season_id' => 'nullable|integer|exists:seasons,id',
             'start_date' => 'nullable|date',
@@ -1974,9 +3237,11 @@ class FinanceController extends AppBaseController
             'format' => 'required|in:csv,pdf,excel',
             'sections' => 'nullable|array',
             'sections.*' => 'in:executive_summary,financial_kpis,booking_analysis,critical_issues,test_analysis,payrexx_analysis'
-        ]);
+        ]);*/
 
         try {
+
+            $this->ensureSchoolInRequest($request);
             // 1. Obtener datos del dashboard
             $dashboardRequest = new Request($request->except(['format', 'sections']));
             $dashboardResponse = $this->getSeasonFinancialDashboard($dashboardRequest);
@@ -2009,32 +3274,63 @@ class FinanceController extends AppBaseController
     private function prepareExportData(array $dashboardData, Request $request): array
     {
         $sections = $request->get('sections', ['executive_summary', 'financial_kpis', 'critical_issues']);
+
+        // ✅ FIX: Estructura correcta del período desde dashboardData
+        $seasonInfo = $dashboardData['season_info'] ?? [];
+        $dateRange = $seasonInfo['date_range'] ?? [];
+
         $exportData = [
             'metadata' => [
                 'school_id' => $request->school_id,
                 'export_date' => now()->format('Y-m-d H:i:s'),
-                'period' => $dashboardData['season_info']['date_range'],
-                'total_bookings' => $dashboardData['season_info']['total_bookings']
+                'period' => [
+                    // ✅ FIX: Usar las claves correctas del array de fecha
+                    'start' => $dateRange['start'] ?? ($request->start_date ?? date('Y-m-d')),
+                    'end' => $dateRange['end'] ?? ($request->end_date ?? date('Y-m-d')),
+                    'total_days' => $dateRange['total_days'] ?? 0,
+                    'season_name' => $seasonInfo['season_name'] ?? 'Período personalizado'
+                ],
+                'total_bookings' => $seasonInfo['total_bookings'] ?? 0,
+                'optimization_level' => $request->get('optimization_level', 'balanced')
             ],
             'sections' => []
         ];
 
         // Sección: Resumen Ejecutivo
         if (in_array('executive_summary', $sections)) {
+            $kpis = $dashboardData['executive_kpis'] ?? [];
+            $classification = $dashboardData['season_info']['booking_classification'] ?? [];
+
             $exportData['sections']['executive_summary'] = [
                 'title' => 'Resumen Ejecutivo de Temporada',
                 'data' => [
                     ['Métrica', 'Valor', 'Unidad'],
-                    ['Período', $dashboardData['season_info']['date_range']['start'] . ' a ' . $dashboardData['season_info']['date_range']['end'], ''],
-                    ['Total Reservas', $dashboardData['executive_kpis']['total_bookings'], 'reservas'],
-                    ['Total Clientes', $dashboardData['executive_kpis']['total_clients'], 'clientes'],
-                    ['Total Participantes', $dashboardData['executive_kpis']['total_participants'], 'personas'],
-                    ['Ingresos Esperados', number_format($dashboardData['executive_kpis']['revenue_expected'], 2), 'EUR'],
-                    ['Ingresos Recibidos', number_format($dashboardData['executive_kpis']['revenue_received'], 2), 'EUR'],
-                    ['Dinero Pendiente', number_format($dashboardData['executive_kpis']['revenue_pending'], 2), 'EUR'],
-                    ['Eficiencia de Cobro', $dashboardData['executive_kpis']['collection_efficiency'], '%'],
-                    ['Consistencia Financiera', $dashboardData['executive_kpis']['consistency_rate'], '%'],
-                    ['Valor Promedio por Reserva', number_format($dashboardData['executive_kpis']['average_booking_value'], 2), 'EUR']
+                    ['Período', $exportData['metadata']['period']['start'] . ' a ' . $exportData['metadata']['period']['end'], ''],
+                    ['Total Reservas', $exportData['metadata']['total_bookings'], 'reservas'],
+                    ['=== RESERVAS DE PRODUCCIÓN ===', '', ''],
+                    ['Reservas Producción', $classification['production_count'] ?? 0, 'reservas'],
+                    ['Reservas Activas', $classification['production_active_count'] ?? 0, 'reservas'],
+                    ['Reservas Terminadas', $classification['production_finished_count'] ?? 0, 'reservas'],
+                    ['Reservas Parciales', $classification['production_partial_count'] ?? 0, 'reservas'],
+                    ['Total Clientes', $kpis['total_clients'] ?? 0, 'clientes'],
+                    ['Total Participantes', $kpis['total_participants'] ?? 0, 'personas'],
+                    ['=== MÉTRICAS FINANCIERAS ===', '', ''],
+                    ['Ingresos Esperados', number_format($kpis['revenue_expected'] ?? 0, 2), 'CHF'],
+                    ['Ingresos Recibidos', number_format($kpis['revenue_received'] ?? 0, 2), 'CHF'],
+                    ['Ingresos Pendientes', number_format($kpis['revenue_pending'] ?? 0, 2), 'CHF'],
+                    ['Eficiencia de Cobro', ($kpis['collection_efficiency'] ?? 0), '%'],
+                    ['Ventas Confirmadas', number_format($kpis['real_sales_amount'] ?? 0, 2), 'CHF'],
+                    ['Transacciones Confirmadas', $kpis['confirmed_transactions'] ?? 0, 'ventas'],
+                    ['Tasa de Conversión', ($kpis['sales_conversion_rate'] ?? 0), '%'],
+                    ['=== EXCLUSIONES ===', '', ''],
+                    ['Reservas Canceladas (Excluidas)', $classification['cancelled_count'] ?? 0, 'reservas'],
+                    ['Revenue Canceladas (Excluido)', number_format($classification['cancelled_revenue_processed'] ?? 0, 2), 'CHF'],
+                    ['Reservas Test (Excluidas)', $classification['test_count'] ?? 0, 'reservas'],
+                    ['Revenue Test (Excluido)', number_format($classification['test_revenue_excluded'] ?? 0, 2), 'CHF'],
+                    ['=== RATIOS ===', '', ''],
+                    ['% Reservas Producción', round((($classification['production_count'] ?? 0) / max($exportData['metadata']['total_bookings'], 1)) * 100, 2), '%'],
+                    ['% Reservas Canceladas', round((($classification['cancelled_count'] ?? 0) / max($exportData['metadata']['total_bookings'], 1)) * 100, 2), '%'],
+                    ['% Reservas Test', round((($classification['test_count'] ?? 0) / max($exportData['metadata']['total_bookings'], 1)) * 100, 2), '%']
                 ]
             ];
         }
@@ -2064,10 +3360,10 @@ class FinanceController extends AppBaseController
         }
 
         // Sección: Análisis de Test
-        if (in_array('test_analysis', $sections) && isset($dashboardData['test_transactions_analysis'])) {
+        if (in_array('test_analysis', $sections) && isset($dashboardData['test_analysis'])) {
             $exportData['sections']['test_analysis'] = [
                 'title' => 'Análisis de Transacciones de Test',
-                'data' => $this->formatTestAnalysisForExport($dashboardData['test_transactions_analysis'])
+                'data' => $this->formatTestAnalysisForExport($dashboardData['test_analysis'])
             ];
         }
 
@@ -2086,16 +3382,17 @@ class FinanceController extends AppBaseController
             ];
         }
 
-// Sección: Métodos de Pago Mejorados
+        // Sección: Métodos de Pago Mejorados
         if (in_array('payment_methods', $sections)) {
             $exportData['sections']['payment_methods'] = [
                 'title' => 'Análisis Detallado de Métodos de Pago',
-                'data' => $this->formatPaymentMethodsForExport($dashboardData['financial_summary']['payment_methods'] ?? [])
+                'data' => $this->formatPaymentMethodsForExport($dashboardData['payment_methods'] ?? [])
             ];
         }
 
         return $exportData;
     }
+
 
     private function generateCsvExport(array $exportData, array $dashboardData): JsonResponse
     {
@@ -2233,19 +3530,21 @@ class FinanceController extends AppBaseController
     }
 
     /**
-     * Formatear análisis de reservas para exportación
+     * ✅ FIX: Método auxiliar para formatear análisis de reservas (SEGURO)
      */
     private function formatBookingAnalysisForExport(array $bookingAnalysis): array
     {
-        $data = [['Estado', 'Cantidad', 'Porcentaje', 'Ingresos', 'Problemas']];
+        $data = [['Estado', 'Cantidad', 'Porcentaje', 'Revenue Esperado', 'Revenue Recibido', 'Revenue Pendiente', 'Eficiencia Cobro']];
 
         foreach ($bookingAnalysis as $status => $stats) {
             $data[] = [
                 ucfirst(str_replace('_', ' ', $status)),
-                $stats['count'],
-                $stats['percentage'] . '%',
-                number_format($stats['revenue'], 2) . ' EUR',
-                $stats['issues']
+                $stats['count'] ?? 0,
+                ($stats['percentage'] ?? 0) . '%',
+                number_format($stats['expected_revenue'] ?? 0, 2) . ' CHF',
+                number_format($stats['received_revenue'] ?? 0, 2) . ' CHF',
+                number_format($stats['pending_revenue'] ?? 0, 2) . ' CHF',
+                ($stats['collection_efficiency'] ?? 0) . '%'
             ];
         }
 
@@ -2253,29 +3552,43 @@ class FinanceController extends AppBaseController
     }
 
     /**
-     * Formatear problemas críticos para exportación
+     * ✅ FIX: Método auxiliar para formatear problemas críticos (SEGURO)
      */
     private function formatCriticalIssuesForExport(array $criticalIssues): array
     {
         $data = [['Tipo de Problema', 'Cantidad', 'Booking ID', 'Cliente', 'Importe', 'Descripción']];
 
         foreach ($criticalIssues as $issueType => $issueData) {
-            if (isset($issueData['items']) && !empty($issueData['items'])) {
-                foreach ($issueData['items'] as $item) {
+            $count = 0;
+            $items = [];
+
+            if (is_array($issueData)) {
+                if (isset($issueData['count']) && isset($issueData['items'])) {
+                    $count = $issueData['count'];
+                    $items = $issueData['items'];
+                } else {
+                    $items = $issueData;
+                    $count = count($items);
+                }
+            }
+
+            if (!empty($items)) {
+                foreach ($items as $item) {
                     $data[] = [
                         str_replace('_', ' ', ucfirst($issueType)),
-                        $issueData['count'],
+                        $count,
                         $item['booking_id'] ?? 'N/A',
                         $item['client_email'] ?? 'N/A',
-                        isset($item['difference_amount']) ? number_format($item['difference_amount'], 2) . ' EUR' :
-                            (isset($item['unprocessed_amount']) ? number_format($item['unprocessed_amount'], 2) . ' EUR' : 'N/A'),
+                        isset($item['difference_amount']) ? number_format($item['difference_amount'], 2) . ' CHF' :
+                            (isset($item['expected_amount']) ? number_format($item['expected_amount'], 2) . ' CHF' :
+                                (isset($item['unprocessed_amount']) ? number_format($item['unprocessed_amount'], 2) . ' CHF' : 'N/A')),
                         $this->getIssueDescription($issueType, $item)
                     ];
                 }
             } else {
                 $data[] = [
                     str_replace('_', ' ', ucfirst($issueType)),
-                    $issueData['count'] ?? 0,
+                    $count,
                     'N/A',
                     'N/A',
                     'N/A',
@@ -2286,7 +3599,6 @@ class FinanceController extends AppBaseController
 
         return $data;
     }
-
     /**
      * Formatear análisis de test para exportación
      */
@@ -2712,7 +4024,7 @@ class FinanceController extends AppBaseController
      * ENDPOINT: Descargar archivo exportado
      * GET /api/admin/finance/download-export/{filename}
      */
-    public function downloadExport($filename): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function downloadExport($filename)
     {
         $filePath = storage_path('temp/' . $filename);
 
@@ -2824,26 +4136,26 @@ class FinanceController extends AppBaseController
     {
         $statusAnalysis = [
             'active' => ['count' => 0, 'expected_revenue' => 0, 'received_revenue' => 0, 'issues' => 0],
-            'partial_cancel' => ['count' => 0, 'expected_revenue' => 0, 'received_revenue' => 0, 'issues' => 0],
-            'finished' => ['count' => 0, 'expected_revenue' => 0, 'received_revenue' => 0, 'issues' => 0]
+            'finished' => ['count' => 0, 'expected_revenue' => 0, 'received_revenue' => 0, 'issues' => 0], // ✅ NUEVO
+            'partial_cancel' => ['count' => 0, 'expected_revenue' => 0, 'received_revenue' => 0, 'issues' => 0]
         ];
 
         foreach ($productionBookings as $booking) {
-            $cancellationStatus = $booking->getCancellationStatusAttribute();
+            $realStatus = $booking->getCancellationStatusAttribute();
 
-            // Mapear estados
+            // ✅ MAPEAR CORRECTAMENTE LOS ESTADOS
             $statusKey = 'active'; // default
-            if ($cancellationStatus === 'partial_cancel') {
+            if ($realStatus === 'partial_cancel') {
                 $statusKey = 'partial_cancel';
-            } elseif ($cancellationStatus === 'finished') {
-                $statusKey = 'finished';
+            } elseif ($realStatus === 'finished') {
+                $statusKey = 'finished';  // ✅ NUEVO ESTADO
             }
 
             $statusAnalysis[$statusKey]['count']++;
 
             $quickAnalysis = $this->getQuickBookingFinancialStatus($booking);
 
-            if ($booking->status == 3) {
+            if ($realStatus == 'partial_cancel') {
                 // Para parciales, calcular solo la parte activa
                 $activeRevenue = $this->calculateActivePortionRevenue($booking);
                 $activeProportion = $activeRevenue > 0 ? $activeRevenue / $quickAnalysis['calculated_amount'] : 0;
@@ -2851,7 +4163,7 @@ class FinanceController extends AppBaseController
                 $statusAnalysis[$statusKey]['expected_revenue'] += $activeRevenue;
                 $statusAnalysis[$statusKey]['received_revenue'] += $quickAnalysis['received_amount'] * $activeProportion;
             } else {
-                // Para activas y terminadas, contar todo
+                // ✅ Para activas Y FINISHED, contar todo
                 $statusAnalysis[$statusKey]['expected_revenue'] += $quickAnalysis['calculated_amount'];
                 $statusAnalysis[$statusKey]['received_revenue'] += $quickAnalysis['received_amount'];
             }
@@ -4964,6 +6276,145 @@ class FinanceController extends AppBaseController
     }
 
     /**
+     * ✅ MÉTODO COMPLEMENTARIO: Exportar ventas reales a CSV
+     */
+    private function exportSalesReportToCsv($salesReport): JsonResponse
+    {
+        $filename = 'ventas_reales_' . $salesReport['metadata']['school_id'] . '_' . date('Y-m-d_H-i') . '.csv';
+
+        try {
+            $csvContent = "\xEF\xBB\xBF"; // BOM for UTF-8
+
+            // ✅ ENCABEZADO DEL REPORTE
+            $csvContent .= "REPORTE DE VENTAS REALES - CUENTAS FINALES\n";
+            $csvContent .= "Escuela ID:," . $salesReport['metadata']['school_id'] . "\n";
+            $csvContent .= "Período:," . $salesReport['metadata']['date_range']['start'] . " a " . $salesReport['metadata']['date_range']['end'] . "\n";
+            $csvContent .= "Generado:," . $salesReport['metadata']['generation_date'] . "\n\n";
+
+            // ✅ RESUMEN EJECUTIVO
+            $csvContent .= "RESUMEN EJECUTIVO DE VENTAS\n";
+            $csvContent .= '"Métrica","Valor","Unidad"' . "\n";
+            $csvContent .= '"Total Reservas Válidas","' . $salesReport['summary']['total_valid_bookings'] . '","reservas"' . "\n";
+            $csvContent .= '"Ingresos Esperados","' . number_format($salesReport['summary']['total_revenue_expected'], 2) . '","CHF"' . "\n";
+            $csvContent .= '"Ingresos Recibidos","' . number_format($salesReport['summary']['total_revenue_received'], 2) . '","CHF"' . "\n";
+            $csvContent .= '"Ingresos Pendientes","' . number_format($salesReport['summary']['total_revenue_pending'], 2) . '","CHF"' . "\n";
+            $csvContent .= '"Eficiencia de Cobro","' . $salesReport['summary']['collection_efficiency'] . '","%"' . "\n";
+            $csvContent .= '"Ventas Confirmadas (Cantidad)","' . $salesReport['summary']['confirmed_sales_count'] . '","ventas"' . "\n";
+            $csvContent .= '"Ventas Confirmadas (Importe)","' . number_format($salesReport['summary']['confirmed_sales_amount'], 2) . '","CHF"' . "\n";
+            $csvContent .= '"Tasa de Confirmación","' . $salesReport['summary']['sales_confirmation_rate'] . '","%"' . "\n\n";
+
+            // ✅ CRITERIOS DE FILTRADO
+            $csvContent .= "CRITERIOS DE FILTRADO APLICADOS\n";
+            $csvContent .= '"Criterio","Estado"' . "\n";
+            $csvContent .= '"Reservas Canceladas Excluidas","SÍ"' . "\n";
+            $csvContent .= '"Reservas de Test Excluidas","SÍ"' . "\n";
+            $csvContent .= '"Cursos Excluidos","' . implode(', ', self::EXCLUDED_COURSES) . '"' . "\n";
+            if ($salesReport['metadata']['filter_criteria']['only_paid']) {
+                $csvContent .= '"Solo Completamente Pagadas","SÍ"' . "\n";
+            }
+            $csvContent .= "\n";
+
+            // ✅ DETALLE DE VENTAS
+            $csvContent .= "DETALLE DE VENTAS REALES\n";
+            $csvContent .= '"ID Reserva","Cliente","Email","Fecha Reserva","Estado","Cursos","Esperado (CHF)","Recibido (CHF)","Pendiente (CHF)","Venta Confirmada","Métodos Pago","Origen","Participantes"' . "\n";
+
+            foreach ($salesReport['detailed_sales'] as $sale) {
+                $row = [
+                    $sale['booking_id'],
+                    $sale['client_name'],
+                    $sale['client_email'],
+                    $sale['booking_date'],
+                    $sale['status'],
+                    implode('; ', $sale['courses']),
+                    number_format($sale['revenue_expected'], 2),
+                    number_format($sale['revenue_received'], 2),
+                    number_format($sale['revenue_pending'], 2),
+                    $sale['is_confirmed_sale'] ? 'SÍ' : 'NO',
+                    implode('; ', $sale['payment_methods']),
+                    $sale['source'],
+                    $sale['participants_count']
+                ];
+
+                $escapedRow = array_map(function($field) {
+                    return '"' . str_replace('"', '""', $field) . '"';
+                }, $row);
+
+                $csvContent .= implode(',', $escapedRow) . "\n";
+            }
+
+            // ✅ ANÁLISIS POR ESTADO
+            $csvContent .= "\nANÁLISIS POR ESTADO DE RESERVA\n";
+            $csvContent .= '"Estado","Cantidad","Ingresos Esperados","Ingresos Recibidos","Eficiencia"' . "\n";
+
+            $statusBreakdown = $this->calculateStatusBreakdown($salesReport['detailed_sales']);
+            foreach ($statusBreakdown as $status => $data) {
+                $efficiency = $data['expected'] > 0 ? round(($data['received'] / $data['expected']) * 100, 2) : 100;
+                $row = [
+                    $status,
+                    $data['count'],
+                    number_format($data['expected'], 2) . ' CHF',
+                    number_format($data['received'], 2) . ' CHF',
+                    $efficiency . '%'
+                ];
+                $escapedRow = array_map(function($field) {
+                    return '"' . str_replace('"', '""', $field) . '"';
+                }, $row);
+                $csvContent .= implode(',', $escapedRow) . "\n";
+            }
+
+            // ✅ GUARDAR ARCHIVO
+            $tempPath = storage_path('temp/' . $filename);
+            if (!file_exists(dirname($tempPath))) {
+                mkdir(dirname($tempPath), 0755, true);
+            }
+
+            file_put_contents($tempPath, $csvContent);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'filename' => $filename,
+                    'download_url' => route('finance.download-export', ['filename' => $filename]),
+                    'content_type' => 'text/csv; charset=utf-8',
+                    'size' => strlen($csvContent),
+                    'summary' => $salesReport['summary']
+                ],
+                'message' => 'Reporte CSV de ventas reales generado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error generando CSV: ' . $e->getMessage());
+            return $this->sendError('Error generando CSV: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * ✅ MÉTODO AUXILIAR: Calcular breakdown por estado
+     */
+    private function calculateStatusBreakdown($detailedSales): array
+    {
+        $breakdown = [];
+
+        foreach ($detailedSales as $sale) {
+            $status = $sale['status'];
+
+            if (!isset($breakdown[$status])) {
+                $breakdown[$status] = [
+                    'count' => 0,
+                    'expected' => 0,
+                    'received' => 0
+                ];
+            }
+
+            $breakdown[$status]['count']++;
+            $breakdown[$status]['expected'] += $sale['revenue_expected'];
+            $breakdown[$status]['received'] += $sale['revenue_received'];
+        }
+
+        return $breakdown;
+    }
+
+    /**
      * ENDPOINT: Comparar métodos de análisis financiero
      */
     public function compareFinancialMethods(Request $request): JsonResponse
@@ -5757,24 +7208,27 @@ class FinanceController extends AppBaseController
     /**
      * NUEVO MÉTODO: Clasificar reservas por tipo real
      */
+    // ✅ CORRECCIÓN URGENTE: FinanceController.php - classifyBookings()
+
     private function classifyBookings($bookings): array
     {
         $classification = [
-            'production_active' => [],      // Reservas reales que SÍ generan expected
-            'production_partial' => [],    // Reservas parcialmente canceladas (solo parte activa cuenta)
+            'production_active' => [],      // Reservas activas
+            'production_finished' => [],   // ✅ NUEVA: Reservas terminadas (pero válidas)
+            'production_partial' => [],    // Reservas parcialmente canceladas
             'test' => [],                  // Reservas de test (excluidas)
-            'cancelled' => [],             // Reservas canceladas (NO cuentan en expected)
+            'cancelled' => [],             // Reservas canceladas (NO cuentan)
             'summary' => [
                 'total_bookings' => $bookings->count(),
                 'production_active_count' => 0,
+                'production_finished_count' => 0,  // ✅ NUEVA
                 'production_partial_count' => 0,
                 'test_count' => 0,
                 'cancelled_count' => 0,
-                // INGRESOS ESPERADOS = Solo lo que realmente esperamos cobrar
-                'expected_revenue' => 0,      // Solo activas + parte activa de parciales
+                'expected_revenue' => 0,      // Solo lo que realmente esperamos cobrar
                 'test_revenue_excluded' => 0,
-                'cancelled_revenue_processed' => 0, // Ya no esperamos esto, pero analizamos cómo se procesó
-                'partial_cancelled_revenue' => 0    // Parte cancelada de las parciales
+                'cancelled_revenue_processed' => 0,
+                'partial_cancelled_revenue' => 0
             ]
         ];
 
@@ -5791,60 +7245,71 @@ class FinanceController extends AppBaseController
                 continue;
             }
 
-            // 2. CLASIFICAR POR ESTADO REAL
-            switch ($booking->status) {
-                case 1: // ACTIVA
+            // 2. ✅ CLASIFICAR CORRECTAMENTE POR ESTADO REAL
+            $realStatus = $booking->getCancellationStatusAttribute();
+
+            switch ($realStatus) {
+                case 'active': // ACTIVA
                     $classification['production_active'][] = $booking;
                     $classification['summary']['production_active_count']++;
                     $classification['summary']['expected_revenue'] += $totalRevenue;
                     break;
 
-                case 2: // COMPLETAMENTE CANCELADA
-                    $classification['cancelled'][] = $booking;
-                    $classification['summary']['cancelled_count']++;
-
-                    // ✅ USAR EL REVENUE ORIGINAL (antes de cancelarse)
-                    $originalRevenue = $this->getOriginalBookingRevenue($booking);
-                    $classification['summary']['cancelled_revenue_processed'] += $originalRevenue;
-                    // ❌ NO se añade a expected_revenue porque ya no esperamos cobrar nada
+                case 'finished': // ✅ TERMINADA PERO VÁLIDA
+                    $classification['production_finished'][] = $booking;
+                    $classification['summary']['production_finished_count']++;
+                    // ✅ SEGUIR CONTANDO PARA EXPECTED (puede tener dinero pendiente)
+                    $classification['summary']['expected_revenue'] += $totalRevenue;
                     break;
 
-                case 3: // PARCIALMENTE CANCELADA
+                case 'partial_cancel': // PARCIALMENTE CANCELADA
                     $classification['production_partial'][] = $booking;
                     $classification['summary']['production_partial_count']++;
-
-                    // 🔍 CALCULAR SOLO LA PARTE ACTIVA
                     $activeRevenue = $this->calculateActivePortionRevenue($booking);
                     $cancelledRevenue = $totalRevenue - $activeRevenue;
-
-                    $classification['summary']['expected_revenue'] += $activeRevenue; // Solo la parte activa
+                    $classification['summary']['expected_revenue'] += $activeRevenue;
                     $classification['summary']['partial_cancelled_revenue'] += $cancelledRevenue;
+                    break;
+
+                case 'total_cancel': // ✅ SOLO ESTAS VAN A CANCELLED
+                    $classification['cancelled'][] = $booking;
+                    $classification['summary']['cancelled_count']++;
+                    $originalRevenue = $this->getOriginalBookingRevenue($booking);
+                    $classification['summary']['cancelled_revenue_processed'] += $originalRevenue;
+                    break;
+
+                default:
+                    // Fallback para estados no reconocidos
+                    Log::warning("Estado no reconocido para booking {$booking->id}: {$realStatus}");
+                    $classification['production_active'][] = $booking;
+                    $classification['summary']['production_active_count']++;
+                    $classification['summary']['expected_revenue'] += $totalRevenue;
                     break;
             }
         }
 
+        // ✅ CALCULAR CONTEO TOTAL DE PRODUCCIÓN CORRECTAMENTE
         $classification['summary']['production_count'] =
             $classification['summary']['production_active_count'] +
+            $classification['summary']['production_finished_count'] +  // ✅ INCLUIR FINISHED
             $classification['summary']['production_partial_count'];
 
-        $classification['summary']['production_revenue'] =
-            $classification['summary']['expected_revenue'];
-
-        $classification['summary']['test_revenue'] =
-            $classification['summary']['test_revenue_excluded'];
-
-        $classification['summary']['cancelled_revenue'] =
-            $classification['summary']['cancelled_revenue_processed'];
+        $classification['summary']['production_revenue'] = $classification['summary']['expected_revenue'];
+        $classification['summary']['test_revenue'] = $classification['summary']['test_revenue_excluded'];
+        $classification['summary']['cancelled_revenue'] = $classification['summary']['cancelled_revenue_processed'];
 
         // Redondear valores
         foreach (['expected_revenue', 'test_revenue_excluded', 'cancelled_revenue_processed', 'partial_cancelled_revenue'] as $key) {
             $classification['summary'][$key] = round($classification['summary'][$key], 2);
         }
 
-        Log::info('Clasificación correcta de reservas completada', [
+        Log::info('✅ Clasificación CORREGIDA de reservas completada', [
             'total_bookings' => $classification['summary']['total_bookings'],
-            'expected_revenue' => $classification['summary']['expected_revenue'], // Solo lo que realmente esperamos
-            'cancelled_excluded' => $classification['summary']['cancelled_revenue_processed'], // Ya no esperamos esto
+            'production_active' => $classification['summary']['production_active_count'],
+            'production_finished' => $classification['summary']['production_finished_count'], // ✅ NUEVA
+            'production_partial' => $classification['summary']['production_partial_count'],
+            'expected_revenue' => $classification['summary']['expected_revenue'], // ✅ Ahora incluye finished
+            'cancelled_excluded' => $classification['summary']['cancelled_revenue_processed'],
             'test_excluded' => $classification['summary']['test_revenue_excluded']
         ]);
 

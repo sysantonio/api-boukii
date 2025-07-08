@@ -3,6 +3,7 @@
 use App\Exports\CoursesExport;
 use App\Exports\UsedVouchersExport;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\FinanceControllerRefactor;
 use App\Http\Controllers\Admin\StatisticsController;
 use App\Models\Booking;
 use App\Models\BookingUser;
@@ -107,6 +108,9 @@ Route::any('/fix-subgroups', function () {
 Route::get('/admin/finance/download-export/{filename}', [FinanceController::class, 'downloadExport'])
     ->name('finance.download-export');
 
+Route::get('/admin/finance/debug-pending', [FinanceController::class, 'debugPendingDiscrepancy']);
+Route::get('/download-export/{filename}', [FinanceController::class, 'downloadExport'])
+    ->name('finance.download-export');
 
 Route::get('/debug-books', [StatisticsController::class, 'debugSpecificBookings']);
 Route::get('/debug-test-detection', [FinanceController::class, 'debugTestDetection']);

@@ -382,7 +382,6 @@ class Booking extends Model
     }
 
 
-
     public function getVouchersUsedAmountAttribute()
     {
         return $this->vouchersLogs()->sum('amount');
