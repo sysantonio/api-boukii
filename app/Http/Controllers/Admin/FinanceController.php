@@ -1671,12 +1671,16 @@ class FinanceController extends AppBaseController
             // ✅ AGREGAR: Aplicar la misma clasificación que en los KPIs
             $classification = $this->classifyBookings($filteredBookings);
 
-            // ✅ Solo usar reservas de producción
             $productionBookings = array_merge(
                 $classification['production_active'],
                 $classification['production_finished'],
                 $classification['production_partial']
             );
+
+            // 👇 Si se piden solo canceladas, añadir también las canceladas
+            if ($request->boolean('only_cancelled')) {
+                $productionBookings = array_merge($productionBookings, $classification['cancelled']);
+            }
 
             $bookingDetails = [];
 
