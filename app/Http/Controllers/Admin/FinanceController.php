@@ -322,21 +322,436 @@ class FinanceController extends AppBaseController
         return $dashboard;
     }
 
+    /**
+     * NUEVO MÉTODO: Calcular cantidad de cursos vendidos por tipo
+     * Considera las diferencias entre fijos/flexibles y la lógica de cada tipo
+     */
+    private function calculateCourseSales($bookings)
+    {
+        $courseSales = [];
+
+        foreach ($bookings as $booking) {
+            // Filtros estándar
+            $realStatus = $booking->getCancellationStatusAttribute();
+            if ($realStatus == 'total_cancel') continue;
+
+            $testAnalysis = $this->isTestBooking($booking);
+            if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') continue;
+
+            $activities = $booking->getGroupedActivitiesAttribute();
+
+            foreach ($activities as $activity) {
+                $course = $activity['course'];
+                if (!$course || in_array($course->id, self::EXCLUDED_COURSES)) continue;
+                if ($activity['status'] === 2) continue; // Cancelados
+
+                $courseId = $course->id;
+
+                if (!isset($courseSales[$courseId])) {
+                    $courseSales[$courseId] = [
+                        'id' => $courseId,
+                        'name' => $course->name,
+                        'type' => $course->course_type,
+                        'is_flexible' => $course->is_flexible,
+                        'sport' => optional($course->sport)->name,
+
+                        // ✅ NUEVO: Cantidad de cursos vendidos
+                        'courses_sold' => 0,
+                        'courses_sold_detail' => [], // Para debugging
+
+                        // Métricas existentes
+                        'revenue' => 0,
+                        'revenue_received' => 0,
+                        'revenue_pending' => 0,
+                        'participants' => 0,
+                        'bookings' => 0,
+                    ];
+                }
+
+                // ✅ CALCULAR CURSOS VENDIDOS SEGÚN TIPO Y MODALIDAD
+                $salesData = $this->calculateCoursesSoldForActivity($activity, $booking);
+
+                $courseSales[$courseId]['courses_sold'] += $salesData['quantity'];
+                $courseSales[$courseId]['courses_sold_detail'][] = $salesData['detail'];
+
+                // Métricas existentes
+                $revenueAssigned = $this->calculateActivityRevenue($activity, $booking);
+                $courseSales[$courseId]['revenue'] += $revenueAssigned['expected'];
+                $courseSales[$courseId]['revenue_received'] += $revenueAssigned['received'];
+                $courseSales[$courseId]['revenue_pending'] += $revenueAssigned['pending'];
+                $courseSales[$courseId]['participants'] += count($activity['utilizers'] ?? []);
+            }
+        }
+
+        // ✅ PROCESAR RESERVAS ÚNICAS PARA BOOKINGS
+        $courseSales = $this->processUniqueBookings($courseSales, $bookings);
+
+        return array_values($courseSales);
+    }
+
+    /**
+     * MÉTODO PRINCIPAL: Calcular cursos vendidos para una actividad específica
+     */
+    private function calculateCoursesSoldForActivity($activity, $booking): array
+    {
+        $course = $activity['course'];
+        $courseType = $course->course_type;
+        $isFlexible = $course->is_flexible;
+
+        $salesData = [
+            'quantity' => 0,
+            'detail' => [
+                'booking_id' => $booking->id,
+                'course_type' => $courseType,
+                'is_flexible' => $isFlexible,
+                'calculation_method' => '',
+                'raw_data' => [],
+                'explanation' => ''
+            ]
+        ];
+
+        switch ($courseType) {
+            case 1: // Colectivos
+                if ($isFlexible) {
+                    $salesData = $this->calculateFlexibleCollectiveSales($activity, $booking);
+                } else {
+                    $salesData = $this->calculateFixedCollectiveSales($activity, $booking);
+                }
+                break;
+
+            case 2: // Privados
+                if ($isFlexible) {
+                    $salesData = $this->calculateFlexiblePrivateSales($activity, $booking);
+                } else {
+                    $salesData = $this->calculateFixedPrivateSales($activity, $booking);
+                }
+                break;
+
+            case 3: // Actividades
+                $salesData = $this->calculateActivitySales($activity, $booking);
+                break;
+
+            default:
+                $salesData['detail']['explanation'] = 'Tipo de curso desconocido';
+        }
+
+        return $salesData;
+    }
+
+    /**
+     * COLECTIVOS FIJOS: 1 paquete = 1 curso vendido (por participante)
+     * Un paquete de X días cuenta como 1 curso vendido por cada participante
+     */
+    private function calculateFixedCollectiveSales($activity, $booking): array
+    {
+        $participants = count($activity['utilizers'] ?? []);
+
+        return [
+            'quantity' => $participants, // 1 curso por participante
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'fixed_collective',
+                'participants' => $participants,
+                'explanation' => "Colectivo fijo: {$participants} participantes = {$participants} cursos vendidos",
+                'raw_data' => [
+                    'total_dates' => count($activity['dates'] ?? []),
+                    'utilizers' => $activity['utilizers']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * COLECTIVOS FLEXIBLES: Cada día = 1 unidad de curso vendida
+     * Los participantes pueden comprar 1 a X días
+     */
+    private function calculateFlexibleCollectiveSales($activity, $booking): array
+    {
+        $participants = count($activity['utilizers'] ?? []);
+        $totalDays = count($activity['dates'] ?? []);
+
+        // En flexibles, cada día por participante es una unidad vendida
+        $coursesSold = $participants * $totalDays;
+
+        return [
+            'quantity' => $coursesSold,
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'flexible_collective',
+                'participants' => $participants,
+                'days' => $totalDays,
+                'explanation' => "Colectivo flexible: {$participants} participantes × {$totalDays} días = {$coursesSold} unidades vendidas",
+                'raw_data' => [
+                    'dates' => $activity['dates'],
+                    'utilizers' => $activity['utilizers']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * PRIVADOS FIJOS: 1 sesión = 1 curso vendido
+     * Precio fijo independientemente del número de participantes
+     */
+    private function calculateFixedPrivateSales($activity, $booking): array
+    {
+        $totalSessions = count($activity['dates'] ?? []);
+
+        return [
+            'quantity' => $totalSessions, // 1 curso por sesión
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'fixed_private',
+                'sessions' => $totalSessions,
+                'participants' => count($activity['utilizers'] ?? []),
+                'explanation' => "Privado fijo: {$totalSessions} sesiones = {$totalSessions} cursos vendidos",
+                'raw_data' => [
+                    'dates' => $activity['dates'],
+                    'utilizers' => $activity['utilizers']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * PRIVADOS FLEXIBLES: 1 grupo por sesión = 1 curso vendido
+     * Se agrupa por monitor, fecha, hora y group_id
+     */
+    private function calculateFlexiblePrivateSales($activity, $booking): array
+    {
+        // En privados flexibles, necesitamos agrupar por sesiones únicas
+        $uniqueSessions = [];
+
+        foreach ($activity['dates'] ?? [] as $date) {
+            $sessionKey = sprintf(
+                '%s_%s_%s_%s',
+                $date['date'],
+                $date['startHour'],
+                $date['endHour'],
+                $date['monitor']->id ?? 'no_monitor'
+            );
+
+            if (!isset($uniqueSessions[$sessionKey])) {
+                $uniqueSessions[$sessionKey] = [
+                    'date' => $date['date'],
+                    'start_hour' => $date['startHour'],
+                    'end_hour' => $date['endHour'],
+                    'duration' => $date['duration'],
+                    'monitor_id' => $date['monitor']->id ?? null,
+                    'participants' => count($date['utilizers'] ?? [])
+                ];
+            }
+        }
+
+        $coursesSold = count($uniqueSessions);
+
+        return [
+            'quantity' => $coursesSold,
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'flexible_private',
+                'unique_sessions' => $coursesSold,
+                'sessions_detail' => array_values($uniqueSessions),
+                'explanation' => "Privado flexible: {$coursesSold} sesiones únicas = {$coursesSold} cursos vendidos",
+                'raw_data' => [
+                    'dates' => $activity['dates'],
+                    'utilizers' => $activity['utilizers']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * ACTIVIDADES: 1 actividad = 1 curso vendido
+     */
+    private function calculateActivitySales($activity, $booking): array
+    {
+        $totalActivities = count($activity['dates'] ?? []);
+
+        return [
+            'quantity' => $totalActivities,
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'activity',
+                'activities' => $totalActivities,
+                'participants' => count($activity['utilizers'] ?? []),
+                'explanation' => "Actividad: {$totalActivities} actividades = {$totalActivities} cursos vendidos",
+                'raw_data' => [
+                    'dates' => $activity['dates'],
+                    'utilizers' => $activity['utilizers']
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Calcular revenue de una actividad
+     */
+    private function calculateActivityRevenue($activity, $booking): array
+    {
+        $paidTotal = $booking->payments->where('status', 'paid')->sum('amount');
+        $totalDue = collect($booking->getGroupedActivitiesAttribute())->sum('price') ?: 1;
+
+        $expectedRevenue = $activity['price'] ?? 0;
+        $receivedRevenue = ($expectedRevenue / $totalDue) * $paidTotal;
+
+        return [
+            'expected' => $expectedRevenue,
+            'received' => $receivedRevenue,
+            'pending' => max(0, $expectedRevenue - $receivedRevenue)
+        ];
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Procesar bookings únicos
+     */
+    private function processUniqueBookings($courseSales, $bookings): array
+    {
+        $processedBookings = [];
+
+        foreach ($bookings as $booking) {
+            $realStatus = $booking->getCancellationStatusAttribute();
+            if ($realStatus == 'total_cancel') continue;
+
+            $testAnalysis = $this->isTestBooking($booking);
+            if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') continue;
+
+            $activities = $booking->getGroupedActivitiesAttribute();
+            $coursesInBooking = [];
+
+            foreach ($activities as $activity) {
+                $course = $activity['course'];
+                if (!$course || in_array($course->id, self::EXCLUDED_COURSES)) continue;
+                if ($activity['status'] === 2) continue;
+
+                $coursesInBooking[] = $course->id;
+            }
+
+            // Contar booking único por curso
+            foreach (array_unique($coursesInBooking) as $courseId) {
+                if (isset($courseSales[$courseId]) && !in_array($booking->id, $processedBookings[$courseId] ?? [])) {
+                    $courseSales[$courseId]['bookings']++;
+                    $processedBookings[$courseId][] = $booking->id;
+                }
+            }
+        }
+
+        return $courseSales;
+    }
+
+    /**
+     * MÉTODO PRINCIPAL: Generar analytics con cursos vendidos
+     */
+    private function generateCourseAnalyticsWithSales($bookings)
+    {
+        $courseAnalytics = $this->calculateCourseSales($bookings);
+
+        // Postprocesamiento con métricas adicionales
+        foreach ($courseAnalytics as &$course) {
+            // Métricas de eficiencia
+            $course['average_price_per_course'] = $course['courses_sold'] > 0
+                ? round($course['revenue'] / $course['courses_sold'], 2)
+                : 0;
+
+            $course['participants_per_course'] = $course['courses_sold'] > 0
+                ? round($course['participants'] / $course['courses_sold'], 2)
+                : 0;
+
+            $course['revenue_per_participant'] = $course['participants'] > 0
+                ? round($course['revenue'] / $course['participants'], 2)
+                : 0;
+
+            // Información del tipo de curso
+            $course['course_type_name'] = $course['type'];
+            $course['flexibility_type'] = $course['is_flexible'] ? 'flexible' : 'fixed';
+            $course['full_type_description'] = $course['course_type_name'] . ' ' . $course['flexibility_type'];
+
+            // Redondear valores
+            foreach (['revenue', 'revenue_received', 'revenue_pending'] as $key) {
+                $course[$key] = round($course[$key], 2);
+            }
+        }
+
+        return $courseAnalytics;
+    }
+
+    /**
+     * MÉTODO DE VALIDACIÓN: Verificar cálculo de cursos vendidos
+     */
+    private function validateCourseSalesCalculation($courseAnalytics): array
+    {
+        $validation = [
+            'total_courses_sold' => 0,
+            'breakdown_by_type' => [],
+            'potential_issues' => [],
+            'detailed_analysis' => []
+        ];
+
+        foreach ($courseAnalytics as $course) {
+            $courseType = $course['full_type_description'];
+
+            if (!isset($validation['breakdown_by_type'][$courseType])) {
+                $validation['breakdown_by_type'][$courseType] = [
+                    'courses_sold' => 0,
+                    'revenue' => 0,
+                    'count' => 0
+                ];
+            }
+
+            $validation['breakdown_by_type'][$courseType]['courses_sold'] += $course['courses_sold'];
+            $validation['breakdown_by_type'][$courseType]['revenue'] += $course['revenue'];
+            $validation['breakdown_by_type'][$courseType]['count']++;
+
+            $validation['total_courses_sold'] += $course['courses_sold'];
+
+            // Detectar posibles issues
+            if ($course['courses_sold'] == 0 && $course['revenue'] > 0) {
+                $validation['potential_issues'][] = [
+                    'course_id' => $course['id'],
+                    'issue' => 'Revenue sin cursos vendidos',
+                    'revenue' => $course['revenue']
+                ];
+            }
+
+            if ($course['courses_sold'] > 0 && $course['participants'] == 0) {
+                $validation['potential_issues'][] = [
+                    'course_id' => $course['id'],
+                    'issue' => 'Cursos vendidos sin participantes',
+                    'courses_sold' => $course['courses_sold']
+                ];
+            }
+
+            // Análisis detallado
+            $validation['detailed_analysis'][] = [
+                'course_name' => $course['name'],
+                'type' => $courseType,
+                'courses_sold' => $course['courses_sold'],
+                'revenue' => $course['revenue'],
+                'participants' => $course['participants'],
+                'avg_price_per_course' => $course['average_price_per_course'],
+                'participants_per_course' => $course['participants_per_course']
+            ];
+        }
+
+        return $validation;
+    }
+
     private function generateCourseAnalytics($bookings)
     {
         $courses = [];
+        $processedBookings = [];
 
         foreach ($bookings as $booking) {
             // ✅ SALTAR RESERVAS CANCELADAS COMPLETAMENTE
             $realStatus = $booking->getCancellationStatusAttribute();
             if ($realStatus == 'total_cancel') {
-                continue; // ✅ NO CONTAR CANCELADAS EN REVENUE DE CURSOS
+                continue;
             }
 
             // ✅ SALTAR RESERVAS DE TEST
             $testAnalysis = $this->isTestBooking($booking);
             if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') {
-                continue; // ✅ NO CONTAR TEST EN REVENUE DE CURSOS
+                continue;
             }
 
             $activities = $booking->getGroupedActivitiesAttribute();
@@ -359,17 +774,25 @@ class FinanceController extends AppBaseController
                         'id' => $courseId,
                         'name' => $course->name,
                         'type' => $course->course_type,
+                        'is_flexible' => $course->is_flexible,
                         'sport' => optional($course->sport)->name,
 
-                        // ✅ VENTAS REALES (SIN CANCELADAS)
-                        'revenue' => 0,               // Revenue total
-                        'revenue_received' => 0,      // ✅ NUEVO: Dinero realmente cobrado
-                        'revenue_pending' => 0,       // ✅ NUEVO: Dinero por cobrar
+                        // ✅ MÉTRICAS FINANCIERAS
+                        'revenue' => 0,
+                        'revenue_received' => 0,
+                        'revenue_pending' => 0,
+                        'confirmed_sales' => 0,
+
+                        // ✅ MÉTRICAS DE CANTIDAD
                         'participants' => 0,
                         'bookings' => 0,
-                        'confirmed_sales' => 0,       // ✅ NUEVO: Ventas confirmadas
-                        'average_price' => 0,
 
+                        // ✅ NUEVO: CURSOS VENDIDOS
+                        'courses_sold' => 0,
+                        'courses_sold_detail' => [],
+                        'calculation_method' => $this->getCourseCalculationMethod($course),
+
+                        // ✅ MÉTRICAS ADICIONALES
                         'payment_methods' => [
                             'cash' => 0, 'card' => 0, 'online' => 0,
                             'transfer' => 0, 'voucher' => 0, 'other' => 0
@@ -381,22 +804,26 @@ class FinanceController extends AppBaseController
 
                 // ✅ SOLO CONTAR SI NO ESTÁ CANCELADO
                 if ($activity['status'] !== 2) {
-                    // Revenue proporcional del grupo
+                    // === CÁLCULOS FINANCIEROS ===
                     $revenueAssigned = ($activity['price'] / $totalDue) * $paidTotal;
                     $expectedRevenue = $activity['price'];
 
-                    $courses[$courseId]['revenue'] += $expectedRevenue; // Lo que debería valer
-                    $courses[$courseId]['revenue_received'] += $revenueAssigned; // Lo pagado
+                    $courses[$courseId]['revenue'] += $expectedRevenue;
+                    $courses[$courseId]['revenue_received'] += $revenueAssigned;
                     $courses[$courseId]['revenue_pending'] += max(0, $expectedRevenue - $revenueAssigned);
-                    $courses[$courseId]['bookings']++;
                     $courses[$courseId]['participants'] += count($activity['utilizers'] ?? []);
 
-                    // ✅ NUEVO: Contar ventas confirmadas
+                    // === NUEVO: CÁLCULO DE CURSOS VENDIDOS ===
+                    $salesData = $this->calculateCoursesSoldForActivity($activity, $booking, $course);
+                    $courses[$courseId]['courses_sold'] += $salesData['quantity'];
+                    $courses[$courseId]['courses_sold_detail'][] = $salesData['detail'];
+
+                    // ✅ VENTAS CONFIRMADAS
                     if (abs($expectedRevenue - $revenueAssigned) <= 0.50) {
                         $courses[$courseId]['confirmed_sales'] += $revenueAssigned;
                     }
 
-                    // Métodos de pago proporcionales
+                    // === MÉTODOS DE PAGO ===
                     $methods = $this->getProportionalPaymentMethods($booking, $activity['price'], $totalDue);
                     foreach ($methods as $method => $amount) {
                         if (isset($courses[$courseId]['payment_methods'][$method])) {
@@ -404,7 +831,7 @@ class FinanceController extends AppBaseController
                         }
                     }
 
-                    // Estados y fuentes
+                    // === ESTADOS Y FUENTES ===
                     foreach ($activity['statusList'] ?? [] as $status) {
                         if (!isset($courses[$courseId]['status_breakdown'][$status])) {
                             $courses[$courseId]['status_breakdown'][$status] = 0;
@@ -421,13 +848,16 @@ class FinanceController extends AppBaseController
             }
         }
 
-        // ✅ POSTPROCESADO CON MÉTRICAS DE VENTAS REALES
+        // ✅ PROCESAR BOOKINGS ÚNICOS
+        $courses = $this->processUniqueBookingsForCourses($courses, $bookings);
+
+        // ✅ POSTPROCESADO CON MÉTRICAS AVANZADAS
         foreach ($courses as &$course) {
+            // === MÉTRICAS BÁSICAS ===
             $course['average_price'] = $course['participants'] > 0
                 ? round($course['revenue'] / $course['participants'], 2)
                 : 0;
 
-            // ✅ NUEVAS MÉTRICAS
             $course['collection_rate'] = $course['revenue'] > 0
                 ? round(($course['revenue_received'] / $course['revenue']) * 100, 2)
                 : 100;
@@ -436,7 +866,25 @@ class FinanceController extends AppBaseController
                 ? round((($course['confirmed_sales'] > 0 ? 1 : 0) / $course['bookings']) * 100, 2)
                 : 0;
 
-            // Redondear valores
+            // === NUEVAS MÉTRICAS DE CURSOS VENDIDOS ===
+            $course['average_price_per_course_sold'] = $course['courses_sold'] > 0
+                ? round($course['revenue'] / $course['courses_sold'], 2)
+                : 0;
+
+            $course['participants_per_course_sold'] = $course['courses_sold'] > 0
+                ? round($course['participants'] / $course['courses_sold'], 2)
+                : 0;
+
+            $course['courses_sold_per_booking'] = $course['bookings'] > 0
+                ? round($course['courses_sold'] / $course['bookings'], 2)
+                : 0;
+
+            // === INFORMACIÓN DESCRIPTIVA ===
+            $course['course_type_name'] = $course['type'];
+            $course['flexibility_type'] = $course['is_flexible'] ? 'flexible' : 'fixed';
+            $course['full_type_description'] = $course['course_type_name'] . '_' . $course['flexibility_type'];
+
+            // === REDONDEAR VALORES ===
             foreach (['revenue', 'revenue_received', 'revenue_pending', 'confirmed_sales'] as $key) {
                 $course[$key] = round($course[$key], 2);
             }
@@ -447,6 +895,26 @@ class FinanceController extends AppBaseController
         }
 
         return array_values($courses);
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Determinar método de cálculo por tipo de curso
+     */
+    private function getCourseCalculationMethod($course): string
+    {
+        $type = $course->course_type;
+        $flexible = $course->is_flexible;
+
+        switch ($type) {
+            case 1: // Colectivos
+                return $flexible ? 'collective_flexible' : 'collective_fixed';
+            case 2: // Privados
+                return $flexible ? 'private_flexible' : 'private_fixed';
+            case 3: // Actividades
+                return 'activity';
+            default:
+                return 'unknown';
+        }
     }
 
     public function exportRealSalesReport(Request $request): JsonResponse
@@ -513,6 +981,124 @@ class FinanceController extends AppBaseController
 
             return $hasValidCourses;
         });
+    }
+
+
+    /**
+     * ACTIVIDADES: 1 actividad = 1 curso vendido
+     */
+    private function calculateActivityCourseSales($activity, $booking): array
+    {
+        $totalActivities = count($activity['dates'] ?? []);
+
+        return [
+            'quantity' => $totalActivities,
+            'detail' => [
+                'booking_id' => $booking->id,
+                'calculation_method' => 'activity',
+                'activities' => $totalActivities,
+                'participants' => count($activity['utilizers'] ?? []),
+                'explanation' => "Actividad: {$totalActivities} actividades = {$totalActivities} cursos vendidos"
+            ]
+        ];
+    }
+
+    /**
+     * MÉTODO AUXILIAR: Procesar bookings únicos para evitar duplicados
+     */
+    private function processUniqueBookingsForCourses($courses, $bookings): array
+    {
+        $processedBookings = [];
+
+        foreach ($bookings as $booking) {
+            $realStatus = $booking->getCancellationStatusAttribute();
+            if ($realStatus == 'total_cancel') continue;
+
+            $testAnalysis = $this->isTestBooking($booking);
+            if ($testAnalysis['is_test_booking'] && $testAnalysis['confidence_level'] !== 'low') continue;
+
+            $activities = $booking->getGroupedActivitiesAttribute();
+            $coursesInBooking = [];
+
+            foreach ($activities as $activity) {
+                $course = $activity['course'];
+                if (!$course || in_array($course->id, self::EXCLUDED_COURSES)) continue;
+                if ($activity['status'] === 2) continue;
+
+                $coursesInBooking[] = $course->id;
+            }
+
+            // Contar booking único por curso
+            foreach (array_unique($coursesInBooking) as $courseId) {
+                if (isset($courses[$courseId]) && !in_array($booking->id, $processedBookings[$courseId] ?? [])) {
+                    $courses[$courseId]['bookings']++;
+                    $processedBookings[$courseId][] = $booking->id;
+                }
+            }
+        }
+
+        return $courses;
+    }
+
+    /**
+     * MÉTODO DE VALIDACIÓN: Verificar cálculos de cursos vendidos
+     */
+    private function validateCoursesSoldCalculation($courses): array
+    {
+        $validation = [
+            'total_courses_sold' => 0,
+            'breakdown_by_method' => [],
+            'potential_issues' => [],
+            'summary' => []
+        ];
+
+        foreach ($courses as $course) {
+            $method = $course['calculation_method'];
+
+            if (!isset($validation['breakdown_by_method'][$method])) {
+                $validation['breakdown_by_method'][$method] = [
+                    'courses_sold' => 0,
+                    'revenue' => 0,
+                    'count' => 0
+                ];
+            }
+
+            $validation['breakdown_by_method'][$method]['courses_sold'] += $course['courses_sold'];
+            $validation['breakdown_by_method'][$method]['revenue'] += $course['revenue'];
+            $validation['breakdown_by_method'][$method]['count']++;
+
+            $validation['total_courses_sold'] += $course['courses_sold'];
+
+            // Detectar posibles issues
+            if ($course['courses_sold'] == 0 && $course['revenue'] > 0) {
+                $validation['potential_issues'][] = [
+                    'course_id' => $course['id'],
+                    'course_name' => $course['name'],
+                    'issue' => 'Revenue sin cursos vendidos',
+                    'revenue' => $course['revenue']
+                ];
+            }
+
+            if ($course['courses_sold'] > 0 && $course['participants'] == 0) {
+                $validation['potential_issues'][] = [
+                    'course_id' => $course['id'],
+                    'course_name' => $course['name'],
+                    'issue' => 'Cursos vendidos sin participantes',
+                    'courses_sold' => $course['courses_sold']
+                ];
+            }
+
+            $validation['summary'][] = [
+                'course_name' => $course['name'],
+                'method' => $method,
+                'courses_sold' => $course['courses_sold'],
+                'revenue' => $course['revenue'],
+                'participants' => $course['participants'],
+                'avg_price_per_course' => $course['average_price_per_course_sold']
+            ];
+        }
+
+        return $validation;
     }
 
     /**
