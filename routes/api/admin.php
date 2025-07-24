@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AnalyticsProfessionalController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\FinanceControllerRefactor;
 use App\Http\Controllers\Admin\StatisticsController;
@@ -17,8 +18,8 @@ Route::post('auth/recover-password', [\App\Http\Controllers\Auth\AuthController:
 Route::post('auth/reset-password/{token}', [\App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);*/
 
 
-// Private
-Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
+// Private - Con rate limiting específico para admin Angular
+Route::middleware(['auth:sanctum', 'ability:admin:all', 'admin.rate.limit'])->group(function() {
 
     Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)
         ->except(['create', 'edit'])->names([
@@ -204,19 +205,30 @@ Route::middleware(['auth:sanctum', 'ability:admin:all'])->group(function() {
         Route::get('/download/{filename}', [FinanceControllerRefactor::class, 'downloadExport'])
             ->name('analytics.download-export');
 
-        // ===== ENDPOINTS ADICIONALES (futuro) =====
+        // ===== ANALYTICS PROFESIONALES OPTIMIZADOS PARA ADMIN ANGULAR =====
+        
+        // Dashboard de temporada (endpoint principal del admin)
+        Route::get('/finance/season-dashboard', [AnalyticsProfessionalController::class, 'seasonDashboard'])
+            ->name('analytics.season-dashboard');
 
-        // Análisis de ingresos detallado
-        Route::get('/revenue-by-period', [FinanceControllerRefactor::class, 'getRevenueByPeriod'])
+        // Análisis de ingresos por período (usado por gráficos admin)
+        Route::get('/revenue-by-period', [AnalyticsProfessionalController::class, 'revenueByPeriod'])
             ->name('analytics.revenue-by-period');
 
-        // Análisis detallado de cursos
-        Route::get('/courses-detailed', [FinanceControllerRefactor::class, 'getDetailedCourseAnalytics'])
+        // Análisis detallado de cursos (tabla principal admin)
+        Route::get('/courses-detailed', [AnalyticsProfessionalController::class, 'coursesDetailed'])
             ->name('analytics.courses-detailed');
 
-        // Análisis de eficiencia de monitores
-        Route::get('/monitors-efficiency', [FinanceControllerRefactor::class, 'getMonitorEfficiencyAnalytics'])
+        // Análisis de eficiencia de monitores (dashboard monitores)
+        Route::get('/monitors-efficiency', [AnalyticsProfessionalController::class, 'monitorsEfficiency'])
             ->name('analytics.monitors-efficiency');
+
+        // Gestión de caché de analytics (usado por admin)
+        Route::delete('/cache/clear', [AnalyticsProfessionalController::class, 'clearCache'])
+            ->name('analytics.cache-clear');
+        
+        Route::get('/cache/status', [AnalyticsProfessionalController::class, 'cacheStatus'])
+            ->name('analytics.cache-status');
 
         // Análisis de conversión y abandono
         Route::get('/conversion-analysis', [FinanceControllerRefactor::class, 'getConversionAnalysis'])

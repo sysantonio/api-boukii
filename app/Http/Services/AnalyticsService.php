@@ -23,8 +23,10 @@ class AnalyticsService
 
     public function getTotalPaid(): float
     {
-        return $this->basePayments()
+        // OPTIMIZACIÓN: Usar query optimizada con índice
+        return Payment::where('school_id', $this->schoolId)
             ->where('status', 'paid')
+            ->where('created_at', '<=', $this->toDate)
             ->sum('amount');
     }
 
