@@ -96,85 +96,16 @@ class MonitorController extends AppBaseController
 
 
         $clientLanguages = array_unique($clientLanguages);
-        $degreeOrder = $request->minimumDegreeId ? Degree::find($request->minimumDegreeId)->degree_order : 1;
-        // Paso 1: Obtener todos los monitores que tengan el deporte y grado requerido.
-        $eligibleMonitors =
-            MonitorSportsDegree::whereHas('monitorSportAuthorizedDegrees', function ($query)
-            use ($school, $request,$degreeOrder) {
-                $query
-                    ->whereHas('degree', function ($q) use ($school, $request, $degreeOrder) {
-                        $q->where('degree_order', '>=', $degreeOrder);
-                    });
-            })->where('school_id', $school->id)
-                ->where('sport_id', $request->sportId)
-                // Comprobaci"" ón adicional para allow_adults si hay algún cliente adulto
-                ->when($isAnyAdultClient, function ($query) {
-                    return $query->where('allow_adults', true);
-                })
-                ->with(['monitor' => function ($query) use ($school, $clientLanguages) {
-                    $query->whereHas('monitorsSchools', function ($subQuery) use ($school) {
-                        $subQuery->where('school_id', $school->id)->where('active_school', 1);
-                    });
-                    // Añadir filtro de idiomas si clientIds está presente
-                    if (!empty($clientLanguages)) {
-                        $query->where(function ($query) use ($clientLanguages) {
-                            $query->orWhereIn('language1_id', $clientLanguages)
-                                ->orWhereIn('language2_id', $clientLanguages)
-                                ->orWhereIn('language3_id', $clientLanguages)
-                                ->orWhereIn('language4_id', $clientLanguages)
-                                ->orWhereIn('language5_id', $clientLanguages)
-                                ->orWhereIn('language6_id', $clientLanguages);
+        $degreeOrder = $request->minimumDegreeId ? Degree::find($request->minimumDegreeId)->degree_order : null;
 
-                        });
-                    }
-                }])
-                ->get()
-                ->pluck('monitor');
+        $availableMonitors = Monitor::query()
+            ->withSportAndDegree($request->sportId, $school->id, $degreeOrder, $isAnyAdultClient)
+            ->withLanguages($clientLanguages)
+            ->availableBetween($request->date, $request->startTime, $request->endTime, $bookingUserIds)
+            ->get()
+            ->toArray();
 
-        $busyMonitors = BookingUser::whereDate('date', $request->date)
-            ->when(count($bookingUserIds) > 0, function ($query) use ($bookingUserIds) {
-                return $query->whereNotIn('id', $bookingUserIds);
-            })
-            ->where(function ($query) use ($request) {
-                $query->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime))
-                    ->where('status', 1);
-            })->whereHas('booking', function ($query) {
-                $query->where('status', '!=', 2); // La Booking no debe tener status 2
-            })
-        ->pluck('monitor_id')
-            ->merge(MonitorNwd::whereDate('start_date', '<=', $request->date)
-                ->whereDate('end_date', '>=', $request->date)
-                ->where(function ($query) use ($request) {
-                    // Aquí incluimos la lógica para verificar si es un día entero
-                    $query->where('full_day', true)
-                        ->orWhere(function ($timeQuery) use ($request) {
-                            $timeQuery->whereTime('start_time', '<',
-                                Carbon::createFromFormat('H:i', $request->endTime))
-                                ->whereTime('end_time', '>', Carbon::createFromFormat('H:i', $request->startTime));
-                        });
-                })
-                ->pluck('monitor_id'))
-            ->merge(CourseSubgroup::whereHas('courseDate', function ($query) use ($request) {
-                $query->whereDate('date', $request->date)
-                    ->whereTime('hour_start', '<', Carbon::createFromFormat('H:i', $request->endTime))
-                    ->whereTime('hour_end', '>', Carbon::createFromFormat('H:i', $request->startTime));
-            })
-                ->pluck('monitor_id'))
-            ->unique();
-
-
-        // Paso 3: Filtrar los monitores elegibles excluyendo los ocupados.
-        $availableMonitors = $eligibleMonitors->whereNotIn('id', $busyMonitors);
-
-        // Eliminar los elementos nulos
-        $availableMonitors = array_filter($availableMonitors->toArray());
-
-        // Reindexar el array para eliminar las claves
-        $availableMonitors = array_values($availableMonitors);
-
-        // Paso 4: Devolver los monitores disponibles.
-        return $this->sendResponse($availableMonitors, 'Monitors returned successfully');
+        return $this->sendResponse(array_values($availableMonitors), 'Monitors returned successfully');
 
     }
 

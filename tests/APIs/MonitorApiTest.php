@@ -79,4 +79,48 @@ class MonitorApiTest extends TestCase
 
         $this->response->assertStatus(404);
     }
+
+    /**
+     * @test
+     */
+    public function test_search_available_monitors()
+    {
+        $school = \App\Models\School::factory()->create();
+        $sport = \App\Models\Sport::factory()->create();
+        $degree = \App\Models\Degree::factory()->create(['degree_order' => 1]);
+
+        $monitor = Monitor::factory()->create();
+        \App\Models\MonitorsSchool::factory()->create([
+            'monitor_id' => $monitor->id,
+            'school_id' => $school->id,
+            'active_school' => 1,
+        ]);
+
+        $monitorSport = \App\Models\MonitorSportsDegree::factory()->create([
+            'monitor_id' => $monitor->id,
+            'sport_id' => $sport->id,
+            'school_id' => $school->id,
+            'degree_id' => $degree->id,
+            'allow_adults' => true,
+        ]);
+
+        \App\Models\MonitorSportAuthorizedDegree::factory()->create([
+            'monitor_sport_id' => $monitorSport->id,
+            'degree_id' => $degree->id,
+            'school_id' => $school->id,
+        ]);
+
+        $payload = [
+            'sportId' => $sport->id,
+            'minimumDegreeId' => $degree->id,
+            'date' => now()->toDateString(),
+            'startTime' => '10:00',
+            'endTime' => '11:00',
+            'clientIds' => [],
+        ];
+
+        $this->response = $this->json('POST', '/api/admin/monitors/available', $payload);
+        $this->response->assertStatus(200);
+        $this->response->assertJsonFragment(['id' => $monitor->id]);
+    }
 }
