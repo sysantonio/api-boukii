@@ -8,6 +8,7 @@ use Tests\TestCase;
 use Tests\ApiTestTrait;
 
 use App\Models\{User, School, SchoolUser, Language, Monitor, MonitorsSchool, Station, Course, CourseDate, Client, Booking, BookingUser};
+
 use Carbon\Carbon;
 
 class PlannerApiTest extends TestCase
@@ -18,7 +19,8 @@ class PlannerApiTest extends TestCase
     {
         $user = User::factory()->create();
         $school = School::factory()->create();
-        SchoolUser::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+
+        SchoolUser::factory()->create([ 'user_id' => $user->id, 'school_id' => $school->id ]);
 
         $langs = Language::factory()->count(2)->create();
         $monitor1 = Monitor::factory()->create([
@@ -36,6 +38,7 @@ class PlannerApiTest extends TestCase
     }
 
     /** @test */
+
     public function test_planner_bookings_include_user_id()
     {
         $school = School::factory()->create();
@@ -102,7 +105,6 @@ class PlannerApiTest extends TestCase
         }
     }
 
-    /** @test */
     public function it_gets_planner_without_language_filter()
     {
         [$user, $school] = $this->prepareData();

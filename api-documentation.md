@@ -630,7 +630,9 @@ Opcionalmente puede enviarse el parámetro `languages` con IDs separados por com
 
 The booking objects returned by this endpoint now include a `user_id` value representing the booking creator.
 
-Responses for this endpoint are cached for up to 10 minutes. The cache key is built from `school_id`, `date_start`, `date_end`, `monitor_id` and `languages` parameters.
+Responses for this endpoint are cached for up to 10 minutes. The cache key is built
+from `school_id`, `date_start`, `date_end`, `monitor_id` and `languages` parameters.
+
 Clear the cache or wait for expiration if planner data has changed.
 
 #### Transferir Asignaciones de Monitor
