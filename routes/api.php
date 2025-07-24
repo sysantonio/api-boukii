@@ -1196,6 +1196,7 @@ Route::get('/calculateTotalPrices1', function (Request $request) {
     return (new CoursesExport($result))->download('courses_export.xlsx');
 });
 
+if (!function_exists('calculateTotalPrice')) {
 function calculateTotalPrice($bookingUser)
 {
     $courseType = $bookingUser->course->course_type; // 1 = Colectivo, 2 = Privado
@@ -1228,7 +1229,9 @@ function calculateTotalPrice($bookingUser)
 
     return $totalPrice;
 }
+}
 
+if (!function_exists('calculateFixedCollectivePrice')) {
 function calculateFixedCollectivePrice($bookingUser)
 {
     $course = $bookingUser->course;
@@ -1248,7 +1251,9 @@ function calculateFixedCollectivePrice($bookingUser)
     // Tomar el precio del curso para cada participante
     return count($participants) ? $course->price : 0;
 }
+}
 
+if (!function_exists('calculateFlexibleCollectivePrice')) {
 function calculateFlexibleCollectivePrice($bookingUser)
 {
     $course = $bookingUser->course;
@@ -1277,7 +1282,9 @@ function calculateFlexibleCollectivePrice($bookingUser)
 
     return $totalPrice;
 }
+}
 
+if (!function_exists('calculatePrivatePrice')) {
 function calculatePrivatePrice($bookingUser, $priceRange)
 {
     $course = $bookingUser->course;
@@ -1314,6 +1321,8 @@ function calculatePrivatePrice($bookingUser, $priceRange)
 
     return $totalPrice;
 }
+}
+if (!function_exists('getIntervalFromDuration')) {
 function getIntervalFromDuration($duration)
 {
     $mapping = [
@@ -1330,7 +1339,9 @@ function getIntervalFromDuration($duration)
 
     return $mapping[$duration] ?? null;
 }
+}
 
+if (!function_exists('calculateExtrasPrice')) {
 function calculateExtrasPrice($bookingUser)
 {
     $extras = $bookingUser->bookingUserExtras; // Relación con BookingUserExtras
@@ -1343,6 +1354,7 @@ function calculateExtrasPrice($bookingUser)
     }
 
     return $totalExtrasPrice;
+}
 }
 
 

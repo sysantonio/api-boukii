@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\API\BaseCrudController;
 use App\Http\Requests\API\CreateBookingAPIRequest;
 use App\Http\Requests\API\UpdateBookingAPIRequest;
 use App\Http\Resources\API\BookingResource;
@@ -21,14 +21,12 @@ use Illuminate\Support\Facades\Mail;
  * Class BookingController
  */
 
-class BookingAPIController extends AppBaseController
+class BookingAPIController extends BaseCrudController
 {
-    /** @var  BookingRepository */
-    private $bookingRepository;
-
     public function __construct(BookingRepository $bookingRepo)
     {
-        $this->bookingRepository = $bookingRepo;
+        parent::__construct($bookingRepo);
+        $this->resource = BookingResource::class;
     }
 
     /**
@@ -61,7 +59,7 @@ class BookingAPIController extends AppBaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $bookings = $this->bookingRepository->all(
+        $bookings = $this->repository->all(
             searchArray: $request->except([
                 'skip', 'limit', 'search', 'exclude', 'user', 'perPage', 'order',
                 'orderColumn', 'page', 'with', 'isMultiple', 'course_types',
@@ -121,7 +119,7 @@ class BookingAPIController extends AppBaseController
     {
         $input = $request->all();
 
-        $booking = $this->bookingRepository->create($input);
+        $booking = $this->repository->create($input);
 
         $logData = [
             'booking_id' => $booking->id,
@@ -174,7 +172,7 @@ class BookingAPIController extends AppBaseController
     public function show($id, Request $request): JsonResponse
     {
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
+        $booking = $this->repository->find($id, with: $request->get('with', []));
 
         if (empty($booking)) {
             return $this->sendError('Booking not found');
@@ -228,13 +226,13 @@ class BookingAPIController extends AppBaseController
         $input = $request->all();
 
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id, with: $request->get('with', []));
+        $booking = $this->repository->find($id, with: $request->get('with', []));
 
         if (empty($booking)) {
             return $this->sendError('Booking not found');
         }
 
-        $booking = $this->bookingRepository->update($input, $id);
+        $booking = $this->repository->update($input, $id);
 
         if($request->has('send_mail') && $request->input('send_mail')) {
             dispatch(function () use ($booking) {
@@ -290,7 +288,7 @@ class BookingAPIController extends AppBaseController
     public function destroy($id): JsonResponse
     {
         /** @var Booking $booking */
-        $booking = $this->bookingRepository->find($id);
+        $booking = $this->repository->find($id);
         if (empty($booking)) {
             return $this->sendError('Booking not found');
         }

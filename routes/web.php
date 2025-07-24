@@ -67,6 +67,7 @@ Route::get('/boom', function () {
     }
 });
 
+if (!function_exists('sendPostRequest')) {
 function sendPostRequest($url, $data, $proxy = null, $proxyAuth = null) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -131,8 +132,10 @@ function sendPostRequest($url, $data, $proxy = null, $proxyAuth = null) {
         'Response Body' => $response_body
     ];
 }
+}
 
 
+if (!function_exists('getImageBase64FromUrl')) {
 function getImageBase64FromUrl($url) {
     $context = stream_context_create([
         'http' => [
@@ -146,15 +149,19 @@ function getImageBase64FromUrl($url) {
     }
     return base64_encode($imageData);
 }
+}
 
+if (!function_exists('generateRandomEmail')) {
 function generateRandomEmail() {
     $faker = Faker::create();
     $domains = ['outlook.com', 'icloud.com', 'gmail.com'];
     $email = $faker->userName . '@' . $domains[array_rand($domains)];
     return $email;
 }
+}
 
 
+if (!function_exists('checkProxy')) {
 function checkProxy($proxy, $proxyAuth = null) {
     $url = "https://www.google.com";
     $ch = curl_init($url);
@@ -172,6 +179,7 @@ function checkProxy($proxy, $proxyAuth = null) {
     curl_close($ch);
 
     return $http_code == 200;
+}
 }
 
 Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
