@@ -28,6 +28,7 @@ use Validator;
 
 class PlannerController extends AppBaseController
 {
+    const CACHE_TTL = 600; // 10 minutes
 
     public function __construct()
     {
@@ -79,22 +80,21 @@ class PlannerController extends AppBaseController
 
     public function getPlanner(Request $request): JsonResponse
     {
-        /*$cacheKey = 'planner_data_' . md5(serialize($request->all()));
+        $schoolId = $this->getSchool($request)->id;
+        $cacheKey = 'planner_' . md5(json_encode([
+            'school_id'  => $schoolId,
+            'date_start' => $request->input('date_start'),
+            'date_end'   => $request->input('date_end'),
+            'monitor_id' => $request->input('monitor_id'),
+            'languages'  => $request->input('languages'),
+        ]));
 
-        // Intenta obtener los datos desde la caché
-        $cachedData = Cache::get($cacheKey);
+        $ttl = config('app.planner_cache_ttl', self::CACHE_TTL);
 
-        if ($cachedData) {
-            // Devuelve los datos de la caché si están disponibles
-            return $this->sendResponse($cachedData, 'Planner retrieved successfully from cache');
-        }
+        $data = Cache::remember($cacheKey, $ttl, function () use ($request) {
+            return $this->performPlannerQuery($request);
+        });
 
-        // Si los datos no están en caché, realiza la consulta y guárdala en caché durante 10 minutos
-        $data = $this->performPlannerQuery($request);
-
-        // Guarda los datos en caché durante 10 minutos
-        Cache::put($cacheKey, $data, now()->addMinutes(10));*/
-        $data = $this->performPlannerQuery($request);
         return $this->sendResponse($data, 'Planner retrieved successfully');
     }
 
