@@ -106,21 +106,26 @@ abstract class BaseRepository
                     $query->orWhere($value, 'like', "%" . $search . "%");
                 }
 
+                // OPTIMIZACIÓN: Usar JOINs en lugar de whereHas para evitar N+1
                 if (strpos(get_class($this->model), 'Booking') !== false) {
-                    $query->orWhere(function($q) use($value, $search) {
-                        $q->whereHas('bookingUsers.course', function ($subQuery) use ($search) {
-                            $subQuery->where('name', 'like', "%" . $search . "%");
-                        });
-
+                    $query->orWhereExists(function ($subQuery) use ($search) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('booking_users as bu')
+                            ->join('courses as c', 'bu.course_id', '=', 'c.id')
+                            ->whereColumn('bu.booking_id', 'bookings.id')
+                            ->where('c.name', 'like', "%" . $search . "%");
                     });
                 }
 
                 if (strpos(get_class($this->model), 'Booking') !== false) {
-                    $query->orWhere(function($q) use($value, $search) {
-                        $q->whereHas('clientMain', function ($subQuery) use ($search) {
-                            $subQuery->where('first_name', 'like', "%" . $search . "%")
-                            ->orWhere('last_name', 'like', "%" . $search . "%");
-                        });
+                    $query->orWhereExists(function ($subQuery) use ($search) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('clients as cl')
+                            ->whereColumn('cl.id', 'bookings.client_main_id')
+                            ->where(function ($q) use ($search) {
+                                $q->where('cl.first_name', 'like', "%" . $search . "%")
+                                  ->orWhere('cl.last_name', 'like', "%" . $search . "%");
+                            });
                     });
                 }
 

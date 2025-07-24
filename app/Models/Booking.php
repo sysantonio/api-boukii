@@ -387,9 +387,19 @@ class Booking extends Model
         return $this->vouchersLogs()->sum('amount');
     }
 
-    // Agrupa los booking_users por group_id con detalles completos
+    // Agrupa los booking_users por group_id con detalles completos - OPTIMIZADO
     public function getGroupedActivitiesAttribute()
     {
+        // Cargar todas las relaciones necesarias de una vez para evitar N+1
+        $this->loadMissing([
+            'bookingUsers.client.clientSports.degree',
+            'bookingUsers.client.clientSports.sport',
+            'bookingUsers.course.sport',
+            'bookingUsers.degree',
+            'bookingUsers.monitor',
+            'bookingUsers.bookingUserExtras.courseExtra'
+        ]);
+        
         return array_values($this->bookingUsers->groupBy('group_id')->map(function ($users) {
             $groupedActivity = [
                 'group_id' => $users->first()->group_id,

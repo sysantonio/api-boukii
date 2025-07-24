@@ -12,7 +12,10 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'api/teach/*',
-        'api/*',
+        // Solo endpoints específicos que necesitan excepción CSRF
+        'api/payrexxNotification',  // Webhook de pagos (debe usar signature verification)
+        'api/payrexx/finish',       // Finalización de pagos
+        // Endpoints de webhook que usan verification por signature
+        'api/admin/integrations/webhook/realtime-update',
     ];
 }

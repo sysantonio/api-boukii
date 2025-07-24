@@ -17,18 +17,40 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'http://localhost:4200'),
+        env('ADMIN_FRONTEND_URL', 'http://localhost:4201'),
+        env('TEACHER_APP_URL', 'http://localhost:4202'),
+        env('BOOKING_PAGE_URL', 'http://localhost:4203'),
+    ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        // Permitir subdominios de desarrollo
+        '#^https?://.*\.localhost(:\d+)?$#',
+        // Permitir dominios de producción específicos
+        '#^https://.*\.boukii\.com$#',
+    ],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization', 
+        'Content-Type',
+        'X-Requested-With',
+        'X-School-Slug',
+        'X-CSRF-TOKEN',
+        'X-Socket-ID',
+    ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => [
+        'X-Pagination-Current-Page',
+        'X-Pagination-Per-Page', 
+        'X-Pagination-Total',
+    ],
 
-    'max_age' => 0,
+    'max_age' => 86400, // 24 hours
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

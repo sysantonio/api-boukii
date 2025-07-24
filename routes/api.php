@@ -50,27 +50,41 @@ use Payrexx\Payrexx;
 |
 */
 
+// ENDPOINT ASEGURADO: Solo superadmin puede ejecutar comandos del sistema
 Route::any('/users-permissions', function () {
-    // Ejecuta el comando artisan para resetear la caché de permisos
-    $output = shell_exec('php artisan permission:cache-reset');
-
-    // Verifica si el comando se ejecutó correctamente
-    if ($output === null) {
-        return 'Error al ejecutar el comando artisan';
+    // Verificar autenticación y permisos de superadmin
+    $user = auth('sanctum')->user();
+    if (!$user || !$user->hasRole('superadmin')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized. Superadmin access required.'
+        ], 403);
     }
-
-    // Asigna permisos iniciales a los usuarios
-    foreach (User::all() as $user) {
-        try {
+    
+    try {
+        // Usar Artisan facade en lugar de shell_exec para mayor seguridad
+        \Illuminate\Support\Facades\Artisan::call('permission:cache-reset');
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        
+        // Asigna permisos iniciales a los usuarios
+        foreach (User::all() as $user) {
             $user->setInitialPermissionsByRole();
-        } catch (Exception $e) {
-            // Maneja excepciones para saber si algo falla durante el proceso
-            return 'Error al asignar permisos: ' . $e->getMessage();
         }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Permisos actualizados correctamente',
+            'output' => $output
+        ]);
+        
+    } catch (Exception $e) {
+        \Log::error('Error updating permissions: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al asignar permisos: ' . $e->getMessage()
+        ], 500);
     }
-
-    return 'Permisos actualizados correctamente';
-});
+})->middleware('auth:sanctum');
 
 Route::get('/export/vouchers-used', function (Request $request) {
     $request->validate([
@@ -239,11 +253,11 @@ Route::any('/fix-dates', function () {
     DB::beginTransaction();
 
     try {
-        // 1. Encontrar las course_dates duplicadas (mismo course_id y date)
+        // 1. Encontrar las course_dates duplicadas (mismo course_id y date) - SEGURO
         $duplicates = DB::table('course_dates')
             ->select('course_id', 'date', DB::raw('MIN(id) as keep_id'))
             ->groupBy('course_id', 'date')
-            ->havingRaw('COUNT(*) > 1')
+            ->having(DB::raw('COUNT(*)'), '>', 1)
             ->get();
 
         foreach ($duplicates as $dup) {
