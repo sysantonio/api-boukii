@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\AppBaseController;
-use App\Models\User;
+use App\Services\Auth\LoginService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Response;
-use Validator;
-
-;
 
 /**
  * Class UserController
@@ -18,10 +12,11 @@ use Validator;
  */
 class AuthController extends AppBaseController
 {
+    protected LoginService $loginService;
 
-    public function __construct()
+    public function __construct(LoginService $loginService)
     {
-
+        $this->loginService = $loginService;
     }
 
 
@@ -63,43 +58,13 @@ class AuthController extends AppBaseController
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        $result = $this->loginService->authenticate($request, ['admin', 1, 'superadmin', 4]);
 
-        // Buscar usuarios por correo electrónico y tipo
-        $users = User::where('email', $credentials['email'])
-            ->where(function ($query) {
-                $query->where('type', 'admin')
-                    ->orWhere('type', 1)
-                    ->orWhere('type', 'superadmin')
-                    ->orWhere('type', 4);
-            })
-            ->get();
-
-        foreach ($users as $user) {
-            // Verificar si la contraseña es correcta
-            if (Hash::check($credentials['password'], $user->password)) {
-
-                // Cargar escuelas relacionadas si las hay
-                if ($user->type == 'superadmin' || $user->type == '4') {
-                    $success['token'] = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
-                    $success['user'] = $user;
-                } else if ($user->type == '1' || $user->type == 'admin') {
-                    $user->load('schools');
-                    $success['token'] = $user->createToken('Boukii', ['admin:all'])->plainTextToken;
-                    $success['user'] = $user;
-                } else {
-                    return $this->sendError('Unauthorized.', 401);
-                }
-
-                return $this->sendResponse($success, 'User login successfully.');
-            }
+        if (!$result) {
+            return $this->sendError('Unauthorized.', 401);
         }
 
-        // Si no se encuentra ningún usuario o la contraseña no coincide
-        return $this->sendError('Unauthorized.', 401);
+        return $this->sendResponse($result, 'User login successfully.');
     }
 
 }
