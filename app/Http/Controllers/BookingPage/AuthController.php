@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\BookingPage;
 
 use App\Http\Controllers\AppBaseController;
-use App\Models\User;
+use App\Services\Auth\LoginService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Response;
-use Validator;
-
-;
 
 /**
  * Class UserController
@@ -19,6 +13,13 @@ use Validator;
 
 class AuthController extends SlugAuthController
 {
+    protected LoginService $loginService;
+
+    public function __construct(LoginService $loginService, Request $request)
+    {
+        parent::__construct($request);
+        $this->loginService = $loginService;
+    }
 
     /**
      * @OA\Post(
@@ -58,41 +59,13 @@ class AuthController extends SlugAuthController
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-        $school = $this->school;
+        $result = $this->loginService->authenticate($request, ['client', 2], $this->school);
 
-
-        $users = User::with('schools', 'clients.schools', 'clients.utilizers')
-            ->where('email', $credentials['email'])
-            ->where(function ($query) {
-                $query->where('type', 'client')
-                    ->orWhere('type', '2');
-            })
-            ->get();
-
-        foreach ($users as $user) {
-            // Verificar si la contraseña es correcta
-            if (Hash::check($credentials['password'], $user->password)) {
-                // Cargar escuelas relacionadas si las hay
-                if ($user->type == 'client' || $user->type == 2) {
-                    foreach ($user->clients as $client) {
-                        if ($client->schools->contains('id', $school->id)) {
-                            $success['token'] = $user->createToken('Boukii')->plainTextToken;
-                            $user->load('clients.utilizers.sports', 'clients.sports');
-                            $user->tokenCan('client:all');
-                            $success['user'] =  $user;
-                            return $this->sendResponse($success, 'User login successfully.');
-                        }
-                    }
-                }
-
-            }
+        if (!$result) {
+            return $this->sendError('Unauthorized.', 401);
         }
 
-        return $this->sendError('Unauthorized.', 401);
+        return $this->sendResponse($result, 'User login successfully.');
 
     }
 }
