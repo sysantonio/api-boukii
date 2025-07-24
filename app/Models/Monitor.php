@@ -469,6 +469,89 @@ class Monitor extends Model
         return $this->hasMany(\App\Models\MonitorsSchool::class, 'monitor_id');
     }
 
+    /**
+     * Scope to filter monitors by spoken languages.
+     */
+    public function scopeWithLanguages($query, array $languages)
+    {
+        if (empty($languages)) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($languages) {
+            $q->orWhereIn('language1_id', $languages)
+                ->orWhereIn('language2_id', $languages)
+                ->orWhereIn('language3_id', $languages)
+                ->orWhereIn('language4_id', $languages)
+                ->orWhereIn('language5_id', $languages)
+                ->orWhereIn('language6_id', $languages);
+        });
+    }
+
+    /**
+     * Scope to restrict monitors to a sport and minimum degree.
+     *
+     * TODO: allow passing multiple sports and level ranges.
+     */
+    public function scopeWithSportAndDegree($query, $sportId, $schoolId, $degreeOrder = null, $allowAdults = false)
+    {
+        return $query->whereHas('monitorSportsDegrees', function ($q) use ($sportId, $schoolId, $degreeOrder, $allowAdults) {
+            $q->where('sport_id', $sportId)
+                ->when($allowAdults, function ($sub) {
+                    $sub->where('allow_adults', true);
+                })
+                ->whereHas('monitorSportAuthorizedDegrees', function ($q2) use ($schoolId, $degreeOrder) {
+                    $q2->where('school_id', $schoolId);
+
+                    if (!is_null($degreeOrder)) {
+                        $q2->whereHas('degree', function ($d) use ($degreeOrder) {
+                            $d->where('degree_order', '>=', $degreeOrder);
+                        });
+                    }
+                });
+        })->whereHas('monitorsSchools', function ($q) use ($schoolId) {
+            $q->where('school_id', $schoolId)->where('active_school', 1);
+        });
+    }
+
+    /**
+     * Scope to filter monitors available between times on a given date.
+     */
+    public function scopeAvailableBetween($query, $date, $startTime, $endTime, array $excludeBookingUserIds = [])
+    {
+        return $query
+            ->whereDoesntHave('bookingUsers', function ($q) use ($date, $startTime, $endTime, $excludeBookingUserIds) {
+                $q->whereDate('date', $date)
+                    ->when(!empty($excludeBookingUserIds), function ($sub) use ($excludeBookingUserIds) {
+                        $sub->whereNotIn('id', $excludeBookingUserIds);
+                    })
+                    ->whereTime('hour_start', '<', $endTime)
+                    ->whereTime('hour_end', '>', $startTime)
+                    ->where('status', 1)
+                    ->whereHas('booking', function ($b) {
+                        $b->where('status', '!=', 2);
+                    });
+            })
+            ->whereDoesntHave('monitorNwds', function ($q) use ($date, $startTime, $endTime) {
+                $q->whereDate('start_date', '<=', $date)
+                    ->whereDate('end_date', '>=', $date)
+                    ->where(function ($time) use ($startTime, $endTime) {
+                        $time->where('full_day', true)
+                            ->orWhere(function ($t) use ($startTime, $endTime) {
+                                $t->whereTime('start_time', '<', $endTime)
+                                    ->whereTime('end_time', '>', $startTime);
+                            });
+                    });
+            })
+            ->whereDoesntHave('courseSubgroups', function ($q) use ($date, $startTime, $endTime) {
+                $q->whereHas('courseDate', function ($cd) use ($date, $startTime, $endTime) {
+                    $cd->whereDate('date', $date)
+                        ->whereTime('hour_start', '<', $endTime)
+                        ->whereTime('hour_end', '>', $startTime);
+                });
+            });
+    }
+
     public function schools(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(
