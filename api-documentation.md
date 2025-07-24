@@ -626,6 +626,7 @@ Content-Type: application/json
 ```http
 GET /api/admin/getPlanner?school_id=1&date_start=2025-01-01&date_end=2025-01-31
 ```
+The booking objects returned by this endpoint now include a `user_id` field indicating the user who created the booking.
 
 #### Transferir Asignaciones de Monitor
 ```http
