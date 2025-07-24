@@ -7,26 +7,35 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tests\ApiTestTrait;
 
-use App\Models\User;
-use App\Models\School;
-use App\Models\SchoolUser;
-use App\Models\Language;
-use App\Models\Monitor;
-use App\Models\MonitorsSchool;
-use App\Models\Station;
-use App\Models\Course;
-use App\Models\CourseDate;
-use App\Models\Client;
-use App\Models\Booking;
-use App\Models\BookingUser;
+use App\Models\{User, School, SchoolUser, Language, Monitor, MonitorsSchool, Station, Course, CourseDate, Client, Booking, BookingUser};
+use Carbon\Carbon;
 
 class PlannerApiTest extends TestCase
 {
     use ApiTestTrait, WithoutMiddleware, DatabaseTransactions;
 
-    /**
-     * @test
-     */
+    private function prepareData()
+    {
+        $user = User::factory()->create();
+        $school = School::factory()->create();
+        SchoolUser::factory()->create(['user_id' => $user->id, 'school_id' => $school->id]);
+
+        $langs = Language::factory()->count(2)->create();
+        $monitor1 = Monitor::factory()->create([
+            'language1_id' => $langs[0]->id,
+            'active_school' => $school->id,
+        ]);
+        $monitor2 = Monitor::factory()->create([
+            'language1_id' => $langs[1]->id,
+            'active_school' => $school->id,
+        ]);
+        MonitorsSchool::factory()->create(['monitor_id' => $monitor1->id, 'school_id' => $school->id]);
+        MonitorsSchool::factory()->create(['monitor_id' => $monitor2->id, 'school_id' => $school->id]);
+
+        return [$user, $school, $monitor1, $monitor2, $langs];
+    }
+
+    /** @test */
     public function test_planner_bookings_include_user_id()
     {
         $school = School::factory()->create();
@@ -79,7 +88,7 @@ class PlannerApiTest extends TestCase
 
         $this->response = $this->json('GET', '/api/admin/getPlanner', [
             'date_start' => '2025-01-15',
-            'date_end' => '2025-01-15',
+            'date_end'   => '2025-01-15',
         ]);
 
         $this->assertApiSuccess();
@@ -91,5 +100,38 @@ class PlannerApiTest extends TestCase
                 }
             }
         }
+    }
+
+    /** @test */
+    public function it_gets_planner_without_language_filter()
+    {
+        [$user, $school] = $this->prepareData();
+        $this->actingAs($user);
+
+        $response = $this->json('GET', '/api/admin/getPlanner', [
+            'date_start' => Carbon::today()->toDateString(),
+            'date_end'   => Carbon::today()->toDateString(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertCount(2, $response->json('data'));
+    }
+
+    /** @test */
+    public function it_filters_planner_by_languages()
+    {
+        [$user, $school, $monitor1, $monitor2, $langs] = $this->prepareData();
+        $this->actingAs($user);
+
+        $response = $this->json('GET', '/api/admin/getPlanner', [
+            'date_start' => Carbon::today()->toDateString(),
+            'date_end'   => Carbon::today()->toDateString(),
+            'languages'  => $langs[0]->id,
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertArrayHasKey($monitor1->id, $data);
     }
 }

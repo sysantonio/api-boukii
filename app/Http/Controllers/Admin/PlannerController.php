@@ -28,6 +28,7 @@ use Validator;
 
 class PlannerController extends AppBaseController
 {
+    const CACHE_TTL = 600; // 10 minutes
 
     public function __construct()
     {
@@ -79,22 +80,21 @@ class PlannerController extends AppBaseController
 
     public function getPlanner(Request $request): JsonResponse
     {
-        /*$cacheKey = 'planner_data_' . md5(serialize($request->all()));
+        $schoolId = $this->getSchool($request)->id;
+        $cacheKey = 'planner_' . md5(json_encode([
+            'school_id'  => $schoolId,
+            'date_start' => $request->input('date_start'),
+            'date_end'   => $request->input('date_end'),
+            'monitor_id' => $request->input('monitor_id'),
+            'languages'  => $request->input('languages'),
+        ]));
 
-        // Intenta obtener los datos desde la caché
-        $cachedData = Cache::get($cacheKey);
+        $ttl = config('app.planner_cache_ttl', self::CACHE_TTL);
 
-        if ($cachedData) {
-            // Devuelve los datos de la caché si están disponibles
-            return $this->sendResponse($cachedData, 'Planner retrieved successfully from cache');
-        }
+        $data = Cache::remember($cacheKey, $ttl, function () use ($request) {
+            return $this->performPlannerQuery($request);
+        });
 
-        // Si los datos no están en caché, realiza la consulta y guárdala en caché durante 10 minutos
-        $data = $this->performPlannerQuery($request);
-
-        // Guarda los datos en caché durante 10 minutos
-        Cache::put($cacheKey, $data, now()->addMinutes(10));*/
-        $data = $this->performPlannerQuery($request);
         return $this->sendResponse($data, 'Planner retrieved successfully');
     }
 
@@ -103,6 +103,17 @@ class PlannerController extends AppBaseController
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
         $monitorId = $request->input('monitor_id');
+        $languagesInput = $request->input('languages');
+        $languageIds = [];
+        if (!empty($languagesInput)) {
+            if (is_string($languagesInput)) {
+                $languagesInput = array_map('trim', explode(',', $languagesInput));
+            }
+            if (!is_array($languagesInput)) {
+                $languagesInput = [$languagesInput];
+            }
+            $languageIds = array_filter(array_map('intval', $languagesInput));
+        }
 
         $schoolId = $this->getSchool($request)->id;
 
@@ -196,8 +207,18 @@ class PlannerController extends AppBaseController
                     });
                 }])
                 ->where('school_id', $schoolId)
-                ->whereHas('monitor', function ($query) use ($monitorId) {
+                ->whereHas('monitor', function ($query) use ($monitorId, $languageIds) {
                     $query->where('id', $monitorId);
+                    if (!empty($languageIds)) {
+                        $query->where(function ($q) use ($languageIds) {
+                            $q->whereIn('language1_id', $languageIds)
+                                ->orWhereIn('language2_id', $languageIds)
+                                ->orWhereIn('language3_id', $languageIds)
+                                ->orWhereIn('language4_id', $languageIds)
+                                ->orWhereIn('language5_id', $languageIds)
+                                ->orWhereIn('language6_id', $languageIds);
+                        });
+                    }
                 })
                 ->get()
                 ->pluck('monitor');
@@ -224,6 +245,18 @@ class PlannerController extends AppBaseController
                 }])
                 ->where('school_id', $schoolId)
                 ->where('active_school', 1)
+                ->when(!empty($languageIds), function ($query) use ($languageIds) {
+                    $query->whereHas('monitor', function ($q) use ($languageIds) {
+                        $q->where(function ($q2) use ($languageIds) {
+                            $q2->whereIn('language1_id', $languageIds)
+                                ->orWhereIn('language2_id', $languageIds)
+                                ->orWhereIn('language3_id', $languageIds)
+                                ->orWhereIn('language4_id', $languageIds)
+                                ->orWhereIn('language5_id', $languageIds)
+                                ->orWhereIn('language6_id', $languageIds);
+                        });
+                    });
+                })
                 ->get();
             $monitors = $monitorSchools->pluck('monitor');
         }

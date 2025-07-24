@@ -186,6 +186,14 @@ interface VoucherData {
 
 **Servicio**: `BookingService`
 
+### Planner
+
+#### Obtener datos de planificación
+- **Endpoint**: `GET /admin/getPlanner`
+- **Query Params**: `school_id`, `date_start`, `date_end`, `languages`
+- **Descripción**: El parámetro `languages` puede ser un array o una cadena separada por comas con los IDs de idioma.
+- **Servicio**: `PlannerService`
+
 ### 7. Analytics Profesional
 
 #### Dashboard de temporada
