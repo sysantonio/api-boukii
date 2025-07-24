@@ -277,6 +277,13 @@ class PlannerController extends AppBaseController
         $nwd = $nwdQuery->get();
         $subgroups = $subgroupsQuery->get();
         $bookings = $bookingQuery->get();
+
+        // Attach booking user id to each booking user for planner consumers
+        $bookings->each(function ($bookingUser) {
+            if ($bookingUser->relationLoaded('booking') && $bookingUser->booking) {
+                $bookingUser->user_id = $bookingUser->booking->user_id;
+            }
+        });
         $subgroupsPerGroup = CourseSubgroup::select('course_group_id', DB::raw('COUNT(*) as total'))
             ->groupBy('course_group_id')
             ->pluck('total', 'course_group_id');
