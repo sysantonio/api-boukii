@@ -375,4 +375,18 @@ class BookingAPIController extends BaseCrudController
         }
     }
 
+    public function metrics($id): JsonResponse
+    {
+        $service = new \App\Services\Analytics\BookingAnalyticsService();
+        $data = $service->computeMetrics($id);
+        return $this->sendResponse($data, "Booking metrics retrieved");
+    }
+
+    public function profitability($id): JsonResponse
+    {
+        $service = new \App\Services\Analytics\BookingAnalyticsService();
+        $data = $service->computeProfitability($id);
+        return $this->sendResponse($data, "Booking profitability retrieved");
+    }
+
 }
