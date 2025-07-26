@@ -74,14 +74,13 @@ Route::middleware(['guest'])->group(function () {
         ->except(['create', 'edit']);
 
     Route::resource('courses', App\Http\Controllers\API\CourseAPIController::class)
-        ->except(['create', 'edit']) ->names([
+        ->except(['create', 'edit'])->names([
             'index' => 'api.courses.index',
             'store' => 'api.courses.store',
             'show' => 'api.courses.show',
             'update' => 'api.courses.update',
             'destroy' => 'api.courses.destroy',
         ]);
-
 
     Route::resource('course-dates', App\Http\Controllers\API\CourseDateAPIController::class)
         ->except(['create', 'edit']);
@@ -203,9 +202,11 @@ Route::middleware(['guest'])->group(function () {
     Route::get('bookings/{id}/edit-data', [\App\Http\Controllers\API\SmartBookingController::class, 'editData']);
     Route::put('bookings/{id}/smart-update', [\App\Http\Controllers\API\SmartBookingController::class, 'smartUpdate']);
     Route::post('bookings/resolve-conflicts', [\App\Http\Controllers\API\SmartBookingController::class, 'resolveConflicts']);
-    Route::get("bookings/{id}/metrics", [\App\Http\Controllers\API\BookingAPIController::class, "metrics"]);
-    Route::get("bookings/{id}/profitability", [\App\Http\Controllers\API\BookingAPIController::class, "profitability"]);
-    Route::get("analytics/optimization-suggestions", [\App\Http\Controllers\API\AnalyticsAPIController::class, "optimizationSuggestions"]);
+    Route::post('bookings/bulk-operations', [\App\Http\Controllers\API\BulkBookingController::class, 'bulkOperations']);
+    Route::post('bookings/{id}/duplicate-smart', [\App\Http\Controllers\API\BulkBookingController::class, 'duplicateSmart']);
+    Route::get('bookings/{id}/metrics', [\App\Http\Controllers\API\BookingAPIController::class, 'metrics']);
+    Route::get('bookings/{id}/profitability', [\App\Http\Controllers\API\BookingAPIController::class, 'profitability']);
+    Route::get('analytics/optimization-suggestions', [\App\Http\Controllers\API\AnalyticsAPIController::class, 'optimizationSuggestions']);
 
     Route::prefix('ai')->group(function () {
         Route::post('smart-suggestions', [\App\Http\Controllers\API\AIController::class, 'smartSuggestions']);
@@ -213,4 +214,3 @@ Route::middleware(['guest'])->group(function () {
         Route::post('predictive-analysis', [\App\Http\Controllers\API\AIController::class, 'predictiveAnalysis']);
     });
 });
-
