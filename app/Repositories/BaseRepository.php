@@ -162,12 +162,12 @@ abstract class BaseRepository
      */
     public function all($searchArray = [], string $search = null, $skip = null, $limit = null, $pagination = 10,
                         array $with = [],
-        $order = 'desc', $orderColumn = 'id', $additionalConditions = null, $onlyTrashed = false): \Illuminate\Contracts\Pagination\Paginator
+        $order = 'desc', $orderColumn = 'id', $additionalConditions = null, $onlyTrashed = false): Builder|\Illuminate\Contracts\Pagination\Paginator
     {
         $query = $this->allQuery($searchArray, $search, $skip, $limit, $order, $orderColumn, $with, $additionalConditions, $onlyTrashed);
 
         // OPTIMIZACIÓN: Paginación mejorada para admin Angular
-        if ($pagination > 1000) {
+        if ($pagination > 9999) {
             // Para requests masivos del admin (perPage > 1000), usar simple paginate
             return $query->simplePaginate($pagination);
         }

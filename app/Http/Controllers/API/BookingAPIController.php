@@ -115,7 +115,7 @@ class BookingAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function store(CreateBookingAPIRequest $request): JsonResponse
+    public function store(CreateBookingAPIRequest|Request $request): JsonResponse
     {
         $input = $request->all();
 
@@ -221,7 +221,7 @@ class BookingAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function update($id, UpdateBookingAPIRequest $request): JsonResponse
+    public function update($id, UpdateBookingAPIRequest|Request $request): JsonResponse
     {
         $input = $request->all();
 

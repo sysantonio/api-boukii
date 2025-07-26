@@ -123,6 +123,40 @@ interface ApiResponse {
 
 ### 6. Gestión de Reservas
 
+Los nuevos servicios de la API V3 exponen endpoints adicionales para gestionar
+reservas con filtros y creación inteligente:
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `GET`  | `/bookings` | Listar reservas con filtros y paginación |
+| `GET`  | `/bookings/kpis` | Métricas resumidas de reservas |
+| `POST` | `/bookings` | Crear una reserva tradicional |
+| `POST` | `/bookings/smart-create` | Crear reserva con lógica inteligente |
+| `PATCH` | `/bookings/{id}` | Actualizar datos parciales de una reserva |
+| `POST` | `/bookings/{id}/cancel` | Cancelar una reserva existente |
+| `GET`  | `/clients/smart-search` | Búsqueda avanzada de clientes |
+| `POST` | `/pricing/calculate-dynamic` | Calcular precio dinámico |
+
+#### Ejemplo de creación de reserva inteligente
+```http
+POST /bookings/smart-create
+{
+  "client_id": 1,
+  "course_id": 2,
+  "dates": ["2024-01-05"],
+  "participants": 2
+}
+```
+
+#### Ejemplo de cancelación
+```http
+POST /bookings/123/cancel
+{
+  "reason": "client_request",
+  "notifyClient": true
+}
+```
+
 #### Crear log de reserva
 - **Endpoint**: `POST /booking-logs`
 - **Request**:
@@ -186,13 +220,12 @@ interface VoucherData {
 
 **Servicio**: `BookingService`
 
-### Planner
-
-#### Obtener datos de planificación
-- **Endpoint**: `GET /admin/getPlanner`
-- **Query Params**: `school_id`, `date_start`, `date_end`, `languages`
-- **Descripción**: El parámetro `languages` puede ser un array o una cadena separada por comas con los IDs de idioma.
-- **Servicio**: `PlannerService`
+#### Wizard Inteligente V3
+- **Crear reserva inteligente**: `POST /bookings/smart-create`
+- **Guardar borrador**: `POST /bookings/drafts`
+- **Validar paso**: `POST /bookings/validate-step`
+- **Obtener sugerencias**: `GET /ai/smart-suggestions`
+- **Detectar conflictos**: `POST /bookings/detect-conflicts`
 
 ### 7. Analytics Profesional
 

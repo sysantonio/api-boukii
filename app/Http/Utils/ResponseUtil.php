@@ -6,7 +6,7 @@ class ResponseUtil
 {
     public static function makeResponse(string $message, mixed $data): array
     {
-        if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+        if ($data instanceof \Illuminate\Contracts\Pagination\Paginator) {
             // Extraer datos de paginación
             $paginationData = $data->toArray();
 
