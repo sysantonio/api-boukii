@@ -16,6 +16,9 @@ Route::middleware(['guest'])->group(function () {
     Route::post('availability/hours', [App\Http\Controllers\API\AvailabilityAPIController::class, 'getAvailableHours'])
         ->name('api.hours.get');
 
+    Route::post('availability/matrix', [App\Http\Controllers\API\AvailabilityAPIController::class, 'matrix']);
+    Route::post('availability/realtime-check', [App\Http\Controllers\API\AvailabilityAPIController::class, 'realtimeCheck']);
+
     Route::post('translate', [App\Http\Controllers\API\TranslationAPIController::class, 'translate'])
         ->name('api.translation.get');
 

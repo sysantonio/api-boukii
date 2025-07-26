@@ -218,6 +218,121 @@ class AvailabilityAPIController extends AppBaseController
         return $busyHours;
     }
 
+    public function matrix(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $startDate = Carbon::parse($request->input('start_date'))->format('Y-m-d');
+        $endDate = Carbon::parse($request->input('end_date'))->format('Y-m-d');
+
+        $query = CourseDate::with('courseSubgroups.bookingUsers')
+            ->whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate);
+
+        if ($request->filled('course_id')) {
+            $query->where('course_id', $request->input('course_id'));
+        }
+
+        if ($request->filled('sport_id')) {
+            $sportId = $request->input('sport_id');
+            $query->whereHas('course', function (Builder $q) use ($sportId) {
+                $q->where('sport_id', $sportId);
+            });
+        }
+
+        $courseDates = $query->get();
+
+        $matrix = [];
+        $totalSlots = 0;
+        $availableSlots = 0;
+
+        foreach ($courseDates->groupBy('date') as $date => $items) {
+            $slots = [];
+            $formattedDate = Carbon::parse($date)->format('Y-m-d');
+            foreach ($items as $item) {
+                $total = $item->courseSubgroups->sum('max_participants');
+                $booked = $item->courseSubgroups->sum(function ($sg) {
+                    return $sg->bookingUserss->count();
+                });
+                $available = max($total - $booked, 0);
+
+                $slots[] = [
+                    'timeSlot' => $item->hour_start . '-' . $item->hour_end,
+                    'availability' => [
+                        'total' => $total,
+                        'available' => $available,
+                        'booked' => $booked,
+                        'blocked' => 0,
+                    ],
+                ];
+
+                $totalSlots++;
+                if ($available > 0) {
+                    $availableSlots++;
+                }
+            }
+            $matrix[] = [
+                'date' => $formattedDate,
+                'slots' => $slots,
+            ];
+        }
+
+        $summary = [
+            'totalSlots' => $totalSlots,
+            'availableSlots' => $availableSlots,
+            'optimalSlots' => 0,
+            'averagePrice' => 0,
+        ];
+
+        return $this->sendResponse(['matrix' => $matrix, 'summary' => $summary], 'Availability matrix retrieved successfully');
+    }
+
+    public function realtimeCheck(Request $request): JsonResponse
+    {
+        $request->validate([
+            'course_id' => 'required|integer',
+            'dates' => 'required|array',
+        ]);
+
+        $courseId = $request->input('course_id');
+        $dates = $request->input('dates');
+        $monitorId = $request->input('monitor_id');
+        $timeSlots = $request->input('time_slots', []);
+
+        $conflicts = [];
+
+        foreach ($dates as $index => $date) {
+            $slot = $timeSlots[$index] ?? null;
+            $query = BookingUser::where('course_id', $courseId)
+                ->whereDate('date', $date)
+                ->where('status', 1);
+
+            if ($monitorId) {
+                $query->where('monitor_id', $monitorId);
+            }
+
+            if ($slot) {
+                [$start, $end] = explode('-', $slot);
+                $query->where('hour_start', '<', $end)
+                    ->where('hour_end', '>', $start);
+            }
+
+            if ($query->exists()) {
+                $conflicts[] = [
+                    'date' => $date,
+                    'timeSlot' => $slot,
+                    'type' => 'booking',
+                    'message' => 'Slot already booked',
+                ];
+            }
+        }
+
+        return $this->sendResponse(['conflicts' => $conflicts], 'Realtime availability checked successfully');
+    }
+
 
     public function findAvailableMonitorsForCourseDate(Request $request): JsonResponse
     {
