@@ -200,5 +200,11 @@ Route::middleware(['guest'])->group(function () {
     Route::get('bookings/{id}/edit-data', [\App\Http\Controllers\API\SmartBookingController::class, 'editData']);
     Route::put('bookings/{id}/smart-update', [\App\Http\Controllers\API\SmartBookingController::class, 'smartUpdate']);
     Route::post('bookings/resolve-conflicts', [\App\Http\Controllers\API\SmartBookingController::class, 'resolveConflicts']);
+
+    Route::prefix('ai')->group(function () {
+        Route::post('smart-suggestions', [\App\Http\Controllers\API\AIController::class, 'smartSuggestions']);
+        Route::post('course-recommendations', [\App\Http\Controllers\API\AIController::class, 'courseRecommendations']);
+        Route::post('predictive-analysis', [\App\Http\Controllers\API\AIController::class, 'predictiveAnalysis']);
+    });
 });
 
