@@ -194,5 +194,11 @@ Route::middleware(['guest'])->group(function () {
     Route::resource('discount-codes', App\Http\Controllers\API\DiscountCodeAPIController::class)
         ->except(['create', 'edit']);
 
+    Route::post('bookings/smart-create', [\App\Http\Controllers\API\SmartBookingController::class, 'smartCreate']);
+    Route::post('bookings/drafts', [\App\Http\Controllers\API\SmartBookingController::class, 'storeDraft']);
+    Route::post('bookings/validate-step', [\App\Http\Controllers\API\SmartBookingController::class, 'validateStep']);
+    Route::get('bookings/{id}/edit-data', [\App\Http\Controllers\API\SmartBookingController::class, 'editData']);
+    Route::put('bookings/{id}/smart-update', [\App\Http\Controllers\API\SmartBookingController::class, 'smartUpdate']);
+    Route::post('bookings/resolve-conflicts', [\App\Http\Controllers\API\SmartBookingController::class, 'resolveConflicts']);
 });
 
