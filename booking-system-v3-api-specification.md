@@ -942,6 +942,59 @@ GET /bookings/{id}/profitability
 GET /analytics/optimization-suggestions?type={type}&timeframe={timeframe}
 ```
 
+## 🖥️ **Dashboard V3**
+
+### **Dashboard Summary**
+```http
+GET /dashboard/summary
+```
+
+**Response Example:**
+```typescript
+{
+  success: boolean;
+  data: {
+    new_reservations: number;
+    courses_this_week: number;
+    performance_improvement: number;
+    revenue_today: number;
+  };
+}
+```
+
+### **Sales Data**
+```http
+GET /dashboard/sales
+```
+
+**Response Example:**
+```typescript
+{
+  success: boolean;
+  data: {
+    totalSales: number;
+    monthly: Array<{ month: string; value: number }>;
+  };
+}
+```
+
+### **Reservation Status**
+```http
+GET /dashboard/reservations
+```
+
+**Response Example:**
+```typescript
+{
+  success: boolean;
+  data: {
+    pending: number;
+    confirmed: number;
+    cancelled: number;
+  };
+}
+```
+
 ---
 
 ## 💬 **Comunicaciones**
@@ -1057,6 +1110,19 @@ POST /bookings/{id}/duplicate-smart
 ### **32. Pronóstico del Tiempo**
 ```http
 GET /weather/forecast?location={location}&dates[]={dates}&include_ski_conditions={boolean}
+```
+
+**Response Example:**
+```typescript
+{
+  success: boolean;
+  data: Array<{
+    temperature: number;
+    wind: string;
+    visibility: string;
+    snow: string;
+  }>;
+}
 ```
 
 ### **33. Condiciones de Esquí**
@@ -1236,7 +1302,7 @@ GET /system/health
 5. **Documentar casos de uso** específicos
 6. **Configurar monitoreo** y alertas
 7. **Planificar testing** integral
-8. **Preparar migración** desde V2
+8. **Preparar migración** desde V2. Consulta la sección *Migración desde V2* en `frontend-api-usage.md` para detalles sobre cambios de rutas y estructuras.
 
 ---
 
