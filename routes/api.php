@@ -1573,3 +1573,18 @@ Route::prefix('')
 Route::prefix('slug')
     ->group(base_path('routes/api/bookingPage.php'));
 /* API IFRAME */
+
+/* WEATHER */
+Route::prefix('weather')
+    ->group(base_path('routes/api/weather.php'));
+/* WEATHER */
+
+/* EXTERNAL */
+Route::prefix('external')
+    ->group(base_path('routes/api/external.php'));
+/* EXTERNAL */
+
+/* SYSTEM */
+Route::prefix('system')
+    ->group(base_path('routes/api/system.php'));
+/* SYSTEM */
