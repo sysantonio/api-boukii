@@ -22,6 +22,10 @@ interface ApiResponse {
 }
 ```
 
+## Migración desde V2
+
+Las rutas de la API V3 cambian respecto a la versión anterior. Actualiza los endpoints de analytics a los nuevos prefijos `/dashboard` y revisa las estructuras de respuesta descritas a continuación para adaptar tu frontend.
+
 ## Endpoints por Funcionalidad
 
 ### 1. Autenticación
@@ -311,6 +315,16 @@ interface VoucherData {
 - **Endpoint**: `DELETE /admin/analytics/cache/clear`
 - **Endpoint**: `GET /admin/analytics/cache/status`
 
+#### Dashboard V3
+- **Endpoint**: `GET /dashboard/summary`
+- **Response**: `DashboardSummary` interface
+- **Endpoint**: `GET /dashboard/sales`
+- **Response**: `SalesData` interface
+- **Endpoint**: `GET /dashboard/reservations`
+- **Response**: `ReservationStats` interface
+- **Endpoint**: `GET /dashboard/weather`
+- **Response**: `WeatherInfo[]`
+
 **Servicio**: `AnalyticsProfessionalService`
 
 ### 8. Exportación de Analytics
@@ -429,6 +443,43 @@ export interface ExportOptions {
     start: string;
     end: string;
   };
+}
+```
+
+### DashboardSummary
+```typescript
+export interface DashboardSummary {
+  new_reservations: number;
+  courses_this_week: number;
+  performance_improvement: number;
+  revenue_today: number;
+}
+```
+
+### SalesData
+```typescript
+export interface SalesData {
+  totalSales: number;
+  monthly: Array<{ month: string; value: number }>;
+}
+```
+
+### ReservationStats
+```typescript
+export interface ReservationStats {
+  pending: number;
+  confirmed: number;
+  cancelled: number;
+}
+```
+
+### WeatherInfo
+```typescript
+export interface WeatherInfo {
+  temperature: number;
+  wind: string;
+  visibility: string;
+  snow: string;
 }
 ```
 
