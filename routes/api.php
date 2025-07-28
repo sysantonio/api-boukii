@@ -1592,12 +1592,11 @@ Route::prefix('system')
 /* BOUKII V5 */
 Route::prefix('v5')->group(function () {
     Route::get('health-check', [\App\V5\Modules\HealthCheck\Controllers\HealthCheckController::class, 'index']);
-    Route::get('seasons', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'index']);
-    Route::post('seasons', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'store']);
+
+    Route::resource('seasons', \App\V5\Modules\Season\Controllers\SeasonController::class)
+        ->except(['create', 'edit']);
+
     Route::get('seasons/current', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'current']);
-    Route::get('seasons/{id}', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'show']);
-    Route::put('seasons/{id}', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'update']);
-    Route::delete('seasons/{id}', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'destroy']);
     Route::post('seasons/{id}/close', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'close']);
     Route::post('seasons/{id}/clone', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'clone']);
 });
