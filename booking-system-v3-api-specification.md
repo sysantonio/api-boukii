@@ -953,12 +953,12 @@ GET /dashboard/summary
 ```typescript
 {
   success: boolean;
-  data: {
-    new_reservations: number;
-    courses_this_week: number;
-    performance_improvement: number;
-    revenue_today: number;
-  };
+    data: {
+      privateCourses: number;
+      groupCourses: number;
+      activeReservationsToday: number;
+      salesToday: number;
+    };
 }
 ```
 

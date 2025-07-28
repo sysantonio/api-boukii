@@ -449,10 +449,10 @@ export interface ExportOptions {
 ### DashboardSummary
 ```typescript
 export interface DashboardSummary {
-  new_reservations: number;
-  courses_this_week: number;
-  performance_improvement: number;
-  revenue_today: number;
+  privateCourses: number;
+  groupCourses: number;
+  activeReservationsToday: number;
+  salesToday: number;
 }
 ```
 
