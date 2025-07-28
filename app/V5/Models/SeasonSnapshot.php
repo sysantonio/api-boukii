@@ -61,6 +61,11 @@ class SeasonSnapshot extends Model
         return $this->belongsTo(Season::class);
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
     protected static function boot()
     {
         parent::boot();
