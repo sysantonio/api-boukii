@@ -116,7 +116,7 @@ class ClientAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function store(CreateClientAPIRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $input = $request->all();
 
@@ -226,7 +226,7 @@ class ClientAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function update($id, UpdateClientAPIRequest $request): JsonResponse
+    public function update($id, Request $request): JsonResponse
     {
         $input = $request->all();
 

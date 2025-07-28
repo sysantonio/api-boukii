@@ -22,12 +22,12 @@ class BookingLogAPIController extends BaseCrudController
         parent::__construct($bookingLogRepo);
         $this->resource = BookingLogResource::class;
     }
-    public function store(CreateBookingLogAPIRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         return parent::store($request);
     }
 
-    public function update($id, UpdateBookingLogAPIRequest $request): JsonResponse
+    public function update($id, Request $request): JsonResponse
     {
         return parent::update($id, $request);
     }

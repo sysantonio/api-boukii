@@ -102,7 +102,7 @@ class BookingUserAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function store(CreateBookingUserAPIRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         return parent::store($request);
     }
@@ -188,7 +188,7 @@ class BookingUserAPIController extends BaseCrudController
      *      )
      * )
      */
-    public function update($id, UpdateBookingUserAPIRequest $request): JsonResponse
+    public function update($id, Request $request): JsonResponse
     {
         return parent::update($id, $request);
     }
