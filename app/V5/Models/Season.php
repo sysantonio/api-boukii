@@ -74,4 +74,9 @@ class Season extends Model
     {
         return $this->hasMany(SeasonSnapshot::class);
     }
+
+    public function settings(): HasMany
+    {
+        return $this->hasMany(SeasonSettings::class);
+    }
 }
