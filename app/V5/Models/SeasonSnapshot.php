@@ -6,6 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @OA\Schema(
+ *     schema="V5SeasonSnapshot",
+ *     required={"season_id","snapshot_type"},
+ *     @OA\Property(property="id", type="integer", readOnly=true),
+ *     @OA\Property(property="season_id", type="integer"),
+ *     @OA\Property(property="snapshot_type", type="string"),
+ *     @OA\Property(property="snapshot_data", type="object", nullable=true),
+ *     @OA\Property(property="snapshot_date", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="is_immutable", type="boolean"),
+ *     @OA\Property(property="created_by", type="integer", nullable=true),
+ *     @OA\Property(property="description", type="string", nullable=true),
+ *     @OA\Property(property="checksum", type="string", nullable=true),
+ * )
+ */
+
 class SeasonSnapshot extends Model
 {
     use HasFactory;

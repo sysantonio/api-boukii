@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @OA\Schema(
+ *     schema="V5Season",
+ *     required={"start_date","end_date","school_id"},
+ *     @OA\Property(property="id", type="integer", readOnly=true),
+ *     @OA\Property(property="name", type="string", nullable=true),
+ *     @OA\Property(property="start_date", type="string", format="date"),
+ *     @OA\Property(property="end_date", type="string", format="date"),
+ *     @OA\Property(property="hour_start", type="string", format="time", nullable=true),
+ *     @OA\Property(property="hour_end", type="string", format="time", nullable=true),
+ *     @OA\Property(property="is_active", type="boolean"),
+ *     @OA\Property(property="vacation_days", type="string", nullable=true),
+ *     @OA\Property(property="school_id", type="integer"),
+ *     @OA\Property(property="is_closed", type="boolean"),
+ *     @OA\Property(property="closed_at", type="string", format="date-time", nullable=true),
+ * )
+ */
+
 class Season extends Model
 {
     use HasFactory;
