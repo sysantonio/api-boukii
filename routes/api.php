@@ -1592,5 +1592,12 @@ Route::prefix('system')
 /* BOUKII V5 */
 Route::prefix('v5')->group(function () {
     Route::get('health-check', [\App\V5\Modules\HealthCheck\Controllers\HealthCheckController::class, 'index']);
+
+    Route::resource('seasons', \App\V5\Modules\Season\Controllers\SeasonController::class)
+        ->except(['create', 'edit']);
+
+    Route::get('seasons/current', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'current']);
+    Route::post('seasons/{id}/close', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'close']);
+    Route::post('seasons/{id}/clone', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'clone']);
 });
 /* BOUKII V5 */
