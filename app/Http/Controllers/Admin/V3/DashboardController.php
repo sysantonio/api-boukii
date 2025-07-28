@@ -9,7 +9,11 @@ use App\Services\Admin\V3\ReservationService;
 use App\Services\Admin\V3\SalesService;
 use App\Services\Admin\V3\WeatherService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\V3\DashboardSummaryRequest;
+use App\Http\Requests\Admin\V3\DashboardCourseStatsRequest;
+use App\Http\Requests\Admin\V3\DashboardSalesRequest;
+use App\Http\Requests\Admin\V3\DashboardReservationsRequest;
+use App\Http\Requests\Admin\V3\DashboardWeatherRequest;
 
 class DashboardController extends AppBaseController
 {
@@ -37,7 +41,7 @@ class DashboardController extends AppBaseController
         $this->weatherService = $weatherService;
     }
 
-    public function summary(Request $request): JsonResponse
+    public function summary(DashboardSummaryRequest $request): JsonResponse
     {
         $this->ensureSchoolInRequest($request);
         $data = $this->summaryService->getSummary($request);
@@ -45,7 +49,7 @@ class DashboardController extends AppBaseController
         return $this->sendResponse($data, 'Dashboard summary retrieved');
     }
 
-    public function courseStats(Request $request): JsonResponse
+    public function courseStats(DashboardCourseStatsRequest $request): JsonResponse
     {
         $this->ensureSchoolInRequest($request);
         $data = $this->courseStatsService->getCourseStats($request);
@@ -53,7 +57,7 @@ class DashboardController extends AppBaseController
         return $this->sendResponse($data, 'Course statistics retrieved');
     }
 
-    public function sales(Request $request): JsonResponse
+    public function sales(DashboardSalesRequest $request): JsonResponse
     {
         $this->ensureSchoolInRequest($request);
         $data = $this->salesService->getSalesData($request);
@@ -61,7 +65,7 @@ class DashboardController extends AppBaseController
         return $this->sendResponse($data, 'Sales data retrieved');
     }
 
-    public function reservations(Request $request): JsonResponse
+    public function reservations(DashboardReservationsRequest $request): JsonResponse
     {
         $this->ensureSchoolInRequest($request);
         $data = $this->reservationService->getReservationData($request);
@@ -69,7 +73,7 @@ class DashboardController extends AppBaseController
         return $this->sendResponse($data, 'Reservation data retrieved');
     }
 
-    public function weather(Request $request): JsonResponse
+    public function weather(DashboardWeatherRequest $request): JsonResponse
     {
         $this->ensureSchoolInRequest($request);
         $data = $this->weatherService->getWeather($request);
