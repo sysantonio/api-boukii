@@ -70,5 +70,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'admin.rate.limit' => \App\Http\Middleware\AdminRateLimit::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'season.context' => \App\V5\Middleware\SeasonContextMiddleware::class,
+        'season.permission' => \App\V5\Guards\SeasonPermissionGuard::class,
     ];
 }

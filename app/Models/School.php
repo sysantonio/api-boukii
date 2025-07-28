@@ -335,7 +335,8 @@ class School extends Model
         'inscription',
         'type',
         'active',
-        'settings'
+        'settings',
+        'current_season_id'
     ];
 
     protected $casts = [
@@ -374,7 +375,8 @@ class School extends Model
         'inscription' => 'boolean',
         'type' => 'string',
         'active' => 'boolean',
-        'settings' => 'string'
+        'settings' => 'string',
+        'current_season_id' => 'integer'
     ];
 
     public static array $rules = [
@@ -414,6 +416,7 @@ class School extends Model
         'type' => 'nullable',
         'active' => 'nullable',
         'settings' => 'nullable',
+        'current_season_id' => 'nullable|integer',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
         'deleted_at' => 'nullable'
@@ -511,6 +514,16 @@ class School extends Model
     public function vouchers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Voucher::class, 'school_id');
+    }
+
+    public function seasonSettings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\V5\Models\SchoolSeasonSettings::class, 'school_id');
+    }
+
+    public function currentSeason(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\V5\Models\Season::class, 'current_season_id');
     }
 
     public function getActivitylogOptions(): LogOptions
