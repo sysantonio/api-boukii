@@ -1588,3 +1588,9 @@ Route::prefix('external')
 Route::prefix('system')
     ->group(base_path('routes/api/system.php'));
 /* SYSTEM */
+
+/* BOUKII V5 */
+Route::prefix('v5')->group(function () {
+    Route::get('health-check', [\App\V5\Modules\HealthCheck\Controllers\HealthCheckController::class, 'index']);
+});
+/* BOUKII V5 */
