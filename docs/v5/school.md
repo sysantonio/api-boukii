@@ -23,9 +23,14 @@ Response:
   {
     "id": 1,
     "name": "Test School",
+    "current_season_id": 3,
     "season_settings": [
       { "key": "currency", "value": "CHF" }
     ]
   }
 ]
 ```
+
+Each school record includes `current_season_id` which references the
+active `Season` for that school. Use the `currentSeason` relationship on
+the `School` model to retrieve the full season object.
