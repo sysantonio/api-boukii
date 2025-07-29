@@ -20,7 +20,11 @@ class SeasonPermissionGuard
         $userId = $request->user()->id ?? 0;
         $seasonId = (int) $request->get('season_id');
         $permissions = $this->auth->checkSeasonPermissions($userId, $seasonId);
-        // TODO: check actual permission list
+
+        if (empty($permissions)) {
+            abort(403, 'Forbidden');
+        }
+
         return $next($request);
     }
 }
