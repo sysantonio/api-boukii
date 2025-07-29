@@ -1600,9 +1600,11 @@ Route::prefix('v5')->group(function () {
     Route::post('seasons/{id}/close', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'close']);
     Route::post('seasons/{id}/clone', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'clone']);
 
+    Route::post('auth/login', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'login'])
+        ->middleware('season.context');
+
     Route::middleware(['season.context', 'season.permission'])->group(function () {
         Route::get('schools', [\App\V5\Modules\School\Controllers\SchoolV5Controller::class, 'index']);
-        Route::post('auth/login', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'login']);
         Route::get('auth/permissions', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'permissions']);
         Route::post('auth/season/switch', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'switch']);
     });
