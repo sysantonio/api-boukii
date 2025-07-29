@@ -36,6 +36,7 @@ It returns:
 Use this route to confirm that the V5 API is reachable.
 
 The Season module manages school terms and is exposed under `/api/v5/seasons`. See `docs/v5/season.md` for all Season endpoints.
+Authentication routes live under `/api/v5/auth` and are detailed in `docs/v5/auth.md`. The `/api/v5/schools` endpoint which lists schools for a season is covered in `docs/v5/school.md`.
 ## Running V5 Tests
 
 Feature tests for V5 reside under `tests/Feature`, currently starting with `V5HealthCheckTest.php`. Run all tests with:
