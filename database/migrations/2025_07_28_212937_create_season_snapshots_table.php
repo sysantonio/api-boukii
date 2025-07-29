@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('checksum', 64);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['season_id', 'snapshot_type']);
             $table->index(['is_immutable', 'snapshot_date']);

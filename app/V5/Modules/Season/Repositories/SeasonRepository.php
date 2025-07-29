@@ -53,4 +53,13 @@ class SeasonRepository extends BaseRepository
             ->orderByDesc('start_date')
             ->first();
     }
+
+    public function getActiveSeasons(int $schoolId): Collection
+    {
+        return $this->model->newQuery()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->orderByDesc('start_date')
+            ->get();
+    }
 }

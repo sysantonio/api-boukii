@@ -24,6 +24,7 @@ return new class extends Migration
             $table->boolean('is_closed')->default(false);
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['school_id', 'start_date', 'end_date'], 'idx_seasons_school_dates');
         });
