@@ -114,4 +114,28 @@ class SeasonServiceTest extends TestCase
         $this->assertFalse($closed->is_active);
         $this->assertNotNull($closed->closed_at);
     }
+
+    public function test_get_active_seasons_returns_only_active(): void
+    {
+        $service = $this->getService();
+        Season::create([
+            'name' => 'Active 1',
+            'start_date' => '2024-11-01',
+            'end_date' => '2024-12-01',
+            'is_active' => true,
+            'school_id' => 1,
+        ]);
+        Season::create([
+            'name' => 'Inactive',
+            'start_date' => '2025-01-01',
+            'end_date' => '2025-02-01',
+            'is_active' => false,
+            'school_id' => 1,
+        ]);
+
+        $active = $service->getActiveSeasons(1);
+
+        $this->assertCount(1, $active);
+        $this->assertEquals('Active 1', $active->first()->name);
+    }
 }

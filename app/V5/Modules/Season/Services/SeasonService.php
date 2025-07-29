@@ -105,4 +105,14 @@ class SeasonService extends BaseService
         $repo = $this->repository;
         return $repo->getCurrentSeason($schoolId);
     }
+
+    /**
+     * @return Collection<int,Season>
+     */
+    public function getActiveSeasons(int $schoolId): Collection
+    {
+        /** @var SeasonRepository $repo */
+        $repo = $this->repository;
+        return $repo->getActiveSeasons($schoolId);
+    }
 }

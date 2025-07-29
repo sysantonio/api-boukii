@@ -4,6 +4,7 @@ namespace App\V5\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SeasonSnapshot extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'season_snapshots';
 
@@ -79,5 +81,11 @@ class SeasonSnapshot extends Model
                 throw new \Exception('Immutable snapshots cannot be modified');
             }
         });
+    }
+
+    public function verifyIntegrity(): bool
+    {
+        $expected = hash('sha256', json_encode($this->snapshot_data));
+        return $this->checksum === $expected;
     }
 }

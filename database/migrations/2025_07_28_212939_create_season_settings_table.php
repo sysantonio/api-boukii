@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('key');
             $table->json('value')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->unique(['season_id', 'key']);
         });
