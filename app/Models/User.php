@@ -13,6 +13,8 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
+use App\V5\Models\UserSeasonRole;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @OA\Schema(
@@ -191,6 +193,26 @@ use Spatie\Permission\Traits\HasRoles;
             'id', // Clave local en el modelo inicial
             'school_id' // Clave local en el modelo intermedio
         );
+    }
+
+    public function userSeasonRoles(): HasMany
+    {
+        return $this->hasMany(UserSeasonRole::class);
+    }
+
+    public function getSeasonRole(int $seasonId): ?string
+    {
+        return $this->userSeasonRoles()
+            ->where('season_id', $seasonId)
+            ->value('role');
+    }
+
+    public function hasSeasonRole(int $seasonId, string $role): bool
+    {
+        return $this->userSeasonRoles()
+            ->where('season_id', $seasonId)
+            ->where('role', $role)
+            ->exists();
     }
 
     public function getActivitylogOptions(): LogOptions
