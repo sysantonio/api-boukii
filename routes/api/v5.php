@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\API\V5\AuthV5Controller;
-use App\Http\Controllers\API\V5\SeasonV5Controller;
+use App\Http\Controllers\Api\V5\AuthController;
+use App\Http\Controllers\Api\V5\SeasonController;
 use App\V5\Modules\Dashboard\Controllers\DashboardV5Controller;
 
 /*
@@ -19,9 +19,9 @@ use App\V5\Modules\Dashboard\Controllers\DashboardV5Controller;
 
 // Grupo de rutas públicas (sin autenticación)
 Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthV5Controller::class, 'login'])->name('v5.auth.login');
-    Route::post('initial-login', [AuthV5Controller::class, 'initialLogin'])->name('v5.auth.initial-login');
-    Route::post('check-user', [AuthV5Controller::class, 'checkUser'])->name('v5.auth.check-user');
+    Route::post('login', [AuthController::class, 'login'])->name('v5.auth.login');
+    Route::post('initial-login', [AuthController::class, 'initialLogin'])->name('v5.auth.initial-login');
+    Route::post('check-user', [AuthController::class, 'checkUser'])->name('v5.auth.check-user');
 });
 
 // Debug endpoint outside middleware to check token without school context requirement
@@ -59,8 +59,8 @@ Route::middleware(['auth:api_v5'])->group(function () {
     
     // Rutas de autenticación
     Route::prefix('auth')->group(function () {
-        Route::post('logout', [AuthV5Controller::class, 'logout'])->name('v5.auth.logout');
-        Route::get('me', [AuthV5Controller::class, 'me'])->name('v5.auth.me');
+        Route::post('logout', [AuthController::class, 'logout'])->name('v5.auth.logout');
+        Route::get('me', [AuthController::class, 'me'])->name('v5.auth.me');
         Route::get('debug-token', function() {
             $user = Auth::guard('api_v5')->user(); 
             $token = $user->currentAccessToken();
@@ -73,8 +73,8 @@ Route::middleware(['auth:api_v5'])->group(function () {
                 'token_name' => $token->name
             ]);
         })->name('v5.auth.debug-token');
-        Route::post('select-school', [AuthV5Controller::class, 'selectSchool'])->name('v5.auth.select-school');
-        Route::post('select-season', [AuthV5Controller::class, 'selectSeason'])->name('v5.auth.select-season');
+        Route::post('select-school', [AuthController::class, 'selectSchool'])->name('v5.auth.select-school');
+        Route::post('select-season', [AuthController::class, 'selectSeason'])->name('v5.auth.select-season');
     });
     
     // Rutas que requieren contexto de escuela
@@ -83,14 +83,14 @@ Route::middleware(['auth:api_v5'])->group(function () {
         // Season management routes - ONLY require school context, NOT season context
         // (because you manage seasons, you don't need to be IN a season)
         Route::prefix('seasons')->name('seasons.')->group(function () {
-            Route::get('/', [SeasonV5Controller::class, 'index'])->name('index');
-            Route::post('/', [SeasonV5Controller::class, 'store'])->name('store');
-            Route::get('/current', [SeasonV5Controller::class, 'current'])->name('current');
-            Route::get('/{season}', [SeasonV5Controller::class, 'show'])->name('show');
-            Route::put('/{season}', [SeasonV5Controller::class, 'update'])->name('update');
-            Route::patch('/{season}', [SeasonV5Controller::class, 'update'])->name('patch');
-            Route::delete('/{season}', [SeasonV5Controller::class, 'destroy'])->name('destroy');
-            Route::post('/{season}/close', [SeasonV5Controller::class, 'close'])->name('close');
+            Route::get('/', [SeasonController::class, 'index'])->name('index');
+            Route::post('/', [SeasonController::class, 'store'])->name('store');
+            Route::get('/current', [SeasonController::class, 'current'])->name('current');
+            Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
+            Route::put('/{season}', [SeasonController::class, 'update'])->name('update');
+            Route::patch('/{season}', [SeasonController::class, 'update'])->name('patch');
+            Route::delete('/{season}', [SeasonController::class, 'destroy'])->name('destroy');
+            Route::post('/{season}/close', [SeasonController::class, 'close'])->name('close');
         });
         
         // Debug endpoint to test token and context

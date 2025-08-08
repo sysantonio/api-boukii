@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V5\Seasons;
+namespace App\Http\Controllers\Api\V5;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\V5\CreateSeasonV5Request;

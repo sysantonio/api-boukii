@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 /**
- * Class SeasonV5ControllerTest
+ * Class SeasonControllerTest
  * 
- * Feature tests for SeasonV5Controller API endpoints.
+ * Feature tests for SeasonController API endpoints.
  * Tests all CRUD operations and business logic.
  * 
  * @package Tests\Feature\API\V5
  */
-class SeasonV5ControllerTest extends TestCase
+class SeasonControllerTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 

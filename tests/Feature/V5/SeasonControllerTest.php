@@ -10,7 +10,7 @@ use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
 
-class SeasonV5ControllerTest extends TestCase
+class SeasonControllerTest extends TestCase
 {
     use RefreshDatabase;
 
