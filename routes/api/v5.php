@@ -77,11 +77,10 @@ Route::middleware(['auth:api_v5'])->group(function () {
         Route::post('select-season', [AuthController::class, 'selectSeason'])->name('v5.auth.select-season');
     });
     
-    // Rutas que requieren contexto de escuela
-    Route::middleware(['school.context.v5'])->group(function () {
-        
-        // Season management routes - ONLY require school context, NOT season context
-        // (because you manage seasons, you don't need to be IN a season)
+    // Rutas que requieren contexto completo (escuela y temporada)
+    Route::middleware(['context.v5'])->group(function () {
+
+        // Season management routes
         Route::prefix('seasons')->name('seasons.')->group(function () {
             Route::get('/', [SeasonController::class, 'index'])->name('index');
             Route::post('/', [SeasonController::class, 'store'])->name('store');
@@ -123,48 +122,10 @@ Route::middleware(['auth:api_v5'])->group(function () {
             }
         })->name('debug-token');
         
-        // Debug endpoint to test school context middleware specifically
-        Route::post('/debug-school-context', function(\Illuminate\Http\Request $request) {
-            try {
-                $user = auth()->guard('api_v5')->user();
-                $token = $user ? $user->currentAccessToken() : null;
-                
-                // Manually run the same logic as SchoolContextMiddleware
-                $schoolIdFromToken = null;
-                if ($token && isset($token->context_data['school_id'])) {
-                    $schoolIdFromToken = (int) $token->context_data['school_id'];
-                }
-                
-                $schoolIdFromRequest = $request->header('X-School-ID') 
-                    ?? $request->query('school_id') 
-                    ?? $request->input('school_id');
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => 'School context debug',
-                    'data' => [
-                        'user_id' => $user->id ?? null,
-                        'token_context_data' => $token->context_data ?? null,
-                        'school_id_from_token' => $schoolIdFromToken,
-                        'school_id_from_request' => $schoolIdFromRequest,
-                        'context_school_id_in_request' => $request->get('context_school_id'),
-                        'all_request_data' => $request->all(),
-                        'middleware_should_set' => $schoolIdFromToken ?: $schoolIdFromRequest
-                    ]
-                ]);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Debug failed: ' . $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ], 500);
-            }
-        })->name('debug-school-context');
-        
-        // Future routes that only require school context
+        // Future routes that only require context
         // Route::apiResource('users', UserV5Controller::class);
-        
-        // Rutas que requieren contexto de escuela y temporada
+
+        // Rutas que requieren permisos específicos de temporada
         Route::middleware(['season.permission'])->group(function () {
             
             // Dashboard/Welcome routes
