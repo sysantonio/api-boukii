@@ -126,7 +126,7 @@ Route::middleware(['auth:api_v5'])->group(function () {
         // Route::apiResource('users', UserV5Controller::class);
 
         // Rutas que requieren permisos específicos de temporada
-        Route::middleware(['season.permission'])->group(function () {
+        Route::middleware(['context.permission'])->group(function () {
             
             // Dashboard/Welcome routes
             Route::prefix('dashboard')->group(function () {

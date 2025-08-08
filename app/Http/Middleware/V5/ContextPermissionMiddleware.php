@@ -13,7 +13,7 @@ use App\Models\School;
 use App\Models\Season;
 
 /**
- * Role and Permission Middleware for V5 System
+ * Context Permission Middleware for V5 System
  * 
  * Handles granular permissions at three levels:
  * 1. Global/System level (superadmin)
@@ -25,7 +25,7 @@ use App\Models\Season;
  * - School permissions override season permissions
  * - Season permissions are the most granular
  */
-class RolePermissionMiddleware
+class ContextPermissionMiddleware
 {
     // ============================================================================
     // PERMISSION CONSTANTS
@@ -120,7 +120,7 @@ class RolePermissionMiddleware
 
             // Add user permissions to request for controllers to use
             $request->merge([
-                'user_permissions' => $this->getUserPermissions($user, $schoolId, $seasonId)
+                'user_permissions' => $this->calculateUserPermissions($user, $schoolId, $seasonId)
             ]);
 
             return $next($request);
@@ -134,6 +134,34 @@ class RolePermissionMiddleware
 
             return $this->errorResponse('Permission check failed', 500);
         }
+    }
+
+    /**
+     * Determine if the current request has the given permission.
+     */
+    public function hasPermission(Request $request, string $permission): bool
+    {
+        $user = $request->user('api_v5');
+        if (! $user) {
+            return false;
+        }
+        $schoolId = $request->get('context_school_id');
+        $seasonId = $this->getSeasonIdFromRequest($request);
+        return $this->userHasPermission($user, $permission, $schoolId, $seasonId);
+    }
+
+    /**
+     * Get all permissions for the current request context.
+     */
+    public function getUserPermissions(Request $request): array
+    {
+        $user = $request->user('api_v5');
+        if (! $user) {
+            return [];
+        }
+        $schoolId = $request->get('context_school_id');
+        $seasonId = $this->getSeasonIdFromRequest($request);
+        return $this->calculateUserPermissions($user, $schoolId, $seasonId);
     }
 
     // ============================================================================
@@ -399,7 +427,7 @@ class RolePermissionMiddleware
     /**
      * Get all permissions for user in current context
      */
-    private function getUserPermissions(User $user, ?int $schoolId = null, ?int $seasonId = null): array
+    private function calculateUserPermissions(User $user, ?int $schoolId = null, ?int $seasonId = null): array
     {
         $permissions = [];
 
