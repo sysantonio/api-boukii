@@ -18,6 +18,7 @@ class SchoolV5Controller extends BaseV5Controller
     {
         $seasonId = (int) $request->get('season_id');
         $data = $this->service->listBySeason($seasonId);
+
         return $this->respond($data);
     }
 }

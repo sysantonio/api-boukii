@@ -138,6 +138,27 @@ class Season extends Model
         return $this->belongsTo(\App\Models\School::class, 'school_id');
     }
 
+    public function creator(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function closer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'closed_by');
+    }
+
+    // TODO: Re-enable once database schema includes season_id in bookings and courses tables
+    // public function bookings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    // {
+    //     return $this->hasMany(\App\Models\Booking::class, 'season_id');
+    // }
+
+    // public function courses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    // {
+    //     return $this->hasMany(\App\Models\Course::class, 'season_id');
+    // }
+
     public function getActivitylogOptions(): LogOptions
     {
          return LogOptions::defaults();

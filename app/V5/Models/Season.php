@@ -2,16 +2,17 @@
 
 namespace App\V5\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @OA\Schema(
  *     schema="V5Season",
  *     required={"start_date","end_date","school_id"},
+ *
  *     @OA\Property(property="id", type="integer", readOnly=true),
  *     @OA\Property(property="name", type="string", nullable=true),
  *     @OA\Property(property="start_date", type="string", format="date"),
@@ -25,7 +26,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *     @OA\Property(property="closed_at", type="string", format="date-time", nullable=true),
  * )
  */
-
 class Season extends Model
 {
     use HasFactory;
@@ -43,7 +43,7 @@ class Season extends Model
         'vacation_days',
         'school_id',
         'is_closed',
-        'closed_at'
+        'closed_at',
     ];
 
     protected $casts = [

@@ -16,6 +16,9 @@ use Faker\Factory as Faker;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Include V5 web routes
+require __DIR__.'/v5_web.php';
 Route::get('/boom', function () {
     $url = 'https://data-hub-service.production.bike-on.app/applicationusers';
 

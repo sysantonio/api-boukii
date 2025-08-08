@@ -2,15 +2,16 @@
 
 namespace App\V5\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @OA\Schema(
  *     schema="V5SeasonSnapshot",
  *     required={"season_id","snapshot_type"},
+ *
  *     @OA\Property(property="id", type="integer", readOnly=true),
  *     @OA\Property(property="season_id", type="integer"),
  *     @OA\Property(property="snapshot_type", type="string"),
@@ -22,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *     @OA\Property(property="checksum", type="string", nullable=true),
  * )
  */
-
 class SeasonSnapshot extends Model
 {
     use HasFactory;
@@ -86,6 +86,7 @@ class SeasonSnapshot extends Model
     public function verifyIntegrity(): bool
     {
         $expected = hash('sha256', json_encode($this->snapshot_data));
+
         return $this->checksum === $expected;
     }
 }

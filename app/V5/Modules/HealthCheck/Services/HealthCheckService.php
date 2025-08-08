@@ -2,8 +2,8 @@
 
 namespace App\V5\Modules\HealthCheck\Services;
 
-use App\V5\Services\BaseService;
 use App\V5\Modules\HealthCheck\Repositories\HealthCheckRepository;
+use App\V5\Services\BaseService;
 
 class HealthCheckService extends BaseService
 {
@@ -16,6 +16,7 @@ class HealthCheckService extends BaseService
     {
         /** @var HealthCheckRepository $repo */
         $repo = $this->repository;
+
         return $repo->status();
     }
 }

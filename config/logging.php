@@ -147,6 +147,67 @@ return [
             'level' => 'debug',
             'days' => 7
         ],
+
+        // V5 Logging Channels
+        'v5_enterprise' => [
+            'driver' => 'stack',
+            'channels' => ['v5_daily', 'v5_database'],
+            'ignore_exceptions' => false,
+        ],
+
+        'v5_daily' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/enterprise.log'),
+            'level' => env('V5_LOG_LEVEL', 'debug'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'v5_payments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/payments.log'),
+            'level' => env('V5_LOG_LEVEL', 'debug'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'v5_financial' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/financial.log'),
+            'level' => env('V5_LOG_LEVEL', 'info'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
+        'v5_security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/security.log'),
+            'level' => env('V5_LOG_LEVEL', 'warning'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 365),
+            'replace_placeholders' => true,
+        ],
+
+        'v5_alerts' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/alerts.log'),
+            'level' => env('V5_LOG_LEVEL', 'warning'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 60),
+            'replace_placeholders' => true,
+        ],
+
+        'v5_database' => [
+            'driver' => 'monolog',
+            'handler' => \App\V5\Logging\DatabaseLogHandler::class,
+            'level' => env('V5_LOG_LEVEL', 'debug'),
+        ],
+
+        'v5_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/v5/performance.log'),
+            'level' => env('V5_LOG_LEVEL', 'info'),
+            'days' => env('V5_LOG_RETENTION_DAYS', 7),
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];

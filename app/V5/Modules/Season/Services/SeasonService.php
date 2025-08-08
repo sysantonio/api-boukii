@@ -2,9 +2,9 @@
 
 namespace App\V5\Modules\Season\Services;
 
+use App\V5\Models\Season;
 use App\V5\Modules\Season\Repositories\SeasonRepository;
 use App\V5\Services\BaseService;
-use App\V5\Models\Season;
 use Illuminate\Support\Collection;
 
 class SeasonService extends BaseService
@@ -21,6 +21,7 @@ class SeasonService extends BaseService
     {
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
+
         return $repo->all();
     }
 
@@ -28,6 +29,7 @@ class SeasonService extends BaseService
     {
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
+
         return $repo->find($id);
     }
 
@@ -35,6 +37,7 @@ class SeasonService extends BaseService
     {
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
+
         return $repo->create($data);
     }
 
@@ -43,9 +46,10 @@ class SeasonService extends BaseService
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
         $season = $repo->find($id);
-        if (!$season) {
+        if (! $season) {
             return null;
         }
+
         return $repo->update($season, $data);
     }
 
@@ -54,6 +58,7 @@ class SeasonService extends BaseService
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
         $season = $repo->find($id);
+
         return $season ? $repo->delete($season) : false;
     }
 
@@ -62,12 +67,13 @@ class SeasonService extends BaseService
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
         $season = $repo->find($id);
-        if (!$season) {
+        if (! $season) {
             return null;
         }
         $data = $season->replicate()->toArray();
         unset($data['id']);
         $data['is_active'] = false;
+
         return $repo->create($data);
     }
 
@@ -76,7 +82,7 @@ class SeasonService extends BaseService
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
         $season = $repo->find($id);
-        if (!$season) {
+        if (! $season) {
             return null;
         }
         $repo->update($season, [
@@ -84,6 +90,7 @@ class SeasonService extends BaseService
             'is_closed' => true,
             'closed_at' => now(),
         ]);
+
         return $season->fresh();
     }
 
@@ -92,10 +99,11 @@ class SeasonService extends BaseService
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
         $season = $repo->find($id);
-        if (!$season) {
+        if (! $season) {
             return null;
         }
         $repo->update($season, ['is_active' => true]);
+
         return $season->fresh();
     }
 
@@ -103,7 +111,46 @@ class SeasonService extends BaseService
     {
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
-        return $repo->getCurrentSeason($schoolId);
+        $season = $repo->getCurrentSeason($schoolId);
+        
+        // If no season exists, create a dummy season
+        if (!$season) {
+            $season = $this->createDummySeasonIfNeeded($schoolId);
+        }
+
+        return $season;
+    }
+    
+    /**
+     * Create a dummy season if none exists for the school
+     */
+    private function createDummySeasonIfNeeded(int $schoolId): ?Season
+    {
+        try {
+            $currentYear = date('Y');
+            $nextYear = $currentYear + 1;
+            
+            // Create a default season for this school
+            return $this->createSeason([
+                'name' => "Temporada {$currentYear}-{$nextYear}",
+                'school_id' => $schoolId,
+                'start_date' => "{$currentYear}-12-01",
+                'end_date' => "{$nextYear}-04-30",
+                'is_active' => true,
+                'settings' => [
+                    'default_booking_duration' => 180, // 3 hours
+                    'max_advance_booking_days' => 30,
+                    'cancellation_policy' => 'flexible',
+                    'created_by_system' => true
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create dummy season', [
+                'school_id' => $schoolId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -113,6 +160,7 @@ class SeasonService extends BaseService
     {
         /** @var SeasonRepository $repo */
         $repo = $this->repository;
+
         return $repo->getActiveSeasons($schoolId);
     }
 }

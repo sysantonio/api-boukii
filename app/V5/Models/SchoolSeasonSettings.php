@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @OA\Schema(
  *     schema="V5SchoolSeasonSettings",
  *     required={"school_id","season_id","key"},
+ *
  *     @OA\Property(property="id", type="integer", readOnly=true),
  *     @OA\Property(property="school_id", type="integer"),
  *     @OA\Property(property="season_id", type="integer"),

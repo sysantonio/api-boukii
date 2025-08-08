@@ -28,6 +28,9 @@ use App\Models\StationService;
 use App\Models\User;
 use App\Traits\Utils;
 use Carbon\Carbon;
+
+// Include V5 API Routes
+Route::prefix('v5')->group(base_path('routes/api/v5.php'));
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1593,20 +1596,32 @@ Route::prefix('system')
 Route::prefix('v5')->group(function () {
     Route::get('health-check', [\App\V5\Modules\HealthCheck\Controllers\HealthCheckController::class, 'index']);
 
-    Route::resource('seasons', \App\V5\Modules\Season\Controllers\SeasonController::class)
-        ->except(['create', 'edit']);
+    // TEMPORARILY DISABLED - OLD V5 SEASON ROUTES CONFLICTING WITH NEW V5 ROUTES
+    // Route::resource('seasons', \App\V5\Modules\Season\Controllers\SeasonController::class)
+    //     ->except(['create', 'edit']);
 
-    Route::get('seasons/current', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'current']);
-    Route::post('seasons/{id}/close', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'close']);
-    Route::post('seasons/{id}/clone', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'clone']);
+    // Route::get('seasons/current', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'current']);
+    // Route::post('seasons/{id}/close', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'close']);
+    // Route::post('seasons/{id}/clone', [\App\V5\Modules\Season\Controllers\SeasonController::class, 'clone']);
 
     Route::post('auth/login', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'login'])
         ->middleware('season.context');
 
-    Route::middleware(['season.context', 'season.permission'])->group(function () {
+    Route::middleware(['auth:sanctum', 'season.context', 'season.permission'])->group(function () {
         Route::get('schools', [\App\V5\Modules\School\Controllers\SchoolV5Controller::class, 'index']);
+        Route::get('auth/me', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'me']);
         Route::get('auth/permissions', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'permissions']);
         Route::post('auth/season/switch', [\App\V5\Modules\Auth\Controllers\AuthV5Controller::class, 'switch']);
+        
+        // Dashboard endpoints
+        Route::prefix('dashboard')->group(function () {
+            Route::get('stats', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'stats']);
+            Route::get('recent-activity', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'recentActivity']);
+            Route::get('alerts', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'alerts']);
+            Route::delete('alerts/{alertId}', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'dismissAlert']);
+            Route::get('daily-sessions', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'dailySessions']);
+            Route::get('today-reservations', [\App\V5\Modules\Dashboard\Controllers\DashboardV5Controller::class, 'todayReservations']);
+        });
     });
 });
 /* BOUKII V5 */

@@ -8,7 +8,7 @@ class BaseRepository
 {
     protected ?Model $model;
 
-    public function __construct(Model $model = null)
+    public function __construct(?Model $model = null)
     {
         $this->model = $model;
     }

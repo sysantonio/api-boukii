@@ -2,10 +2,10 @@
 
 namespace App\V5\Modules\Season\Services;
 
-use App\V5\Modules\Season\Repositories\SeasonSnapshotRepository;
-use App\V5\Services\BaseService;
 use App\V5\Models\Season;
 use App\V5\Models\SeasonSnapshot;
+use App\V5\Modules\Season\Repositories\SeasonSnapshotRepository;
+use App\V5\Services\BaseService;
 
 class SeasonSnapshotService extends BaseService
 {
@@ -19,6 +19,7 @@ class SeasonSnapshotService extends BaseService
         /** @var SeasonSnapshotRepository $repo */
         $repo = $this->repository;
         $extra['is_immutable'] = true;
+
         return $repo->createSeasonSnapshot($season, $type, $data, $extra);
     }
 

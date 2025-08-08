@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class SeasonSnapshotRepository extends BaseRepository
 {
-    public function __construct(SeasonSnapshot $model = null)
+    public function __construct(?SeasonSnapshot $model = null)
     {
         parent::__construct($model ?? new SeasonSnapshot());
     }

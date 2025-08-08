@@ -183,16 +183,32 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
         return $this->hasMany(\App\Models\SchoolUser::class, 'user_id');
     }
 
-    public function schools(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function schools(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasManyThrough(
-            \App\Models\School::class, // Modelo final al que quieres llegar
-            \App\Models\SchoolUser::class, // Modelo intermedio
-            'user_id', // Clave foránea en el modelo intermedio
-            'id', // Clave foránea en el modelo final
-            'id', // Clave local en el modelo inicial
-            'school_id' // Clave local en el modelo intermedio
-        );
+        return $this->belongsToMany(
+            \App\Models\School::class,
+            'school_users', // Tabla pivote
+            'user_id', // Clave foránea del modelo actual
+            'school_id' // Clave foránea del modelo relacionado
+        )->where('schools.active', 1)
+         ->whereNull('schools.deleted_at');
+    }
+
+    /**
+     * Get the primary school for this user
+     */
+    public function getCurrentSchool()
+    {
+        return $this->schools()->first();
+    }
+
+    /**
+     * Get the primary school ID for this user
+     */
+    public function getCurrentSchoolId(): ?int
+    {
+        $school = $this->getCurrentSchool();
+        return $school ? $school->id : null;
     }
 
     public function userSeasonRoles(): HasMany
@@ -213,6 +229,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
             ->where('season_id', $seasonId)
             ->where('role', $role)
             ->exists();
+    }
+
+    /**
+     * Scope to safely load schools without column ambiguity
+     */
+    public function scopeWithSafeSchools($query)
+    {
+        return $query->with(['schools' => function ($schoolQuery) {
+            $schoolQuery->select([
+                'schools.id',
+                'schools.name',
+                'schools.slug', 
+                'schools.logo'
+            ])->where('schools.active', 1)
+              ->whereNull('schools.deleted_at');
+        }]);
     }
 
     public function getActivitylogOptions(): LogOptions

@@ -16,6 +16,7 @@ class HealthCheckController extends BaseV5Controller
     public function index(): JsonResponse
     {
         $data = $this->service->check();
+
         return $this->respond($data);
     }
 }

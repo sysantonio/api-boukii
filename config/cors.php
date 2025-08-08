@@ -46,6 +46,9 @@ return [
         'X-School-Slug',
         'X-CSRF-TOKEN',
         'X-Socket-ID',
+        'X-Season-Id',
+        'X-School-Id',
+        'X-Client-Version',
     ],
 
     'exposed_headers' => [

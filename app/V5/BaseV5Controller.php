@@ -3,8 +3,8 @@
 namespace App\V5;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use App\V5\Services\BaseService;
+use Illuminate\Http\JsonResponse;
 
 class BaseV5Controller extends Controller
 {

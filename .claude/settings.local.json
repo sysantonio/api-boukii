@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan route:list:*)",
+      "Bash(vendor/bin/pint:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": []
   }
