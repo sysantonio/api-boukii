@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
-class SeasonV5Test extends TestCase
+class SeasonTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
