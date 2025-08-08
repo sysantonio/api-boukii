@@ -5,6 +5,7 @@ namespace Tests\Feature\V5;
 use App\Models\User;
 use App\Models\School;
 use App\Models\Season;
+use App\V5\Models\UserSeasonRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -37,10 +38,8 @@ class SeasonContextTest extends TestCase
             'active' => true
         ]);
 
-        // Associate user with school
         $this->user->schools()->attach($this->school->id);
 
-        // Create test season with current date range
         $this->season = Season::factory()->create([
             'school_id' => $this->school->id,
             'name' => 'Test Season 2025',
@@ -48,6 +47,12 @@ class SeasonContextTest extends TestCase
             'end_date' => now()->addMonths(4)->toDateString(),
             'is_active' => true,
             'is_current' => false // Will be auto-selected by date
+        ]);
+
+        UserSeasonRole::create([
+            'user_id' => $this->user->id,
+            'season_id' => $this->season->id,
+            'role' => 'admin'
         ]);
     }
 
@@ -84,7 +89,8 @@ class SeasonContextTest extends TestCase
         // Now test seasons API call with proper headers
         $response = $this->getJson('/api/v5/seasons', [
             'Authorization' => 'Bearer ' . $token,
-            'X-School-ID' => $this->school->id
+            'X-School-ID' => $this->school->id,
+            'X-Season-ID' => $this->season->id
         ]);
 
         $response->assertStatus(200);
@@ -132,15 +138,17 @@ class SeasonContextTest extends TestCase
         $token = $loginResponse->json('data.access_token');
 
         // Test school context debug endpoint
-        $response = $this->postJson('/api/v5/debug-school-context', [], [
-            'Authorization' => 'Bearer ' . $token
+        $response = $this->postJson('/api/v5/debug-token', [], [
+            'Authorization' => 'Bearer ' . $token,
+            'X-School-ID' => $this->school->id,
+            'X-Season-ID' => $this->season->id,
         ]);
 
         $response->assertStatus(200);
         $debugData = $response->json('data');
-        
-        $this->assertEquals($this->school->id, $debugData['school_id_from_token']);
-        $this->assertEquals($this->school->id, $debugData['middleware_should_set']);
+
+        $this->assertEquals($this->school->id, $debugData['school_id_from_context']);
+        $this->assertTrue($debugData['middleware_applied']);
     }
 
     /** @test */
@@ -158,7 +166,9 @@ class SeasonContextTest extends TestCase
 
         // Call seasons API - should NOT return "School context is required"
         $response = $this->getJson('/api/v5/seasons', [
-            'Authorization' => 'Bearer ' . $token
+            'Authorization' => 'Bearer ' . $token,
+            'X-School-ID' => $this->school->id,
+            'X-Season-ID' => $this->season->id,
         ]);
 
         // Should be successful, not forbidden

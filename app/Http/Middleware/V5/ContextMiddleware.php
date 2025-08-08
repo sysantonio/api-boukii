@@ -5,6 +5,7 @@ namespace App\Http\Middleware\V5;
 use App\Models\School;
 use App\Models\Season;
 use App\Models\User;
+use App\V5\Models\UserSeasonRole;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -141,11 +142,9 @@ class ContextMiddleware
             return true;
         }
 
-        if ($user->hasRole('school_admin')) {
-            return $user->schools()->where('schools.id', $season->school_id)->exists();
-        }
-
-        return $user->schools()->where('schools.id', $season->school_id)->exists();
+        return UserSeasonRole::where('user_id', $user->id)
+            ->where('season_id', $season->id)
+            ->exists();
     }
 
     private function unauthorizedResponse(string $message): JsonResponse

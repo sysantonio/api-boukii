@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Course;
 use App\Models\Monitor;
 use App\Models\School;
+use App\Models\Season;
+use App\V5\Models\UserSeasonRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -26,18 +28,32 @@ class BookingControllerTest extends TestCase
     private $client;
     private $course;
     private $monitor;
-    private $seasonId = 1;
+    private $season;
+    private $seasonId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create test user and authenticate
-        $this->user = \App\Models\User::factory()->create();
-        Sanctum::actingAs($this->user);
-
-        // Create test data
         $this->school = School::factory()->create();
+
+        $this->user = \App\Models\User::factory()->create();
+        $this->user->schools()->attach($this->school->id);
+
+        $this->season = Season::factory()->create([
+            'school_id' => $this->school->id,
+            'is_active' => true,
+        ]);
+        $this->seasonId = $this->season->id;
+
+        UserSeasonRole::create([
+            'user_id' => $this->user->id,
+            'season_id' => $this->season->id,
+            'role' => 'admin'
+        ]);
+
+        Sanctum::actingAs($this->user, ['*'], 'api_v5');
+
         $this->client = Client::factory()->create(['school_id' => $this->school->id]);
         $this->course = Course::factory()->create(['school_id' => $this->school->id]);
         $this->monitor = Monitor::factory()->create();
