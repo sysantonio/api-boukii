@@ -29,7 +29,7 @@ class SeasonTest extends TestCase
         // Mock context and permission middleware
         $this->withoutMiddleware([
             'context.v5',
-            'season.permission'
+            'context.permission'
         ]);
     }
 
