@@ -29,7 +29,7 @@ class CreateSeasonV5Request extends BaseApiRequest
             return false;
         }
 
-        // School ID will be available from SchoolContextMiddleware
+        // School and season IDs will be available from ContextMiddleware
         // For now, allow any authenticated user - authorization is handled in the controller
         return true;
     }
@@ -214,13 +214,13 @@ class CreateSeasonV5Request extends BaseApiRequest
     }
 
     /**
-     * Get school ID from request context (set by SchoolContextMiddleware)
+     * Get school ID from request context (set by ContextMiddleware)
      * 
      * @return int|null
      */
     private function getSchoolId(): ?int
     {
-        // School ID is set by SchoolContextMiddleware
+        // School ID is set by ContextMiddleware
         return $this->get('context_school_id');
     }
 

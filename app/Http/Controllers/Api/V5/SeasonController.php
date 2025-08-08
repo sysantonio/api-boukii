@@ -486,7 +486,7 @@ class SeasonController extends Controller
      */
     private function getSchoolIdFromContext(Request $request): int
     {
-        // School ID is set by SchoolContextMiddleware in the request
+        // School ID is set by ContextMiddleware in the request
         $schoolId = $request->get('context_school_id');
         
         if (!$schoolId) {

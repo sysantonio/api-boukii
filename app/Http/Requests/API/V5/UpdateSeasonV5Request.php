@@ -29,7 +29,7 @@ class UpdateSeasonV5Request extends BaseApiRequest
             return false;
         }
 
-        // School ID will be available from SchoolContextMiddleware
+        // School and season IDs will be available from ContextMiddleware
         // Just check if user has general permissions - specific school check is done in middleware
         return $user->hasPermission('seasons.update') ||
                $user->hasPermission('seasons.manage') ||
@@ -330,13 +330,13 @@ class UpdateSeasonV5Request extends BaseApiRequest
     }
 
     /**
-     * Get school ID from request context (set by SchoolContextMiddleware)
+     * Get school ID from request context (set by ContextMiddleware)
      * 
      * @return int|null
      */
     private function getSchoolId(): ?int
     {
-        // School ID is set by SchoolContextMiddleware
+        // School ID is set by ContextMiddleware
         return $this->get('context_school_id');
     }
 

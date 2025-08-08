@@ -6,6 +6,7 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\School;
 use App\Models\Season;
+use App\V5\Models\UserSeasonRole;
 use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
@@ -16,6 +17,7 @@ class SeasonControllerTest extends TestCase
 
     private User $user;
     private School $school;
+    private Season $season;
     private string $baseUrl = '/api/v5/seasons';
 
     protected function setUp(): void
@@ -33,28 +35,24 @@ class SeasonControllerTest extends TestCase
             'slug' => 'test-school-seasons',
         ]);
         
-        // Associate user with school
         $this->user->schools()->attach($this->school->id);
-        
-        // Authenticate with token that includes school context
-        $token = $this->user->createToken('test-token', ['*'], [
+
+        $this->season = Season::factory()->create([
             'school_id' => $this->school->id,
-            'school_slug' => $this->school->slug,
+            'is_active' => true,
         ]);
-        
-        // Set the context data properly
-        $token->accessToken->context_data = json_encode([
-            'school_id' => $this->school->id,
-            'school_slug' => $this->school->slug,
+
+        UserSeasonRole::create([
+            'user_id' => $this->user->id,
+            'season_id' => $this->season->id,
+            'role' => 'admin'
         ]);
-        $token->accessToken->save();
-        
+
         Sanctum::actingAs($this->user, ['*'], 'api_v5');
-        
-        // Add school context header for middleware
+
         $this->withHeaders([
             'X-School-ID' => (string) $this->school->id,
-            'Authorization' => 'Bearer ' . $token->plainTextToken,
+            'X-Season-ID' => (string) $this->season->id,
         ]);
     }
 
@@ -325,15 +323,15 @@ class SeasonControllerTest extends TestCase
     }
 
     /** @test */
-    public function test_school_context_middleware_applied()
+    public function test_context_middleware_applied()
     {
-        // Arrange: Remove school context header
-        $this->withoutHeaders(['X-School-ID']);
+        // Arrange: Remove school and season context headers
+        $this->withoutHeaders(['X-School-ID', 'X-Season-ID']);
 
-        // Act: Try to access seasons without school context
+        // Act: Try to access seasons without required context
         $response = $this->getJson($this->baseUrl);
 
-        // Assert: Should fail due to missing school context
+        // Assert: Should fail due to missing context
         $response->assertStatus(403)
                 ->assertJson([
                     'success' => false,
