@@ -421,7 +421,7 @@ class DashboardController extends Controller
 
     private function getCurrentSchoolId(Request $request): ?int
     {
-        // School ID is set by SchoolContextMiddleware in the request (same as seasons)
+        // School ID is set by ContextMiddleware in the request
         $schoolId = $request->get('context_school_id');
         if ($schoolId) {
             return (int) $schoolId;
@@ -447,18 +447,23 @@ class DashboardController extends Controller
 
     private function getCurrentSeasonId(Request $request): ?int
     {
-        // Get season ID from header (sent by frontend interceptor)
+        // Context middleware sets the season id
+        $seasonId = $request->get('context_season_id');
+        if ($seasonId) {
+            return (int) $seasonId;
+        }
+
+        // Fallbacks for legacy headers/params
         $seasonId = $request->header('X-Season-ID');
         if ($seasonId) {
             return (int) $seasonId;
         }
-        
-        // Fallback to parameter
+
         $seasonId = $request->get('season_id');
         if ($seasonId) {
             return (int) $seasonId;
         }
-        
+
         return null;
     }
 

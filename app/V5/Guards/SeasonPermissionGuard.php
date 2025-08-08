@@ -31,10 +31,10 @@ class SeasonPermissionGuard
                 return $this->unauthorizedResponse('Authentication required');
             }
 
-            // Get season context from header or query parameter
-            $seasonId = (int) ($request->header('X-Season-ID') ?? $request->get('season_id', 0));
+            // Get season context validated by ContextMiddleware
+            $seasonId = (int) $request->get('context_season_id', 0);
             if ($seasonId <= 0) {
-                return $this->forbiddenResponse('Season context required - X-Season-ID header or season_id parameter needed');
+                return $this->forbiddenResponse('Season context required');
             }
 
             // Check if user has any permissions for this season
@@ -67,7 +67,7 @@ class SeasonPermissionGuard
             return false;
         }
 
-        $seasonId = (int) $request->get('season_id', 0);
+        $seasonId = (int) $request->get('context_season_id', 0);
         if ($seasonId <= 0) {
             return false;
         }

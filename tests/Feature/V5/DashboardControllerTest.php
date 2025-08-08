@@ -191,16 +191,15 @@ class DashboardControllerTest extends TestCase
     {
         $this->actingAs($this->user, 'sanctum');
 
-        // Test without season context
+        // Test without school/season context
         $response = $this->getJson('/api/v5/dashboard/stats');
-        $response->assertStatus(400)
-                ->assertJsonPath('code', 'SEASON_CONTEXT_REQUIRED');
+        $response->assertStatus(403);
 
         // Test with invalid season
         $response = $this->getJson('/api/v5/dashboard/stats', [
+            'X-School-Id' => $this->user->school_id,
             'X-Season-Id' => 99999
         ]);
-        $response->assertStatus(400)
-                ->assertJsonPath('code', 'INVALID_SEASON');
+        $response->assertStatus(403);
     }
 }

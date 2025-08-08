@@ -26,9 +26,9 @@ class SeasonTest extends TestCase
             'school_id' => $this->school->id
         ]);
         
-        // Mock season context middleware
+        // Mock context and permission middleware
         $this->withoutMiddleware([
-            'season.context',
+            'context.v5',
             'season.permission'
         ]);
     }

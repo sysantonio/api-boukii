@@ -368,19 +368,23 @@ class RolePermissionMiddleware
      */
     private function getSeasonIdFromRequest(Request $request): ?int
     {
-        // Try header first (sent by frontend interceptor)
+        // Context middleware injects the validated season id
+        $seasonId = $request->get('context_season_id');
+        if ($seasonId) {
+            return (int) $seasonId;
+        }
+
+        // Fallbacks for legacy headers/params
         $seasonId = $request->header('X-Season-ID');
         if ($seasonId) {
             return (int) $seasonId;
         }
 
-        // Try query parameter
         $seasonId = $request->get('season_id');
         if ($seasonId) {
             return (int) $seasonId;
         }
 
-        // Try from token context
         $user = auth()->user();
         if ($user && $user->currentAccessToken()) {
             $contextData = $user->currentAccessToken()->context_data;
