@@ -25,9 +25,9 @@ Route::prefix('auth')->group(function () {
 });
 
 // Debug endpoint outside middleware to check token without school context requirement
-Route::middleware(['auth:api_v5'])->post('/debug-raw-token', function(\Illuminate\Http\Request $request) {
+Route::middleware(['auth:sanctum'])->post('/debug-raw-token', function(\Illuminate\Http\Request $request) {
     try {
-        $user = auth()->guard('api_v5')->user();
+        $user = auth()->guard('sanctum')->user();
         $token = $user ? $user->currentAccessToken() : null;
         
         return response()->json([
@@ -55,14 +55,14 @@ Route::middleware(['auth:api_v5'])->post('/debug-raw-token', function(\Illuminat
 });
 
 // Grupo de rutas autenticadas
-Route::middleware(['auth:api_v5'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     
     // Rutas de autenticación
     Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('v5.auth.logout');
         Route::get('me', [AuthController::class, 'me'])->name('v5.auth.me');
         Route::get('debug-token', function() {
-            $user = Auth::guard('api_v5')->user(); 
+            $user = Auth::guard('sanctum')->user();
             $token = $user->currentAccessToken();
             return response()->json([
                 'user_id' => $user->id,
@@ -78,27 +78,15 @@ Route::middleware(['auth:api_v5'])->group(function () {
     });
     
     // Rutas que requieren contexto completo (escuela y temporada)
-    Route::middleware(['context.v5'])->group(function () {
+    Route::middleware(['context.middleware'])->group(function () {
 
-        // Season management routes
-        Route::prefix('seasons')->name('seasons.')->group(function () {
-            Route::get('/', [SeasonController::class, 'index'])->name('index');
-            Route::post('/', [SeasonController::class, 'store'])->name('store');
-            Route::get('/current', [SeasonController::class, 'current'])->name('current');
-            Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
-            Route::put('/{season}', [SeasonController::class, 'update'])->name('update');
-            Route::patch('/{season}', [SeasonController::class, 'update'])->name('patch');
-            Route::delete('/{season}', [SeasonController::class, 'destroy'])->name('destroy');
-            Route::post('/{season}/close', [SeasonController::class, 'close'])->name('close');
-        });
-        
         // Debug endpoint to test token and context
         Route::post('/debug-token', function(\Illuminate\Http\Request $request) {
             try {
-                $user = auth()->guard('api_v5')->user();
+                $user = auth()->guard('sanctum')->user();
                 $token = $user ? $user->currentAccessToken() : null;
                 $schoolId = $request->get('context_school_id');
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Token debug info',
@@ -121,34 +109,43 @@ Route::middleware(['auth:api_v5'])->group(function () {
                 ], 500);
             }
         })->name('debug-token');
-        
+
         // Future routes that only require context
         // Route::apiResource('users', UserV5Controller::class);
 
         // Rutas que requieren permisos específicos de temporada
-        Route::middleware(['context.permission'])->group(function () {
-            
+        Route::middleware(['role.permission.middleware:season.admin'])->prefix('seasons')->name('seasons.')->group(function () {
+            Route::get('/', [SeasonController::class, 'index'])->name('index');
+            Route::post('/', [SeasonController::class, 'store'])->name('store');
+            Route::get('/current', [SeasonController::class, 'current'])->name('current');
+            Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
+            Route::put('/{season}', [SeasonController::class, 'update'])->name('update');
+            Route::patch('/{season}', [SeasonController::class, 'update'])->name('patch');
+            Route::delete('/{season}', [SeasonController::class, 'destroy'])->name('destroy');
+            Route::post('/{season}/close', [SeasonController::class, 'close'])->name('close');
+        });
+
+        Route::middleware(['role.permission.middleware:season.analytics'])->group(function () {
             // Dashboard/Welcome routes
             Route::prefix('dashboard')->group(function () {
                 Route::get('stats', [DashboardV5Controller::class, 'stats'])->name('v5.dashboard.stats');
                 Route::get('recent-activity', [DashboardV5Controller::class, 'recentActivity'])->name('v5.dashboard.recent-activity');
                 Route::get('alerts', [DashboardV5Controller::class, 'alerts'])->name('v5.dashboard.alerts');
             });
-            
+
             // Alias para compatibilidad con frontend (welcome -> dashboard)
             Route::prefix('welcome')->group(function () {
                 Route::get('stats', [DashboardV5Controller::class, 'stats'])->name('v5.welcome.stats');
                 Route::get('recent-activity', [DashboardV5Controller::class, 'recentActivity'])->name('v5.welcome.recent-activity');
                 Route::get('alerts', [DashboardV5Controller::class, 'alerts'])->name('v5.welcome.alerts');
             });
-            
+
             // Aquí se agregarían más rutas que requieren contexto completo
             // Route::apiResource('courses', CourseV5Controller::class);
             // Route::apiResource('bookings', BookingV5Controller::class);
             // Route::apiResource('equipment', EquipmentV5Controller::class);
-            
         });
-        
+
     });
-    
+
 });
