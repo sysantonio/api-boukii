@@ -71,7 +71,9 @@ class Kernel extends HttpKernel
         'admin.rate.limit' => \App\Http\Middleware\AdminRateLimit::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'context.permission' => \App\Http\Middleware\V5\ContextPermissionMiddleware::class,
+        'role.permission.middleware' => \App\Http\Middleware\V5\ContextPermissionMiddleware::class,
         'v5.logging' => \App\V5\Middleware\RequestLoggingMiddleware::class,
         'context.v5' => \App\Http\Middleware\V5\ContextMiddleware::class,
+        'context.middleware' => \App\Http\Middleware\V5\ContextMiddleware::class,
     ];
 }
