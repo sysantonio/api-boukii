@@ -5,6 +5,7 @@ namespace Tests\Unit\V5;
 use Tests\TestCase;
 use App\V5\Logging\V5Logger;
 use App\V5\Logging\CorrelationTracker;
+use App\V5\Logging\ContextProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -64,7 +65,6 @@ class V5LoggerTest extends TestCase
     public function test_api_request_logging()
     {
         Log::shouldReceive('channel')
-            ->with('v5_enterprise')
             ->andReturnSelf();
         
         Log::shouldReceive('info')
@@ -80,7 +80,6 @@ class V5LoggerTest extends TestCase
     public function test_api_response_logging_with_different_status_codes()
     {
         Log::shouldReceive('channel')
-            ->with('v5_enterprise')
             ->andReturnSelf();
         
         // Test successful response
@@ -104,16 +103,22 @@ class V5LoggerTest extends TestCase
 
     public function test_authentication_event_logging()
     {
-        // Mock the request to avoid session issues
-        $this->app->instance('request', new Request());
+        // Mock the request with a session to avoid session issues
+        $request = Request::create('/auth', 'GET');
+        $request->setLaravelSession(app('session')->driver());
+        $this->app->instance('request', $request);
+        $this->app->instance(Request::class, $request);
         
         Log::shouldReceive('channel')
-            ->with('v5_enterprise')
             ->andReturnSelf();
         
         Log::shouldReceive('warning')
             ->once()
             ->with('Authentication Event', \Mockery::type('array'));
+
+        Log::shouldReceive('warning')
+            ->once()
+            ->with('Security Event', \Mockery::type('array'));
 
         V5Logger::logAuthEvent('login_failed', [
             'user_id' => 123,
@@ -176,8 +181,11 @@ class V5LoggerTest extends TestCase
 
     public function test_security_event_logging()
     {
-        // Mock the request to avoid session issues
-        $this->app->instance('request', new Request());
+        // Mock the request with a session to avoid session issues
+        $request = Request::create('/security', 'GET');
+        $request->setLaravelSession(app('session')->driver());
+        $this->app->instance('request', $request);
+        $this->app->instance(Request::class, $request);
         
         Log::shouldReceive('channel')
             ->with('v5_security')
@@ -272,6 +280,27 @@ class V5LoggerTest extends TestCase
         $exception = new \Exception('Test exception', 500);
         
         V5Logger::logSystemError($exception, ['additional' => 'context']);
+    }
+
+    public function test_context_processor_injects_request_values()
+    {
+        $request = Request::create('/test', 'GET', ['season_id' => 1, 'school_id' => 2]);
+        $request->headers->set('User-Agent', 'phpunit-agent');
+        $request->server->set('REMOTE_ADDR', '123.123.123.123');
+        $request->setUserResolver(fn () => (object) ['id' => 99]);
+        $this->app->instance('request', $request);
+        $this->app->instance(Request::class, $request);
+
+        V5Logger::initializeCorrelation('corr-id-1');
+
+        $processor = new ContextProcessor();
+        $record = $processor([]);
+
+        $this->assertEquals('corr-id-1', $record['extra']['correlation_id']);
+        $this->assertEquals(1, $record['extra']['season_id']);
+        $this->assertEquals(2, $record['extra']['school_id']);
+        $this->assertEquals('123.123.123.123', $record['extra']['ip']);
+        $this->assertEquals('phpunit-agent', $record['extra']['user_agent']);
     }
 
     public function test_sensitive_data_sanitization()

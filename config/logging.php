@@ -153,6 +153,7 @@ return [
             'driver' => 'stack',
             'channels' => ['v5_daily', 'v5_database'],
             'ignore_exceptions' => false,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_daily' => [
@@ -161,6 +162,7 @@ return [
             'level' => env('V5_LOG_LEVEL', 'debug'),
             'days' => env('V5_LOG_RETENTION_DAYS', 30),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_payments' => [
@@ -169,6 +171,7 @@ return [
             'level' => env('V5_LOG_LEVEL', 'debug'),
             'days' => env('V5_LOG_RETENTION_DAYS', 30),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_financial' => [
@@ -177,6 +180,7 @@ return [
             'level' => env('V5_LOG_LEVEL', 'info'),
             'days' => env('V5_LOG_RETENTION_DAYS', 90),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_security' => [
@@ -185,6 +189,7 @@ return [
             'level' => env('V5_LOG_LEVEL', 'warning'),
             'days' => env('V5_LOG_RETENTION_DAYS', 365),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_alerts' => [
@@ -193,12 +198,14 @@ return [
             'level' => env('V5_LOG_LEVEL', 'warning'),
             'days' => env('V5_LOG_RETENTION_DAYS', 60),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_database' => [
             'driver' => 'monolog',
             'handler' => \App\V5\Logging\DatabaseLogHandler::class,
             'level' => env('V5_LOG_LEVEL', 'debug'),
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
 
         'v5_performance' => [
@@ -207,6 +214,7 @@ return [
             'level' => env('V5_LOG_LEVEL', 'info'),
             'days' => env('V5_LOG_RETENTION_DAYS', 7),
             'replace_placeholders' => true,
+            'processors' => [\App\V5\Logging\ContextProcessor::class],
         ],
     ],
 
