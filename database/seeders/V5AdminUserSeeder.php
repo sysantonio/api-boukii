@@ -23,7 +23,7 @@ class V5AdminUserSeeder extends Seeder
             Role::create(['name' => 'school_admin', 'guard_name' => 'web']);
         }
 
-        // Ensure school exists
+        // Ensure school exists without modifying existing data
         $school = School::firstOrCreate(
             ['id' => 2],
             [
@@ -41,7 +41,7 @@ class V5AdminUserSeeder extends Seeder
         );
 
         // Create admin user
-        $adminUser = User::firstOrCreate(
+        $adminUser = User::updateOrCreate(
             ['email' => 'admin@escuela-test-v5.com'],
             [
                 'username' => 'admin-test-v5',
@@ -72,7 +72,7 @@ class V5AdminUserSeeder extends Seeder
         }
 
         // Create current season (active and current)
-        $currentSeason = Season::firstOrCreate(
+        $currentSeason = Season::updateOrCreate(
             [
                 'school_id' => $school->id,
                 'name' => 'Temporada 2024-2025'
@@ -96,7 +96,7 @@ class V5AdminUserSeeder extends Seeder
         );
 
         // Create future season
-        $futureSeason = Season::firstOrCreate(
+        $futureSeason = Season::updateOrCreate(
             [
                 'school_id' => $school->id,
                 'name' => 'Temporada 2025-2026'
@@ -116,7 +116,7 @@ class V5AdminUserSeeder extends Seeder
         );
 
         // Create historical season
-        $historicalSeason = Season::firstOrCreate(
+        $historicalSeason = Season::updateOrCreate(
             [
                 'school_id' => $school->id,
                 'name' => 'Temporada 2023-2024'

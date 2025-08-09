@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Season;
 use App\Models\School;
-use Carbon\Carbon;
 
 class V5TestUsersSeeder extends Seeder
 {
@@ -17,13 +16,13 @@ class V5TestUsersSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin test v5 user
-        $adminUser = User::updateOrCreate(
-            ['email' => 'admin.test.v5@boukii.com'],
+        // Create multi-school admin user
+        $multiSchoolAdmin = User::updateOrCreate(
+            ['email' => 'admin@boukii-v5.com'],
             [
-                'username' => 'admin_test_v5',
+                'username' => 'admin_multi',
                 'first_name' => 'Admin',
-                'last_name' => 'Test V5',
+                'last_name' => 'Boukii',
                 'password' => Hash::make('password'),
                 'type' => 'admin',
                 'active' => 1,
@@ -32,13 +31,13 @@ class V5TestUsersSeeder extends Seeder
             ]
         );
 
-        // Create multi test user
-        $multiUser = User::updateOrCreate(
-            ['email' => 'multi.test@boukii.com'],
+        // Create school 2 admin user
+        $schoolTwoAdmin = User::updateOrCreate(
+            ['email' => 'multi@boukii-v5.com'],
             [
-                'username' => 'multi_test',
+                'username' => 'school2_admin',
                 'first_name' => 'Multi',
-                'last_name' => 'Test',
+                'last_name' => 'School2',
                 'password' => Hash::make('password'),
                 'type' => 'admin',
                 'active' => 1,
@@ -47,29 +46,24 @@ class V5TestUsersSeeder extends Seeder
             ]
         );
 
-        $this->command->info("Users created: Admin Test V5 (ID: {$adminUser->id}), Multi Test (ID: {$multiUser->id})");
+        $this->command->info("Users created: admin@boukii-v5.com (ID: {$multiSchoolAdmin->id}), multi@boukii-v5.com (ID: {$schoolTwoAdmin->id})");
 
-        // Find school 2 (ESS Veveyse)
-        $school = School::find(2);
-        if (!$school) {
-            $this->command->error('School 2 not found!');
-            return;
+        // Associate multi-school admin with all schools
+        $schoolIds = School::pluck('id');
+        foreach ($schoolIds as $schoolId) {
+            DB::table('school_users')->updateOrInsert(
+                ['school_id' => $schoolId, 'user_id' => $multiSchoolAdmin->id],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
         }
 
-        // Associate users with school 2
+        // Associate second admin only with school 2
         DB::table('school_users')->updateOrInsert(
-            ['school_id' => 2, 'user_id' => $adminUser->id],
+            ['school_id' => 2, 'user_id' => $schoolTwoAdmin->id],
             ['created_at' => now(), 'updated_at' => now()]
         );
 
-        DB::table('school_users')->updateOrInsert(
-            ['school_id' => 2, 'user_id' => $multiUser->id],
-            ['created_at' => now(), 'updated_at' => now()]
-        );
-
-        $this->command->info("Users associated with school: {$school->name}");
-
-        // Create or find 2025-2026 season
+        // Create or find 2025-2026 season for school 2
         $season = Season::updateOrCreate(
             ['name' => 'Temporada 2025-2026', 'school_id' => 2],
             [
@@ -83,32 +77,14 @@ class V5TestUsersSeeder extends Seeder
 
         $this->command->info("Season created/updated: {$season->name} (ID: {$season->id})");
 
-        // Create user_season_roles table if it doesn't exist
-        if (!DB::getSchemaBuilder()->hasTable('user_season_roles')) {
-            DB::statement('
-                CREATE TABLE user_season_roles (
-                    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                    user_id BIGINT UNSIGNED NOT NULL,
-                    season_id BIGINT UNSIGNED NOT NULL,
-                    role VARCHAR(255) NOT NULL,
-                    created_at TIMESTAMP NULL DEFAULT NULL,
-                    updated_at TIMESTAMP NULL DEFAULT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                    FOREIGN KEY (season_id) REFERENCES seasons(id) ON DELETE CASCADE,
-                    UNIQUE KEY unique_user_season (user_id, season_id)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ');
-            $this->command->info('user_season_roles table created');
-        }
-
         // Assign admin permissions to both users for the season
         DB::table('user_season_roles')->updateOrInsert(
-            ['user_id' => $adminUser->id, 'season_id' => $season->id],
+            ['user_id' => $multiSchoolAdmin->id, 'season_id' => $season->id],
             ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
         );
 
         DB::table('user_season_roles')->updateOrInsert(
-            ['user_id' => $multiUser->id, 'season_id' => $season->id],
+            ['user_id' => $schoolTwoAdmin->id, 'season_id' => $season->id],
             ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
         );
 
@@ -118,12 +94,12 @@ class V5TestUsersSeeder extends Seeder
         $season11 = Season::find(11);
         if ($season11) {
             DB::table('user_season_roles')->updateOrInsert(
-                ['user_id' => $adminUser->id, 'season_id' => 11],
+                ['user_id' => $multiSchoolAdmin->id, 'season_id' => 11],
                 ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
             );
 
             DB::table('user_season_roles')->updateOrInsert(
-                ['user_id' => $multiUser->id, 'season_id' => 11],
+                ['user_id' => $schoolTwoAdmin->id, 'season_id' => 11],
                 ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
             );
 
