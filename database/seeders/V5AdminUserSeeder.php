@@ -23,8 +23,8 @@ class V5AdminUserSeeder extends Seeder
             Role::create(['name' => 'school_admin', 'guard_name' => 'web']);
         }
 
-        // Ensure school exists
-        $school = School::updateOrCreate(
+        // Ensure school exists without modifying existing data
+        $school = School::firstOrCreate(
             ['id' => 2],
             [
                 'name' => 'Escuela de Esquí Test V5',
