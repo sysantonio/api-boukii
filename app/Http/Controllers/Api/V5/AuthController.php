@@ -204,6 +204,12 @@ class AuthController extends Controller
             $user = $request->user(); // Get user from authenticated token
             $school = School::find($validated['school_id']);
 
+            Log::info('selectSchool called', [
+                'user_id' => $user?->id,
+                'school_id' => $validated['school_id'],
+                'school_found' => !!$school
+            ]);
+
             if (!$user) {
                 return $this->errorResponse('Usuario no autenticado', 401);
             }
@@ -235,8 +241,11 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent()
             ];
 
-            $token = $user->createToken($tokenName, ['*'], null, [
-                'context_data' => $contextData
+            $token = $user->createToken($tokenName, ['*']);
+            
+            // Store context data in the token
+            $token->accessToken->update([
+                'context_data' => json_encode($contextData)
             ]);
 
             Log::info('School selection successful - full access token created', [

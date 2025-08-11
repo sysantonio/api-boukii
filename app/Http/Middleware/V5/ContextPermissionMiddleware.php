@@ -289,11 +289,14 @@ class ContextPermissionMiddleware
     private function userHasSeasonPermission(User $user, string $permission, int $schoolId, int $seasonId): bool
     {
         // Get user's specific permissions for this season
+        // Note: user_season_roles doesn't have school_id, but we can verify through the season
         $seasonRole = DB::table('user_season_roles')
-            ->where('user_id', $user->id)
-            ->where('school_id', $schoolId)
-            ->where('season_id', $seasonId)
-            ->where('is_active', true)
+            ->join('seasons', 'user_season_roles.season_id', '=', 'seasons.id')
+            ->where('user_season_roles.user_id', $user->id)
+            ->where('seasons.school_id', $schoolId)
+            ->where('user_season_roles.season_id', $seasonId)
+            ->where('user_season_roles.is_active', true)
+            ->select('user_season_roles.*')
             ->first();
 
         if (!$seasonRole) {

@@ -63,21 +63,26 @@ class V5TestUsersSeeder extends Seeder
             ['created_at' => now(), 'updated_at' => now()]
         );
 
-        // Create or find 2025-2026 season for school 2
-        $season = Season::updateOrCreate(
-            ['name' => 'Temporada 2025-2026', 'school_id' => 2],
-            [
+        // Use existing season ID 6 from school 2 if exists, otherwise create new season
+        $existingSeason = Season::where('school_id', 2)->first();
+        if ($existingSeason) {
+            $season = $existingSeason;
+            $this->command->info("Using existing season: {$season->name} (ID: {$season->id})");
+        } else {
+            // Only create if no season exists for school 2
+            $season = Season::create([
+                'name' => 'Temporada 2025-2026',
+                'school_id' => 2,
                 'start_date' => '2025-12-01',
                 'end_date' => '2026-04-30',
                 'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
-        );
+            ]);
+            $this->command->info("Created new season: {$season->name} (ID: {$season->id})");
+        }
 
-        $this->command->info("Season created/updated: {$season->name} (ID: {$season->id})");
-
-        // Assign admin permissions to both users for the season
+        // Assign admin permissions to both users for the existing season
         DB::table('user_season_roles')->updateOrInsert(
             ['user_id' => $multiSchoolAdmin->id, 'season_id' => $season->id],
             ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
@@ -88,23 +93,7 @@ class V5TestUsersSeeder extends Seeder
             ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
         );
 
-        $this->command->info("Admin permissions assigned for season: {$season->name}");
-
-        // Also check for season 11 and assign permissions if it exists
-        $season11 = Season::find(11);
-        if ($season11) {
-            DB::table('user_season_roles')->updateOrInsert(
-                ['user_id' => $multiSchoolAdmin->id, 'season_id' => 11],
-                ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
-            );
-
-            DB::table('user_season_roles')->updateOrInsert(
-                ['user_id' => $schoolTwoAdmin->id, 'season_id' => 11],
-                ['role' => 'admin', 'created_at' => now(), 'updated_at' => now()]
-            );
-
-            $this->command->info("Admin permissions also assigned for season 11: {$season11->name}");
-        }
+        $this->command->info("Admin permissions assigned for season: {$season->name} (ID: {$season->id})");
 
         $this->command->info('V5 Test Users and permissions setup completed!');
     }

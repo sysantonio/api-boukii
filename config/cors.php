@@ -49,6 +49,7 @@ return [
         'X-Season-Id',
         'X-School-Id',
         'X-Client-Version',
+        'X-Client-Type',
     ],
 
     'exposed_headers' => [

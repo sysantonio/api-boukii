@@ -113,10 +113,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Future routes that only require context
         // Route::apiResource('users', UserV5Controller::class);
 
-        // Rutas que requieren permisos específicos de temporada
-        Route::middleware(['role.permission.middleware:season.admin'])->prefix('seasons')->name('seasons.')->group(function () {
+        // Rutas de temporadas - solo requieren contexto de escuela (no temporada)
+        // Usar middleware diferente porque no tiene sentido requerir temporada para listar temporadas
+        Route::middleware(['school.context.middleware'])->prefix('seasons')->name('seasons.')->group(function () {
             Route::get('/', [SeasonController::class, 'index'])->name('index');
             Route::post('/', [SeasonController::class, 'store'])->name('store');
+        });
+
+        // Rutas específicas de temporada - requieren contexto completo
+        Route::middleware(['context.middleware', 'role.permission.middleware:season.admin'])->prefix('seasons')->name('seasons.')->group(function () {
             Route::get('/current', [SeasonController::class, 'current'])->name('current');
             Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
             Route::put('/{season}', [SeasonController::class, 'update'])->name('update');

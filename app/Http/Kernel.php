@@ -70,10 +70,10 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'admin.rate.limit' => \App\Http\Middleware\AdminRateLimit::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'context.permission' => \App\Http\Middleware\V5\ContextPermissionMiddleware::class,
+        // V5 Middleware Aliases (cleaned up duplicates)
         'role.permission.middleware' => \App\Http\Middleware\V5\ContextPermissionMiddleware::class,
-        'v5.logging' => \App\V5\Middleware\RequestLoggingMiddleware::class,
-        'context.v5' => \App\Http\Middleware\V5\ContextMiddleware::class,
         'context.middleware' => \App\Http\Middleware\V5\ContextMiddleware::class,
+        'school.context.middleware' => \App\Http\Middleware\V5\SchoolContextMiddleware::class,
+        'v5.logging' => \App\V5\Middleware\RequestLoggingMiddleware::class,
     ];
 }
