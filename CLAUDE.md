@@ -1,212 +1,212 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este archivo proporciona instrucciones y contexto para **Claude Code** (claude.ai/code) al trabajar con el repositorio backend de **Boukii V5**.
 
-## Project Overview
+Incluye información de **backend (Laravel 10+)**, arquitectura V5, sistema multi-escuela/temporada, comandos de desarrollo y sincronización de documentación.
 
-This is a Laravel API application for a sports course booking and management system (specifically designed for ski schools and similar sports instruction businesses). The system handles course bookings, client management, instructor scheduling, payments, and comprehensive financial analytics.
+---
 
-## Common Development Commands
+## 📂 Ubicaciones principales
+- **Backend Laravel**: `C:\laragon\www\api-boukii` (este repositorio)
+- **Frontend Angular**: `C:\Users\aym14\Documents\WebstormProjects\boukii\boukii-admin-panel`
 
-### PHP/Laravel Commands
-```bash
-# Install dependencies
-composer install
+---
 
-# Run database migrations
-php artisan migrate
+## 💻 Development Commands
 
-# Generate application key
-php artisan key:generate
-
-# Clear application cache
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-
-# Run background jobs
-php artisan queue:work
-
-# Generate API documentation
-php artisan l5-swagger:generate
-```
-
-### Node.js Commands
-```bash
-# Install frontend dependencies
-npm install
-
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-```
+### Backend (Laravel)
+- `php artisan serve` - Iniciar servidor local (no usar, ya está en Laragon) la url es: http://api-boukii.test
+- `php artisan migrate` - Ejecutar migraciones
+- `php artisan test` - Ejecutar suite de tests
+- `php artisan route:list` - Listar rutas
+- `php artisan tinker` - Consola interactiva
 
 ### Testing
 ```bash
-# Run all tests
-vendor/bin/phpunit
+# Ejecutar todos los tests
+php artisan test
 
-# Run specific test suite
-vendor/bin/phpunit tests/Feature
-vendor/bin/phpunit tests/Unit
+# Tests específicos de V5
+php artisan test --group=v5
+php artisan test --group=context
 
-# Run tests with coverage
-vendor/bin/phpunit --coverage-html coverage
+# Tests con coverage
+php artisan test --coverage
+
+# Test específico
+php artisan test tests/Feature/V5/AuthTest.php
 ```
 
 ### Code Quality
 ```bash
-# Run Laravel Pint (code formatting)
-vendor/bin/pint
+# PHP CS Fixer (estilo de código)
+./vendor/bin/php-cs-fixer fix
 
-# Check code style
-vendor/bin/pint --test
+# PHPStan (análisis estático)
+./vendor/bin/phpstan analyse
+
+# Laravel Pint
+vendor/bin/pint
 ```
 
-## Architecture Overview
+---
 
-### Domain Models
+## 🏗 Arquitectura V5
+
+### Sistema Multi-Escuela y Multi-Temporada
+- **Context Headers**: `X-School-ID` y `X-Season-ID` obligatorios en rutas admin
+- **Middleware**: `ContextMiddleware` unificado para validación
+- **Roles**: Sistema granular por escuela y temporada (`user_season_roles`)
+- **Tokens**: Sanctum con contexto embebido
+
+### Backend (Laravel 10+)
+- **Controladores V5**: Extienden `BaseV5Controller`
+- **Rutas**: `routes/api/v5.php` con middleware `context`
+- **Middleware stack**:
+  - `auth:sanctum`
+  - `context.middleware`
+  - `role.permission.middleware`
+- **Logs**: Canal `v5_enterprise` con contexto (`user_id`, `school_id`, `season_id`)
+
+### Base de Datos
+- **Tabla clave**: `user_season_roles` para permisos granulares
+- **Seeds seguros**: Usar `updateOrCreate` siempre
+- **Usuarios de prueba**:
+  - `admin@boukii-v5.com` (multi-school)
+  - `multi@boukii-v5.com` (school 2 only)
+- **School 2**: Debe tener al menos una season activa
+
+### Flujo de API
+```
+Request → auth:sanctum → context.middleware → role.permission → Controller
+```
+
+---
+
+## 🎨 Domain Models V5
+
+### Core Entities
+- **School**: Entidad multi-tenant principal
+- **Season**: Temporadas por escuela con configuración independiente
+- **User**: Con roles por escuela/temporada
+- **Booking**: Reservas contextualizadas por school/season
+- **Course**: Cursos con contexto temporal
+- **Client**: Clientes multi-escuela
+- **Monitor**: Instructores con asignaciones por temporada
+
+### Key Services V5
+- **BaseV5Controller**: Controlador base con contexto automático
+- **ContextMiddleware**: Validación de headers y permisos
+- **SeasonService**: Lógica de temporadas y contexto
+
+---
+
+## ⚠️ Buenas Prácticas V5
+
+### API Development
+- Extender `BaseV5Controller` para endpoints V5
+- Usar Form Requests para validación
+- Respuestas JSON estándar: `{success, data, meta}`
+- Logs con contexto en canal `v5_enterprise`
+
+### Database
+- Seeds con `updateOrCreate` para idempotencia
+- Probar en **staging** antes de producción
+- Migraciones reversibles obligatorias
+- Context filtering en queries
+
+### Error Handling
+- `V5ExceptionHandler` para respuestas consistentes
+- Separar logs: API errors, permisos, auditoría
+- Headers de contexto validados siempre
+
+---
+
+## 🔄 Sincronización de Documentación
+
+### Carpetas Editables por Claude
+- `docs/shared/` - Documentación sincronizada entre frontend y backend
+- `docs/backend/` - Documentación específica del backend (solo en este repo)
+- `CLAUDE.md` - Instrucciones para IA (en ambos repos)
+
+### Reglas de Commits
+- **Cambios normales**: `docs: descripción del cambio`
+- **Commits de sync automática**: `docs-sync: descripción` (NUNCA usar manualmente)
+- **Anti-bucle**: Commits con `docs-sync:` NO disparan nueva sincronización
+
+### Proceso de Sync
+1. Editar documentación en `/docs/shared/` del repo actual
+2. Commit con prefijo `docs:`
+3. GitHub Actions sincroniza automáticamente al otro repo
+4. Para sync inmediata usar script: `.docs-sync/ROBUST_SYNC.ps1`
+
+### ⚠️ Importante
+- NUNCA tocar código sin crear PR primero
+- Nunca usar prefijo `docs-sync:` manualmente
+- Si el commit contiene `docs-sync:`, no se dispara otra sincronización
+
+---
+
+## 🧪 Testing Strategy V5
+
+### Test Groups
+```bash
+# Context y middleware
+php artisan test --group=context
+
+# API endpoints V5
+php artisan test --group=v5
+
+# Tests de integración
+php artisan test --group=integration
+```
+
+### Critical Test Cases
+- Login multi-escuela → tokens con contexto
+- Context middleware → validación headers
+- Role permissions → acceso granular por escuela/temporada  
+- API responses → formato JSON estándar
+
+---
+
+## 📚 Legacy Context
+
+### Domain Models (Legacy)
 - **Booking**: Central entity managing course reservations with complex pricing, payments, and voucher systems
 - **Course**: Sports courses with flexible pricing models (collective/private/activities) organized in groups and subgroups  
 - **Client**: Customer management with multi-language support and utilizer relationships
 - **Monitor**: Instructors with sport-specific degrees and availability management
-- **School**: Multi-tenant architecture where each school manages its own courses and settings
-- **User**: Authentication with role-based permissions (admin/client/monitor/superadmin)
 
-### Key Services
-- **BookingPriceCalculatorService** (`app/Http/Services/BookingPriceCalculatorService.php`): Sophisticated pricing engine handling flexible vs fixed pricing, multi-participant calculations, extras, insurance, and discount logic
-- **AnalyticsService** (`app/Http/Services/AnalyticsService.php`): Financial reporting and dashboard generation
-- **PayrexxService** (`app/Services/Payrexx/PayrexxService.php`): Payment gateway integration
-- **SeasonFinanceService** (`app/Services/Finance/SeasonFinanceService.php`): Seasonal financial analytics
+### Key Services (Legacy)
+- **BookingPriceCalculatorService**: Sophisticated pricing engine handling flexible vs fixed pricing
+- **AnalyticsService**: Financial reporting and dashboard generation
+- **PayrexxService**: Payment gateway integration
+- **SeasonFinanceService**: Seasonal financial analytics
 
 ### Repository Pattern
-All models use the Repository pattern with a `BaseRepository` providing common CRUD operations. Repositories handle:
-- Multi-tenant filtering (school-based data isolation)
-- Standardized search and pagination
-- Soft delete handling
+All models use the Repository pattern with a `BaseRepository` providing common CRUD operations with multi-tenant filtering.
 
-### API Organization
-Routes are organized by role and functionality:
-- `/api/admin/` - Admin panel with comprehensive management features
+### API Organization (Legacy)
+- `/api/admin/` - Admin panel endpoints
 - `/api/teach/` - Monitor/instructor mobile app endpoints  
 - `/api/sports/` - Client sports app endpoints
-- `/api/slug/` - Booking iframe functionality
-- `/api/` - Public API endpoints
+- `/api/v5/` - **V5 endpoints** (preferred for new development)
 
-Authentication uses Laravel Sanctum with ability-based permissions.
+---
 
-## Development Patterns
+## 🚀 Migration to V5
 
-### Multi-tenancy
-The system implements school-based multi-tenancy. Most queries automatically filter by `school_id`. When working with data:
-- Always consider school context
-- Use school-scoped relationships where appropriate
-- Check existing patterns in repositories for school filtering
+### Priority
+- **New features**: Usar siempre endpoints `/api/v5/`
+- **Legacy endpoints**: Mantener compatibilidad pero migrar gradualmente
+- **Context required**: Todos los endpoints admin V5 requieren contexto
 
-### Financial Calculations
-The `Utils` trait (`app/Traits/Utils.php`) contains complex business calculations:
-- Course availability and duration calculations
-- Multi-type pricing logic (collective, private, activity courses)
-- Monitor availability management
-- Use existing methods rather than reimplementing calculations
+### V5 Development Only
+- Nuevos controladores deben extender `BaseV5Controller`
+- Middleware stack V5 obligatorio
+- Context headers en todas las requests admin
+- Logs estructurados con contexto
 
-### Pricing System
-Courses support flexible pricing models:
-- **Fixed pricing**: Set price regardless of participants
-- **Flexible pricing**: Price varies by participant count with min/max constraints
-- **Extras**: Insurance, equipment, additional services
-- **Vouchers**: Discount codes and prepaid vouchers
-- Complex logic is handled in `BookingPriceCalculatorService`
+---
 
-### Localization
-The system supports multiple languages (en, fr, de, es, it):
-- Email templates are localized per school
-- Client communications use their preferred language
-- Translation files are in `resources/lang/`
-
-## Testing Strategy
-
-The application has comprehensive test coverage:
-- **API Tests**: `tests/APIs/` - Test all API endpoints
-- **Repository Tests**: `tests/Repositories/` - Test data access layer
-- **Unit Tests**: `tests/Unit/` - Test individual components
-- **Feature Tests**: `tests/Feature/` - Test application workflows
-
-When adding new features:
-1. Write API tests for new endpoints
-2. Add repository tests for new data access methods
-3. Include unit tests for complex business logic
-
-## Database Considerations
-
-### Key Relationships
-- Many-to-many: Clients ↔ Schools, Clients ↔ Sports, Monitors ↔ Schools
-- Complex hierarchies: Course → CourseGroup → CourseSubgroup → BookingUsers
-- Financial tracking: Booking → Payments, Booking → VoucherLogs
-
-### Migration Strategy
-- Migrations include both current and legacy (`database/migrations/old/`) structures
-- Use `doctrine/dbal` for complex schema modifications
-- Always include rollback functionality
-
-## Performance Considerations
-
-### Caching
-- Financial dashboards use cache keys generated by `FinanceCacheKeyTrait`
-- Heavy calculations in analytics are cached
-- Clear relevant caches when updating related data
-
-### Database Optimization
-- Indexes exist for common query patterns (see recent migrations)
-- Use eager loading for relationships to avoid N+1 queries
-- Repository pattern includes optimized queries for common operations
-
-## External Integrations
-
-### Payrexx Payment Gateway
-- Service class: `PayrexxService`
-- Configuration in `config/services.php`
-- Webhook handling in payment controllers
-
-### Weather API (AccuWeather)
-- Integration for station-based weather forecasts
-- Helper utilities in `AccuweatherHelpers`
-- Scheduled command: `StationWeatherForecast`
-
-## Email System
-
-### Mail Classes
-Email templates are stored in database and managed per school:
-- Use `Mail` model for template management
-- Localization handled automatically based on client language
-- Preview functionality available in admin panel
-
-### Common Mail Types
-- Booking confirmations/cancellations
-- Payment notifications
-- Course information updates
-- Password reset functionality
-
-## Background Jobs
-
-### Scheduled Commands
-- `BookingCancel`: Process automatic cancellations
-- `BookingCancelUnpaid`: Clean up unpaid bookings
-- `MonitorDashboardPerformance`: Update performance metrics
-- Configure in `app/Console/Kernel.php`
-
-### Queue Jobs
-- Email sending
-- Heavy calculations
-- External API calls
-- Configure queue driver in `.env`
-
-## Development Workflow
-
-1. **Database Setup**: Run migrations and seeders for local development
-2. **API Documentation**: Generate Swagger docs after API changes
-3. **Testing**: Run test suite before committing changes
-4. **Code Style**: Use Laravel Pint for consistent formatting
-5. **Caching**: Clear relevant caches after configuration changes
+*Última actualización: 2025-08-13*
