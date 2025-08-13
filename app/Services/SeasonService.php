@@ -224,7 +224,119 @@ class SeasonService
     }
 
     /**
-     * Close a season (mark as closed)
+     * Activate a season
+     * 
+     * @param Season $season
+     * @param int $activatedBy
+     * @return Season
+     * @throws \Exception
+     */
+    public function activateSeason(Season $season, int $activatedBy): Season
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Check if season can be activated
+            if ($season->is_active) {
+                throw new \Exception('Season is already active');
+            }
+
+            if ($season->is_closed || $season->is_historical) {
+                throw new \Exception('Cannot activate a closed or historical season');
+            }
+
+            // Validate and deactivate other active seasons
+            $this->validateActiveSeasonConstraints($season->school_id, $season->id);
+            $this->deactivateActiveSeasons($season->school_id, $season->id);
+
+            // Activate the season
+            $season->update([
+                'is_active' => true,
+                'updated_at' => now(),
+            ]);
+
+            // Load relationships
+            $season->load(['creator', 'closer', 'school']);
+
+            DB::commit();
+
+            Log::info('Season activated successfully', [
+                'season_id' => $season->id,
+                'season_name' => $season->name,
+                'activated_by' => $activatedBy
+            ]);
+
+            return $season;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to activate season', [
+                'season_id' => $season->id,
+                'error' => $e->getMessage(),
+                'activated_by' => $activatedBy
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Deactivate a season
+     * 
+     * @param Season $season
+     * @param int $deactivatedBy
+     * @return Season
+     * @throws \Exception
+     */
+    public function deactivateSeason(Season $season, int $deactivatedBy): Season
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Check if season can be deactivated
+            if (!$season->is_active) {
+                throw new \Exception('Season is already inactive');
+            }
+
+            if ($season->is_closed || $season->is_historical) {
+                throw new \Exception('Cannot deactivate a closed or historical season');
+            }
+
+            // Deactivate the season
+            $season->update([
+                'is_active' => false,
+                'updated_at' => now(),
+            ]);
+
+            // Load relationships
+            $season->load(['creator', 'closer', 'school']);
+
+            DB::commit();
+
+            Log::info('Season deactivated successfully', [
+                'season_id' => $season->id,
+                'season_name' => $season->name,
+                'deactivated_by' => $deactivatedBy
+            ]);
+
+            return $season;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to deactivate season', [
+                'season_id' => $season->id,
+                'error' => $e->getMessage(),
+                'deactivated_by' => $deactivatedBy
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Close a season (mark as closed, but can be reopened)
      * 
      * @param Season $season
      * @param int $closedBy
@@ -250,7 +362,7 @@ class SeasonService
             //     throw new \Exception("Cannot close season with {$activeBookingsCount} active bookings");
             // }
 
-            // Close the season
+            // Close the season (but don't mark as historical - it can be reopened)
             $season->update([
                 'is_closed' => true,
                 'is_active' => false, // Cannot be active if closed
@@ -279,6 +391,62 @@ class SeasonService
                 'season_id' => $season->id,
                 'error' => $e->getMessage(),
                 'closed_by' => $closedBy
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Reopen a closed season
+     * 
+     * @param Season $season
+     * @param int $reopenedBy
+     * @return Season
+     * @throws \Exception
+     */
+    public function reopenSeason(Season $season, int $reopenedBy): Season
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Check if season can be reopened
+            if (!$season->is_closed) {
+                throw new \Exception('Season is not closed, cannot reopen');
+            }
+
+            if ($season->is_historical) {
+                throw new \Exception('Cannot reopen a historical season');
+            }
+
+            // Reopen the season
+            $season->update([
+                'is_closed' => false,
+                'closed_at' => null,
+                'closed_by' => null,
+                'updated_at' => now(),
+            ]);
+
+            // Load relationships
+            $season->load(['creator', 'closer', 'school']);
+
+            DB::commit();
+
+            Log::info('Season reopened successfully', [
+                'season_id' => $season->id,
+                'season_name' => $season->name,
+                'reopened_by' => $reopenedBy
+            ]);
+
+            return $season;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to reopen season', [
+                'season_id' => $season->id,
+                'error' => $e->getMessage(),
+                'reopened_by' => $reopenedBy
             ]);
             
             throw $e;

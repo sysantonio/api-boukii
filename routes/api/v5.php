@@ -77,6 +77,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('select-season', [AuthController::class, 'selectSeason'])->name('v5.auth.select-season');
     });
     
+    // ✅ MOVED: Rutas de temporadas FUERA del grupo context.middleware
+    // Rutas de temporadas - TODAS solo requieren contexto de escuela (no temporada)
+    // No tiene sentido requerir temporada para gestionar temporadas
+    Route::middleware(['school.context.middleware', 'role.permission.middleware:seasons.manage'])->prefix('seasons')->name('seasons.')->group(function () {
+            // Listado y creación
+            Route::get('/', [SeasonController::class, 'index'])->name('index');
+            Route::post('/', [SeasonController::class, 'store'])->name('store');
+            
+            // Temporada actual (puede no existir, por eso no necesita season context)
+            Route::get('/current', [SeasonController::class, 'current'])->name('current');
+            
+            // Operaciones específicas de temporada
+            Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
+            Route::put('/{season}', [SeasonController::class, 'update'])->name('update');
+            Route::patch('/{season}', [SeasonController::class, 'update'])->name('patch');
+            Route::delete('/{season}', [SeasonController::class, 'destroy'])->name('destroy');
+            
+            // Acciones de estado para temporadas
+            Route::post('/{season}/activate', [SeasonController::class, 'activate'])->name('activate');
+            Route::post('/{season}/deactivate', [SeasonController::class, 'deactivate'])->name('deactivate');
+            Route::post('/{season}/close', [SeasonController::class, 'close'])->name('close');
+            Route::post('/{season}/reopen', [SeasonController::class, 'reopen'])->name('reopen');
+        });
+
     // Rutas que requieren contexto completo (escuela y temporada)
     Route::middleware(['context.middleware'])->group(function () {
 
@@ -109,26 +133,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 ], 500);
             }
         })->name('debug-token');
-
-        // Future routes that only require context
-        // Route::apiResource('users', UserV5Controller::class);
-
-        // Rutas de temporadas - solo requieren contexto de escuela (no temporada)
-        // Usar middleware diferente porque no tiene sentido requerir temporada para listar temporadas
-        Route::middleware(['school.context.middleware'])->prefix('seasons')->name('seasons.')->group(function () {
-            Route::get('/', [SeasonController::class, 'index'])->name('index');
-            Route::post('/', [SeasonController::class, 'store'])->name('store');
-        });
-
-        // Rutas específicas de temporada - requieren contexto completo
-        Route::middleware(['context.middleware', 'role.permission.middleware:season.admin'])->prefix('seasons')->name('seasons.')->group(function () {
-            Route::get('/current', [SeasonController::class, 'current'])->name('current');
-            Route::get('/{season}', [SeasonController::class, 'show'])->name('show');
-            Route::put('/{season}', [SeasonController::class, 'update'])->name('update');
-            Route::patch('/{season}', [SeasonController::class, 'update'])->name('patch');
-            Route::delete('/{season}', [SeasonController::class, 'destroy'])->name('destroy');
-            Route::post('/{season}/close', [SeasonController::class, 'close'])->name('close');
-        });
 
         Route::middleware(['role.permission.middleware:season.analytics'])->group(function () {
             // Dashboard/Welcome routes

@@ -55,6 +55,9 @@ class ContextPermissionMiddleware
     const SEASON_ANALYTICS = 'season.analytics';
     const SEASON_EQUIPMENT = 'season.equipment';
     
+    // Seasons management permissions
+    const SEASONS_MANAGE = 'seasons.manage';
+    
     // Resource-specific permissions
     const BOOKING_CREATE = 'booking.create';
     const BOOKING_READ = 'booking.read';
@@ -86,7 +89,7 @@ class ContextPermissionMiddleware
     public function handle(Request $request, Closure $next, ...$permissions)
     {
         try {
-            $user = Auth::guard('api_v5')->user();
+            $user = Auth::guard('sanctum')->user();
             
             if (!$user) {
                 return $this->unauthorizedResponse('Authentication required');
@@ -141,7 +144,7 @@ class ContextPermissionMiddleware
      */
     public function hasPermission(Request $request, string $permission): bool
     {
-        $user = $request->user('api_v5');
+        $user = $request->user('sanctum');
         if (! $user) {
             return false;
         }
@@ -155,7 +158,7 @@ class ContextPermissionMiddleware
      */
     public function getUserPermissions(Request $request): array
     {
-        $user = $request->user('api_v5');
+        $user = $request->user('sanctum');
         if (! $user) {
             return [];
         }
@@ -254,7 +257,9 @@ class ContextPermissionMiddleware
                 self::SEASON_MONITORS,
                 self::SEASON_COURSES,
                 self::SEASON_ANALYTICS,
-                self::SEASON_EQUIPMENT
+                self::SEASON_EQUIPMENT,
+                // Seasons management permission
+                self::SEASONS_MANAGE
             ],
             'manager' => [
                 self::SCHOOL_MANAGER,
@@ -266,7 +271,9 @@ class ContextPermissionMiddleware
                 self::SEASON_CLIENTS,
                 self::SEASON_MONITORS,
                 self::SEASON_COURSES,
-                self::SEASON_ANALYTICS
+                self::SEASON_ANALYTICS,
+                // Managers can also manage seasons
+                self::SEASONS_MANAGE
             ],
             'staff' => [
                 self::SCHOOL_STAFF,
@@ -444,6 +451,8 @@ class ContextPermissionMiddleware
             // Season
             self::SEASON_ADMIN, self::SEASON_MANAGER, self::SEASON_VIEW, self::SEASON_BOOKINGS, 
             self::SEASON_CLIENTS, self::SEASON_MONITORS, self::SEASON_COURSES, self::SEASON_ANALYTICS, self::SEASON_EQUIPMENT,
+            // Seasons management
+            self::SEASONS_MANAGE,
             // Resources
             self::BOOKING_CREATE, self::BOOKING_READ, self::BOOKING_UPDATE, self::BOOKING_DELETE, self::BOOKING_PAYMENT,
             self::CLIENT_CREATE, self::CLIENT_READ, self::CLIENT_UPDATE, self::CLIENT_DELETE, self::CLIENT_EXPORT,

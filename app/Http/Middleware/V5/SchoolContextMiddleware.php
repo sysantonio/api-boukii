@@ -17,8 +17,8 @@ class SchoolContextMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. Verificar autenticación
-        $user = Auth::guard('api_v5')->user();
+        // 1. Verificar autenticación (usando sanctum como las rutas)
+        $user = Auth::guard('sanctum')->user();
         if (! $user) {
             return $this->unauthorizedResponse('Authentication required');
         }

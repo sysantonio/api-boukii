@@ -360,8 +360,174 @@ class SeasonController extends Controller
 
     /**
      * @OA\Post(
+     *     path="/api/v5/seasons/{id}/activate",
+     *     summary="Activate a season",
+     *     tags={"V5 Seasons"}
+     * )
+     */
+    public function activate(Request $request, int $id): JsonResponse
+    {
+        DB::beginTransaction();
+        
+        try {
+            $schoolId = $this->getSchoolIdFromContext($request);
+            $user = $request->user();
+
+            $season = $this->seasonService->getSeasonForSchool($id, $schoolId);
+            
+            if (!$season) {
+                return $this->errorResponse(
+                    'Season not found or not accessible',
+                    Response::HTTP_NOT_FOUND,
+                    'SEASON_NOT_FOUND'
+                );
+            }
+
+            if ($season->is_active) {
+                return $this->errorResponse(
+                    'Season is already active',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_ALREADY_ACTIVE'
+                );
+            }
+
+            if ($season->is_closed || $season->is_historical) {
+                return $this->errorResponse(
+                    'Cannot activate a closed or historical season',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_IMMUTABLE'
+                );
+            }
+
+            // Verify permissions
+            if (!$this->userCanManageSeasons($user, $schoolId)) {
+                return $this->errorResponse(
+                    'Insufficient permissions to activate seasons',
+                    Response::HTTP_FORBIDDEN,
+                    'PERMISSION_DENIED'
+                );
+            }
+
+            $activatedSeason = $this->seasonService->activateSeason($season, $user->id);
+
+            DB::commit();
+
+            Log::info('SeasonController@activate success', [
+                'season_id' => $id,
+                'season_name' => $activatedSeason->name,
+                'school_id' => $schoolId,
+                'user_id' => $user->id
+            ]);
+
+            return $this->successResponse(
+                new SeasonV5Resource($activatedSeason),
+                'Season activated successfully'
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('SeasonController@activate failed', [
+                'season_id' => $id,
+                'error' => $e->getMessage(),
+                'school_id' => $this->getSchoolIdFromContext($request),
+                'user_id' => $request->user()->id
+            ]);
+
+            return $this->errorResponse(
+                'Failed to activate season',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v5/seasons/{id}/deactivate",
+     *     summary="Deactivate a season",
+     *     tags={"V5 Seasons"}
+     * )
+     */
+    public function deactivate(Request $request, int $id): JsonResponse
+    {
+        DB::beginTransaction();
+        
+        try {
+            $schoolId = $this->getSchoolIdFromContext($request);
+            $user = $request->user();
+
+            $season = $this->seasonService->getSeasonForSchool($id, $schoolId);
+            
+            if (!$season) {
+                return $this->errorResponse(
+                    'Season not found or not accessible',
+                    Response::HTTP_NOT_FOUND,
+                    'SEASON_NOT_FOUND'
+                );
+            }
+
+            if (!$season->is_active) {
+                return $this->errorResponse(
+                    'Season is already inactive',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_ALREADY_INACTIVE'
+                );
+            }
+
+            if ($season->is_closed || $season->is_historical) {
+                return $this->errorResponse(
+                    'Cannot deactivate a closed or historical season',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_IMMUTABLE'
+                );
+            }
+
+            // Verify permissions
+            if (!$this->userCanManageSeasons($user, $schoolId)) {
+                return $this->errorResponse(
+                    'Insufficient permissions to deactivate seasons',
+                    Response::HTTP_FORBIDDEN,
+                    'PERMISSION_DENIED'
+                );
+            }
+
+            $deactivatedSeason = $this->seasonService->deactivateSeason($season, $user->id);
+
+            DB::commit();
+
+            Log::info('SeasonController@deactivate success', [
+                'season_id' => $id,
+                'season_name' => $deactivatedSeason->name,
+                'school_id' => $schoolId,
+                'user_id' => $user->id
+            ]);
+
+            return $this->successResponse(
+                new SeasonV5Resource($deactivatedSeason),
+                'Season deactivated successfully'
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('SeasonController@deactivate failed', [
+                'season_id' => $id,
+                'error' => $e->getMessage(),
+                'school_id' => $this->getSchoolIdFromContext($request),
+                'user_id' => $request->user()->id
+            ]);
+
+            return $this->errorResponse(
+                'Failed to deactivate season',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * @OA\Post(
      *     path="/api/v5/seasons/{id}/close",
-     *     summary="Close a season (mark as historical)",
+     *     summary="Close a season (mark as closed, but can be reopened)",
      *     tags={"V5 Seasons"}
      * )
      */
@@ -413,7 +579,7 @@ class SeasonController extends Controller
 
             return $this->successResponse(
                 new SeasonV5Resource($closedSeason),
-                'Season closed successfully'
+                'Season closed successfully (can be reopened)'
             );
 
         } catch (\Exception $e) {
@@ -428,6 +594,89 @@ class SeasonController extends Controller
 
             return $this->errorResponse(
                 'Failed to close season',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v5/seasons/{id}/reopen",
+     *     summary="Reopen a closed season",
+     *     tags={"V5 Seasons"}
+     * )
+     */
+    public function reopen(Request $request, int $id): JsonResponse
+    {
+        DB::beginTransaction();
+        
+        try {
+            $schoolId = $this->getSchoolIdFromContext($request);
+            $user = $request->user();
+
+            $season = $this->seasonService->getSeasonForSchool($id, $schoolId);
+            
+            if (!$season) {
+                return $this->errorResponse(
+                    'Season not found or not accessible',
+                    Response::HTTP_NOT_FOUND,
+                    'SEASON_NOT_FOUND'
+                );
+            }
+
+            if (!$season->is_closed) {
+                return $this->errorResponse(
+                    'Season is not closed, cannot reopen',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_NOT_CLOSED'
+                );
+            }
+
+            if ($season->is_historical) {
+                return $this->errorResponse(
+                    'Cannot reopen a historical season',
+                    Response::HTTP_CONFLICT,
+                    'SEASON_HISTORICAL'
+                );
+            }
+
+            // Verify permissions
+            if (!$this->userCanManageSeasons($user, $schoolId)) {
+                return $this->errorResponse(
+                    'Insufficient permissions to reopen seasons',
+                    Response::HTTP_FORBIDDEN,
+                    'PERMISSION_DENIED'
+                );
+            }
+
+            $reopenedSeason = $this->seasonService->reopenSeason($season, $user->id);
+
+            DB::commit();
+
+            Log::info('SeasonController@reopen success', [
+                'season_id' => $id,
+                'season_name' => $reopenedSeason->name,
+                'school_id' => $schoolId,
+                'user_id' => $user->id
+            ]);
+
+            return $this->successResponse(
+                new SeasonV5Resource($reopenedSeason),
+                'Season reopened successfully'
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('SeasonController@reopen failed', [
+                'season_id' => $id,
+                'error' => $e->getMessage(),
+                'school_id' => $this->getSchoolIdFromContext($request),
+                'user_id' => $request->user()->id
+            ]);
+
+            return $this->errorResponse(
+                'Failed to reopen season',
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }

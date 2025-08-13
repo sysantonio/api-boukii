@@ -226,7 +226,7 @@ class AuthController extends Controller
                 ->where('is_active', true)
                 ->whereNull('deleted_at')
                 ->orderBy('created_at', 'desc')
-                ->get(['id', 'name', 'start_date', 'end_date']);
+                ->get(['id', 'name', 'start_date', 'end_date', 'is_active']); // ✅ FIX: Include is_active field
 
             $currentSeason = $seasons->first(); // Use most recent active season
 

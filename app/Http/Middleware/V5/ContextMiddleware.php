@@ -15,7 +15,7 @@ class ContextMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('api_v5')->user();
+        $user = Auth::guard('sanctum')->user();
         if (! $user) {
             return $this->unauthorizedResponse('Authentication required');
         }

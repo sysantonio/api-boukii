@@ -283,4 +283,135 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
             $this->givePermissionTo($permissions);
         }
     }
+
+    /**
+     * Check if user has specific permission
+     * Compatible with V5 multi-school/season architecture
+     * 
+     * @param string $permission Permission name (e.g., 'seasons.edit', 'view seasons')
+     * @param int|null $schoolId School context (auto-detected from headers if null)
+     * @param int|null $seasonId Season context (auto-detected from headers if null)
+     * @return bool
+     */
+    public function hasPermission(string $permission, $schoolId = null, $seasonId = null): bool
+    {
+        // Obtener contexto de headers HTTP si no se proporciona
+        $schoolId = $schoolId ?? request()->header('X-School-ID');
+        $seasonId = $seasonId ?? request()->header('X-Season-ID');
+
+        // Super admin (type == 1 or 'admin') tiene todos los permisos
+        if ($this->type == 1 || $this->type === 'admin') {
+            return true;
+        }
+
+        // Verificar acceso a la escuela primero
+        if ($schoolId && !$this->hasAccessToSchool($schoolId)) {
+            return false;
+        }
+
+        // Usar Spatie Permission si el permiso existe en el sistema
+        if ($this->hasPermissionTo($permission)) {
+            return true;
+        }
+
+        // Mapeo de permisos específicos para seasons (V5 compatible)
+        $seasonPermissions = [
+            'seasons.view' => $this->canViewSeasons($schoolId),
+            'seasons.create' => $this->canCreateSeasons($schoolId),
+            'seasons.edit' => $this->canEditSeasons($schoolId, $seasonId),
+            'seasons.update' => $this->canEditSeasons($schoolId, $seasonId),
+            'seasons.delete' => $this->canDeleteSeasons($schoolId),
+            'seasons.activate' => $this->canActivateSeasons($schoolId),
+            'seasons.close' => $this->canCloseSeasons($schoolId),
+            'seasons.manage' => $this->canManageSeasons($schoolId),
+            // Compatibilidad con formato Spatie
+            'view seasons' => $this->canViewSeasons($schoolId),
+            'create seasons' => $this->canCreateSeasons($schoolId),
+            'update seasons' => $this->canEditSeasons($schoolId, $seasonId),
+            'delete seasons' => $this->canDeleteSeasons($schoolId),
+        ];
+
+        // Si el permiso está mapeado, usar la lógica específica
+        if (array_key_exists($permission, $seasonPermissions)) {
+            return $seasonPermissions[$permission];
+        }
+
+        // Para otros permisos, usar lógica básica por rol/tipo
+        return $this->hasBasicPermission($permission, $schoolId, $seasonId);
+    }
+
+    /**
+     * Verificar acceso a escuela específica
+     */
+    protected function hasAccessToSchool($schoolId): bool
+    {
+        if ($this->type == 1 || $this->type === 'admin') {
+            return true;
+        }
+
+        // Verificar mediante la relación schools (tabla school_users)
+        return $this->schools()->where('schools.id', $schoolId)->exists();
+    }
+
+    /**
+     * Permisos específicos para seasons
+     */
+    protected function canViewSeasons($schoolId): bool
+    {
+        return $this->hasAccessToSchool($schoolId);
+    }
+
+    protected function canCreateSeasons($schoolId): bool
+    {
+        return $this->hasAccessToSchool($schoolId) && 
+               in_array($this->type, [1, 'admin', 3, 'monitor']);
+    }
+
+    protected function canEditSeasons($schoolId, $seasonId = null): bool
+    {
+        return $this->hasAccessToSchool($schoolId) && 
+               in_array($this->type, [1, 'admin', 3, 'monitor']);
+    }
+
+    protected function canDeleteSeasons($schoolId): bool
+    {
+        return $this->hasAccessToSchool($schoolId) && 
+               ($this->type == 1 || $this->type === 'admin');
+    }
+
+    protected function canActivateSeasons($schoolId): bool
+    {
+        return $this->hasAccessToSchool($schoolId) && 
+               in_array($this->type, [1, 'admin', 3, 'monitor']);
+    }
+
+    protected function canCloseSeasons($schoolId): bool
+    {
+        return $this->hasAccessToSchool($schoolId) && 
+               ($this->type == 1 || $this->type === 'admin');
+    }
+
+    protected function canManageSeasons($schoolId): bool
+    {
+        return $this->canEditSeasons($schoolId);
+    }
+
+    /**
+     * Lógica básica de permisos para otros casos
+     */
+    protected function hasBasicPermission($permission, $schoolId, $seasonId): bool
+    {
+        // Admin tiene todo
+        if ($this->type == 1 || $this->type === 'admin') {
+            return true;
+        }
+
+        // Monitor tiene permisos limitados
+        if ($this->type == 3 || $this->type === 'monitor') {
+            return $this->hasAccessToSchool($schoolId);
+        }
+
+        // Cliente tiene permisos muy limitados
+        return false;
+    }
 }
