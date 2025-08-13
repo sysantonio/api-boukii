@@ -1,20 +1,62 @@
+# Laravel specific
 /.phpunit.cache
 /node_modules
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/public
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/views
+/storage/logs
 /vendor
-.env
-.env.backup
-.env.production
 .phpunit.result.cache
+composer.lock
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE files
+/.fleet
+/.idea
+/.vscode
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Laravel specific
 Homestead.json
 Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
-/.fleet
-/.idea
-/.vscode
+
+# Old admin front (removed)
 /old-admin-front
+
+# Cache and temp files
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Testing
+coverage/
+.coverage
+.nyc_output
