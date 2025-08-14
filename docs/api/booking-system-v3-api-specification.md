@@ -1277,14 +1277,14 @@ GET /system/health
 ## 📚 **Recursos Adicionales**
 
 ### **Documentación**
-- [Guía de Implementación](./implementation-guide.md)
-- [Ejemplos de Código](./code-examples.md)
-- [Casos de Uso](./use-cases.md)
+- [Guía de Implementación](implementation-guide.md)
+- [Ejemplos de Código](code-examples.md)
+- [Casos de Uso](use-cases.md)
 
 ### **Testing**
 - [Ambiente de Pruebas](https://api-sandbox.boukii.com/v3)
-- [Postman Collection](./boukii-v3.postman_collection.json)
-- [Datos de Prueba](./test-data.json)
+- [Postman Collection](boukii-v3.postman_collection.json)
+- [Datos de Prueba](test-data.json)
 
 ### **Herramientas**
 - [SDK JavaScript](https://github.com/boukii/js-sdk-v3)
