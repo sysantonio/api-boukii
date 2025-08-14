@@ -92,7 +92,7 @@ Request → auth:sanctum → context.middleware → role.permission → Controll
 - **Booking**: Reservas contextualizadas por school/season
 - **Course**: Cursos con contexto temporal
 - **Client**: Clientes multi-escuela
-- **Monitor**: Instructores con asignaciones por temporada
+- **Monitor**: Instructores con asignaciones por temporada multi-escuela
 
 ### Key Services V5
 - **BaseV5Controller**: Controlador base con contexto automático

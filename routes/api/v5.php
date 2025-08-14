@@ -138,15 +138,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // Dashboard/Welcome routes
             Route::prefix('dashboard')->group(function () {
                 Route::get('stats', [DashboardV5Controller::class, 'stats'])->name('v5.dashboard.stats');
+                Route::get('revenue', [DashboardV5Controller::class, 'revenue'])->name('v5.dashboard.revenue');
+                Route::get('bookings', [DashboardV5Controller::class, 'bookings'])->name('v5.dashboard.bookings');
                 Route::get('recent-activity', [DashboardV5Controller::class, 'recentActivity'])->name('v5.dashboard.recent-activity');
                 Route::get('alerts', [DashboardV5Controller::class, 'alerts'])->name('v5.dashboard.alerts');
+                Route::post('alerts/{alertId}/dismiss', [DashboardV5Controller::class, 'dismissAlert'])->name('v5.dashboard.alerts.dismiss');
+                Route::get('daily-sessions', [DashboardV5Controller::class, 'dailySessions'])->name('v5.dashboard.daily-sessions');
+                Route::get('today-reservations', [DashboardV5Controller::class, 'todayReservations'])->name('v5.dashboard.today-reservations');
             });
 
             // Alias para compatibilidad con frontend (welcome -> dashboard)
             Route::prefix('welcome')->group(function () {
                 Route::get('stats', [DashboardV5Controller::class, 'stats'])->name('v5.welcome.stats');
+                Route::get('revenue', [DashboardV5Controller::class, 'revenue'])->name('v5.welcome.revenue');
+                Route::get('bookings', [DashboardV5Controller::class, 'bookings'])->name('v5.welcome.bookings');
                 Route::get('recent-activity', [DashboardV5Controller::class, 'recentActivity'])->name('v5.welcome.recent-activity');
                 Route::get('alerts', [DashboardV5Controller::class, 'alerts'])->name('v5.welcome.alerts');
+                Route::post('alerts/{alertId}/dismiss', [DashboardV5Controller::class, 'dismissAlert'])->name('v5.welcome.alerts.dismiss');
+                Route::get('daily-sessions', [DashboardV5Controller::class, 'dailySessions'])->name('v5.welcome.daily-sessions');
+                Route::get('today-reservations', [DashboardV5Controller::class, 'todayReservations'])->name('v5.welcome.today-reservations');
             });
 
             // Aquí se agregarían más rutas que requieren contexto completo
