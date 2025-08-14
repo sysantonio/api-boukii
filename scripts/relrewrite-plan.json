@@ -1,0 +1,7 @@
+[
+  {"file": "docs/api/booking-system-v3-api-specification.md", "from": "](./implementation-guide.md)", "to": "](implementation-guide.md)"},
+  {"file": "docs/api/booking-system-v3-api-specification.md", "from": "](./code-examples.md)", "to": "](code-examples.md)"},
+  {"file": "docs/api/booking-system-v3-api-specification.md", "from": "](./use-cases.md)", "to": "](use-cases.md)"},
+  {"file": "docs/api/booking-system-v3-api-specification.md", "from": "](./boukii-v3.postman_collection.json)", "to": "](boukii-v3.postman_collection.json)"},
+  {"file": "docs/api/booking-system-v3-api-specification.md", "from": "](./test-data.json)", "to": "](test-data.json)"}
+]
