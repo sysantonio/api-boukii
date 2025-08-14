@@ -49,23 +49,26 @@ function Write-Info { param($Message) Write-ColorOutput $Message "Cyan" }
 function Get-DefaultPaths {
     $scriptDir = Split-Path -Parent $MyInvocation.PSCommandPath
     $currentRepo = Split-Path -Parent $scriptDir
-    
+
     # Determinar si estamos en frontend o backend
     $repoName = Split-Path -Leaf $currentRepo
-    
+
+    $envFront = $env:BOUKII_FRONT_PATH
+    $envBack  = $env:BOUKII_BACK_PATH
+
     if ($repoName -eq "boukii-admin-panel") {
         # Estamos en frontend
         $detectedFront = $currentRepo
-        $detectedBack = "C:\laragon\www\api-boukii"
+        $detectedBack = $envBack
     } elseif ($repoName -eq "api-boukii") {
         # Estamos en backend
-        $detectedFront = "C:\Users\aym14\Documents\WebstormProjects\boukii\boukii-admin-panel"
+        $detectedFront = $envFront
         $detectedBack = $currentRepo
     } else {
-        Write-Error "No se pudo detectar el tipo de repositorio. Usar parámetros explícitos."
-        exit 1
+        $detectedFront = $envFront
+        $detectedBack = $envBack
     }
-    
+
     return @{
         Frontend = $detectedFront
         Backend = $detectedBack
@@ -157,10 +160,15 @@ function Main {
     $defaultPaths = Get-DefaultPaths
     $frontPath = if ($FrontPath) { $FrontPath } else { $defaultPaths.Frontend }
     $backPath = if ($BackPath) { $BackPath } else { $defaultPaths.Backend }
-    
+
+    if (-not $frontPath -or -not $backPath) {
+        Write-Error "❌ No se pudieron determinar las rutas. Proporciona -FrontPath/-BackPath o define BOUKII_FRONT_PATH y BOUKII_BACK_PATH."
+        exit 1
+    }
+
     Write-Info "📂 Frontend: $frontPath"
     Write-Info "📂 Backend:  $backPath"
-    
+
     # Validar estructura de repositorios
     if (!(Test-RepoStructure $frontPath "Frontend")) { exit 1 }
     if (!(Test-RepoStructure $backPath "Backend")) { exit 1 }
