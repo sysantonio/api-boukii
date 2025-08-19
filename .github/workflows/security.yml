@@ -1,0 +1,398 @@
+name: Security Audit
+
+on:
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================================================
+  # DEPENDENCY VULNERABILITY SCAN
+  # ============================================================================
+  dependency-audit:
+    name: 🔒 Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run npm audit
+        id: npm-audit
+        run: |
+          echo "🔍 Running npm security audit..."
+
+          # Run audit and capture output
+          npm audit --audit-level=moderate --json > audit-report.json || true
+
+          # Parse results
+          CRITICAL=$(cat audit-report.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat audit-report.json | jq '.metadata.vulnerabilities.high // 0')
+          MODERATE=$(cat audit-report.json | jq '.metadata.vulnerabilities.moderate // 0')
+          LOW=$(cat audit-report.json | jq '.metadata.vulnerabilities.low // 0')
+
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "moderate=$MODERATE" >> $GITHUB_OUTPUT
+          echo "low=$LOW" >> $GITHUB_OUTPUT
+
+          echo "📊 Vulnerability Summary:"
+          echo "   Critical: $CRITICAL"
+          echo "   High: $HIGH"
+          echo "   Moderate: $MODERATE"
+          echo "   Low: $LOW"
+
+          # Check if there are critical or high vulnerabilities
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "❌ Critical or high vulnerabilities found!"
+            exit 1
+          fi
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report
+          path: audit-report.json
+
+      - name: Comment PR with security results
+        if: github.event_name == 'pull_request' && (steps.npm-audit.outputs.critical > 0 || steps.npm-audit.outputs.high > 0)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const critical = '${{ steps.npm-audit.outputs.critical }}';
+            const high = '${{ steps.npm-audit.outputs.high }}';
+            const moderate = '${{ steps.npm-audit.outputs.moderate }}';
+            const low = '${{ steps.npm-audit.outputs.low }}';
+
+            const comment = `## 🔒 Security Audit Results
+
+            | Severity | Count | Status |
+            |----------|-------|--------|
+            | Critical | ${critical} | ${critical === '0' ? '✅' : '❌'} |
+            | High | ${high} | ${high === '0' ? '✅' : '❌'} |
+            | Moderate | ${moderate} | ${moderate === '0' ? '✅' : '⚠️'} |
+            | Low | ${low} | ${low === '0' ? '✅' : 'ℹ️'} |
+
+            ${critical > 0 || high > 0 ? 
+              '🚨 **Action Required:** Critical or high severity vulnerabilities found. Please run `npm audit fix` to resolve.' :
+              '✅ No critical or high severity vulnerabilities found.'
+            }
+
+            Run \`npm audit\` locally for detailed information.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================================================
+  # SOURCE CODE SECURITY SCAN
+  # ============================================================================
+  source-code-scan:
+    name: 🔍 Source Code Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Scan for secrets
+        run: |
+          echo "🔐 Scanning for hardcoded secrets..."
+
+          # Check for common secret patterns
+          SECRET_PATTERNS=(
+            "password\s*[:=]\s*['\"][^'\"]*['\"]"
+            "api[_-]?key\s*[:=]\s*['\"][^'\"]*['\"]"
+            "secret\s*[:=]\s*['\"][^'\"]*['\"]"
+            "token\s*[:=]\s*['\"][^'\"]*['\"]"
+            "AUTH_TOKEN"
+            "DATABASE_URL"
+            "PRIVATE_KEY"
+          )
+
+          SECRETS_FOUND=0
+
+          for pattern in "${SECRET_PATTERNS[@]}"; do
+            if grep -r -i "$pattern" src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.stories.ts"; then
+              echo "❌ Potential secret found: $pattern"
+              SECRETS_FOUND=$((SECRETS_FOUND + 1))
+            fi
+          done
+
+          if [ $SECRETS_FOUND -gt 0 ]; then
+            echo "❌ $SECRETS_FOUND potential secrets found in source code"
+            exit 1
+          fi
+
+          echo "✅ No hardcoded secrets detected"
+
+      - name: Check for console.log statements
+        run: |
+          echo "🔍 Checking for debug statements..."
+
+          # Check for console statements in production code
+          if grep -r "console\." src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.stories.ts" --include="*.ts"; then
+            echo "⚠️ Console statements found in source code (should be reviewed for production)"
+          else
+            echo "✅ No console statements found"
+          fi
+
+      - name: Validate environment files
+        run: |
+          echo "🔧 Validating environment configuration..."
+
+          # Check that environment files don't contain secrets
+          for env_file in src/environments/*.ts; do
+            if [ -f "$env_file" ]; then
+              echo "Checking $env_file..."
+              
+              if grep -i "password\|secret\|key" "$env_file"; then
+                echo "❌ Potential secrets found in $env_file"
+                exit 1
+              fi
+            fi
+          done
+
+          echo "✅ Environment files validated"
+
+  # ============================================================================
+  # DOCKER SECURITY SCAN (if applicable)
+  # ============================================================================
+  docker-security:
+    name: 🐳 Docker Security
+    runs-on: ubuntu-latest
+    if: false # Enable when Docker is implemented
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t boukii-admin:test .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'boukii-admin:test'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # SECURITY COMPLIANCE CHECK
+  # ============================================================================
+  compliance-check:
+    name: ⚖️ Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check license compliance
+        run: |
+          echo "📄 Checking license compliance..."
+
+          # Check if LICENSE file exists
+          if [ ! -f "LICENSE" ]; then
+            echo "⚠️ LICENSE file not found"
+          else
+            echo "✅ LICENSE file present"
+          fi
+
+          # Check package.json for license
+          if grep -q "\"license\":" package.json; then
+            LICENSE=$(cat package.json | jq -r '.license')
+            echo "✅ Package license: $LICENSE"
+          else
+            echo "⚠️ No license specified in package.json"
+          fi
+
+      - name: Check security headers configuration
+        run: |
+          echo "🛡️ Checking security headers configuration..."
+
+          # Look for security header configurations
+          if [ -f "angular.json" ]; then
+            echo "✅ Angular configuration found"
+            
+            # Check for CSP configuration
+            if grep -q "contentSecurityPolicy" angular.json; then
+              echo "✅ Content Security Policy configured"
+            else
+              echo "⚠️ Consider adding Content Security Policy"
+            fi
+          fi
+
+      - name: Check for sensitive file patterns
+        run: |
+          echo "🔍 Checking for sensitive files..."
+
+          SENSITIVE_FILES=(
+            "*.pem"
+            "*.key"
+            "*.p12"
+            "*.pfx"
+            ".env"
+            ".env.*"
+            "config/*.json"
+          )
+
+          for pattern in "${SENSITIVE_FILES[@]}"; do
+            if find . -name "$pattern" -not -path "./node_modules/*" -not -path "./.git/*"; then
+              echo "⚠️ Sensitive file pattern found: $pattern"
+            fi
+          done
+
+          echo "✅ Sensitive file check completed"
+
+  # ============================================================================
+  # SECURITY REPORTING
+  # ============================================================================
+  security-report:
+    name: 📊 Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, source-code-scan, compliance-check]
+    if: always()
+
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "📊 Security Audit Summary"
+          echo "========================="
+          echo "Date: $(date)"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+
+          # Check job results
+          DEPENDENCY_STATUS="${{ needs.dependency-audit.result }}"
+          SOURCE_STATUS="${{ needs.source-code-scan.result }}"
+          COMPLIANCE_STATUS="${{ needs.compliance-check.result }}"
+
+          echo "Dependency Audit: $DEPENDENCY_STATUS"
+          echo "Source Code Scan: $SOURCE_STATUS"
+          echo "Compliance Check: $COMPLIANCE_STATUS"
+
+          # Overall security status
+          if [ "$DEPENDENCY_STATUS" == "success" ] && [ "$SOURCE_STATUS" == "success" ] && [ "$COMPLIANCE_STATUS" == "success" ]; then
+            echo ""
+            echo "🎉 Overall Security Status: PASSED"
+          else
+            echo ""
+            echo "❌ Overall Security Status: FAILED"
+            exit 1
+          fi
+
+      - name: Create security issue if failed
+        if: failure() && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🔒 Security Audit Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Security Audit Failure Report
+
+            **Date:** ${new Date().toISOString()}
+            **Branch:** ${{ github.ref_name }}
+            **Commit:** ${{ github.sha }}
+            **Workflow:** ${{ github.workflow }}
+
+            ### Failed Jobs
+            - Dependency Audit: ${{ needs.dependency-audit.result }}
+            - Source Code Scan: ${{ needs.source-code-scan.result }}
+            - Compliance Check: ${{ needs.compliance-check.result }}
+
+            ### Action Required
+            Please review the security audit results and address any issues found.
+
+            **Severity:** High
+            **Priority:** Immediate attention required
+
+            ### Next Steps
+            1. Review the workflow logs for specific issues
+            2. Fix any identified vulnerabilities
+            3. Re-run the security audit
+            4. Close this issue once resolved
+
+            ---
+            *This issue was automatically created by the Security Audit workflow.*
+            `;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'bug', 'high-priority']
+            });
+
+  # ============================================================================
+  # SCHEDULED MAINTENANCE
+  # ============================================================================
+  scheduled-maintenance:
+    name: 🔧 Scheduled Security Maintenance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "📦 Checking for outdated dependencies..."
+          npm ci --legacy-peer-deps
+          npx npm-check-updates --errorLevel 2
+
+          echo "✅ Dependency check completed"
+
+      - name: Security maintenance summary
+        run: |
+          echo "🔧 Daily Security Maintenance Summary"
+          echo "===================================="
+          echo "Date: $(date)"
+          echo "✅ Dependency vulnerability scan completed"
+          echo "✅ Source code security scan completed"
+          echo "✅ Compliance check completed"
+          echo "✅ Outdated dependency check completed"

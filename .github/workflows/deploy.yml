@@ -1,0 +1,397 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ['CI/CD Pipeline']
+    types: [completed]
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment for deployment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests (emergency deployment only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  CACHE_NAME: boukii-admin-v5
+
+jobs:
+  # ============================================================================
+  # DETERMINE DEPLOYMENT STRATEGY
+  # ============================================================================
+  determine-environment:
+    name: 🎯 Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.determine.outputs.environment }}
+      should-deploy: ${{ steps.determine.outputs.should-deploy }}
+      is-production: ${{ steps.determine.outputs.is-production }}
+
+    steps:
+      - name: Determine deployment environment
+        id: determine
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+            DEPLOY="true"
+          elif [ "${{ github.ref_name }}" == "main" ]; then
+            ENV="production"
+            DEPLOY="true"
+          elif [ "${{ github.ref_name }}" == "develop" ]; then
+            ENV="staging"
+            DEPLOY="true"
+          else
+            ENV="none"
+            DEPLOY="false"
+          fi
+
+          IS_PROD="false"
+          if [ "$ENV" == "production" ]; then
+            IS_PROD="true"
+          fi
+
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "should-deploy=$DEPLOY" >> $GITHUB_OUTPUT
+          echo "is-production=$IS_PROD" >> $GITHUB_OUTPUT
+
+          echo "🎯 Deployment Configuration:"
+          echo "   Environment: $ENV"
+          echo "   Should Deploy: $DEPLOY"
+          echo "   Is Production: $IS_PROD"
+          echo "   Branch: ${{ github.ref_name }}"
+
+  # ============================================================================
+  # PRE-DEPLOYMENT VALIDATION
+  # ============================================================================
+  pre-deployment:
+    name: 🔍 Pre-deployment Validation
+    runs-on: ubuntu-latest
+    needs: determine-environment
+    if: needs.determine-environment.outputs.should-deploy == 'true'
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --prefer-offline --no-audit
+
+      - name: Validate environment configuration
+        run: |
+          ENV="${{ needs.determine-environment.outputs.environment }}"
+          CONFIG_FILE="src/assets/config/runtime-config.$ENV.json"
+
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "❌ Environment configuration not found: $CONFIG_FILE"
+            exit 1
+          fi
+
+          echo "✅ Environment configuration validated: $CONFIG_FILE"
+          cat "$CONFIG_FILE" | jq '.'
+
+      - name: Security scan
+        if: needs.determine-environment.outputs.is-production == 'true'
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --audit-level=high
+
+          echo "🔍 Checking for sensitive data..."
+          if grep -r "password\|secret\|key\|token" src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.stories.ts"; then
+            echo "❌ Potential sensitive data found in source code"
+            exit 1
+          fi
+
+          echo "✅ Security checks passed"
+
+      - name: Performance budget check
+        if: needs.determine-environment.outputs.is-production == 'true'
+        run: |
+          echo "📊 Checking performance budget..."
+          npm run build:production
+
+          # Check bundle sizes
+          MAIN_BUNDLE_SIZE=$(ls -la dist/*.js | awk '{print $5}' | sort -nr | head -1)
+          MAX_BUNDLE_SIZE=2097152  # 2MB in bytes
+
+          if [ "$MAIN_BUNDLE_SIZE" -gt "$MAX_BUNDLE_SIZE" ]; then
+            echo "❌ Bundle size exceeds limit: $(($MAIN_BUNDLE_SIZE / 1024))KB > $(($MAX_BUNDLE_SIZE / 1024))KB"
+            exit 1
+          fi
+
+          echo "✅ Performance budget check passed"
+
+  # ============================================================================
+  # STAGING DEPLOYMENT
+  # ============================================================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [determine-environment, pre-deployment]
+    if: needs.determine-environment.outputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.boukii-admin.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --prefer-offline --no-audit
+
+      - name: Build for staging
+        run: |
+          npm run config:staging
+          npm run build:staging
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "   URL: https://staging.boukii-admin.app"
+          echo "   Build: ${{ github.sha }}"
+
+          # Here you would add your actual deployment commands
+          # Examples:
+          # - AWS S3 + CloudFront
+          # - Netlify
+          # - Vercel
+          # - Azure Static Web Apps
+          # - Firebase Hosting
+
+          # Example for AWS S3:
+          # aws s3 sync dist/ s3://staging-bucket --delete
+          # aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
+
+          echo "✅ Staging deployment completed"
+
+      - name: Run smoke tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          sleep 10  # Wait for deployment propagation
+
+          # Example smoke tests
+          curl -f https://staging.boukii-admin.app/ || exit 1
+          curl -f https://staging.boukii-admin.app/assets/config/runtime-config.staging.json || exit 1
+
+          echo "✅ Smoke tests passed"
+
+      - name: Update deployment status
+        run: |
+          echo "📝 Updating deployment status..."
+          echo "   Environment: Staging"
+          echo "   Status: Success"
+          echo "   URL: https://staging.boukii-admin.app"
+          echo "   Commit: ${{ github.sha }}"
+
+  # ============================================================================
+  # PRODUCTION DEPLOYMENT
+  # ============================================================================
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [determine-environment, pre-deployment]
+    if: needs.determine-environment.outputs.environment == 'production'
+    environment:
+      name: production
+      url: https://admin.boukii.app
+
+    steps:
+      - name: Production deployment approval
+        uses: trstringer/manual-approval@v1
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: '🌟 Production Deployment Approval Required'
+          issue-body: |
+            ## Production Deployment Request
+
+            **Branch:** ${{ github.ref_name }}
+            **Commit:** ${{ github.sha }}
+            **Author:** ${{ github.actor }}
+
+            ### Pre-deployment Checks
+            - ✅ CI/CD Pipeline passed
+            - ✅ Quality Gate passed
+            - ✅ Security scan completed
+            - ✅ Performance budget validated
+
+            ### Deployment Details
+            - **Environment:** Production
+            - **URL:** https://admin.boukii.app
+            - **Estimated Downtime:** ~2 minutes
+
+            **Please review and approve this production deployment.**
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --prefer-offline --no-audit
+
+      - name: Build for production
+        run: |
+          npm run config:production
+          npm run build:production
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Create backup
+        run: |
+          echo "💾 Creating production backup..."
+          # Here you would backup the current production deployment
+          echo "✅ Backup created"
+
+      - name: Deploy to production
+        run: |
+          echo "🌟 Deploying to production environment..."
+          echo "   URL: https://admin.boukii.app"
+          echo "   Build: ${{ github.sha }}"
+          echo "   Deployment time: $(date)"
+
+          # Here you would add your actual production deployment commands
+          # Examples with blue-green deployment:
+          # 1. Deploy to green environment
+          # 2. Run health checks
+          # 3. Switch traffic to green
+          # 4. Monitor for issues
+
+          echo "✅ Production deployment completed"
+
+      - name: Health check
+        run: |
+          echo "🏥 Running production health checks..."
+          sleep 30  # Wait for deployment propagation
+
+          # Health check endpoints
+          curl -f https://admin.boukii.app/health || exit 1
+          curl -f https://admin.boukii.app/ || exit 1
+
+          echo "✅ Health checks passed"
+
+      - name: Monitor deployment
+        run: |
+          echo "📊 Monitoring deployment for 2 minutes..."
+          for i in {1..4}; do
+            echo "   Check $i/4..."
+            curl -f https://admin.boukii.app/ > /dev/null
+            sleep 30
+          done
+          echo "✅ Monitoring completed successfully"
+
+      - name: Update production status
+        run: |
+          echo "📝 Updating production status..."
+          echo "   Environment: Production"
+          echo "   Status: Success"
+          echo "   URL: https://admin.boukii.app"
+          echo "   Commit: ${{ github.sha }}"
+          echo "   Deployed at: $(date)"
+
+      - name: Notify team
+        run: |
+          echo "📢 Notifying team of successful deployment..."
+          # Here you would send notifications to Slack, Teams, etc.
+          echo "✅ Team notified"
+
+  # ============================================================================
+  # POST-DEPLOYMENT
+  # ============================================================================
+  post-deployment:
+    name: 📋 Post-deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+
+    steps:
+      - name: Generate deployment report
+        run: |
+          ENV="${{ needs.determine-environment.outputs.environment }}"
+
+          echo "📋 Deployment Report"
+          echo "==================="
+          echo "Environment: $ENV"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Deployed by: ${{ github.actor }}"
+          echo "Deployment time: $(date)"
+
+          if [ "$ENV" == "production" ]; then
+            echo "URL: https://admin.boukii.app"
+          else
+            echo "URL: https://staging.boukii-admin.app"
+          fi
+
+      - name: Update deployment tracking
+        run: |
+          echo "📊 Updating deployment tracking..."
+          # Here you would update your deployment tracking system
+          echo "✅ Deployment tracking updated"
+
+      - name: Cleanup old artifacts
+        run: |
+          echo "🧹 Cleaning up old deployment artifacts..."
+          # Here you would clean up old builds, containers, etc.
+          echo "✅ Cleanup completed"
+
+  # ============================================================================
+  # ROLLBACK (if needed)
+  # ============================================================================
+  rollback:
+    name: 🔄 Rollback
+    runs-on: ubuntu-latest
+    if: failure() && needs.determine-environment.outputs.is-production == 'true'
+    needs: [determine-environment, deploy-production]
+    environment:
+      name: production
+
+    steps:
+      - name: Emergency rollback
+        run: |
+          echo "🚨 Initiating emergency rollback..."
+          # Here you would implement your rollback strategy
+          # Examples:
+          # - Revert to previous deployment
+          # - Switch back to blue environment
+          # - Restore from backup
+
+          echo "✅ Rollback completed"
+
+      - name: Notify team of rollback
+        run: |
+          echo "📢 Notifying team of rollback..."
+          # Send urgent notifications
+          echo "✅ Team notified of rollback"

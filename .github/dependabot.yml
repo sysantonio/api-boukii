@@ -1,0 +1,151 @@
+# Dependabot configuration for automated dependency updates
+version: 2
+updates:
+  # NPM package updates
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Europe/Madrid'
+
+    # Dependency update strategy
+    versioning-strategy: increase
+
+    # Commit message configuration
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+      include: 'scope'
+
+    # Pull request configuration
+    open-pull-requests-limit: 5
+
+    # Automatic approval for patch updates
+    reviewers:
+      - 'boukii-dev-team'
+    assignees:
+      - 'tech-lead'
+
+    # Labels to add to pull requests
+    labels:
+      - 'dependencies'
+      - 'automated'
+      - 'security'
+
+    # Group dependency updates
+    groups:
+      # Angular ecosystem updates
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - 'angular-eslint'
+          - 'ng-*'
+
+      # Testing framework updates
+      testing:
+        patterns:
+          - 'jest*'
+          - '@types/jest'
+          - 'karma*'
+          - 'jasmine*'
+          - '@types/jasmine'
+          - 'protractor*'
+          - 'cypress*'
+          - 'playwright*'
+
+      # Development tools
+      dev-tools:
+        patterns:
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - 'prettier*'
+          - 'husky*'
+          - 'lint-staged*'
+          - '@commitlint/*'
+          - 'typescript*'
+
+      # Storybook ecosystem
+      storybook:
+        patterns:
+          - '@storybook/*'
+          - 'storybook*'
+
+      # Security-related packages (high priority)
+      security:
+        patterns:
+          - '*security*'
+          - '*audit*'
+          - '*vulnerability*'
+
+    # Ignore specific dependencies
+    ignore:
+      # Ignore major version updates for stable packages
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+
+      # Ignore Angular major updates (manual upgrade required)
+      - dependency-name: '@angular/*'
+        update-types: ['version-update:semver-major']
+
+      # Ignore Node.js major updates
+      - dependency-name: 'node'
+        update-types: ['version-update:semver-major']
+
+    # Allow automatic merging for specific update types
+    allow:
+      - dependency-type: 'production'
+        update-type: 'security'
+      - dependency-type: 'development'
+        update-type: 'security'
+      - dependency-type: 'production'
+        update-type: 'semver:patch'
+      - dependency-type: 'development'
+        update-type: 'semver:patch'
+
+  # GitHub Actions updates
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'tuesday'
+      time: '10:00'
+      timezone: 'Europe/Madrid'
+
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+
+    labels:
+      - 'ci'
+      - 'dependencies'
+      - 'automated'
+
+    # Auto-merge patch and minor updates for GitHub Actions
+    allow:
+      - dependency-type: 'direct'
+        update-type: 'security'
+      - dependency-type: 'direct'
+        update-type: 'semver:patch'
+      - dependency-type: 'direct'
+        update-type: 'semver:minor'
+
+  # Docker updates (if Docker is used in the future)
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'wednesday'
+      time: '11:00'
+      timezone: 'Europe/Madrid'
+
+    commit-message:
+      prefix: 'chore(docker)'
+      include: 'scope'
+
+    labels:
+      - 'docker'
+      - 'dependencies'
+      - 'automated'

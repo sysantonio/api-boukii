@@ -1,0 +1,130 @@
+{
+  "name": "Boukii Admin V5 - Test",
+  "type": "test",
+  "version": "5.0.0",
+  "buildDate": "2025-08-15T00:00:00.000Z",
+  "description": "Boukii Admin Panel V5 - Test Environment",
+  "production": false,
+
+  "api": {
+    "baseUrl": "http://localhost:8000",
+    "timeout": 5000,
+    "retryAttempts": 1,
+    "retryDelay": 500,
+    "version": "v5",
+    "endpoints": {
+      "auth": "/api/v5/auth",
+      "users": "/api/v5/users",
+      "dashboard": "/api/v5/dashboard",
+      "schools": "/api/v5/schools",
+      "seasons": "/api/v5/seasons",
+      "clients": "/api/v5/clients",
+      "courses": "/api/v5/courses",
+      "bookings": "/api/v5/bookings",
+      "monitors": "/api/v5/monitors"
+    }
+  },
+
+  "auth": {
+    "tokenKey": "boukii_test_token",
+    "refreshTokenKey": "boukii_test_refresh_token",
+    "tokenExpiry": 300000,
+    "refreshThreshold": 60000,
+    "loginRedirect": "/auth/login",
+    "logoutRedirect": "/auth/login",
+    "sessionTimeout": 3600000,
+    "rememberMeEnabled": false
+  },
+
+  "features": {
+    "darkTheme": true,
+    "multiLanguage": true,
+    "notifications": false,
+    "analytics": false,
+    "dashboardWidgets": true,
+    "realtimeUpdates": false,
+    "exportData": false,
+    "importData": false,
+    "userManagement": true,
+    "systemSettings": false,
+    "auditLogs": false,
+    "backupRestore": false,
+    "experimentalUI": false,
+    "betaFeatures": false,
+    "debugMode": true,
+    "performanceMonitoring": false,
+    "paymentGateway": false,
+    "emailService": false,
+    "smsService": false,
+    "socialLogin": false
+  },
+
+  "monitoring": {
+    "enabled": false,
+    "errorReporting": false,
+    "performanceTracking": false,
+    "userAnalytics": false,
+    "logLevel": "debug",
+    "maxLogEntries": 100,
+    "retentionDays": 1
+  },
+
+  "cache": {
+    "enabled": false,
+    "strategies": {
+      "api": "memory",
+      "translations": "memory",
+      "user": "memory",
+      "dashboard": "memory"
+    },
+    "ttl": {
+      "default": 60000,
+      "user": 60000,
+      "translations": 60000,
+      "dashboard": 60000,
+      "api": 60000
+    },
+    "maxSize": {
+      "memory": 1048576,
+      "localStorage": 0,
+      "sessionStorage": 0
+    }
+  },
+
+  "security": {
+    "enableCSP": false,
+    "enableHSTS": false,
+    "enableXSSProtection": false,
+    "corsOrigins": ["*"],
+    "trustedDomains": ["localhost"],
+    "encryptLocalStorage": false,
+    "sessionSecurity": "relaxed",
+    "passwordPolicy": {
+      "minLength": 4,
+      "requireUppercase": false,
+      "requireLowercase": false,
+      "requireNumbers": false,
+      "requireSymbols": false
+    }
+  },
+
+  "app": {
+    "title": "Boukii Admin V5 - Test",
+    "logo": "/assets/images/logo.svg",
+    "supportEmail": "test@boukii.app",
+    "supportPhone": "",
+    "companyName": "Boukii Technologies",
+    "privacyPolicyUrl": "#",
+    "termsOfServiceUrl": "#",
+    "maxFileUploadSize": 1048576,
+    "allowedFileTypes": ["jpg", "png"],
+    "defaultLanguage": "en",
+    "availableLanguages": ["en"],
+    "timezone": "UTC",
+    "dateFormat": "dd/MM/yyyy",
+    "timeFormat": "HH:mm",
+    "currency": "EUR"
+  },
+
+  "integrations": {}
+}

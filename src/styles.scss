@@ -1,0 +1,14 @@
+/* Main application styles */
+
+/* Angular Material theme */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Import design tokens first */
+@import './styles/tokens.css';
+
+/* Import theme files */
+@import './styles/light.css';
+@import './styles/dark.css';
+
+/* Import global styles */
+@import './styles/index.scss';

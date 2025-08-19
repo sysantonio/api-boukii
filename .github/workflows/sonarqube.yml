@@ -1,0 +1,154 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sonarqube:
+    name: SonarQube Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for better relevancy of analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run tests with coverage
+        run: npm run test:ci
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+
+      - name: Run linting
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Build application
+        run: npm run build:production
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Run quality analysis
+        run: npm run analyze:code
+
+      - name: SonarQube Scan
+        uses: sonarqube-quality-gate-action@master
+        with:
+          scanMetadataReportFile: target/sonar/report-task.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Upload quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: quality-report-*.json
+
+      - name: Comment PR with quality results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const glob = require('glob');
+
+            // Find the latest quality report
+            const reports = glob.sync('quality-report-*.json');
+            if (reports.length === 0) return;
+
+            const report = JSON.parse(fs.readFileSync(reports[0], 'utf8'));
+
+            const comment = `
+            ## 📊 Code Quality Report
+
+            **Quality Score:** ${report.qualityScore}/100 (Grade: ${report.summary.qualityGrade})
+            **Files Analyzed:** ${report.metrics.fileStructure?.totalFiles || 'N/A'}
+            **Test Coverage:** ${report.metrics.coverage?.lines || 'N/A'}%
+            **Issues Found:** ${report.summary.totalIssues} (${report.summary.criticalIssues} critical, ${report.summary.warningIssues} warnings)
+
+            ${report.summary.qualityGrade === 'A' ? '🎉 Excellent code quality!' : 
+              report.summary.qualityGrade === 'B' ? '👍 Good code quality with room for improvement.' : 
+              '🔧 Code quality needs attention.'}
+
+            <details>
+            <summary>📋 View Details</summary>
+
+            ### Architecture Compliance
+            ${report.metrics.architecturalCompliance?.hasRequiredStructure ? '✅ Compliant' : '❌ Issues found'}
+
+            ### Dependencies
+            - Production: ${report.metrics.dependencies?.production || 0}
+            - Development: ${report.metrics.dependencies?.development || 0}
+            ${report.metrics.dependencies?.outdated ? `- Outdated: ${report.metrics.dependencies.outdated}` : ''}
+
+            ${report.issues.length > 0 ? `
+            ### Issues
+            ${report.issues.slice(0, 5).map(issue => `- **${issue.severity}**: ${issue.message}`).join('\n')}
+            ${report.issues.length > 5 ? `\n... and ${report.issues.length - 5} more` : ''}
+            ` : ''}
+
+            ${report.recommendations.length > 0 ? `
+            ### Recommendations
+            ${report.recommendations.map(rec => `- ${rec.message}`).join('\n')}
+            ` : ''}
+
+            </details>
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  quality-gate:
+    name: Quality Gate
+    needs: sonarqube
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Download quality report
+        uses: actions/download-artifact@v4
+        with:
+          name: quality-report
+
+      - name: Check quality gate
+        run: |
+          REPORT=$(ls quality-report-*.json | head -1)
+          SCORE=$(cat $REPORT | jq '.qualityScore')
+          GRADE=$(cat $REPORT | jq -r '.summary.qualityGrade')
+          CRITICAL=$(cat $REPORT | jq '.summary.criticalIssues')
+
+          echo "Quality Score: $SCORE/100 (Grade: $GRADE)"
+          echo "Critical Issues: $CRITICAL"
+
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ Quality gate failed: Critical issues found"
+            exit 1
+          fi
+
+          if [ "$SCORE" -lt 70 ]; then
+            echo "❌ Quality gate failed: Score below threshold (70)"
+            exit 1
+          fi
+
+          echo "✅ Quality gate passed"

@@ -1,0 +1,150 @@
+{
+  "name": "Boukii Admin V5 - Staging",
+  "type": "staging",
+  "version": "5.0.0",
+  "buildDate": "2025-08-15T00:00:00.000Z",
+  "description": "Boukii Admin Panel V5 - Staging Environment",
+  "production": false,
+
+  "api": {
+    "baseUrl": "https://staging-api.boukii.app",
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "retryDelay": 1000,
+    "version": "v5",
+    "endpoints": {
+      "auth": "/api/v5/auth",
+      "users": "/api/v5/users",
+      "dashboard": "/api/v5/dashboard",
+      "schools": "/api/v5/schools",
+      "seasons": "/api/v5/seasons",
+      "clients": "/api/v5/clients",
+      "courses": "/api/v5/courses",
+      "bookings": "/api/v5/bookings",
+      "monitors": "/api/v5/monitors"
+    }
+  },
+
+  "auth": {
+    "tokenKey": "boukii_auth_token",
+    "refreshTokenKey": "boukii_refresh_token",
+    "tokenExpiry": 3600000,
+    "refreshThreshold": 300000,
+    "loginRedirect": "/auth/login",
+    "logoutRedirect": "/auth/login",
+    "sessionTimeout": 28800000,
+    "rememberMeEnabled": true
+  },
+
+  "features": {
+    "darkTheme": true,
+    "multiLanguage": true,
+    "notifications": true,
+    "analytics": true,
+    "dashboardWidgets": true,
+    "realtimeUpdates": true,
+    "exportData": true,
+    "importData": true,
+    "userManagement": true,
+    "systemSettings": true,
+    "auditLogs": true,
+    "backupRestore": true,
+    "experimentalUI": true,
+    "betaFeatures": true,
+    "debugMode": false,
+    "performanceMonitoring": true,
+    "paymentGateway": false,
+    "emailService": true,
+    "smsService": false,
+    "socialLogin": true
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "errorReporting": true,
+    "performanceTracking": true,
+    "userAnalytics": true,
+    "logLevel": "info",
+    "maxLogEntries": 1000,
+    "retentionDays": 14,
+    "endpoint": "https://staging-api.boukii.app/logs"
+  },
+
+  "cache": {
+    "enabled": true,
+    "strategies": {
+      "api": "memory",
+      "translations": "localStorage",
+      "user": "localStorage",
+      "dashboard": "sessionStorage"
+    },
+    "ttl": {
+      "default": 300000,
+      "user": 3600000,
+      "translations": 86400000,
+      "dashboard": 600000,
+      "api": 300000
+    },
+    "maxSize": {
+      "memory": 10485760,
+      "localStorage": 5242880,
+      "sessionStorage": 2621440
+    }
+  },
+
+  "security": {
+    "enableCSP": true,
+    "enableHSTS": true,
+    "enableXSSProtection": true,
+    "corsOrigins": ["https://staging-admin.boukii.app"],
+    "trustedDomains": ["staging-api.boukii.app", "boukii.app"],
+    "encryptLocalStorage": true,
+    "sessionSecurity": "strict",
+    "passwordPolicy": {
+      "minLength": 8,
+      "requireUppercase": true,
+      "requireLowercase": true,
+      "requireNumbers": true,
+      "requireSymbols": false
+    }
+  },
+
+  "app": {
+    "title": "Boukii Admin V5 - Staging",
+    "logo": "/assets/images/logo.svg",
+    "supportEmail": "staging@boukii.app",
+    "supportPhone": "+34 900 123 456",
+    "companyName": "Boukii Technologies",
+    "privacyPolicyUrl": "https://boukii.app/privacy",
+    "termsOfServiceUrl": "https://boukii.app/terms",
+    "maxFileUploadSize": 10485760,
+    "allowedFileTypes": ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "xls", "xlsx"],
+    "defaultLanguage": "en",
+    "availableLanguages": ["en", "es"],
+    "timezone": "Europe/Madrid",
+    "dateFormat": "dd/MM/yyyy",
+    "timeFormat": "HH:mm",
+    "currency": "EUR"
+  },
+
+  "integrations": {
+    "firebase": {
+      "apiKey": "AIzaSyBvOkBNaYUWN7YLNLdnKhYSThjEQrBOsXY",
+      "authDomain": "boukii-staging.firebaseapp.com",
+      "projectId": "boukii-staging",
+      "storageBucket": "boukii-staging.appspot.com",
+      "messagingSenderId": "123456789012",
+      "appId": "1:123456789012:web:abc123def456"
+    },
+    "google": {
+      "analytics": "G-STAGING123",
+      "maps": "your-google-maps-api-key-staging"
+    },
+    "stripe": {
+      "publishableKey": "pk_test_xxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "sentry": {
+      "dsn": "https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@sentry.io/staging"
+    }
+  }
+}
