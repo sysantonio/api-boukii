@@ -1,0 +1,65 @@
+{
+  "rules": {
+    "cognitive-complexity": ["error", 15],
+    "max-switch-cases": ["error", 30],
+    "no-all-duplicated-branches": "error",
+    "no-collection-size-mischeck": "error",
+    "no-duplicated-branches": "error",
+    "no-element-overwrite": "error",
+    "no-empty-collection": "error",
+    "no-extra-arguments": "error",
+    "no-gratuitous-expressions": "error",
+    "no-identical-conditions": "error",
+    "no-identical-expressions": "error",
+    "no-ignored-return": "error",
+    "no-inverted-boolean-check": "error",
+    "no-one-iteration-loop": "error",
+    "no-redundant-boolean": "error",
+    "no-redundant-jump": "error",
+    "no-same-line-conditional": "error",
+    "no-small-switch": "error",
+    "no-unused-collection": "error",
+    "no-use-of-empty-return-value": "error",
+    "no-useless-catch": "error",
+    "prefer-immediate-return": "error",
+    "prefer-object-literal": "error",
+    "prefer-single-boolean-return": "error",
+    "prefer-while": "error"
+  },
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": ["plugin:sonarjs/recommended"],
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.test.ts"],
+      "rules": {
+        "sonarjs/no-duplicate-string": "off",
+        "sonarjs/no-identical-functions": "off",
+        "cognitive-complexity": "off"
+      }
+    },
+    {
+      "files": ["**/*.stories.ts"],
+      "rules": {
+        "sonarjs/no-duplicate-string": "off",
+        "cognitive-complexity": "off"
+      }
+    },
+    {
+      "files": ["**/*.component.ts"],
+      "rules": {
+        "cognitive-complexity": ["error", 20]
+      }
+    },
+    {
+      "files": ["**/*.service.ts"],
+      "rules": {
+        "cognitive-complexity": ["error", 15]
+      }
+    }
+  ]
+}

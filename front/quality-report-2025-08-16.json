@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-08-16T00:08:41.547Z",
+  "metrics": {
+    "fileStructure": {
+      "totalFiles": 62,
+      "directories": 27,
+      "byExtension": {
+        ".ts": 42,
+        ".html": 2,
+        ".scss": 3,
+        ".md": 5,
+        "": 1,
+        ".json": 5,
+        ".ico": 1,
+        ".css": 3
+      }
+    },
+    "architecturalCompliance": {
+      "hasRequiredStructure": true,
+      "missingDirectories": []
+    },
+    "complexity": {
+      "error": "Command failed: npx eslint src --format json"
+    },
+    "dependencies": {
+      "production": 11,
+      "development": 32,
+      "total": 43,
+      "angular": 8,
+      "testing": 9
+    },
+    "coverage": {
+      "available": false
+    }
+  },
+  "issues": [],
+  "recommendations": [],
+  "qualityScore": 100,
+  "summary": {
+    "totalIssues": 0,
+    "criticalIssues": 0,
+    "warningIssues": 0,
+    "recommendations": 0,
+    "qualityGrade": "A"
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to continue",
+      "button": "Sign In",
+      "success": "Successfully signed in",
+      "error": "Login failed",
+      "welcome": {
+        "title": "Welcome back",
+        "subtitle": "Access your Boukii V5 administration panel"
+      },
+      "features": {
+        "dashboard": {
+          "title": "Intuitive Dashboard",
+          "description": "Visualize real-time metrics"
+        },
+        "management": {
+          "title": "Complete Management",
+          "description": "Clients, bookings and planning"
+        },
+        "reports": {
+          "title": "Advanced Reports",
+          "description": "Data analysis and trends"
+        }
+      }
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join Boukii V5 and manage your school professionally",
+      "button": "Create Account",
+      "success": "Account created successfully",
+      "error": "Registration failed",
+      "welcome": {
+        "title": "Join Boukii V5",
+        "subtitle": "Manage your sports school professionally and modernly."
+      },
+      "features": {
+        "management": {
+          "title": "Complete Management",
+          "description": "Manage courses, bookings, instructors and seasons from one place."
+        },
+        "seasons": {
+          "title": "Multi-Season",
+          "description": "Organize your activities by seasons and maintain detailed control."
+        },
+        "professional": {
+          "title": "Professionalization",
+          "description": "Advanced tools for modern and efficient sports schools."
+        }
+      }
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "We'll send you a link to reset your password",
+      "button": "Send Reset Link",
+      "success": "Reset link sent successfully",
+      "error": "Failed to send reset link",
+      "successTitle": "Reset Link Sent!",
+      "successMessage": "We've sent recovery instructions to:",
+      "checkSpam": "If you don't see the email, check your spam folder.",
+      "sendAnother": "Send Another Link"
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "Enter your email",
+      "required": "Email is required",
+      "invalid": "Email is not valid"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "Enter your password",
+      "required": "Password is required",
+      "minLength": "Password must be at least 6 characters"
+    },
+    "name": {
+      "label": "Name",
+      "placeholder": "Enter your full name",
+      "required": "Name is required",
+      "minLength": "Name must be at least 2 characters"
+    },
+    "confirmPassword": {
+      "label": "Confirm Password",
+      "placeholder": "Confirm your password",
+      "required": "Password confirmation is required",
+      "mismatch": "Passwords do not match"
+    },
+    "forgotPassword": "Forgot your password?",
+    "noAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "createAccount": "Create account",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "backToLogin": "Back to login",
+    "allRightsReserved": "All rights reserved",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "support": "Support"
+  },
+  "schoolSelection": {
+    "title": "Select School",
+    "subtitle": "Choose the school you want to work with",
+    "selectSchool": "Select School", 
+    "loading": "Loading schools...",
+    "noSchools": "You don't have access to any schools",
+    "error": "Error loading schools",
+    "continue": "Continue",
+    "autoRedirecting": "Automatically redirecting..."
+  },
+  "nav": {
+    "searchPlaceholder": "Search...",
+    "dashboard": "Dashboard",
+    "reservas": "Bookings",
+    "clientes": "Clients",
+    "planificador": "Planner",
+    "instructores": "Instructors",
+    "cursos": "Courses & Activities",
+    "material": "Equipment Rental",
+    "bonos": "Vouchers & Codes",
+    "comunicacion": "Communication",
+    "pagos": "Payments",
+    "reportes": "Reports",
+    "admin": "Administrators",
+    "config": "Settings"
+  },
+  "errors": {
+    "general": "An unexpected error occurred",
+    "network": "Connection error. Check your internet connection",
+    "serverError": "Server error. Please try again later",
+    "unauthorized": "You are not authorized to access this resource",
+    "forbidden": "Access denied",
+    "notFound": "The requested resource was not found",
+    "validation": "Validation error in submitted data",
+    "timeout": "Request has timed out",
+    "api": {
+      "loginFailed": "Invalid credentials",
+      "emailNotFound": "Email not found",
+      "accountLocked": "Account temporarily locked",
+      "emailAlreadyExists": "This email is already registered",
+      "registrationFailed": "Failed to create account",
+      "passwordResetFailed": "Failed to send recovery link",
+      "schoolSelectionFailed": "Error selecting school"
+    }
+  },
+  "featureFlags": {
+    "title": "Feature Flags",
+    "resetDefaults": "Reset Defaults",
+    "reloadConfig": "Reload Configuration",
+    "categories": {
+      "core": {
+        "title": "Core Features",
+        "description": "Basic system functionalities"
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Dashboard features and widgets"
+      },
+      "admin": {
+        "title": "Administration",
+        "description": "Administrative tools and settings"
+      },
+      "experimental": {
+        "title": "Experimental",
+        "description": "Features in development"
+      }
+    },
+    "features": {
+      "darkTheme": {
+        "name": "Dark Theme",
+        "description": "Enable dark theme for the interface"
+      },
+      "multiLanguage": {
+        "name": "Multi-language",
+        "description": "Support for multiple languages"
+      },
+      "notifications": {
+        "name": "Notifications",
+        "description": "Push notification system"
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Usage tracking and analytics"
+      },
+      "dashboardWidgets": {
+        "name": "Dashboard Widgets",
+        "description": "Customizable dashboard widgets"
+      },
+      "realtimeUpdates": {
+        "name": "Real-time Updates",
+        "description": "Real-time data updates"
+      },
+      "exportData": {
+        "name": "Export Data",
+        "description": "Data export functionality"
+      },
+      "importData": {
+        "name": "Import Data",
+        "description": "Data import functionality"
+      },
+      "userManagement": {
+        "name": "User Management",
+        "description": "User administration panel"
+      },
+      "systemSettings": {
+        "name": "System Settings",
+        "description": "Advanced system configurations"
+      },
+      "auditLogs": {
+        "name": "Audit Logs",
+        "description": "System activity logging"
+      },
+      "backupRestore": {
+        "name": "Backup & Restore",
+        "description": "Backup and restoration tools"
+      },
+      "experimentalUI": {
+        "name": "Experimental UI",
+        "description": "New user interface in development"
+      },
+      "betaFeatures": {
+        "name": "Beta Features",
+        "description": "Features in beta testing phase"
+      },
+      "debugMode": {
+        "name": "Debug Mode",
+        "description": "Developer debugging tools"
+      },
+      "performanceMonitoring": {
+        "name": "Performance Monitoring",
+        "description": "System performance tracking"
+      }
+    }
+  }
+}

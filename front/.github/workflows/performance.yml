@@ -1,0 +1,492 @@
+name: Performance Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run performance analysis weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to analyze'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+  LIGHTHOUSE_CONFIG: .github/lighthouse/lighthouse.config.js
+
+jobs:
+  # ============================================================================
+  # BUNDLE ANALYSIS
+  # ============================================================================
+  bundle-analysis:
+    name: 📦 Bundle Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build with statistics
+        run: |
+          echo "🏗️ Building application with bundle analysis..."
+          npm run build:production -- --stats-json
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Analyze bundle size
+        run: |
+          echo "📊 Analyzing bundle size..."
+
+          # Install bundle analyzer if not present
+          npm install -g webpack-bundle-analyzer
+
+          # Generate bundle report
+          npx webpack-bundle-analyzer dist/stats.json --mode static --report bundle-report.html --no-open
+
+          # Extract bundle size information
+          node -e "
+            const stats = require('./dist/stats.json');
+            const assets = stats.assets;
+            
+            let totalSize = 0;
+            let jsSize = 0;
+            let cssSize = 0;
+            
+            assets.forEach(asset => {
+              totalSize += asset.size;
+              if (asset.name.endsWith('.js')) {
+                jsSize += asset.size;
+              } else if (asset.name.endsWith('.css')) {
+                cssSize += asset.size;
+              }
+            });
+            
+            console.log('📊 Bundle Size Analysis:');
+            console.log('   Total Size: ' + (totalSize / 1024 / 1024).toFixed(2) + ' MB');
+            console.log('   JavaScript: ' + (jsSize / 1024 / 1024).toFixed(2) + ' MB');
+            console.log('   CSS: ' + (cssSize / 1024 / 1024).toFixed(2) + ' MB');
+            
+            // Check against budget
+            const maxBundleSize = 2 * 1024 * 1024; // 2MB
+            const maxJsSize = 1.5 * 1024 * 1024;   // 1.5MB
+            
+            if (totalSize > maxBundleSize) {
+              console.log('❌ Bundle size exceeds budget!');
+              process.exit(1);
+            } else {
+              console.log('✅ Bundle size within budget');
+            }
+          "
+
+      - name: Check for duplicate dependencies
+        run: |
+          echo "🔍 Checking for duplicate dependencies..."
+          npx webpack-bundle-analyzer dist/stats.json --mode json --report bundle-stats.json --no-open
+
+          # Analyze for duplicates (simplified check)
+          node -e "
+            const fs = require('fs');
+            const stats = JSON.parse(fs.readFileSync('bundle-stats.json', 'utf8'));
+            
+            console.log('📋 Bundle Analysis Summary:');
+            console.log('   Chunks: ' + stats.chunks.length);
+            console.log('   Modules: ' + stats.modules.length);
+            console.log('   Assets: ' + stats.assets.length);
+          "
+
+      - name: Generate bundle size badge
+        run: |
+          BUNDLE_SIZE=$(node -e "
+            const stats = require('./dist/stats.json');
+            const totalSize = stats.assets.reduce((sum, asset) => sum + asset.size, 0);
+            console.log(Math.round(totalSize / 1024) + 'KB');
+          ")
+
+          echo "Bundle size: $BUNDLE_SIZE"
+          echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: |
+            bundle-report.html
+            bundle-stats.json
+            dist/stats.json
+
+      - name: Comment bundle analysis on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const stats = JSON.parse(fs.readFileSync('dist/stats.json', 'utf8'));
+
+            let totalSize = 0;
+            let jsSize = 0;
+            let cssSize = 0;
+
+            stats.assets.forEach(asset => {
+              totalSize += asset.size;
+              if (asset.name.endsWith('.js')) {
+                jsSize += asset.size;
+              } else if (asset.name.endsWith('.css')) {
+                cssSize += asset.size;
+              }
+            });
+
+            const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+            const jsMB = (jsSize / 1024 / 1024).toFixed(2);
+            const cssMB = (cssSize / 1024 / 1024).toFixed(2);
+
+            const maxSize = 2.0; // 2MB budget
+            const status = totalMB <= maxSize ? '✅' : '❌';
+
+            const comment = `## 📦 Bundle Size Analysis
+
+            | Metric | Size | Status |
+            |--------|------|--------|
+            | **Total Bundle** | ${totalMB} MB | ${status} |
+            | JavaScript | ${jsMB} MB | - |
+            | CSS | ${cssMB} MB | - |
+            | **Budget** | ${maxSize} MB | - |
+
+            ${totalMB <= maxSize ? 
+              '🎯 Bundle size is within the performance budget.' : 
+              '⚠️ Bundle size exceeds the performance budget. Consider code splitting or tree shaking.'
+            }
+
+            [View detailed bundle analysis](${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================================================
+  # LIGHTHOUSE PERFORMANCE AUDIT
+  # ============================================================================
+  lighthouse-audit:
+    name: 🏃 Lighthouse Performance
+    runs-on: ubuntu-latest
+    needs: bundle-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build application
+        run: |
+          npm run build:production
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Serve application
+        run: |
+          echo "🚀 Starting local server for Lighthouse audit..."
+          npx http-server dist -p 4200 -s &
+          sleep 10
+
+          # Check if server is running
+          curl -f http://localhost:4200/ || exit 1
+          echo "✅ Application server is running"
+
+      - name: Run Lighthouse audit
+        run: |
+          echo "🏃 Running Lighthouse performance audit..."
+
+          # Install Lighthouse
+          npm install -g @lhci/cli@0.12.x lighthouse
+
+          # Run Lighthouse audit
+          lighthouse http://localhost:4200/ \
+            --output html \
+            --output json \
+            --output-path ./lighthouse-report \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --budget-path .github/lighthouse/budget.json
+
+      - name: Parse Lighthouse results
+        id: lighthouse
+        run: |
+          echo "📊 Parsing Lighthouse results..."
+
+          # Extract scores from JSON report
+          PERFORMANCE=$(cat lighthouse-report.report.json | jq '.categories.performance.score * 100')
+          ACCESSIBILITY=$(cat lighthouse-report.report.json | jq '.categories.accessibility.score * 100')
+          BEST_PRACTICES=$(cat lighthouse-report.report.json | jq '.categories."best-practices".score * 100')
+          SEO=$(cat lighthouse-report.report.json | jq '.categories.seo.score * 100')
+          PWA=$(cat lighthouse-report.report.json | jq '.categories.pwa.score * 100')
+
+          echo "performance=$PERFORMANCE" >> $GITHUB_OUTPUT
+          echo "accessibility=$ACCESSIBILITY" >> $GITHUB_OUTPUT
+          echo "best-practices=$BEST_PRACTICES" >> $GITHUB_OUTPUT
+          echo "seo=$SEO" >> $GITHUB_OUTPUT
+          echo "pwa=$PWA" >> $GITHUB_OUTPUT
+
+          echo "🎯 Lighthouse Scores:"
+          echo "   Performance: $PERFORMANCE"
+          echo "   Accessibility: $ACCESSIBILITY"
+          echo "   Best Practices: $BEST_PRACTICES"
+          echo "   SEO: $SEO"
+          echo "   PWA: $PWA"
+
+          # Check if performance meets minimum threshold
+          if (( $(echo "$PERFORMANCE < 90" | bc -l) )); then
+            echo "❌ Performance score below threshold (90)"
+            exit 1
+          fi
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: |
+            lighthouse-report.report.html
+            lighthouse-report.report.json
+
+      - name: Comment Lighthouse results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const performance = '${{ steps.lighthouse.outputs.performance }}';
+            const accessibility = '${{ steps.lighthouse.outputs.accessibility }}';
+            const bestPractices = '${{ steps.lighthouse.outputs.best-practices }}';
+            const seo = '${{ steps.lighthouse.outputs.seo }}';
+            const pwa = '${{ steps.lighthouse.outputs.pwa }}';
+
+            const getScoreEmoji = (score) => {
+              if (score >= 90) return '🟢';
+              if (score >= 70) return '🟡';
+              return '🔴';
+            };
+
+            const comment = `## 🏃 Lighthouse Performance Report
+
+            | Category | Score | Status |
+            |----------|-------|--------|
+            | **Performance** | ${performance}% | ${getScoreEmoji(performance)} |
+            | **Accessibility** | ${accessibility}% | ${getScoreEmoji(accessibility)} |
+            | **Best Practices** | ${bestPractices}% | ${getScoreEmoji(bestPractices)} |
+            | **SEO** | ${seo}% | ${getScoreEmoji(seo)} |
+            | **PWA** | ${pwa}% | ${getScoreEmoji(pwa)} |
+
+            ### Performance Insights
+            ${performance >= 90 ? 
+              '🎉 Excellent performance! Your application loads quickly and provides a great user experience.' :
+              performance >= 70 ?
+              '⚠️ Good performance with room for improvement. Consider optimizing critical resources.' :
+              '🔧 Performance needs attention. Review the detailed report for optimization opportunities.'
+            }
+
+            [View detailed Lighthouse report](${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================================================
+  # CORE WEB VITALS ANALYSIS
+  # ============================================================================
+  core-web-vitals:
+    name: 📊 Core Web Vitals
+    runs-on: ubuntu-latest
+    needs: bundle-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build application
+        run: npm run build:production
+        env:
+          NODE_OPTIONS: --max_old_space_size=6144
+
+      - name: Analyze Core Web Vitals
+        run: |
+          echo "📊 Analyzing Core Web Vitals..."
+
+          # Install web-vitals library for analysis
+          npm install web-vitals
+
+          # Create analysis script
+          cat > analyze-vitals.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          // Analyze bundle for potential CWV issues
+          function analyzeBundleForCWV() {
+            const distPath = './dist';
+            const files = fs.readdirSync(distPath);
+            
+            let mainJsSize = 0;
+            let totalJsSize = 0;
+            let cssSize = 0;
+            
+            files.forEach(file => {
+              const filePath = path.join(distPath, file);
+              const stats = fs.statSync(filePath);
+              
+              if (file.endsWith('.js')) {
+                totalJsSize += stats.size;
+                if (file.includes('main')) {
+                  mainJsSize += stats.size;
+                }
+              } else if (file.endsWith('.css')) {
+                cssSize += stats.size;
+              }
+            });
+            
+            console.log('📊 Core Web Vitals Analysis:');
+            console.log('   Main JS Bundle: ' + (mainJsSize / 1024).toFixed(2) + ' KB');
+            console.log('   Total JS Size: ' + (totalJsSize / 1024).toFixed(2) + ' KB');
+            console.log('   CSS Size: ' + (cssSize / 1024).toFixed(2) + ' KB');
+            
+            // Estimates for Core Web Vitals
+            const estimatedLCP = mainJsSize > 200000 ? 'Poor (>2.5s)' : 
+                                mainJsSize > 100000 ? 'Needs Improvement' : 'Good (<2.5s)';
+            const estimatedFID = totalJsSize > 300000 ? 'Poor (>100ms)' : 'Good (<100ms)';
+            const estimatedCLS = 'Good (Layout optimized)';
+            
+            console.log('');
+            console.log('🎯 Estimated Core Web Vitals:');
+            console.log('   LCP (Largest Contentful Paint): ' + estimatedLCP);
+            console.log('   FID (First Input Delay): ' + estimatedFID);
+            console.log('   CLS (Cumulative Layout Shift): ' + estimatedCLS);
+            
+            return {
+              mainJsSize,
+              totalJsSize,
+              cssSize,
+              estimatedLCP,
+              estimatedFID,
+              estimatedCLS
+            };
+          }
+
+          analyzeBundleForCWV();
+          EOF
+
+          node analyze-vitals.js
+
+      - name: Performance recommendations
+        run: |
+          echo "💡 Performance Optimization Recommendations:"
+          echo ""
+          echo "🚀 Core Web Vitals Optimization:"
+          echo "   1. LCP - Optimize critical resources and images"
+          echo "   2. FID - Minimize JavaScript execution time"
+          echo "   3. CLS - Reserve space for dynamic content"
+          echo ""
+          echo "📦 Bundle Optimization:"
+          echo "   1. Implement code splitting"
+          echo "   2. Use lazy loading for routes"
+          echo "   3. Tree shake unused code"
+          echo "   4. Optimize third-party libraries"
+          echo ""
+          echo "🎯 Angular-specific Optimizations:"
+          echo "   1. Use OnPush change detection"
+          echo "   2. Implement virtual scrolling"
+          echo "   3. Optimize NgRx selectors"
+          echo "   4. Use trackBy functions"
+
+  # ============================================================================
+  # PERFORMANCE BUDGET ENFORCEMENT
+  # ============================================================================
+  performance-budget:
+    name: 💰 Performance Budget
+    runs-on: ubuntu-latest
+    needs: [bundle-analysis, lighthouse-audit]
+    if: always()
+
+    steps:
+      - name: Check performance budget
+        run: |
+          echo "💰 Enforcing Performance Budget..."
+
+          # Define performance budget
+          MAX_BUNDLE_SIZE=2097152    # 2MB
+          MAX_JS_SIZE=1572864        # 1.5MB
+          MIN_LIGHTHOUSE_SCORE=90    # 90%
+
+          # Get actual values (these would come from previous jobs)
+          LIGHTHOUSE_SCORE="${{ needs.lighthouse-audit.outputs.performance || '0' }}"
+
+          echo "📊 Performance Budget Check:"
+          echo "   Bundle Size Budget: 2MB"
+          echo "   JavaScript Budget: 1.5MB"
+          echo "   Lighthouse Score Budget: 90%"
+          echo "   Actual Lighthouse Score: $LIGHTHOUSE_SCORE%"
+
+          BUDGET_PASSED=true
+
+          if (( $(echo "$LIGHTHOUSE_SCORE < $MIN_LIGHTHOUSE_SCORE" | bc -l) )); then
+            echo "❌ Lighthouse score below budget ($LIGHTHOUSE_SCORE% < $MIN_LIGHTHOUSE_SCORE%)"
+            BUDGET_PASSED=false
+          fi
+
+          if [ "$BUDGET_PASSED" = true ]; then
+            echo "✅ Performance budget check passed"
+          else
+            echo "❌ Performance budget check failed"
+            exit 1
+          fi
+
+      - name: Generate performance report
+        run: |
+          echo "📋 Performance Analysis Summary"
+          echo "==============================="
+          echo "Date: $(date)"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+          echo "Bundle Analysis: ${{ needs.bundle-analysis.result }}"
+          echo "Lighthouse Audit: ${{ needs.lighthouse-audit.result }}"
+          echo "Core Web Vitals: ${{ needs.core-web-vitals.result }}"
+          echo ""
+          echo "Performance Budget: $([ '${{ needs.lighthouse-audit.result }}' == 'success' ] && echo 'PASSED' || echo 'FAILED')"

@@ -1,0 +1,62 @@
+{
+  "name": "Boukii Admin V5 - Develop",
+  "type": "develop",
+  "version": "5.0.0",
+  "production": false,
+  "staging": true,
+  "testing": false,
+  "debug": true,
+  "monitoring": true,
+  "api": {
+    "baseUrl": "https://api-dev.boukii.app",
+    "version": "v5",
+    "timeout": 30000,
+    "retries": 3
+  },
+  "app": {
+    "title": "🧪 Boukii V5 - Develop",
+    "description": "Boukii Admin Panel V5 - Development Server Environment",
+    "theme": "light",
+    "language": "es"
+  },
+  "features": {
+    "enableDebugMode": true,
+    "enableMockData": false,
+    "enableHotReload": false,
+    "enableStorybook": true,
+    "enableE2ETests": true,
+    "enablePerformanceMonitoring": true,
+    "enableSourceMaps": true
+  },
+  "security": {
+    "enableCSP": false,
+    "enableHSTS": false,
+    "enableXSSProtection": true,
+    "corsOrigins": ["http://localhost:4200", "http://api-boukii.test"],
+    "trustedDomains": ["localhost"],
+    "encryptLocalStorage": false,
+    "sessionSecurity": "standard",
+    "passwordPolicy": {
+      "minLength": 6,
+      "requireUppercase": false,
+      "requireLowercase": false,
+      "requireNumbers": false,
+      "requireSymbols": false
+    }
+  },
+  "logging": {
+    "level": "info",
+    "console": true,
+    "remote": true
+  },
+  "external": {
+    "analytics": {
+      "enabled": true,
+      "trackingId": "GA-DEV-XXXXXXX"
+    },
+    "errorReporting": {
+      "enabled": true,
+      "dsn": "https://dev-sentry-dsn@sentry.io/project"
+    }
+  }
+}

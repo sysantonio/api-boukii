@@ -1,0 +1,194 @@
+{
+  "qualityRules": {
+    "description": "Boukii Admin V5 - Quality Rules and Thresholds",
+    "version": "1.0.0",
+    "lastUpdated": "2025-08-16",
+
+    "thresholds": {
+      "coverage": {
+        "lines": {
+          "excellent": 90,
+          "good": 80,
+          "acceptable": 70,
+          "minimum": 60
+        },
+        "branches": {
+          "excellent": 85,
+          "good": 75,
+          "acceptable": 65,
+          "minimum": 55
+        },
+        "functions": {
+          "excellent": 90,
+          "good": 80,
+          "acceptable": 70,
+          "minimum": 60
+        }
+      },
+
+      "complexity": {
+        "cyclomaticComplexity": {
+          "function": 10,
+          "file": 50
+        },
+        "cognitiveComplexity": {
+          "function": 15,
+          "file": 100
+        },
+        "linesPerFunction": 50,
+        "linesPerFile": 500,
+        "parametersPerFunction": 4,
+        "nestedCallbacks": 3
+      },
+
+      "maintainability": {
+        "duplicatedLines": 3,
+        "duplicatedBlocks": 2,
+        "filesWithDuplication": 5
+      },
+
+      "reliability": {
+        "bugs": 0,
+        "codeSmells": {
+          "critical": 0,
+          "major": 5,
+          "minor": 20
+        }
+      },
+
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 0
+      },
+
+      "qualityGate": {
+        "scoreThresholds": {
+          "A": 90,
+          "B": 80,
+          "C": 70,
+          "D": 60,
+          "F": 0
+        },
+        "blockingConditions": [
+          "critical_issues > 0",
+          "coverage_lines < 70",
+          "security_vulnerabilities > 0",
+          "complexity_violations > 10"
+        ]
+      }
+    },
+
+    "rules": {
+      "typescript": {
+        "mandatory": [
+          "@typescript-eslint/no-explicit-any",
+          "@typescript-eslint/explicit-member-accessibility",
+          "@typescript-eslint/no-unused-vars",
+          "@typescript-eslint/prefer-nullish-coalescing",
+          "@typescript-eslint/prefer-optional-chain"
+        ],
+        "recommended": [
+          "@typescript-eslint/explicit-function-return-type",
+          "@typescript-eslint/prefer-readonly",
+          "@typescript-eslint/prefer-string-starts-ends-with",
+          "@typescript-eslint/no-floating-promises"
+        ]
+      },
+
+      "angular": {
+        "mandatory": [
+          "@angular-eslint/component-selector",
+          "@angular-eslint/directive-selector",
+          "@angular-eslint/use-lifecycle-interface",
+          "@angular-eslint/no-empty-lifecycle-method"
+        ],
+        "recommended": [
+          "@angular-eslint/prefer-on-push-component-change-detection",
+          "@angular-eslint/prefer-standalone",
+          "@angular-eslint/prefer-output-readonly"
+        ]
+      },
+
+      "testing": {
+        "mandatory": [
+          "describe blocks required for test files",
+          "it blocks must have meaningful descriptions",
+          "test files must follow *.spec.ts pattern"
+        ],
+        "coverage": [
+          "all public methods must be tested",
+          "error conditions must be tested",
+          "edge cases should be covered"
+        ]
+      },
+
+      "architecture": {
+        "layering": [
+          "core layer can only import from core",
+          "shared layer cannot import from features",
+          "features can import from core and shared",
+          "ui components should be in ui layer"
+        ],
+        "naming": [
+          "components must end with .component.ts",
+          "services must end with .service.ts",
+          "guards must end with .guard.ts",
+          "pipes must end with .pipe.ts"
+        ]
+      }
+    },
+
+    "exemptions": {
+      "testFiles": {
+        "patterns": ["**/*.spec.ts", "**/*.test.ts"],
+        "exemptRules": [
+          "@typescript-eslint/no-explicit-any",
+          "max-lines-per-function",
+          "cognitive-complexity"
+        ]
+      },
+
+      "storyFiles": {
+        "patterns": ["**/*.stories.ts"],
+        "exemptRules": [
+          "@typescript-eslint/explicit-function-return-type",
+          "max-lines",
+          "sonarjs/no-duplicate-string"
+        ]
+      },
+
+      "configFiles": {
+        "patterns": ["**/*.config.ts", "**/*.config.js"],
+        "exemptRules": [
+          "@typescript-eslint/no-var-requires",
+          "@typescript-eslint/explicit-function-return-type"
+        ]
+      }
+    },
+
+    "reporting": {
+      "formats": ["json", "html", "console"],
+      "includeMetrics": [
+        "coverage",
+        "complexity",
+        "duplication",
+        "maintainability",
+        "reliability",
+        "security"
+      ],
+
+      "dashboards": {
+        "developer": ["quality_score", "test_coverage", "complexity_violations", "recent_issues"],
+        "manager": ["quality_trends", "technical_debt", "team_metrics", "delivery_impact"]
+      }
+    },
+
+    "automation": {
+      "preCommit": ["lint_fix", "format_code", "run_affected_tests"],
+
+      "ci": ["full_test_suite", "quality_analysis", "security_scan", "build_verification"],
+
+      "deployment": ["quality_gate_check", "performance_validation", "security_verification"]
+    }
+  }
+}

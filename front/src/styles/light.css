@@ -1,0 +1,50 @@
+/* Light Theme - Overrides para tema claro */
+:root,
+[data-theme='light'] {
+  /* Surface Colors */
+  --color-background: var(--color-neutral-0);
+  --color-surface: var(--color-neutral-0);
+  --color-surface-elevated: var(--color-neutral-50);
+  --color-surface-secondary: var(--color-neutral-100);
+
+  /* Border Colors */
+  --color-border: var(--color-neutral-200);
+  --color-border-subtle: var(--color-neutral-100);
+  --color-border-strong: var(--color-neutral-300);
+
+  /* Text Colors */
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-tertiary: var(--color-neutral-500);
+  --color-text-inverse: var(--color-neutral-0);
+  --color-text-on-primary: var(--color-neutral-0);
+
+  /* Interactive Colors */
+  --color-primary: var(--color-primary-600);
+  --color-primary-hover: var(--color-primary-700);
+  --color-primary-focus: var(--color-primary-500);
+  --color-primary-disabled: var(--color-neutral-300);
+
+  /* Shadows - más sutiles en tema claro */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+
+  /* Component-specific overrides */
+  --input-background: var(--color-neutral-0);
+  --input-border: var(--color-neutral-300);
+  --input-border-focus: var(--color-primary-500);
+
+  --button-primary-bg: var(--color-primary-600);
+  --button-primary-hover: var(--color-primary-700);
+  --button-primary-text: var(--color-neutral-0);
+
+  --button-secondary-bg: var(--color-neutral-100);
+  --button-secondary-hover: var(--color-neutral-200);
+  --button-secondary-text: var(--color-neutral-700);
+
+  --card-background: var(--color-neutral-0);
+  --card-border: var(--color-neutral-200);
+}

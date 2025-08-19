@@ -1,0 +1,60 @@
+{
+  "name": "Boukii Admin V5 - Local",
+  "type": "local",
+  "version": "5.0.0",
+  "production": false,
+  "staging": false,
+  "testing": false,
+  "debug": true,
+  "monitoring": true,
+  "api": {
+    "baseUrl": "http://api-boukii.test",
+    "version": "v5",
+    "timeout": 30000,
+    "retries": 3
+  },
+  "app": {
+    "title": "🏠 Boukii V5 - Local",
+    "description": "Boukii Admin Panel V5 - Local Development Environment",
+    "theme": "light",
+    "language": "es"
+  },
+  "features": {
+    "enableDebugMode": true,
+    "enableMockData": true,
+    "enableHotReload": true,
+    "enableStorybook": true,
+    "enableE2ETests": true,
+    "enablePerformanceMonitoring": true,
+    "enableSourceMaps": true
+  },
+  "security": {
+    "enableCSP": false,
+    "enableHSTS": false,
+    "enableXSSProtection": true,
+    "corsOrigins": ["http://localhost:4200", "http://api-boukii.test"],
+    "trustedDomains": ["localhost"],
+    "encryptLocalStorage": false,
+    "sessionSecurity": "standard",
+    "passwordPolicy": {
+      "minLength": 6,
+      "requireUppercase": false,
+      "requireLowercase": false,
+      "requireNumbers": false,
+      "requireSymbols": false
+    }
+  },
+  "logging": {
+    "level": "debug",
+    "console": true,
+    "remote": false
+  },
+  "external": {
+    "analytics": {
+      "enabled": false
+    },
+    "errorReporting": {
+      "enabled": false
+    }
+  }
+}

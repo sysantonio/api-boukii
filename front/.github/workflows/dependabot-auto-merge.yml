@@ -1,0 +1,280 @@
+name: Dependabot Auto-merge
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main, develop]
+
+jobs:
+  # ============================================================================
+  # DEPENDABOT AUTO-MERGE VALIDATION
+  # ============================================================================
+  validate-dependabot-pr:
+    name: 🤖 Validate Dependabot PR
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    outputs:
+      should-auto-merge: ${{ steps.check.outputs.should-auto-merge }}
+      update-type: ${{ steps.check.outputs.update-type }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get PR metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: Check auto-merge eligibility
+        id: check
+        run: |
+          UPDATE_TYPE="${{ steps.metadata.outputs.update-type }}"
+          DEPENDENCY_TYPE="${{ steps.metadata.outputs.dependency-type }}"
+
+          echo "Update type: $UPDATE_TYPE"
+          echo "Dependency type: $DEPENDENCY_TYPE"
+
+          SHOULD_AUTO_MERGE="false"
+
+          # Auto-merge conditions
+          if [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]] || [[ "$UPDATE_TYPE" == "version-update:semver-minor" ]]; then
+            if [[ "$DEPENDENCY_TYPE" == "development" ]] || [[ "$DEPENDENCY_TYPE" == "production" ]]; then
+              SHOULD_AUTO_MERGE="true"
+            fi
+          fi
+
+          # Always auto-merge security updates
+          if [[ "$UPDATE_TYPE" == *"security"* ]]; then
+            SHOULD_AUTO_MERGE="true"
+          fi
+
+          echo "should-auto-merge=$SHOULD_AUTO_MERGE" >> $GITHUB_OUTPUT
+          echo "update-type=$UPDATE_TYPE" >> $GITHUB_OUTPUT
+
+          echo "Auto-merge decision: $SHOULD_AUTO_MERGE"
+
+  # ============================================================================
+  # AUTOMATED TESTING FOR DEPENDABOT PRs
+  # ============================================================================
+  test-dependabot-changes:
+    name: 🧪 Test Dependabot Changes
+    runs-on: ubuntu-latest
+    needs: validate-dependabot-pr
+    if: github.actor == 'dependabot[bot]' && needs.validate-dependabot-pr.outputs.should-auto-merge == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit on updated dependencies..."
+          npm audit --audit-level=high
+          echo "✅ Security audit passed"
+
+      - name: Run type checking
+        run: |
+          echo "📝 Running TypeScript type checking..."
+          npm run typecheck
+          echo "✅ Type checking passed"
+
+      - name: Run linting
+        run: |
+          echo "🔍 Running ESLint..."
+          npm run lint
+          echo "✅ Linting passed"
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running test suite..."
+          npm run test:ci
+          echo "✅ Tests passed"
+
+      - name: Test build
+        run: |
+          echo "🏗️ Testing build process..."
+          npm run build:production
+          echo "✅ Build successful"
+
+  # ============================================================================
+  # AUTO-MERGE EXECUTION
+  # ============================================================================
+  auto-merge:
+    name: 🚀 Auto-merge Dependabot PR
+    runs-on: ubuntu-latest
+    needs: [validate-dependabot-pr, test-dependabot-changes]
+    if: |
+      github.actor == 'dependabot[bot]' && 
+      needs.validate-dependabot-pr.outputs.should-auto-merge == 'true' &&
+      needs.test-dependabot-changes.result == 'success'
+
+    steps:
+      - name: Enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pullNumber = context.payload.pull_request.number;
+
+            // Add auto-merge label
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pullNumber,
+              labels: ['auto-merge', 'dependabot']
+            });
+
+            // Enable auto-merge
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number: pullNumber,
+              event: 'APPROVE',
+              body: '🤖 Auto-approved by Dependabot workflow after successful validation'
+            });
+
+            // Merge the PR
+            try {
+              await github.rest.pulls.merge({
+                owner,
+                repo,
+                pull_number: pullNumber,
+                merge_method: 'squash',
+                commit_title: `${context.payload.pull_request.title} (#${pullNumber})`,
+                commit_message: 'Auto-merged by Dependabot workflow'
+              });
+              
+              console.log('✅ PR auto-merged successfully');
+            } catch (error) {
+              console.log('❌ Auto-merge failed:', error.message);
+              
+              // Comment on PR about failure
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                body: `🤖 **Auto-merge failed**
+                
+                The automated merge process failed with the following error:
+                \`\`\`
+                ${error.message}
+                \`\`\`
+                
+                Please merge this PR manually after reviewing the changes.`
+              });
+            }
+
+      - name: Comment on successful merge
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const updateType = '${{ needs.validate-dependabot-pr.outputs.update-type }}';
+
+            const comment = `🤖 **Dependency Update Auto-merged**
+
+            This PR was automatically merged after passing all validation checks:
+
+            ✅ Security audit passed
+            ✅ Type checking passed  
+            ✅ Linting passed
+            ✅ Test suite passed
+            ✅ Build successful
+
+            **Update Type:** ${updateType}
+            **Merge Method:** Squash merge
+
+            The updated dependencies have been integrated into the main branch.`;
+
+            // This will comment on the merged PR
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: comment
+            });
+
+  # ============================================================================
+  # MANUAL REVIEW REQUIRED
+  # ============================================================================
+  require-manual-review:
+    name: 👀 Require Manual Review
+    runs-on: ubuntu-latest
+    needs: validate-dependabot-pr
+    if: |
+      github.actor == 'dependabot[bot]' && 
+      needs.validate-dependabot-pr.outputs.should-auto-merge == 'false'
+
+    steps:
+      - name: Add manual review labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pullNumber = context.payload.pull_request.number;
+            const updateType = '${{ needs.validate-dependabot-pr.outputs.update-type }}';
+
+            // Add labels for manual review
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pullNumber,
+              labels: ['dependabot', 'needs-review', 'manual-merge-required']
+            });
+
+            // Comment explaining why manual review is needed
+            let reason = '';
+            if (updateType.includes('major')) {
+              reason = 'This is a major version update that may contain breaking changes.';
+            } else if (updateType.includes('minor')) {
+              reason = 'This is a minor version update that requires manual review.';
+            } else {
+              reason = 'This update requires manual review based on project policies.';
+            }
+
+            const comment = `🤖 **Manual Review Required**
+
+            This Dependabot PR requires manual review and cannot be auto-merged.
+
+            **Reason:** ${reason}
+            **Update Type:** ${updateType}
+
+            Please review the changes carefully before merging:
+
+            1. Check the changelog for breaking changes
+            2. Verify compatibility with existing code
+            3. Run additional tests if necessary
+            4. Update documentation if required
+
+            Once reviewed, you can merge this PR manually.`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pullNumber,
+              body: comment
+            });
+
+      - name: Request reviewers for major updates
+        if: contains(needs.validate-dependabot-pr.outputs.update-type, 'major')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              reviewers: ['tech-lead', 'senior-developer'],
+              team_reviewers: ['boukii-dev-team']
+            });
