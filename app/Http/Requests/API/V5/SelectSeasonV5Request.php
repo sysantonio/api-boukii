@@ -14,7 +14,7 @@ class SelectSeasonV5Request extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->guard('api_v5')->check();
+        return auth()->guard('sanctum')->check();
     }
 
     /**
@@ -22,9 +22,10 @@ class SelectSeasonV5Request extends FormRequest
      */
     public function rules(): array
     {
-        $user = auth()->guard('api_v5')->user();
+        $user = auth()->guard('sanctum')->user();
         $token = $user?->currentAccessToken();
-        $schoolId = $token?->school_id;
+        $contextData = $token ? json_decode($token->context_data, true) : [];
+        $schoolId = $contextData['school_id'] ?? null;
 
         // Debug: Log the school_id being validated
         \Log::info('SelectSeasonV5Request validation', [
@@ -34,6 +35,11 @@ class SelectSeasonV5Request extends FormRequest
         ]);
 
         return [
+            'school_id' => [
+                'required',
+                'integer',
+                'exists:schools,id'
+            ],
             'season_id' => [
                 'required',
                 'integer',

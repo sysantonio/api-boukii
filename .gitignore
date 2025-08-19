@@ -60,3 +60,9 @@ yarn-error.log
 coverage/
 .coverage
 .nyc_output
+
+/vendor/
+/node_modules/          # por si acaso
+/front/node_modules/
+/front/dist/
+/front/storybook-static/

@@ -303,12 +303,12 @@ class AuthController extends Controller
     public function selectSeason(SelectSeasonV5Request $request): JsonResponse
     {
         try {
-            $user = Auth::guard('api_v5')->user();
+            $validated = $request->validated();
+            $user = $request->user(); // Get user from authenticated token
+            
             if (!$user) {
                 return $this->errorResponse('Usuario no autenticado', 401);
             }
-
-            $validated = $request->validated();
             $school = School::find($validated['school_id']);
 
             if (!$this->userHasAccessToSchool($user, $school)) {
@@ -575,8 +575,8 @@ class AuthController extends Controller
             'context_data' => $contextData
         ]);
 
-        // Assign season role via service
-        $this->authService->assignSeasonRole($user->id, $season->id, 'active');
+        // Assign season role via service (use 'client' as default role)
+        $this->authService->assignSeasonRole($user->id, $season->id, 'client');
 
         Log::info('Complete login successful', [
             'user_id' => $user->id,
