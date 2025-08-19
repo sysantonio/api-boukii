@@ -1,0 +1,39 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - '**'
+      - '!front/**'
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, sqlite, bcmath, intl
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: PHP lint
+        run: |
+          find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 php -l
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse
+      - name: Run tests
+        run: |
+          mkdir -p test-reports
+          vendor/bin/phpunit --log-junit test-reports/phpunit.xml
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: test-reports/phpunit.xml
