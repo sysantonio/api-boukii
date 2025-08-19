@@ -63,6 +63,8 @@ coverage/
 
 /vendor/
 /node_modules/          # por si acaso
-/front/node_modules/
-/front/dist/
-/front/storybook-static/
+front/node_modules/
+front/dist/
+front/storybook-static/
+front-legacy/node_modules/
+front-legacy/dist/
