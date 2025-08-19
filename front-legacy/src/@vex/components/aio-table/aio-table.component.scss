@@ -1,0 +1,46 @@
+td {
+  height: 80px;
+  background-color: var(--is-light-theme, #ffffff) var(--is-dark-theme, #222222);
+}
+
+th {
+  text-wrap: nowrap;
+  background-color: var(--is-light-theme, #ffffff) var(--is-dark-theme, #222222);
+}
+
+.filter-container {
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 32px;
+}
+.filter-container-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+.filter-container-column span {
+  margin-bottom: 8px;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  float: left;
+  margin: 5px 0 0 0;
+}
+.vex-page-layout-content {
+  padding: 0;
+  color: var(--is-light-theme, #121212) var(--is-dark-theme, #dee6ea);
+  background-color: var(--is-light-theme, #eff2f5) var(--is-dark-theme, #2f3844);
+}
+
+::ng-deep {
+  .mat-mdc-paginator-range-actions {
+    button {
+      filter: var(--is-dark-theme, invert(1)) !important;
+    }
+  }
+}

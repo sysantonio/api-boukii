@@ -1,0 +1,117 @@
+.cardgroup {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 20px;
+  column-gap: 10px;
+  padding: 20px;
+  border-bottom: 1px solid #dee6ea;
+  font-size: 12px;
+  color: var(--color-dark1);
+}
+.button {
+  cursor: pointer;
+}
+.cardp {
+  background-color: var(--is-light-theme, white)
+    var(--is-dark-theme, var(--color-grey5));
+  .emptyText {
+    background-color: #dee6ea;
+    border-radius: 10px;
+    width: 100%;
+  }
+  .Img1 {
+    border-radius: 5px;
+  }
+  .emptyImg1 {
+    background-color: #dee6ea;
+  }
+  p {
+    font-size: 12px;
+    color: var(--color-dark1);
+    min-height: 8px;
+  }
+  p.label {
+    font-size: 12px;
+    color: var(--color-grey1);
+    font-weight: 700;
+    min-height: 8px;
+  }
+}
+.sport_icon {
+  border-radius: 3px;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+.noselected {
+  background-color: #2f3844;
+}
+
+.selected {
+  background-color: #e91e63;
+}
+button {
+  border-radius: 3px !important;
+}
+.sport_checkbox {
+  width: calc(50% - 32px);
+  border: 1px #c7d0d3 solid;
+  padding: 16px;
+  border-radius: 3px;
+  min-width: 250px;
+  label {
+    font-size: 14px;
+    font-weight: 900;
+  }
+}
+
+.editbutton {
+  cursor: pointer;
+  float: right;
+  filter: var(--is-dark-theme, invert(1));
+}
+
+.check {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  color: green;
+}
+.languaje {
+  > div {
+    width: 100%;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    > div {
+      width: 100%;
+      display: flex;
+      gap: 20px;
+      > div {
+        height: 24px;
+        width: 100%;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 18px;
+        word-wrap: break-word;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+      }
+    }
+  }
+}
+.extras {
+  > div {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    > div {
+      width: 100%;
+      display: flex;
+      > span {
+      }
+    }
+  }
+}

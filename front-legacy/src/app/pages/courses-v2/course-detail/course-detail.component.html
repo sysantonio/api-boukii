@@ -1,0 +1,158 @@
+<vex-secondary-toolbar current>
+	<vex-breadcrumbs [crumbs]="[
+{icon:'cursos'},
+{text:'courses.title', title: true, link: '/courses'},
+{text: TranslateService.instant('courses.title')+' #'+('00000'+id).slice(-5), subtitle: true}
+]" class="flex">
+	</vex-breadcrumbs>
+</vex-secondary-toolbar>
+<div class="flex flex-col sm:flex-row gap-4" style="width: 100%; float: left;">
+	<div class="card flex-auto">
+		<mat-tab-group >
+			<mat-tab label="{{'course' | translate}}">
+				<mat-spinner *ngIf="loading" style="margin: 0 auto"></mat-spinner>
+				<mat-card *ngIf="!loading">
+					<mat-card-content style="display: flex;padding: 0;">
+						<div [style.width]="count(courses.courseFormGroup.controls['levelGrop'].value,'active')?'':'100%'"
+							class="contents" style="border: 1px solid #dee6ea;">
+							<div [formGroup]="courses.courseFormGroup" style="border-bottom: 1px solid #dee6ea;">
+								<div style="width: calc(50% - 10px);">
+									<mat-slide-toggle (click)="updateCourses()" formControlName="online">
+										<span
+											style="font-size: 14px;font-weight: 600;line-height: 18px;word-wrap: break-word">
+											{{"visible_reserve_page" | translate}}
+										</span>
+										<br>
+										<span
+											style="font-size: 12px;font-weight: 400;line-height: 16px;word-wrap: break-word">
+											{{"course_visible_online_now" |translate}}
+										</span>
+									</mat-slide-toggle>
+								</div>
+								<div style="width: calc(50% - 10px)">
+									<mat-slide-toggle (click)="updateCourses()" formControlName="active">
+										<span
+											style="font-size: 14px;font-weight: 600;line-height: 18px;word-wrap: break-word">
+											{{'active' | translate}}
+										</span>
+										<br>
+										<span
+											style="font-size: 12px;font-weight: 400;line-height: 16px;word-wrap: break-word">
+											{{"course_active_reservable" | translate}}
+										</span>
+									</mat-slide-toggle>
+								</div>
+								<div>
+									<button (click)="sendEmailModal=true"
+										style="margin-top: 0px !important;height: 38px; width: 160px;margin-left: auto;"
+										mat-stroked-button type="button">
+										<mat-icon>mail</mat-icon>
+										{{'send_mail' | translate }}
+									</button>
+								</div>
+							</div>
+							<div style="padding: 0;border: none;">
+								<vex-course-detail-card [courseFormGroup]="courses.courseFormGroup" [detail]="true"
+									[noneExtras]="!count(courses.courseFormGroup.controls['levelGrop'].value,'active')"
+									(edit)="goTo('courses-v2/update/'+id,{step:$event})" style="width: 100%">
+								</vex-course-detail-card>
+							</div>
+						</div>
+						<div class="contents">
+							<div *ngIf="count(courses.courseFormGroup.controls['levelGrop'].value,'active')">
+								<div
+									style="width: 100%;display: flex;gap: 8px;flex-wrap: wrap;align-content: flex-start;">
+									<div style="width: 100%;">
+										<p
+											style="color: var(--color-dark1);font-size: 12px;font-weight: 600;line-height: 16px;word-wrap: break-word">
+											{{'groups' | translate }}
+											<img (click)="goTo('courses-v2/update/'+id,{step:3})"
+												src="assets/icons/icon/edit2.png" alt
+												style="filter: var(--is-dark-theme,invert(1));"
+												class="editbutton icon24">
+										</p>
+									</div>
+									<vex-course-detail-nivel [courseFormGroup]="courses.courseFormGroup"
+										style="width: 100%;"></vex-course-detail-nivel>
+								</div>
+							</div>
+							<div *ngIf="!count(courses.courseFormGroup.controls['levelGrop'].value,'active')"
+								style="padding: 0;border: none;">
+								<vex-course-detail-card [courseFormGroup]="courses.courseFormGroup" [detail]="true"
+									[onlyExtras]="true" (edit)="goTo('courses-v2/update/'+id,{step:$event})"
+									style="width: 100%">
+								</vex-course-detail-card>
+							</div>
+						</div>
+					</mat-card-content>
+				</mat-card>
+			</mat-tab>
+			<mat-tab label="{{'bookings' | translate}}">
+				<vex-page-layout>
+					<vex-page-layout-content class="fullwidth">
+						<vex-aio-table [columns]="columns" [entity]="'/bookings'" [title]="'bookings'"
+							[route]="'bookings'" [filterField]="id" [filterColumn]="'course_id'" [with]="['bookingUsers.course.sport', 'bookingUsers.monitor',
+								  'bookingUsers.client.clientSports.degree',
+								  'bookingUsers.courseSubGroup.degree',
+								  'clientMain.clientSports.degree', 'user',
+								  'vouchersLogs.voucher', 'bookingUsers.bookingUserExtras.courseExtra']">
+						</vex-aio-table>
+					</vex-page-layout-content>
+				</vex-page-layout>
+			</mat-tab>
+			<mat-tab label="{{'menu.stats' | translate}}"></mat-tab>
+		</mat-tab-group>
+	</div>
+</div>
+<vex-flux-modal *ngIf="sendEmailModal" (Close)="sendEmailModal=false" title="{{'send_mail' | translate}}">
+	<div body class="contents" style="width: 100%;padding: 0;">
+		<div>
+			<span style="width: 100%;">A quien se envia</span>
+			<mat-checkbox style="width: calc(50% - 10px);">
+				{{'clients' | translate}}
+			</mat-checkbox>
+			<mat-checkbox style="width: calc(50% - 10px);">
+				{{'settings.monitors' | translate}}
+			</mat-checkbox>
+			<mat-form-field *ngIf="courses.courseFormGroup.controls['course_type'].value>1" appearance="outline"
+				style="width: calc(50% - 10px);">
+				<mat-label>
+					{{'from' | translate}}
+				</mat-label>
+				<input [matDatepicker]="date_desde" [min]="minDate" [max]="maxDate" (click)="date_desde.open()" matInput
+					readonly>
+				<mat-datepicker-toggle [for]="date_desde" matSuffix></mat-datepicker-toggle>
+				<mat-datepicker #date_desde [startAt]="nowDate"></mat-datepicker>
+			</mat-form-field>
+			<mat-form-field *ngIf="courses.courseFormGroup.controls['course_type'].value>1" appearance="outline"
+				style="width: calc(50% - 10px);">
+				<mat-label>
+					{{'to' | translate}}
+				</mat-label>
+				<input [matDatepicker]="date_hasta" [min]="minDate" [max]="maxDate" (click)="date_hasta.open()" matInput
+					readonly>
+				<mat-datepicker-toggle [for]="date_hasta" matSuffix></mat-datepicker-toggle>
+				<mat-datepicker #date_hasta [startAt]="nowDate"></mat-datepicker>
+			</mat-form-field>
+			<mat-form-field appearance="outline" style="width: 100%;">
+				<mat-label>
+					{{'subject' | translate}}
+				</mat-label>
+				<input matInput required type="text">
+			</mat-form-field>
+			<app-form-editor name="message"></app-form-editor>
+		</div>
+	</div>
+	<div footer style="display: flex;width: 100%;padding: 20px 20px 0;">
+		<button (click)="sendEmailModal=false"
+			style="margin-top: 0px !important;height: 38px; width: 128px;margin-left: auto;" mat-stroked-button
+			type="button">
+			{{'cancel' | translate }}
+		</button>
+		<button (click)="sendEmailModal=false"
+			style="margin-top: 0px !important;height: 38px; width: 128px;margin-left: 20px;" color="primary"
+			mat-raised-button type="button">
+			{{'Enviar' | translate }}
+		</button>
+	</div>
+</vex-flux-modal>

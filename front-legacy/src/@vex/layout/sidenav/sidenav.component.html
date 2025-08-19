@@ -1,0 +1,78 @@
+<div (mouseenter)="collapseOpenSidenav()"
+  (mouseleave)="collapseCloseSidenav()"
+  [class.collapsed]="collapsed"
+  [class.open]="collapsed && collapsedOpen$ | async"
+  class="sidenav flex flex-col">
+  <div class="vex-sidenav-toolbar__container">
+    <div class="sidenav-toolbar flex-none flex items-center"
+      [class.collapsed-logo]="collapsed" [class.normal-logo]="!collapsed">
+      <img [src]="imageUrl$ | async" alt="Logo"
+        style="width: 50px; height: 50px;" />
+      <p style="margin: auto;" *ngIf="!collapsed">{{ title$ | async }}</p>
+      <p style="margin: auto;"
+        *ngIf="collapsed && collapsedOpen$ | async">{{ title$ | async }}</p>
+      <button (click)="toggleCollapse()"
+        *ngIf="showCollapsePin$ | async"
+        class="leading-none flex-none hidden lg:block"
+        mat-icon-button
+        type="button">
+        <mat-icon *ngIf="!collapsed"
+          class="icon-xs"
+          svgIcon="mat:radio_button_checked"></mat-icon>
+        <mat-icon *ngIf="collapsed"
+          class="icon-xs"
+          svgIcon="mat:radio_button_unchecked"></mat-icon>
+      </button>
+    </div>
+
+    <!--<div *ngIf="searchVisible$ | async" class="vex-sidenav-search__container">
+      <div class="vex-sidenav-search relative"
+           (click)="openSearch()"
+           matRipple
+           matRippleColor="var(--sidenav-item-ripple-color)">
+        <mat-icon class="flex-none vex-sidenav-search__icon" svgIcon="mat:search"></mat-icon>
+        <div class="flex-auto vex-sidenav-search__placeholder">Quick Search</div>
+        <div class="flex-none vex-sidenav-search__keybind">Ctrl K</div>
+      </div>
+    </div>-->
+
+    <div class="vex-sidenav-toolbar__divider"></div>
+  </div>
+
+  <vex-scrollbar class="flex-1 flex flex-col">
+    <div class="pt-6 flex-1">
+      <vex-sidenav-item
+        *ngFor="let item of items; trackBy: trackByRoute; let i = index"
+        [item]="item"
+        [level]="0"></vex-sidenav-item>
+    </div>
+
+  </vex-scrollbar>
+  <div
+    class="vex-sidenav-footer flex items-center justify-center px-6 py-6 select-none flex-none"
+    style="height: 35px">
+    <img *ngIf="layoutService.isDarkMode"
+      src="../../../assets/img/login-logo-head2.png" style="width:75%" />
+    <img *ngIf="!layoutService.isDarkMode"
+      src="../../../assets/img/logo-login-head.png" style="width:75%" />
+  </div>
+  <div *ngIf="userVisible$ | async"
+    class="vex-sidenav-user__container flex-none">
+    <div #userProfileMenuOriginRef
+      (click)="openProfileMenu(userProfileMenuOriginRef)"
+      [class.vex-sidenav-user--open]="userMenuOpen$ | async"
+      class="vex-sidenav-user flex items-center"
+      matRipple
+      matRippleColor="var(--sidenav-item-ripple-color)">
+      <img alt="User Avatar" class="vex-sidenav-user__image flex-none"
+        src="assets/img/avatar.png" />
+      <div class="vex-sidenav-user__content flex-auto" *ngIf="user !== null">
+        <div class="vex-sidenav-user__title">{{ user.first_name }} {{
+          user.last_name }}</div>
+        <!--<div class="vex-sidenav-user__subtitle">{{ user.type }}</div>-->
+      </div>
+      <mat-icon class="vex-sidenav-user__dropdown-icon flex-none"
+        svgIcon="mat:arrow_drop_down"></mat-icon>
+    </div>
+  </div>
+</div>

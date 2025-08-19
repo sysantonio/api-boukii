@@ -1,0 +1,156 @@
+<vex-page-layout>
+
+  <!--<vex-secondary-toolbar current="Home">
+    <vex-breadcrumbs [crumbs]="[{text:'menu.home', icon: ''}]" class="flex"></vex-breadcrumbs>
+    <button class="ml-2" color="primary" mat-icon-button type="button">
+      <mat-icon svgIcon="mat:more_vert"></mat-icon>
+    </button>
+  </vex-secondary-toolbar>-->
+
+  <vex-secondary-toolbar current>
+    <vex-breadcrumbs [crumbs]="[
+    {icon:'home'},
+    {text:'menu.home', title: true},
+    {text:'list', subtitle: true},
+    ]" class="flex"></vex-breadcrumbs>
+  </vex-secondary-toolbar>
+
+  <vex-page-layout-content class="fullwidth">
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <vex-widget-assistant class="sm:col-span-2" style="display: flex;"
+        [date]="date" (dateEvent)="emitDate($event)"></vex-widget-assistant>
+
+      <!--<vex-widget-quick-line-chart
+        [series]="pageViewsSeries"
+        icon="mat:pageview"
+        iconClass="text-primary-600 bg-primary-600/10"
+        label="Page Views"
+        value="92.4k"></vex-widget-quick-line-chart>
+
+      <vex-widget-quick-line-chart
+        [options]="uniqueUsersOptions"
+        [series]="uniqueUsersSeries"
+        icon="mat:group"
+        iconClass="text-orange-600 bg-orange-600/10"
+        label="Unique Users"
+        value="67.2k"></vex-widget-quick-line-chart>-->
+      <div
+        style="width: 100%;float:left; border-radius: 10px;">
+        <div class="card" style="height:100%; padding: 2.5%;">
+          <div style="width: 100%;">
+            <mat-icon svgIcon="mat:check" style="margin:2%; color:#CEE741"
+              *ngIf="getPrivateNoAssigned() === 0 && getColNoAssigned() === 0"></mat-icon>
+            <mat-icon svgIcon="mat:warning" style="margin:2%; color:red"
+              *ngIf="getPrivateNoAssigned() > 0 || getColNoAssigned() > 0"></mat-icon>
+            <p style="text-align: center;font-size: 20px;">{{
+              'courses.title' | translate }}</p>
+          </div>
+          <div style="width: 100%;text-align-last: center;">
+            <mat-icon svgIcon="logo:cursos"
+              style="width:75px; height:75px"></mat-icon>
+            <p
+              style="float: left;width:100%;text-align: center;font-size: 20px;"><b>{{
+                'courses.title' | translate }}</b></p>
+          </div>
+          <div style="width: 100%;margin: 5% 0 0 0;display: inline-flex;">
+            <div
+              style="width: 48%; display:inline-block; vertical-align:top;">
+              <p style="width:100%;text-align: center;">{{
+                'private' | translate }}</p>
+              <p
+                style="width:100%;text-align: center;color:#F24726; font-size: 40px;font-weight: bold;margin: 8% 0 0 0;line-height: 50px;">{{getPrivateNoAssigned()}}</p>
+            </div>
+            <div style="width: 48%;">
+              <p
+                style="width:100%;text-align: center; display:inline-block; vertical-align:top;">{{
+                'colective' | translate }}</p>
+              <p
+                style="width:100%;text-align: center;color:#CEE741; font-size: 40px;font-weight: bold;margin: 8% 0 0 0;line-height: 50px;">{{getColNoAssigned()}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style="width: 100%;float:left;border-radius: 10px;">
+        <div class="card" style="height:100%; padding: 2.5%;">
+          <div style="width: 100%;">
+            <mat-icon svgIcon="mat:warning" style="margin:2%; color:red"
+              *ngIf="getPaidBookings() > 0"></mat-icon>
+            <mat-icon svgIcon="mat:check" style="margin:2%; color:#CEE741"
+              *ngIf="getPaidBookings() === 0"></mat-icon>
+            <p style="text-align: center;font-size: 20px;">{{
+              'bookings' | translate }}</p>
+          </div>
+
+          <div style="width: 100%;text-align-last: center;">
+            <mat-icon svgIcon="logo:reservas"
+              style="width:75px; height:75px"></mat-icon>
+            <p
+              style="float: left;width:100%;text-align: center;font-size: 20px;"><b>{{
+                'no_payed' | translate }}</b></p>
+          </div>
+
+          <div style="width: 100%;margin: 10% 0 0 0;">
+            <div style="width: 100%;float:left; margin: 0 2% 0 2%; height:75px">
+              <p
+                style="float: left;width:100%;text-align: center;color:#F24726; font-size: 40px;font-weight: bold;margin: 8% 0 0 0;line-height: 50px;">{{getPaidBookings()}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <vex-widget-large-goal-chart
+        [series]="salesSeries"
+        class="sm:col-span-full"
+        total="4,374"></vex-widget-large-goal-chart>
+
+      <vex-widget-quick-value-center
+        [change]="''"
+        [bg]="'#31794B'"
+        [valueColor]="'#29C840'"
+        icon="mat:person"
+        iconClass="text-primary-600 bg-primary-600/10"
+        label="course_private"
+        label_secondary="available_places"
+        [value]="dispoPrivate.toString()"></vex-widget-quick-value-center>
+      <vex-widget-quick-value-center
+        [change]="''"
+        [bg]="'#806B20'"
+        [valueColor]="'#FAC710'"
+        icon="mat:group"
+        iconClass="text-primary-600 bg-primary-600/10"
+        label="course_colective"
+        label_secondary="available_places"
+        [value]="dispoCol.toString()"></vex-widget-quick-value-center>
+      <vex-widget-quick-value-center
+        [change]="''"
+        [bg]="'#2D9BF0'"
+        [valueColor]="'#414BB2'"
+        icon="mat:local_activity"
+        iconClass="text-primary-600 bg-primary-600/10"
+        label="today_bookings"
+        label_secondary="available_places"
+        [value]="bookings.toString()"></vex-widget-quick-value-center>
+      <vex-widget-quick-value-center
+        [change]="''"
+        [bg]="'#A479DF'"
+        [valueColor]="'#652CB3'"
+        icon="mat:block"
+        iconClass="text-primary-600 bg-primary-600/10"
+        label="paid_blocks"
+        label_secondary
+        [value]="blockages.toString()"></vex-widget-quick-value-center>
+
+      <vex-widget-large-chart
+        [series]="userSessionsSeries"
+        class="sm:col-span-2"></vex-widget-large-chart>
+
+      <vex-widget-table
+        [columns]="tableColumns"
+        [data]="bookingList"
+        class="sm:col-span-2"></vex-widget-table>
+    </div>
+
+  </vex-page-layout-content>
+</vex-page-layout>
