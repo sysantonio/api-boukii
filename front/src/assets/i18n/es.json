@@ -135,8 +135,47 @@
     "continue": "Continuar",
     "autoRedirecting": "Redirigiendo automáticamente..."
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bienvenido a Boukii Admin V5",
+    "stats": {
+      "title": "Resumen",
+      "bookings": "Reservas activas",
+      "clients": "Total de clientes", 
+      "courses": "Cursos activos",
+      "revenue": "Ingresos",
+      "active": "Activo",
+      "thisMonth": "Este mes"
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "newClient": "Nuevo cliente registrado",
+      "bookingConfirmed": "Reserva confirmada",
+      "courseUpdated": "Curso actualizado",
+      "completed": "Completado",
+      "confirmed": "Confirmado",
+      "updated": "Actualizado"
+    },
+    "actions": {
+      "title": "Acciones rápidas",
+      "description": "Accede rápidamente a las tareas más comunes",
+      "newBooking": "Nueva reserva",
+      "addClient": "Nuevo cliente",
+      "manageCourses": "Gestionar cursos",
+      "viewReports": "Ver reportes"
+    },
+    "status": {
+      "operational": "Sistema operativo",
+      "pending": "Notificaciones pendientes",
+      "available": "Actualización disponible"
+    }
+  },
   "nav": {
     "searchPlaceholder": "Buscar...",
+    "notifications": "Notificaciones",
+    "profile": "Perfil",
+    "logout": "Cerrar sesión",
+    "mainNavigation": "Navegación principal",
     "dashboard": "Dashboard",
     "reservas": "Reservas",
     "clientes": "Clientes",

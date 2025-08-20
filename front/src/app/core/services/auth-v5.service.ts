@@ -341,7 +341,12 @@ export class AuthV5Service {
   // Private helper methods
 
   public handleLoginSuccess(data: any): void {
-    if (!data) return;
+    console.log('🔑 handleLoginSuccess called with data:', data);
+    
+    if (!data) {
+      console.log('❌ handleLoginSuccess: No data provided');
+      return;
+    }
 
     this.tokenSignal.set(data.token);
     this.userSignal.set(data.user);
@@ -356,14 +361,26 @@ export class AuthV5Service {
 
     // Set current school and season if provided
     if (data.school) {
+      console.log('🏫 Setting current school:', data.school);
       this.currentSchoolIdSignal.set(data.school.id);
       this.storeSchoolId(data.school.id);
+    } else {
+      console.log('❌ No school data in response');
     }
     
     if (data.season) {
+      console.log('🗓️ Setting current season:', data.season);
       this.currentSeasonIdSignal.set(data.season.id);
       this.storeSeasonId(data.season.id);
+    } else {
+      console.log('❌ No season data in response');
     }
+
+    console.log('🔍 Auth context after login:', {
+      schoolId: this.currentSchoolIdSignal(),
+      seasonId: this.currentSeasonIdSignal(),
+      authContext: this.getAuthContext()
+    });
 
     this.logger.logInfo('AuthV5Service: Login successful', {
       userId: data.user?.id,

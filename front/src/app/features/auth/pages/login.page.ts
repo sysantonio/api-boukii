@@ -843,20 +843,28 @@ export class LoginPage implements OnInit {
         console.log('🔍 Login response analysis:', {
           schools_count: schools.length,
           requires_school_selection,
-          school_names: schools.map((s: any) => s.name)
+          school_names: schools.map((s: any) => s.name),
+          schools_array: schools
         });
 
+        console.log('🔍 Evaluating flow conditions:');
+        console.log('  - schools.length === 0:', schools.length === 0);
+        console.log('  - schools.length === 1:', schools.length === 1);
+        console.log('  - schools.length > 1:', schools.length > 1);
+
         if (schools.length === 0) {
+          console.log('❌ No schools available');
           this.handleLoginError('No schools available for this user');
         } else if (schools.length === 1) {
           // Single school user - always auto-select regardless of requires_school_selection
-          console.log('👤 Single school user - auto-selecting');
+          console.log('👤 Single school user - auto-selecting school:', schools[0]);
           this.handleSingleSchoolUser(schools[0], temp_token);
         } else if (schools.length > 1) {
           // Multi-school user - show school selection
           console.log('👥 Multi-school user - showing selection');
           this.handleMultiSchoolUser(schools, temp_token);
         } else {
+          console.log('❌ Invalid school data');
           this.handleLoginError('Invalid school data received');
         }
       },
@@ -871,42 +879,41 @@ export class LoginPage implements OnInit {
   }
 
   private handleSingleSchoolUser(school: any, tempToken: string): void {
-    console.log('🏫 Single school user, auto-selecting school:', school.name);
+    console.log('🏫 Single school user, auto-selecting school:', school.name, 'with ID:', school.id);
+    console.log('🏫 Using temp_token:', tempToken);
 
     // Auto-select the single school
     this.authV5.selectSchool(school.id, tempToken).subscribe({
       next: (response) => {
+        console.log('🏫 selectSchool response:', response);
+        
         if (!response.success || !response.data) {
+          console.log('❌ School selection failed - invalid response');
           this.handleLoginError('School selection failed');
           return;
         }
 
         const { available_seasons, access_token, has_multiple_seasons } = response.data;
+        console.log('🏫 Season analysis:', {
+          available_seasons: available_seasons,
+          seasons_count: available_seasons?.length,
+          has_multiple_seasons: has_multiple_seasons,
+          access_token: access_token ? 'present' : 'missing'
+        });
 
-        if (!has_multiple_seasons || available_seasons.length === 1) {
-          // Single season - login is complete, store the access token
-          console.log('✅ Single season - login complete after school selection');
-          
-          // Store the token and complete login
-          this.authV5.handleLoginSuccess({
-            token: access_token,
-            user: response.data.user,
-            schools: [response.data.school],
-            school: response.data.school,
-            season: response.data.season
-          });
-          
-          this.isLoading.set(false);
-          this.toast.success(this.translation.get('auth.login.success'));
-          this.router.navigate(['/dashboard']);
-        } else if (has_multiple_seasons && available_seasons.length > 1) {
-          // Multiple seasons - user needs to choose
-          this.showSeasonSelection(available_seasons, response.data.school.id, access_token);
+        // For single school users, ALWAYS auto-select the first available season
+        if (available_seasons && available_seasons.length > 0) {
+          console.log('✅ Single school user - auto-selecting first season regardless of count');
+          const firstSeason = available_seasons[0];
+          console.log('✅ Selected season:', firstSeason);
+          this.handleSingleSeason(firstSeason, response.data.school.id, access_token);
         } else {
+          console.log('❌ No seasons available for this school');
           this.handleLoginError('No seasons available for this school');
         }
       },
       error: (error) => {
+        console.log('❌ selectSchool API error:', error);
         this.handleLoginError(`School selection failed: ${error.message}`);
       }
     });
@@ -923,29 +930,32 @@ export class LoginPage implements OnInit {
     this.router.navigate(['/select-school']);
   }
 
-  private handleSingleSeason(season: any, schoolId: number, tempToken: string): void {
-    console.log('🗓️ Single season, auto-selecting:', season.name);
+  private handleSingleSeason(season: any, schoolId: number, accessToken: string): void {
+    console.log('🗓️ Single season, auto-selecting:', season.name, 'with ID:', season.id);
+    console.log('🗓️ For school ID:', schoolId, 'with access token:', accessToken ? 'present' : 'missing');
 
-    // Auto-select the single season
-    this.authV5.selectSeason(season.id, schoolId, tempToken).subscribe({
+    // Auto-select the single season using the access token
+    this.authV5.selectSeason(season.id, schoolId, accessToken).subscribe({
       next: (response) => {
+        console.log('🗓️ selectSeason response:', response);
         this.isLoading.set(false);
-        console.log('✅ Complete V5 login successful:', response);
+        console.log('✅ Complete V5 login successful - navigating to dashboard');
 
         this.toast.success(this.translation.get('auth.login.success'));
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
+        console.log('❌ selectSeason API error:', error);
         this.handleLoginError(`Season selection failed: ${error.message}`);
       }
     });
   }
 
-  private showSeasonSelection(seasons: any[], schoolId: number, tempToken: string): void {
+  private showSeasonSelection(seasons: any[], schoolId: number, accessToken: string): void {
     console.log('🗓️ Multiple seasons, showing selection UI');
 
     // For now, auto-select first season (later implement season selection UI)
-    this.handleSingleSeason(seasons[0], schoolId, tempToken);
+    this.handleSingleSeason(seasons[0], schoolId, accessToken);
   }
 
   private handleLoginError(message: string): void {

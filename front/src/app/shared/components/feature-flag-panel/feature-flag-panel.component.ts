@@ -84,14 +84,15 @@ import { FeatureFlagDirective } from '@shared/directives/feature-flag.directive'
         position: fixed;
         top: 1rem;
         right: 1rem;
-        width: 400px;
+        width: 300px;
         max-width: calc(100vw - 2rem);
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-xl);
-        z-index: var(--z-modal);
+        z-index: 100;
         font-size: var(--font-size-sm);
+        opacity: 0.9;
       }
 
       .panel-header {

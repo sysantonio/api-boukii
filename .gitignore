@@ -38,9 +38,6 @@ auth.json
 npm-debug.log
 yarn-error.log
 
-# Old admin front (removed)
-/old-admin-front
-
 # Cache and temp files
 /bootstrap/cache/*
 !/bootstrap/cache/.gitkeep

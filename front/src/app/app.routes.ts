@@ -19,8 +19,9 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    redirectTo: '/select-school',
-    pathMatch: 'full'
+    loadComponent: () => 
+      import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent),
+    canActivate: [authV5Guard]
   },
   {
     path: 'select-school',
