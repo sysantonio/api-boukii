@@ -18,7 +18,7 @@ use App\V5\Modules\Dashboard\Controllers\DashboardV5Controller;
 */
 
 // Grupo de rutas públicas (sin autenticación)
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('v5.auth.login');
     Route::post('initial-login', [AuthController::class, 'initialLogin'])->name('v5.auth.initial-login');
     Route::post('check-user', [AuthController::class, 'checkUser'])->name('v5.auth.check-user');

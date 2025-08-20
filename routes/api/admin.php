@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Route;
 
 
 // Public
-Route::post('login', [\App\Http\Controllers\Admin\AuthController::class, 'login'])->name('api.admin.login');
+Route::post('login', [\App\Http\Controllers\Admin\AuthController::class, 'login'])
+    ->middleware('throttle:auth')
+    ->name('api.admin.login');
 /*
 Route::delete('logout', [\App\Http\Controllers\Auth\LogoutController::class, 'destroy'])->name('api.admin.logout');
 Route::post('auth/recover-password', [\App\Http\Controllers\Auth\AuthController::class, 'recoverPassword'])->name('api.admin.recoverPassword');

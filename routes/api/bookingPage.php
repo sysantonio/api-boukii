@@ -14,6 +14,7 @@ Route::middleware(['bookingPage'])->group(function () {
     /** Auth **/
 
     Route::post('login', [\App\Http\Controllers\BookingPage\AuthController::class, 'login'])
+        ->middleware('throttle:auth')
         ->name('api.bookings.login');
 
     /** School **/
