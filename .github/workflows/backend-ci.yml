@@ -66,6 +66,10 @@ jobs:
       - name: Seed minimal CI data
         run: php artisan db:seed --force --class=CiSmokeSeeder || true
 
+      - name: Config cache clear (ensure env is read)
+        run: php artisan config:clear
+
+
       - name: PHP lint (syntax)
         run: |
           find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 -I{} php -l {}

@@ -3,30 +3,47 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CiSmokeSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Schema::hasTable('schools') && DB::table('schools')->count() === 0) {
-            DB::table('schools')->insert([
-                'name' => 'CI School',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        // Usuarios
+        $userId = DB::table('users')->insertGetId([
+            'name' => 'CI Admin',
+            'email' => 'ci-admin@example.com',
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        if (Schema::hasTable('users') && DB::table('users')->count() === 0) {
-            DB::table('users')->insert([
-                'name' => 'CI User',
-                'email' => 'ci@example.com',
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        // Escuela
+        $schoolId = DB::table('schools')->insertGetId([
+            'name' => 'CI School',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Temporada
+        $seasonId = DB::table('seasons')->insertGetId([
+            'school_id' => $schoolId,
+            'name' => 'CI Season',
+            'start_date' => now()->startOfYear(),
+            'end_date' => now()->endOfYear(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Pivot
+        DB::table('school_users')->insert([
+            'school_id' => $schoolId,
+            'user_id'   => $userId,
+            'created_at'=> now(),
+            'updated_at'=> now(),
+        ]);
     }
 }
