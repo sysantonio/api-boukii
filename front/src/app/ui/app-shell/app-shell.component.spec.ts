@@ -4,6 +4,7 @@ import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { ThemeService } from '@core/services/theme.service';
+import { signal } from '@angular/core';
 
 import { AppShellComponent } from './app-shell.component';
 import { UiStore } from '@core/stores/ui.store';
@@ -33,6 +34,16 @@ class MockTranslationService {
   }
 }
 
+class MockUiStore {
+  sidebarCollapsed = signal(false);
+  initializeTheme(): void {}
+  toggleSidebar(): void {
+    const newState = !this.sidebarCollapsed();
+    this.sidebarCollapsed.set(newState);
+    localStorage.setItem('sidebarCollapsed', String(newState));
+  }
+}
+
 describe('AppShellComponent interactions', () => {
   beforeEach(async () => {
     localStorage.clear();
@@ -40,7 +51,7 @@ describe('AppShellComponent interactions', () => {
       imports: [AppShellComponent],
       providers: [
         provideRouter([]),
-        { provide: UiStore, useValue: { initializeTheme: () => {} } },
+        { provide: UiStore, useClass: MockUiStore },
         { provide: AuthStore, useValue: { loadMe: () => {} } },
         { provide: LoadingStore, useValue: { isLoading: () => false, longestRunningRequest: () => null } },
         { provide: AuthV5Service, useValue: { isAuthenticated: () => true, currentSchool: () => ({}), currentSchoolIdSignal: () => 1, user: () => ({ name: 'Test User' }), permissions: () => [] } },

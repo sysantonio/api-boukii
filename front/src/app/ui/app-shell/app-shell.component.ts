@@ -37,7 +37,7 @@ interface Notification {
     <!-- Show full layout only when authenticated and has school selected -->
     @if (shouldShowFullLayout()) {
       {{ logFullLayoutRender() }}
-      <div class="app-shell" [class.app-sidebar--collapsed]="sidebarCollapsed()">
+      <div class="app-shell" [class.app-sidebar--collapsed]="ui.sidebarCollapsed()">
         
         <!-- NAVBAR -->
         <header class="app-navbar" role="banner">
@@ -312,7 +312,7 @@ interface Notification {
         </header>
 
         <!-- SIDEBAR -->
-        <aside class="app-sidebar" [class.app-sidebar--collapsed]="sidebarCollapsed()" role="navigation" [attr.aria-label]="'nav.mainNavigation' | translate">
+        <aside class="app-sidebar" [class.collapsed]="ui.sidebarCollapsed()" role="navigation" [attr.aria-label]="'nav.mainNavigation' | translate">
           <!-- Sidebar Header -->
           <div class="sidebar-header">
             <img class="logo" src="assets/logo.svg" alt="boukii" />
@@ -322,14 +322,14 @@ interface Notification {
               (click)="toggleSidebar()"
               aria-label="Colapsar/Expandir"
             >
-              <i class="chev" [class.rot]="sidebarCollapsed()"></i>
+              <i class="chev" [class.rot]="ui.sidebarCollapsed()"></i>
             </button>
           </div>
 
           <!-- Navigation Menu -->
           <nav class="sidebar-nav">              
             <!-- Dashboard -->
-            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="sidebarCollapsed() ? 'Dashboard' : null">
+            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? 'Dashboard' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
@@ -340,7 +340,7 @@ interface Notification {
             </a>
 
             <!-- Reservas -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Reservas' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Reservas' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
@@ -351,7 +351,7 @@ interface Notification {
             </a>
 
             <!-- Clientes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Clientes' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Clientes' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -362,7 +362,7 @@ interface Notification {
             </a>
 
             <!-- Planificador -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Planificador' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Planificador' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
@@ -373,7 +373,7 @@ interface Notification {
             </a>
 
             <!-- Instructores -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Instructores' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Instructores' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -384,7 +384,7 @@ interface Notification {
             </a>
 
             <!-- Cursos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Cursos y Actividades' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Cursos y Actividades' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
@@ -395,7 +395,7 @@ interface Notification {
             </a>
 
             <!-- Material -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Alquiler de Material' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Alquiler de Material' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -406,7 +406,7 @@ interface Notification {
             </a>
 
             <!-- Bonos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Bonos y códigos' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Bonos y códigos' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M4 4h16v2H4zm0 5h16v6H4zm0 11h16v-2H4z"/>
@@ -417,7 +417,7 @@ interface Notification {
             </a>
 
             <!-- Comunicación -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Comunicación' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Comunicación' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v6l4-3 4 3v-6h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
@@ -428,7 +428,7 @@ interface Notification {
             </a>
 
             <!-- Pagos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Pagos' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Pagos' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
@@ -439,7 +439,7 @@ interface Notification {
             </a>
 
             <!-- Reportes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Reportes' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Reportes' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
@@ -450,7 +450,7 @@ interface Notification {
             </a>
 
             <!-- Configuración -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="sidebarCollapsed() ? 'Configuración' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Configuración' : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97L2.46 14.6c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.06.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
@@ -476,7 +476,7 @@ interface Notification {
             </div>
             <button 
               class="support-btn"
-              [title]="sidebarCollapsed() ? 'Soporte' : null"
+              [title]="ui.sidebarCollapsed() ? 'Soporte' : null"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18l6-6-6-6"/>
@@ -536,7 +536,6 @@ export class AppShellComponent implements OnInit {
   ) {}
 
   // Component state signals
-  private readonly _sidebarCollapsed = signal(false);
   private readonly _languageDropdownOpen = signal(false);
   private readonly _userDropdownOpen = signal(false);
   private readonly _isDarkMode = signal(false);
@@ -570,7 +569,6 @@ export class AppShellComponent implements OnInit {
   ]);
 
   // Public computed properties
-  readonly sidebarCollapsed = this._sidebarCollapsed.asReadonly();
   readonly languageDropdownOpen = this._languageDropdownOpen.asReadonly();
   readonly userDropdownOpen = this._userDropdownOpen.asReadonly();
   readonly isDarkMode = this._isDarkMode.asReadonly();
@@ -602,12 +600,6 @@ export class AppShellComponent implements OnInit {
     // Initialize theme system
     this.ui.initializeTheme();
 
-    // Load sidebar collapsed state from localStorage
-    const sidebarState = localStorage.getItem('sidebarCollapsed');
-    if (sidebarState) {
-      this._sidebarCollapsed.set(JSON.parse(sidebarState));
-    }
-
     // Load theme state
     this.loadThemeState();
 
@@ -633,9 +625,7 @@ export class AppShellComponent implements OnInit {
 
   // Sidebar management
   toggleSidebar(): void {
-    const newState = !this._sidebarCollapsed();
-    this._sidebarCollapsed.set(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+    this.ui.toggleSidebar();
   }
 
   // Language management
