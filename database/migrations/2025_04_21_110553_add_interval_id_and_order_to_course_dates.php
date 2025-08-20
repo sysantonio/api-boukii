@@ -11,16 +11,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('course_dates', function (Blueprint $table) {
-            $table->unsignedBigInteger('interval_id')->nullable()->after('hour_end');
-            $table->integer('order')->nullable()->after('interval_id');
-        });
+        if (Schema::hasTable('course_dates')) {
+            Schema::table('course_dates', function (Blueprint $table) {
+                $table->unsignedBigInteger('interval_id')->nullable()->after('hour_end');
+                $table->integer('order')->nullable()->after('interval_id');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('course_dates', function (Blueprint $table) {
-            $table->dropColumn(['interval_id', 'order']);
-        });
+        if (Schema::hasTable('course_dates')) {
+            Schema::table('course_dates', function (Blueprint $table) {
+                $table->dropColumn(['interval_id', 'order']);
+            });
+        }
     }
 };

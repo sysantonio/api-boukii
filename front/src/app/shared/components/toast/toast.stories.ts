@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata, applicationConfig } from '@storybook/angular';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { ToastComponent } from './toast.component';
-import { ToastType } from '@core/models/toast.models';
 
 const meta: Meta<ToastComponent> = {
   title: 'Shared/Toast',
@@ -52,18 +51,6 @@ this.toastService.show({
 
 export default meta;
 type Story = StoryObj<ToastComponent>;
-
-// Create mock toast objects for stories
-const createMockToast = (type: ToastType, message: string, options?: Partial<any>) => ({
-  id: Math.random().toString(36),
-  type,
-  message,
-  duration: 5000,
-  timestamp: new Date(),
-  dismissed: false,
-  progress: 0,
-  ...options,
-});
 
 export const Success: Story = {
   render: () => ({
