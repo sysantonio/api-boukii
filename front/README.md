@@ -7,6 +7,7 @@
 [![Quality Gate](https://img.shields.io/badge/Quality%20Gate-A-brightgreen)](https://github.com/your-org/boukii-admin-v5)
 [![Bundle Size](https://img.shields.io/badge/Bundle%20Size-<2MB-green)](https://github.com/your-org/boukii-admin-v5)
 [![Coverage](https://img.shields.io/badge/Coverage-90%25-brightgreen)](https://github.com/your-org/boukii-admin-v5)
+[![Storybook](https://img.shields.io/badge/Storybook-Docs-ff4785?logo=storybook&logoColor=white)](https://your-org.github.io/boukii-admin-v5/)
 
 **Boukii Admin V5** es un panel de administración empresarial moderno construido con **Angular 18**, implementando las mejores prácticas de desarrollo, arquitectura escalable y automatización completa de CI/CD.
 
