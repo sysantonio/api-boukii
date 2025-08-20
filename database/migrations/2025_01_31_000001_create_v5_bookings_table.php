@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -77,8 +78,10 @@ return new class extends Migration
             $table->index(['status', 'start_date']);
             $table->index(['created_at', 'status']);
             
-            // Full-text search indexes
-            $table->fullText(['special_requests', 'notes'], 'bookings_text_search');
+            // Full-text search indexes (only on drivers that support it)
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['special_requests', 'notes'], 'bookings_text_search');
+            }
         });
     }
 

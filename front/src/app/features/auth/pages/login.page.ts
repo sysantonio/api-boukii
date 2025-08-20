@@ -838,7 +838,7 @@ export class LoginPage implements OnInit {
           return;
         }
 
-        const { user, schools, requires_school_selection, temp_token } = response.data;
+        const { user: _user, schools, requires_school_selection, temp_token } = response.data;
 
         console.log('🔍 Login response analysis:', {
           schools_count: schools.length,

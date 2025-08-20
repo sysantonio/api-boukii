@@ -1,11 +1,8 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.app.json",
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "esnext"
   },
   "include": [
     "src/**/*",
@@ -14,6 +11,6 @@
   ],
   "exclude": [
     "src/**/*.spec.ts",
-    "node_modules/@types/jasmine"
+    "node_modules"
   ]
 }

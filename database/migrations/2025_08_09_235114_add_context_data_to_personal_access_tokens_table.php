@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->text('context_data')->nullable()->after('abilities')->comment('JSON data for multi-tenant context (school_id, season_id, etc.)');
-        });
+        if (Schema::hasTable('personal_access_tokens') && !Schema::hasColumn('personal_access_tokens', 'context_data')) {
+            Schema::table('personal_access_tokens', function (Blueprint $table) {
+                $table->text('context_data')->nullable()->after('abilities')->comment('JSON data for multi-tenant context (school_id, season_id, etc.)');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->dropColumn('context_data');
-        });
+        if (Schema::hasTable('personal_access_tokens') && Schema::hasColumn('personal_access_tokens', 'context_data')) {
+            Schema::table('personal_access_tokens', function (Blueprint $table) {
+                $table->dropColumn('context_data');
+            });
+        }
     }
 };

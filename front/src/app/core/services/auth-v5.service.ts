@@ -5,14 +5,11 @@ import { tap, catchError } from 'rxjs/operators';
 
 import { ApiService, ApiResponse } from './api.service';
 import { LoggingService } from './logging.service';
-import { 
-  LoginRequest, 
-  LoginResponse, 
-  RegisterRequest, 
-  RegisterResponse, 
-  User, 
-  School, 
-  Season,
+import {
+  LoginRequest,
+  RegisterRequest,
+  User,
+  School,
   AuthContext
 } from '../models/auth-v5.models';
 
