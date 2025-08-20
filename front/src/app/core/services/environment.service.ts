@@ -11,6 +11,9 @@ import {
 } from '../models/environment.models';
 import { LoggingService } from './logging.service';
 import { ErrorSeverity } from '../models/error.models';
+import { environment } from '@environments/environment';
+
+export type EnvName = 'development' | 'staging' | 'test' | 'production';
 
 /**
  * Environment Service with Angular Signals
@@ -20,6 +23,8 @@ import { ErrorSeverity } from '../models/error.models';
 export class EnvironmentService {
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggingService);
+
+  private readonly _envName: EnvName = (environment as any).envName ?? 'development';
 
   // Private signals
   private readonly _environment = signal<RuntimeEnvironment | null>(null);
@@ -38,8 +43,6 @@ export class EnvironmentService {
   readonly overrides = this._overrides.asReadonly();
 
   // Computed signals
-  readonly isProduction = computed(() => this._environment()?.production ?? false);
-
   readonly environmentType = computed(() => this._environment()?.type ?? 'development');
 
   readonly apiBaseUrl = computed(() => this._environment()?.api.baseUrl ?? '');
@@ -60,6 +63,26 @@ export class EnvironmentService {
 
   constructor() {
     this.initializeEnvironment();
+  }
+
+  envName(): EnvName {
+    return this._envName;
+  }
+
+  isDevelopment(): boolean {
+    return this._envName === 'development';
+  }
+
+  isStaging(): boolean {
+    return this._envName === 'staging';
+  }
+
+  isTest(): boolean {
+    return this._envName === 'test';
+  }
+
+  isProduction(): boolean {
+    return this._envName === 'production';
   }
 
   /**

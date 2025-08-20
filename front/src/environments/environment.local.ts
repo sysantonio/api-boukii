@@ -1,6 +1,7 @@
 // Local development environment
 export const environment = {
   name: 'Local',
+  envName: 'development',
   production: false,
   development: true,
   staging: false,

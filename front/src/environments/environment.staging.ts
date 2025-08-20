@@ -1,6 +1,7 @@
 // Staging environment
 export const environment = {
   name: 'Staging',
+  envName: 'staging',
   production: false,
   development: false,
   staging: true,

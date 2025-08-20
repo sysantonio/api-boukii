@@ -1,6 +1,7 @@
 // Production environment
 export const environment = {
   name: 'Production',
+  envName: 'production',
   production: true,
   development: false,
   staging: false,

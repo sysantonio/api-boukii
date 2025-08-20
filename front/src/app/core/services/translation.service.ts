@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import {
+import type {
   SupportedLanguage,
   TranslationFile,
   TranslationParams,
@@ -9,6 +9,7 @@ import {
   LanguageDetection,
   TranslationLoadingState,
 } from '../models/i18n.models';
+export type { SupportedLanguage } from '../models/i18n.models';
 import { ErrorSeverity } from '../models/error.models';
 import {
   LANGUAGE_CONFIGS,
@@ -20,16 +21,19 @@ import {
 } from '../config/languages.config';
 import { LoggingService } from './logging.service';
 
+export const SUPPORTED_LANGUAGES: ReadonlyArray<SupportedLanguage> = ['es', 'en', 'fr'] as const;
+
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggingService);
 
   // Private signals
-  private readonly _currentLanguage = signal<SupportedLanguage>(DEFAULT_LANGUAGE);
+  private readonly _current = signal<SupportedLanguage>(DEFAULT_LANGUAGE);
   private readonly _translations = signal<Record<SupportedLanguage, TranslationFile | null>>({
     en: null,
     es: null,
+    fr: null,
   });
   private readonly _loadingState = signal<TranslationLoadingState>({
     loading: false,
@@ -39,18 +43,17 @@ export class TranslationService {
   });
 
   // Public readonly signals
-  readonly currentLanguage = this._currentLanguage.asReadonly();
   readonly translations = this._translations.asReadonly();
   readonly loadingState = this._loadingState.asReadonly();
 
   // Computed signals
-  readonly currentLanguageConfig = computed(() => getLanguageConfig(this._currentLanguage()));
+  readonly currentLanguageConfig = computed(() => getLanguageConfig(this._current()));
 
   readonly isRTL = computed(() => this.currentLanguageConfig().direction === 'rtl');
 
   readonly availableLanguages = computed(() => Object.values(LANGUAGE_CONFIGS));
 
-  readonly currentTranslations = computed(() => this._translations()[this._currentLanguage()]);
+  readonly currentTranslations = computed(() => this._translations()[this._current()]);
 
   readonly isLoading = computed(() => this._loadingState().loading);
   readonly hasError = computed(() => !!this._loadingState().error);
@@ -60,6 +63,10 @@ export class TranslationService {
 
   constructor() {
     this.initializeLanguage();
+  }
+
+  currentLanguage(): SupportedLanguage {
+    return this._current();
   }
 
   /**
@@ -104,7 +111,10 @@ export class TranslationService {
    * Set current language and load translations
    */
   async setLanguage(language: SupportedLanguage): Promise<void> {
-    if (language === this._currentLanguage()) {
+    if (!SUPPORTED_LANGUAGES.includes(language)) {
+      return;
+    }
+    if (language === this._current()) {
       return; // Already set
     }
 
@@ -120,7 +130,7 @@ export class TranslationService {
       await this.loadTranslations(language);
 
       // Set as current language
-      this._currentLanguage.set(language);
+      this._current.set(language);
 
       // Store preference
       this.storeLanguage(language);
@@ -596,7 +606,7 @@ export class TranslationService {
     if (translation === undefined) {
       // Try fallback language if available
       const fallbackTranslations = this._translations()[FALLBACK_LANGUAGE];
-      if (fallbackTranslations && this._currentLanguage() !== FALLBACK_LANGUAGE) {
+      if (fallbackTranslations && this._current() !== FALLBACK_LANGUAGE) {
         const fallbackTranslation = this.getNestedProperty(fallbackTranslations, key);
         if (fallbackTranslation !== undefined) {
           this.logger.logWarning('Using fallback translation', {
@@ -609,7 +619,7 @@ export class TranslationService {
 
       this.logger.logWarning('Translation key not found', {
         key,
-        language: this._currentLanguage(),
+        language: this._current(),
       });
       return key; // Return key as fallback
     }
@@ -693,7 +703,7 @@ export class TranslationService {
     params?: TranslationParams,
     context?: TranslationContext
   ): string {
-    const language = this._currentLanguage();
+    const language = this._current();
     const paramsStr = params ? JSON.stringify(params) : '';
     const contextStr = context ? JSON.stringify(context) : '';
     return `${language}:${key}:${paramsStr}:${contextStr}`;
@@ -742,13 +752,14 @@ export class TranslationService {
     this._translations.set({
       en: null,
       es: null,
+      fr: null,
     });
 
     // Reload current language
-    await this.loadTranslations(this._currentLanguage());
+    await this.loadTranslations(this._current());
 
     this.logger.logInfo('Translations reloaded', {
-      language: this._currentLanguage(),
+      language: this._current(),
     });
   }
 

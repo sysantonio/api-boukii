@@ -1,6 +1,7 @@
 // Development server environment
 export const environment = {
   name: 'Develop',
+  envName: 'staging',
   production: false,
   development: false,
   staging: true,

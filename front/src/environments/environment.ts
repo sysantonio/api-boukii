@@ -1,6 +1,7 @@
 // Default development environment
 export const environment = {
   name: 'Development',
+  envName: 'development',
   production: false,
   development: true,
   staging: false,

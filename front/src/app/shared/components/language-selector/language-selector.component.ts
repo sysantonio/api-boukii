@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslationService } from '@core/services/translation.service';
-import { SupportedLanguage } from '@core/models/i18n.models';
+import { TranslationService, SupportedLanguage } from '@core/services/translation.service';
 
 @Component({
   selector: 'app-language-selector',
