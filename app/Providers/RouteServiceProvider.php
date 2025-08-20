@@ -24,9 +24,7 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
+        $this->configureRateLimiting();
 
         $this->routes(function () {
             Route::middleware('api')
@@ -47,6 +45,35 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/v5_web.php'));
+        });
+    }
+
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            [$maxAttempts, $decayMinutes] = array_map('intval', explode(',', config('rate_limits.api')));
+
+            $keyParts = [$request->ip()];
+            if ($user = $request->user()) {
+                $keyParts[] = $user->id;
+            }
+
+            return Limit::perMinutes($decayMinutes, $maxAttempts)->by(implode('|', $keyParts));
+        });
+
+        RateLimiter::for('auth', function (Request $request) {
+            [$maxAttempts, $decayMinutes] = array_map('intval', explode(',', config('rate_limits.auth')));
+
+            return Limit::perMinutes($decayMinutes, $maxAttempts)->by($request->ip());
+        });
+
+        RateLimiter::for('logging', function (Request $request) {
+            [$maxAttempts, $decayMinutes] = array_map('intval', explode(',', config('rate_limits.logging')));
+
+            return Limit::perMinutes($decayMinutes, $maxAttempts)->by($request->ip());
         });
     }
 }
