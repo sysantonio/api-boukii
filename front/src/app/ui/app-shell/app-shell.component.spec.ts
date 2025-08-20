@@ -52,8 +52,11 @@ class MockUiStore {
 }
 
 describe('AppShellComponent interactions', () => {
+  const logoutSpy = jasmine.createSpy('logout');
+
   beforeEach(async () => {
     localStorage.clear();
+    logoutSpy.calls.reset();
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
       providers: [
@@ -61,7 +64,17 @@ describe('AppShellComponent interactions', () => {
         { provide: UiStore, useClass: MockUiStore },
         { provide: AuthStore, useValue: { loadMe: () => {} } },
         { provide: LoadingStore, useValue: { isLoading: () => false, longestRunningRequest: () => null } },
-        { provide: AuthV5Service, useValue: { isAuthenticated: () => true, currentSchool: () => ({}), currentSchoolIdSignal: () => 1, user: () => ({ name: 'Test User' }), permissions: () => [] } },
+        {
+          provide: AuthV5Service,
+          useValue: {
+            isAuthenticated: () => true,
+            currentSchool: () => ({}),
+            currentSchoolIdSignal: () => 1,
+            user: () => ({ name: 'Test User' }),
+            permissions: () => [],
+            logout: logoutSpy,
+          },
+        },
         { provide: TranslationService, useClass: MockTranslationService },
         { provide: EnvironmentService, useValue: { isProduction: () => true, envName: () => 'production' } },
       ],
@@ -100,6 +113,25 @@ describe('AppShellComponent interactions', () => {
     themeService.setTheme('dark');
     await Promise.resolve();
     expect(overlay.getContainerElement().getAttribute('data-theme')).toBe('dark');
+    fixture.nativeElement.remove();
+  });
+
+  it('invokes logout without confirmation dialog', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    // Open user dropdown
+    const menuButton = screen.getByRole('button', { name: /Test User/ });
+    await user.click(menuButton);
+    fixture.detectChanges();
+
+    const confirmSpy = spyOn(window, 'confirm');
+
+    const logoutButton = screen.getByRole('menuitem', { name: 'userMenu.logout' });
+    await user.click(logoutButton);
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(logoutSpy).toHaveBeenCalled();
     fixture.nativeElement.remove();
   });
 });
