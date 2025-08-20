@@ -57,7 +57,7 @@ interface Notification {
               (click)="toggleLanguageDropdown()"
               [attr.aria-expanded]="languageDropdownOpen()"
               aria-haspopup="true"
-              title="Language"
+              [attr.title]="'language.title' | translate"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -78,7 +78,7 @@ interface Notification {
                   (click)="setLanguage('es')"
                   role="menuitem"
                 >
-                  ES - Español
+                  {{ 'language.es' | translate }}
                 </button>
                 <button
                   class="dropdown-option"
@@ -86,7 +86,7 @@ interface Notification {
                   (click)="setLanguage('en')"
                   role="menuitem"
                 >
-                  EN - English
+                  {{ 'language.en' | translate }}
                 </button>
                 <button
                   class="dropdown-option"
@@ -94,7 +94,7 @@ interface Notification {
                   (click)="setLanguage('fr')"
                   role="menuitem"
                 >
-                  FR - Français
+                  {{ 'language.fr' | translate }}
                 </button>
                 <button
                   class="dropdown-option"
@@ -102,7 +102,7 @@ interface Notification {
                   (click)="setLanguage('it')"
                   role="menuitem"
                 >
-                  IT - Italiano
+                  {{ 'language.it' | translate }}
                 </button>
                 <button
                   class="dropdown-option"
@@ -110,7 +110,7 @@ interface Notification {
                   (click)="setLanguage('de')"
                   role="menuitem"
                 >
-                  DE - Deutsch
+                  {{ 'language.de' | translate }}
                 </button>
               </div>
             }
@@ -120,8 +120,8 @@ interface Notification {
           <button
             class="icon-btn"
             (click)="ui.toggleTheme()"
-            [attr.aria-label]="ui.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-            title="Toggle theme"
+            [attr.aria-label]="ui.isDark() ? ('theme.switchToLight' | translate) : ('theme.switchToDark' | translate)"
+            [attr.title]="'theme.toggle' | translate"
           >
             @if (ui.isDark()) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -148,7 +148,7 @@ interface Notification {
               class="icon-btn notifications-btn" 
               (click)="toggleNotifications()"
               [attr.aria-label]="'nav.notifications' | translate"
-              title="Notifications"
+              [attr.title]="'nav.notifications' | translate"
               [attr.aria-expanded]="notificationDropdownOpen()"
               aria-haspopup="true"
             >
@@ -169,14 +169,14 @@ interface Notification {
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <p>No hay notificaciones</p>
+                    <p>{{ 'notifications.noNotifications' | translate }}</p>
                   </div>
                 } @else {
                   <div class="notifications-header">
-                    <h3>Notificaciones</h3>
+                    <h3>{{ 'notifications.title' | translate }}</h3>
                     @if (unreadNotificationsCount() > 0) {
                       <button class="mark-all-read" (click)="markAllAsRead()">
-                        Marcar todas como leídas
+                        {{ 'notifications.markAllAsRead' | translate }}
                       </button>
                     }
                   </div>
@@ -243,13 +243,13 @@ interface Notification {
               [attr.aria-expanded]="userDropdownOpen()"
               aria-haspopup="true"
             >
-              <img 
+              <img
                 class="user-avatar"
                 [src]="getUserAvatar()"
-                [alt]="authV5.user()?.name || 'User'"
+                [alt]="authV5.user()?.name || ('userMenu.defaultName' | translate)"
               />
               <div class="user-info">
-                <div class="user-name">{{ authV5.user()?.name || 'Usuario' }}</div>
+                <div class="user-name">{{ authV5.user()?.name || ('userMenu.defaultName' | translate) }}</div>
                 <div class="user-role">{{ getUserRole() }}</div>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -260,14 +260,14 @@ interface Notification {
             @if (userDropdownOpen()) {
               <div class="user-dropdown" role="menu">
                 <div class="user-dropdown-header">
-                  <img 
+                  <img
                     class="user-avatar-large"
                     [src]="getUserAvatar()"
-                    [alt]="authV5.user()?.name || 'User'"
+                    [alt]="authV5.user()?.name || ('userMenu.defaultName' | translate)"
                   />
                   <div class="user-details">
-                    <h3 class="user-name-large">{{ authV5.user()?.name || 'Usuario' }}</h3>
-                    <p class="user-email">{{ authV5.user()?.email || 'usuario@example.com' }}</p>
+                    <h3 class="user-name-large">{{ authV5.user()?.name || ('userMenu.defaultName' | translate) }}</h3>
+                    <p class="user-email">{{ authV5.user()?.email || ('userMenu.defaultEmail' | translate) }}</p>
                     <span class="user-role-badge">{{ getUserRole() }}</span>
                   </div>
                 </div>
@@ -279,14 +279,14 @@ interface Notification {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  Perfil
+                  {{ 'userMenu.profile' | translate }}
                 </button>
                 <button class="dropdown-option" role="menuitem">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  Configuración
+                  {{ 'userMenu.settings' | translate }}
                 </button>
                 
                 <div class="dropdown-divider"></div>
@@ -304,7 +304,7 @@ interface Notification {
                       <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                   }
-                  {{ loggingOut() ? 'Cerrando sesión...' : 'Cerrar sesión' }}
+                  {{ loggingOut() ? ('userMenu.loggingOut' | translate) : ('userMenu.logout' | translate) }}
                 </button>
               </div>
             }
@@ -320,7 +320,7 @@ interface Notification {
               class="collapse"
               type="button"
               (click)="toggleSidebar()"
-              aria-label="Colapsar/Expandir"
+              [attr.aria-label]="'sidebar.toggle' | translate"
             >
               <i class="chev" [class.rot]="ui.sidebarCollapsed()"></i>
             </button>
@@ -329,134 +329,134 @@ interface Notification {
           <!-- Navigation Menu -->
           <nav class="sidebar-nav">              
             <!-- Dashboard -->
-            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? 'Dashboard' : null">
+            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? ('nav.dashboard' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Dashboard</span>
+              <span class="nav-text label">{{ 'nav.dashboard' | translate }}</span>
               <span class="badge counter counter--yellow">3</span>
             </a>
 
             <!-- Reservas -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Reservas' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.reservas' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Reservas</span>
+              <span class="nav-text label">{{ 'nav.reservas' | translate }}</span>
               <span class="badge counter counter--blue">12</span>
             </a>
 
             <!-- Clientes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Clientes' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.clientes' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Clientes</span>
+              <span class="nav-text label">{{ 'nav.clientes' | translate }}</span>
               <span class="badge counter counter--green">8</span>
             </a>
 
             <!-- Planificador -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Planificador' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.planificador' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Planificador</span>
+              <span class="nav-text label">{{ 'nav.planificador' | translate }}</span>
               <span class="badge counter counter--red">2</span>
             </a>
 
             <!-- Instructores -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Instructores' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.instructores' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Instructores</span>
+              <span class="nav-text label">{{ 'nav.instructores' | translate }}</span>
               <span class="badge counter counter--green">5</span>
             </a>
 
             <!-- Cursos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Cursos y Actividades' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.cursos' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Cursos y Actividades</span>
+              <span class="nav-text label">{{ 'nav.cursos' | translate }}</span>
               <span class="badge counter counter--blue">15</span>
             </a>
 
             <!-- Material -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Alquiler de Material' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.material' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Alquiler de Material</span>
+              <span class="nav-text label">{{ 'nav.material' | translate }}</span>
               <span class="badge counter counter--yellow">4</span>
             </a>
 
             <!-- Bonos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Bonos y códigos' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.bonos' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M4 4h16v2H4zm0 5h16v6H4zm0 11h16v-2H4z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Bonos y códigos</span>
+              <span class="nav-text label">{{ 'nav.bonos' | translate }}</span>
               <span class="badge counter counter--green">7</span>
             </a>
 
             <!-- Comunicación -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Comunicación' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.comunicacion' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v6l4-3 4 3v-6h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Comunicación</span>
+              <span class="nav-text label">{{ 'nav.comunicacion' | translate }}</span>
               <span class="badge counter counter--red">3</span>
             </a>
 
             <!-- Pagos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Pagos' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.pagos' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Pagos</span>
+              <span class="nav-text label">{{ 'nav.pagos' | translate }}</span>
               <span class="badge counter counter--blue">11</span>
             </a>
 
             <!-- Reportes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Reportes' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.reportes' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Reportes</span>
+              <span class="nav-text label">{{ 'nav.reportes' | translate }}</span>
               <span class="badge counter counter--green">2</span>
             </a>
 
             <!-- Configuración -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? 'Configuración' : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.config' | translate) : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97L2.46 14.6c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.06.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
                 </svg>
               </div>
-              <span class="nav-text label">Configuración</span>
+              <span class="nav-text label">{{ 'nav.config' | translate }}</span>
             </a>
           </nav>
 
@@ -470,13 +470,13 @@ interface Notification {
                 </svg>
               </div>
               <div class="support-text">
-                <div class="support-title">¿Necesitas ayuda?</div>
-                <div class="support-subtitle">Soporte</div>
+                <div class="support-title">{{ 'support.needHelp' | translate }}</div>
+                <div class="support-subtitle">{{ 'support.support' | translate }}</div>
               </div>
             </div>
-            <button 
+            <button
               class="support-btn"
-              [title]="ui.sidebarCollapsed() ? 'Soporte' : null"
+              [title]="ui.sidebarCollapsed() ? ('support.support' | translate) : null"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18l6-6-6-6"/>
@@ -496,7 +496,7 @@ interface Notification {
         @if (loadingStore.isLoading()) {
           <div
             class="global-loading"
-            [attr.aria-label]="loadingStore.longestRunningRequest()?.description || 'Loading...'"
+            [attr.aria-label]="loadingStore.longestRunningRequest()?.description || ('common.loading' | translate)"
           >
             <div class="loading-spinner"></div>
           </div>
@@ -632,8 +632,8 @@ export class AppShellComponent implements OnInit {
     return this.translationService.currentLanguage() === lang;
   }
 
-  setLanguage(lang: SupportedLanguage): void {
-    this.translationService.setLanguage(lang);
+  async setLanguage(lang: SupportedLanguage): Promise<void> {
+    await this.translationService.setLanguage(lang);
     this._languageDropdownOpen.set(false);
   }
 
@@ -681,10 +681,10 @@ export class AppShellComponent implements OnInit {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return 'hace un momento';
-    if (minutes < 60) return `hace ${minutes}m`;
-    if (hours < 24) return `hace ${hours}h`;
-    return `hace ${days}d`;
+    if (minutes < 1) return this.translationService.get('notifications.justNow');
+    if (minutes < 60) return this.translationService.get('notifications.minutesAgo', { count: minutes });
+    if (hours < 24) return this.translationService.get('notifications.hoursAgo', { count: hours });
+    return this.translationService.get('notifications.daysAgo', { count: days });
   }
 
   getUserAvatar(): string {
@@ -697,23 +697,23 @@ export class AppShellComponent implements OnInit {
     
     // Determine role based on permissions
     if (permissions.includes('admin') || permissions.includes('super-admin')) {
-      return 'Administrador';
+      return this.translationService.get('roles.admin');
     } else if (permissions.includes('manager') || permissions.includes('school-manager')) {
-      return 'Gestor';
+      return this.translationService.get('roles.manager');
     } else if (permissions.includes('instructor')) {
-      return 'Instructor';
+      return this.translationService.get('roles.instructor');
     } else if (permissions.includes('staff')) {
-      return 'Personal';
+      return this.translationService.get('roles.staff');
     } else {
-      return 'Usuario';
+      return this.translationService.get('roles.user');
     }
   }
 
   logout(): void {
     if (this._loggingOut()) return; // Prevent multiple clicks
-    
+
     // Show confirmation dialog
-    const confirmed = confirm('¿Estás seguro de que deseas cerrar sesión?');
+    const confirmed = confirm(this.translationService.get('userMenu.logoutConfirm'));
     
     if (confirmed) {
       this._loggingOut.set(true);

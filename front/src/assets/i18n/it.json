@@ -170,25 +170,70 @@
       "available": "Aggiornamento disponibile"
     }
   },
-  "nav": {
-    "searchPlaceholder": "Cerca...",
-    "notifications": "Notifiche",
+    "nav": {
+      "searchPlaceholder": "Cerca...",
+      "notifications": "Notifiche",
+      "profile": "Profilo",
+      "logout": "Disconnetti",
+      "mainNavigation": "Navigazione principale",
+      "dashboard": "Dashboard",
+      "reservas": "Prenotazioni",
+      "clientes": "Clienti",
+      "planificador": "Pianificatore",
+      "instructores": "Istruttori",
+      "cursos": "Corsi e Attività",
+      "material": "Noleggio Attrezzature",
+      "bonos": "Buoni e codici",
+      "comunicacion": "Comunicazione",
+      "pagos": "Pagamenti",
+      "reportes": "Report",
+      "admin": "Amministratori",
+      "config": "Configurazione"
+    },
+  "notifications": {
+    "title": "Notifiche",
+    "noNotifications": "Nessuna notifica",
+    "markAllAsRead": "Segna tutte come lette",
+    "justNow": "proprio ora",
+    "minutesAgo": "{{count}}m fa",
+    "hoursAgo": "{{count}}h fa",
+    "daysAgo": "{{count}}g fa"
+  },
+  "userMenu": {
     "profile": "Profilo",
+    "settings": "Impostazioni",
     "logout": "Disconnetti",
-    "mainNavigation": "Navigazione principale",
-    "dashboard": "Dashboard",
-    "reservas": "Prenotazioni",
-    "clientes": "Clienti",
-    "planificador": "Pianificatore",
-    "instructores": "Istruttori",
-    "cursos": "Corsi e Attività",
-    "material": "Noleggio Attrezzature",
-    "bonos": "Buoni e codici",
-    "comunicacion": "Comunicazione",
-    "pagos": "Pagamenti",
-    "reportes": "Report",
-    "admin": "Amministratori",
-    "config": "Configurazione"
+    "loggingOut": "Disconnessione...",
+    "logoutConfirm": "Sei sicuro di voler uscire?",
+    "defaultName": "Utente",
+    "defaultEmail": "utente@example.com"
+  },
+  "roles": {
+    "admin": "Amministratore",
+    "manager": "Manager",
+    "instructor": "Istruttore",
+    "staff": "Personale",
+    "user": "Utente"
+  },
+  "language": {
+    "title": "Lingua",
+    "es": "ES - Spagnolo",
+    "en": "EN - Inglese",
+    "fr": "FR - Francese",
+    "it": "IT - Italiano",
+    "de": "DE - Tedesco"
+  },
+  "theme": {
+    "toggle": "Cambia tema",
+    "switchToLight": "Passa al tema chiaro",
+    "switchToDark": "Passa al tema scuro"
+  },
+  "support": {
+    "needHelp": "Hai bisogno di aiuto?",
+    "support": "Supporto"
+  },
+  "sidebar": {
+    "toggle": "Comprimi/Espandi"
   },
   "errors": {
     "general": "Si è verificato un errore imprevisto",

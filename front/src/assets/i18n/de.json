@@ -170,25 +170,70 @@
       "available": "Update verfügbar"
     }
   },
-  "nav": {
-    "searchPlaceholder": "Suchen...",
-    "notifications": "Benachrichtigungen",
+    "nav": {
+      "searchPlaceholder": "Suchen...",
+      "notifications": "Benachrichtigungen",
+      "profile": "Profil",
+      "logout": "Abmelden",
+      "mainNavigation": "Hauptnavigation",
+      "dashboard": "Dashboard",
+      "reservas": "Buchungen",
+      "clientes": "Kunden",
+      "planificador": "Planer",
+      "instructores": "Trainer",
+      "cursos": "Kurse & Aktivitäten",
+      "material": "Geräteverleih",
+      "bonos": "Gutscheine & Codes",
+      "comunicacion": "Kommunikation",
+      "pagos": "Zahlungen",
+      "reportes": "Berichte",
+      "admin": "Administratoren",
+      "config": "Konfiguration"
+    },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "noNotifications": "Keine Benachrichtigungen",
+    "markAllAsRead": "Alle als gelesen markieren",
+    "justNow": "gerade eben",
+    "minutesAgo": "vor {{count}}m",
+    "hoursAgo": "vor {{count}}h",
+    "daysAgo": "vor {{count}}T"
+  },
+  "userMenu": {
     "profile": "Profil",
+    "settings": "Einstellungen",
     "logout": "Abmelden",
-    "mainNavigation": "Hauptnavigation",
-    "dashboard": "Dashboard",
-    "reservas": "Buchungen",
-    "clientes": "Kunden",
-    "planificador": "Planer",
-    "instructores": "Trainer",
-    "cursos": "Kurse & Aktivitäten",
-    "material": "Geräteverleih",
-    "bonos": "Gutscheine & Codes",
-    "comunicacion": "Kommunikation",
-    "pagos": "Zahlungen",
-    "reportes": "Berichte",
-    "admin": "Administratoren",
-    "config": "Konfiguration"
+    "loggingOut": "Abmelden...",
+    "logoutConfirm": "Sind Sie sicher, dass Sie sich abmelden möchten?",
+    "defaultName": "Benutzer",
+    "defaultEmail": "benutzer@example.com"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "manager": "Manager",
+    "instructor": "Ausbilder",
+    "staff": "Mitarbeiter",
+    "user": "Benutzer"
+  },
+  "language": {
+    "title": "Sprache",
+    "es": "ES - Spanisch",
+    "en": "EN - Englisch",
+    "fr": "FR - Französisch",
+    "it": "IT - Italienisch",
+    "de": "DE - Deutsch"
+  },
+  "theme": {
+    "toggle": "Theme wechseln",
+    "switchToLight": "Zum hellen Modus wechseln",
+    "switchToDark": "Zum dunklen Modus wechseln"
+  },
+  "support": {
+    "needHelp": "Brauchen Sie Hilfe?",
+    "support": "Support"
+  },
+  "sidebar": {
+    "toggle": "Ein-/Ausklappen"
   },
   "errors": {
     "general": "Ein unerwarteter Fehler ist aufgetreten",

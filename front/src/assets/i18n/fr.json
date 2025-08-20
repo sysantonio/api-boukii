@@ -190,6 +190,51 @@
     "admin": "Administradores",
     "config": "Configuración"
   },
+  "notifications": {
+    "title": "Notifications",
+    "noNotifications": "Aucune notification",
+    "markAllAsRead": "Marquer tout comme lu",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{count}}m",
+    "hoursAgo": "il y a {{count}}h",
+    "daysAgo": "il y a {{count}}j"
+  },
+  "userMenu": {
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Se déconnecter",
+    "loggingOut": "Déconnexion...",
+    "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "defaultName": "Utilisateur",
+    "defaultEmail": "utilisateur@example.com"
+  },
+  "roles": {
+    "admin": "Administrateur",
+    "manager": "Gestionnaire",
+    "instructor": "Instructeur",
+    "staff": "Personnel",
+    "user": "Utilisateur"
+  },
+  "language": {
+    "title": "Langue",
+    "es": "ES - Espagnol",
+    "en": "EN - Anglais",
+    "fr": "FR - Français",
+    "it": "IT - Italien",
+    "de": "DE - Allemand"
+  },
+  "theme": {
+    "toggle": "Changer de thème",
+    "switchToLight": "Passer en mode clair",
+    "switchToDark": "Passer en mode sombre"
+  },
+  "support": {
+    "needHelp": "Besoin d'aide?",
+    "support": "Support"
+  },
+  "sidebar": {
+    "toggle": "Réduire/Agrandir"
+  },
   "errors": {
     "general": "Ha ocurrido un error inesperado",
     "network": "Error de conexión. Verifica tu conexión a internet",
