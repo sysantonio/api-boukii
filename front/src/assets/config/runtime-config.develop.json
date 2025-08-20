@@ -47,7 +47,10 @@
   "logging": {
     "level": "info",
     "console": true,
-    "remote": true
+    "remote": true,
+    "endpoint": "/logs",
+    "forceNetworkInDev": false,
+    "enabled": true
   },
   "external": {
     "analytics": {

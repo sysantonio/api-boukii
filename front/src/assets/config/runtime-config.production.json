@@ -127,6 +127,12 @@
     "currency": "EUR"
   },
 
+  "logging": {
+    "endpoint": "/logs",
+    "forceNetworkInDev": false,
+    "enabled": true
+  },
+
   "integrations": {
     "firebase": {
       "apiKey": "AIzaSyBvOkBNaYUWN7YLNLdnKhYSThjEQrBOsXY",
