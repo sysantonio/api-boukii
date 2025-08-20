@@ -167,7 +167,7 @@ module.exports = tseslint.config(
   },
   {
     // Configuration files
-    files: ['*.config.js', '*.config.ts', 'setup-jest.ts'],
+    files: ['*.config.js', '*.config.ts', 'src/test-setup.ts'],
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',

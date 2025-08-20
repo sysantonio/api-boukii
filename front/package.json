@@ -1,6 +1,7 @@
 {
   "name": "boukii-admin-v5",
   "version": "0.0.0",
+  "type": "commonjs",
   "scripts": {
     "ng": "ng",
     "start": "npm run config:development && ng serve",
@@ -131,7 +132,7 @@
     "@storybook/manager-api": "^8.6.14",
     "@storybook/theming": "^8.6.14",
     "@types/jasmine": "~5.1.0",
-    "@types/jest": "^30.0.0",
+    "@types/jest": "^29.0.0",
     "angular-eslint": "20.1.1",
     "cypress": "^14.5.4",
     "eslint": "^9.29.0",
