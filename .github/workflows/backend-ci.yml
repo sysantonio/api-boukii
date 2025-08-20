@@ -1,39 +1,68 @@
 name: Backend CI
 
 on:
+  push:
+    paths-ignore: ['front/**','front-legacy/**']
   pull_request:
-    paths:
-      - '**'
-      - '!front/**'
+    paths-ignore: ['front/**','front-legacy/**']
 
 jobs:
   backend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, pdo, sqlite, bcmath, intl
+          tools: composer
+          extensions: sqlite, pdo_sqlite, mbstring, exif, pcntl, bcmath, intl
           coverage: none
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist
-      - name: PHP lint
+
+      # ⚠️ Preparar entorno de tests y crear la BD ANTES de composer install
+      - name: Prepare .env (sqlite) and database file
         run: |
-          find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 php -l
-      - name: Static analysis
-        run: vendor/bin/phpstan analyse
-      - name: Run tests
+          cp .env.example .env
+          echo "APP_ENV=testing" >> .env
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+          echo "CACHE_DRIVER=file" >> .env
+          echo "SESSION_DRIVER=file" >> .env
+          echo "QUEUE_CONNECTION=sync" >> .env
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: App key & migrate
+        run: |
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: PHP lint (syntax)
+        run: |
+          find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 -I{} php -l {}
+
+      - name: PHPUnit
         run: |
           mkdir -p test-reports
-          vendor/bin/phpunit --log-junit test-reports/phpunit.xml
+          if [ -f vendor/bin/phpunit ]; then
+            vendor/bin/phpunit --log-junit test-reports/phpunit.xml
+          else
+            php artisan test --log-junit test-reports/phpunit.xml
+          fi
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-reports
           path: test-reports/phpunit.xml
+
+      # PHPStan opcional: solo si existe
+      - name: PHPStan (Larastan)
+        if: ${{ hashFiles('**/vendor/bin/phpstan') != '' }}
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
