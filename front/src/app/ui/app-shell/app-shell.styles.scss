@@ -429,17 +429,16 @@
 /* Support section in collapsed state */
 .app-sidebar.collapsed {
   .support-content {
-    justify-content: center;
+    display: none;
   }
-  
-  .support-text {
-    opacity: 0;
-    pointer-events: none;
-  }
-  
+
   .support-btn {
-    opacity: 0;
-    pointer-events: none;
+    opacity: 1;
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 8px auto;
   }
 }
 
