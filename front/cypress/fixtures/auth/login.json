@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "token": "temp-token",
+    "user": {
+      "id": 1,
+      "name": "Test User",
+      "email": "test@boukii.com",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01"
+    },
+    "schools": [
+      {
+        "id": 1,
+        "name": "Test School",
+        "slug": "test-school",
+        "status": "active",
+        "created_at": "2025-01-01",
+        "updated_at": "2025-01-01"
+      },
+      {
+        "id": 2,
+        "name": "Second School",
+        "slug": "second-school",
+        "status": "active",
+        "created_at": "2025-01-01",
+        "updated_at": "2025-01-01"
+      }
+    ]
+  }
+}
