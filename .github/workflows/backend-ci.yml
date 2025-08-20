@@ -33,22 +33,22 @@ jobs:
           mkdir -p database
           touch database/database.sqlite
 
+      - name: Create .env.testing (sqlite memory)
+        run: |
+          cat > .env.testing <<'EOF'
+          APP_ENV=testing
+          DB_CONNECTION=sqlite
+          DB_DATABASE=:memory:
+          CACHE_DRIVER=array
+          QUEUE_CONNECTION=sync
+          SESSION_DRIVER=array
+          EOF
+
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: App key & migrate
-        run: |
-          php artisan key:generate
-          php artisan migrate --force
-
-      - name: Migrate test fixtures (if any)
-        run: |
-          if [ -d tests/database/migrations ]; then
-            php artisan migrate --force --path=tests/database/migrations
-          fi
-
-      - name: Seed minimal CI data
-        run: php artisan db:seed --force --class=CiSmokeSeeder || true
+      - name: Generate app key
+        run: php artisan key:generate
 
       - name: PHP lint (syntax)
         run: |

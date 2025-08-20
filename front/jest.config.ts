@@ -1,7 +1,12 @@
 /* eslint-disable */
 import type { Config } from 'jest';
 import { pathsToModuleNameMapper } from 'ts-jest';
-import { compilerOptions } from './tsconfig.spec.json';
+import { readFileSync } from 'fs';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const stripJsonComments = require('strip-json-comments');
+const { compilerOptions } = JSON.parse(
+  stripJsonComments(readFileSync('./tsconfig.spec.json', 'utf8'))
+);
 import 'jest-preset-angular/setup-jest';
 
 const config: Config = {
