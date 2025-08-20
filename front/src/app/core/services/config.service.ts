@@ -14,6 +14,20 @@ export class ConfigService {
     this.runtime = cfg;
   }
 
+  /**
+   * Access the loaded runtime configuration if available
+   */
+  getRuntimeConfig(): RuntimeEnvironment | undefined {
+    return this.runtime;
+  }
+
+  /**
+   * Retrieve application version from runtime config or environment
+   */
+  getAppVersion(): string | undefined {
+    return this.runtime?.version || (environment as any)?.appVersion;
+  }
+
   /** Versioned API base URL (e.g. http://api-boukii.test/api/v5) */
   getApiBaseUrl(): string {
     const fromRuntime = this.runtime?.api?.baseUrl;
