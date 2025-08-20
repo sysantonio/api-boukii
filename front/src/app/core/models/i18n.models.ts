@@ -5,7 +5,7 @@
 /**
  * Supported languages
  */
-export type SupportedLanguage = 'en' | 'es' | 'fr';
+export type SupportedLanguage = 'en' | 'es' | 'fr' | 'it' | 'de';
 
 /**
  * Language configuration

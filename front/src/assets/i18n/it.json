@@ -1,0 +1,301 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi"
+  },
+  "auth": {
+    "login": {
+      "title": "Accedi",
+      "subtitle": "Inserisci le tue credenziali per continuare",
+      "button": "Accedi",
+      "success": "Accesso effettuato con successo",
+      "error": "Errore durante l'accesso",
+      "welcome": {
+        "title": "Bentornato",
+        "subtitle": "Accedi al tuo pannello di amministrazione Boukii V5"
+      },
+      "features": {
+        "dashboard": {
+          "title": "Dashboard Intuitiva",
+          "description": "Visualizza metriche in tempo reale"
+        },
+        "management": {
+          "title": "Gestione Completa",
+          "description": "Clienti, prenotazioni e pianificazione"
+        },
+        "reports": {
+          "title": "Report Avanzati",
+          "description": "Analisi dei dati e tendenze"
+        }
+      }
+    },
+    "register": {
+      "title": "Crea Account",
+      "subtitle": "Unisciti a Boukii V5 e gestisci la tua scuola professionalmente",
+      "button": "Crea Account",
+      "success": "Account creato con successo",
+      "error": "Errore durante la creazione dell'account",
+      "welcome": {
+        "title": "Unisciti a Boukii V5",
+        "subtitle": "Gestisci la tua scuola sportiva in modo professionale e moderno."
+      },
+      "features": {
+        "management": {
+          "title": "Gestione Completa",
+          "description": "Gestisci corsi, prenotazioni, istruttori e stagioni da un unico posto."
+        },
+        "seasons": {
+          "title": "Multi-Stagione",
+          "description": "Organizza le tue attività per stagioni e mantieni un controllo dettagliato."
+        },
+        "professional": {
+          "title": "Professionalizzazione",
+          "description": "Strumenti avanzati per scuole sportive moderne ed efficienti."
+        }
+      }
+    },
+    "forgotPassword": {
+      "title": "Recupera Password",
+      "subtitle": "Ti invieremo un link per reimpostare la tua password",
+      "button": "Invia Link",
+      "success": "Link inviato con successo",
+      "error": "Errore durante l'invio del link",
+      "successTitle": "Link Inviato!",
+      "successMessage": "Abbiamo inviato le istruzioni di recupero a:",
+      "checkSpam": "Se non trovi l'email, controlla la cartella spam.",
+      "sendAnother": "Invia Altro Link",
+      "rememberedPassword": "Hai ricordato la tua password?",
+      "welcome": {
+        "title": "Recupera il Tuo Accesso",
+        "subtitle": "Ti aiutiamo a recuperare l'accesso al tuo account in modo sicuro e veloce."
+      },
+      "features": {
+        "secure": {
+          "title": "Processo Sicuro",
+          "description": "Utilizziamo crittografia ad alta sicurezza per proteggere le tue informazioni."
+        },
+        "email": {
+          "title": "Invio Istantaneo",
+          "description": "Riceverai il link di recupero nella tua email in pochi secondi."
+        },
+        "quick": {
+          "title": "Accesso Rapido",
+          "description": "Recupera l'accesso al tuo account in meno di 2 minuti."
+        }
+      }
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "Inserisci la tua email",
+      "required": "L'email è richiesta",
+      "invalid": "L'email non è valida"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "Inserisci la tua password",
+      "required": "La password è richiesta",
+      "minLength": "La password deve avere almeno 6 caratteri"
+    },
+    "name": {
+      "label": "Nome",
+      "placeholder": "Inserisci il tuo nome completo",
+      "required": "Il nome è richiesto",
+      "minLength": "Il nome deve avere almeno 2 caratteri"
+    },
+    "confirmPassword": {
+      "label": "Conferma Password",
+      "placeholder": "Conferma la tua password",
+      "required": "Devi confermare la password",
+      "mismatch": "Le password non corrispondono"
+    },
+    "forgotPassword": "Hai dimenticato la password?",
+    "noAccount": "Non hai un account?",
+    "alreadyHaveAccount": "Hai già un account?",
+    "createAccount": "Crea account",
+    "signIn": "Accedi",
+    "signOut": "Disconnetti",
+    "backToLogin": "Torna al login",
+    "allRightsReserved": "Tutti i diritti riservati",
+    "terms": "Termini",
+    "privacy": "Privacy",
+    "support": "Supporto"
+  },
+  "schoolSelection": {
+    "title": "Seleziona Scuola",
+    "subtitle": "Scegli la scuola con cui vuoi lavorare",
+    "selectSchool": "Seleziona Scuola",
+    "loading": "Caricamento scuole...",
+    "noSchools": "Non hai accesso a nessuna scuola",
+    "error": "Errore nel caricamento delle scuole",
+    "continue": "Continua",
+    "autoRedirecting": "Reindirizzamento automatico..."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Benvenuto in Boukii Admin V5",
+    "stats": {
+      "title": "Riepilogo",
+      "bookings": "Prenotazioni attive",
+      "clients": "Totale clienti", 
+      "courses": "Corsi attivi",
+      "revenue": "Entrate",
+      "active": "Attivo",
+      "thisMonth": "Questo mese"
+    },
+    "activity": {
+      "title": "Attività recente",
+      "newClient": "Nuovo cliente registrato",
+      "bookingConfirmed": "Prenotazione confermata",
+      "courseUpdated": "Corso aggiornato",
+      "completed": "Completato",
+      "confirmed": "Confermato",
+      "updated": "Aggiornato"
+    },
+    "actions": {
+      "title": "Azioni rapide",
+      "description": "Accedi rapidamente alle attività più comuni",
+      "newBooking": "Nuova prenotazione",
+      "addClient": "Nuovo cliente",
+      "manageCourses": "Gestisci corsi",
+      "viewReports": "Visualizza report"
+    },
+    "status": {
+      "operational": "Sistema operativo",
+      "pending": "Notifiche in sospeso",
+      "available": "Aggiornamento disponibile"
+    }
+  },
+  "nav": {
+    "searchPlaceholder": "Cerca...",
+    "notifications": "Notifiche",
+    "profile": "Profilo",
+    "logout": "Disconnetti",
+    "mainNavigation": "Navigazione principale",
+    "dashboard": "Dashboard",
+    "reservas": "Prenotazioni",
+    "clientes": "Clienti",
+    "planificador": "Pianificatore",
+    "instructores": "Istruttori",
+    "cursos": "Corsi e Attività",
+    "material": "Noleggio Attrezzature",
+    "bonos": "Buoni e codici",
+    "comunicacion": "Comunicazione",
+    "pagos": "Pagamenti",
+    "reportes": "Report",
+    "admin": "Amministratori",
+    "config": "Configurazione"
+  },
+  "errors": {
+    "general": "Si è verificato un errore imprevisto",
+    "network": "Errore di connessione. Verifica la tua connessione internet",
+    "serverError": "Errore del server. Riprova più tardi",
+    "unauthorized": "Non sei autorizzato ad accedere a questa risorsa",
+    "forbidden": "Accesso negato",
+    "notFound": "La risorsa richiesta non è stata trovata",
+    "validation": "Errore di validazione nei dati inviati",
+    "timeout": "La richiesta ha superato il limite di tempo",
+    "api": {
+      "loginFailed": "Credenziali non corrette",
+      "emailNotFound": "Email non trovata",
+      "accountLocked": "Account temporaneamente bloccato",
+      "emailAlreadyExists": "Questa email è già registrata",
+      "registrationFailed": "Errore nella creazione dell'account",
+      "passwordResetFailed": "Errore nell'invio del link di recupero",
+      "schoolSelectionFailed": "Errore nella selezione della scuola"
+    }
+  },
+  "featureFlags": {
+    "title": "Flag delle Funzionalità",
+    "resetDefaults": "Ripristina Predefiniti",
+    "reloadConfig": "Ricarica Configurazione",
+    "categories": {
+      "core": {
+        "title": "Funzionalità Principali",
+        "description": "Funzionalità base del sistema"
+      },
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Funzionalità del pannello di controllo"
+      },
+      "admin": {
+        "title": "Amministrazione",
+        "description": "Strumenti amministrativi"
+      },
+      "experimental": {
+        "title": "Sperimentale",
+        "description": "Funzionalità in sviluppo"
+      }
+    },
+    "features": {
+      "darkTheme": {
+        "name": "Tema Scuro",
+        "description": "Abilita il tema scuro dell'interfaccia"
+      },
+      "multiLanguage": {
+        "name": "Multi-lingua",
+        "description": "Supporto per più lingue"
+      },
+      "notifications": {
+        "name": "Notifiche",
+        "description": "Sistema di notifiche push"
+      },
+      "analytics": {
+        "name": "Analisi",
+        "description": "Monitoraggio e analisi dell'utilizzo"
+      },
+      "dashboardWidgets": {
+        "name": "Widget Dashboard",
+        "description": "Widget personalizzabili nella dashboard"
+      },
+      "realtimeUpdates": {
+        "name": "Aggiornamenti Tempo Reale",
+        "description": "Dati aggiornati in tempo reale"
+      },
+      "exportData": {
+        "name": "Esporta Dati",
+        "description": "Funzionalità di esportazione dati"
+      },
+      "importData": {
+        "name": "Importa Dati",
+        "description": "Funzionalità di importazione dati"
+      },
+      "userManagement": {
+        "name": "Gestione Utenti",
+        "description": "Pannello di amministrazione utenti"
+      },
+      "systemSettings": {
+        "name": "Configurazione Sistema",
+        "description": "Configurazioni avanzate del sistema"
+      },
+      "auditLogs": {
+        "name": "Log di Audit",
+        "description": "Registrazione delle attività del sistema"
+      },
+      "backupRestore": {
+        "name": "Backup e Ripristino",
+        "description": "Strumenti di backup e ripristino"
+      },
+      "experimentalUI": {
+        "name": "UI Sperimentale",
+        "description": "Nuova interfaccia utente in sviluppo"
+      },
+      "betaFeatures": {
+        "name": "Funzionalità Beta",
+        "description": "Funzionalità in fase di test beta"
+      },
+      "debugMode": {
+        "name": "Modalità Debug",
+        "description": "Strumenti di debug per sviluppatori"
+      },
+      "performanceMonitoring": {
+        "name": "Monitoraggio Performance",
+        "description": "Monitoraggio delle prestazioni del sistema"
+      }
+    }
+  }
+}

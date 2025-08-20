@@ -1,28 +1,29 @@
 /* Dark Theme - Overrides para tema oscuro */
 [data-theme='dark'] {
   /* Surface Colors */
-  --color-background: var(--color-neutral-950);
-  --color-surface: var(--color-neutral-900);
-  --color-surface-elevated: var(--color-neutral-800);
-  --color-surface-secondary: var(--color-neutral-800);
+  --color-background: var(--color-gray-900);
+  --color-surface: var(--color-gray-800);
+  --color-surface-elevated: var(--color-gray-700);
+  --color-surface-secondary: var(--color-gray-700);
 
   /* Border Colors */
-  --color-border: var(--color-neutral-700);
-  --color-border-subtle: var(--color-neutral-800);
-  --color-border-strong: var(--color-neutral-600);
+  --color-border: var(--color-gray-600);
+  --color-border-subtle: var(--color-gray-700);
+  --color-border-light: var(--color-gray-700);
+  --color-border-strong: var(--color-gray-500);
 
   /* Text Colors */
-  --color-text-primary: var(--color-neutral-0);
-  --color-text-secondary: var(--color-neutral-300);
-  --color-text-tertiary: var(--color-neutral-400);
-  --color-text-inverse: var(--color-neutral-900);
-  --color-text-on-primary: var(--color-neutral-0);
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: var(--color-gray-300);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-inverse: var(--color-gray-900);
+  --color-text-on-primary: var(--color-white);
 
   /* Interactive Colors */
-  --color-primary: var(--color-primary-500);
-  --color-primary-hover: var(--color-primary-400);
-  --color-primary-focus: var(--color-primary-600);
-  --color-primary-disabled: var(--color-neutral-600);
+  --color-primary: var(--color-turquoise-500);
+  --color-primary-hover: var(--color-turquoise-400);
+  --color-primary-focus: var(--color-turquoise-600);
+  --color-primary-disabled: var(--color-gray-600);
 
   /* Status Colors - ajustados para mejor contraste en oscuro */
   --color-success: var(--color-success-500);
@@ -38,63 +39,63 @@
   --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
 
   /* Component-specific overrides */
-  --input-background: var(--color-neutral-800);
-  --input-border: var(--color-neutral-600);
-  --input-border-focus: var(--color-primary-500);
+  --input-background: var(--color-gray-800);
+  --input-border: var(--color-gray-600);
+  --input-border-focus: var(--color-turquoise-500);
 
-  --button-primary-bg: var(--color-primary-600);
-  --button-primary-hover: var(--color-primary-500);
-  --button-primary-text: var(--color-neutral-0);
+  --button-primary-bg: var(--color-turquoise-600);
+  --button-primary-hover: var(--color-turquoise-500);
+  --button-primary-text: var(--color-white);
 
-  --button-secondary-bg: var(--color-neutral-800);
-  --button-secondary-hover: var(--color-neutral-700);
-  --button-secondary-text: var(--color-neutral-200);
+  --button-secondary-bg: var(--color-gray-800);
+  --button-secondary-hover: var(--color-gray-700);
+  --button-secondary-text: var(--color-gray-200);
 
-  --card-background: var(--color-neutral-900);
-  --card-border: var(--color-neutral-700);
+  --card-background: var(--color-gray-900);
+  --card-border: var(--color-gray-700);
 }
 
 /* Dark theme media query para detección automática */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     /* Surface Colors */
-    --color-background: var(--color-neutral-950);
-    --color-surface: var(--color-neutral-900);
-    --color-surface-elevated: var(--color-neutral-800);
-    --color-surface-secondary: var(--color-neutral-800);
+    --color-background: var(--color-gray-900);
+    --color-surface: var(--color-gray-800);
+    --color-surface-elevated: var(--color-gray-700);
+    --color-surface-secondary: var(--color-gray-700);
 
     /* Border Colors */
-    --color-border: var(--color-neutral-700);
-    --color-border-subtle: var(--color-neutral-800);
-    --color-border-strong: var(--color-neutral-600);
+    --color-border: var(--color-gray-600);
+    --color-border-subtle: var(--color-gray-700);
+    --color-border-strong: var(--color-gray-500);
 
     /* Text Colors */
-    --color-text-primary: var(--color-neutral-0);
-    --color-text-secondary: var(--color-neutral-300);
-    --color-text-tertiary: var(--color-neutral-400);
-    --color-text-inverse: var(--color-neutral-900);
-    --color-text-on-primary: var(--color-neutral-0);
+    --color-text-primary: var(--color-white);
+    --color-text-secondary: var(--color-gray-300);
+    --color-text-tertiary: var(--color-gray-400);
+    --color-text-inverse: var(--color-gray-900);
+    --color-text-on-primary: var(--color-white);
 
     /* Interactive Colors */
-    --color-primary: var(--color-primary-500);
-    --color-primary-hover: var(--color-primary-400);
-    --color-primary-focus: var(--color-primary-600);
-    --color-primary-disabled: var(--color-neutral-600);
+    --color-primary: var(--color-turquoise-500);
+    --color-primary-hover: var(--color-turquoise-400);
+    --color-primary-focus: var(--color-turquoise-600);
+    --color-primary-disabled: var(--color-gray-600);
 
     /* Component-specific */
-    --input-background: var(--color-neutral-800);
-    --input-border: var(--color-neutral-600);
-    --input-border-focus: var(--color-primary-500);
+    --input-background: var(--color-gray-800);
+    --input-border: var(--color-gray-600);
+    --input-border-focus: var(--color-turquoise-500);
 
-    --button-primary-bg: var(--color-primary-600);
-    --button-primary-hover: var(--color-primary-500);
-    --button-primary-text: var(--color-neutral-0);
+    --button-primary-bg: var(--color-turquoise-600);
+    --button-primary-hover: var(--color-turquoise-500);
+    --button-primary-text: var(--color-white);
 
-    --button-secondary-bg: var(--color-neutral-800);
-    --button-secondary-hover: var(--color-neutral-700);
-    --button-secondary-text: var(--color-neutral-200);
+    --button-secondary-bg: var(--color-gray-800);
+    --button-secondary-hover: var(--color-gray-700);
+    --button-secondary-text: var(--color-gray-200);
 
-    --card-background: var(--color-neutral-900);
-    --card-border: var(--color-neutral-700);
+    --card-background: var(--color-gray-900);
+    --card-border: var(--color-gray-700);
   }
 }

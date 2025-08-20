@@ -21,7 +21,7 @@ import {
 } from '../config/languages.config';
 import { LoggingService } from './logging.service';
 
-export const SUPPORTED_LANGUAGES: ReadonlyArray<SupportedLanguage> = ['es', 'en', 'fr'] as const;
+export const SUPPORTED_LANGUAGES: ReadonlyArray<SupportedLanguage> = ['es', 'en', 'fr', 'it', 'de'] as const;
 
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
@@ -34,6 +34,8 @@ export class TranslationService {
     en: null,
     es: null,
     fr: null,
+    it: null,
+    de: null,
   });
   private readonly _loadingState = signal<TranslationLoadingState>({
     loading: false,
@@ -753,6 +755,8 @@ export class TranslationService {
       en: null,
       es: null,
       fr: null,
+      it: null,
+      de: null,
     });
 
     // Reload current language

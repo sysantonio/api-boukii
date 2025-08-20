@@ -12,6 +12,15 @@ import { TranslationService, SupportedLanguage, SUPPORTED_LANGUAGES } from '@cor
 import { EnvironmentService } from '@core/services/environment.service';
 import { AuthV5Service } from '@core/services/auth-v5.service';
 
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  createdAt: Date;
+}
+
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -87,6 +96,22 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
                 >
                   FR - Français
                 </button>
+                <button
+                  class="dropdown-option"
+                  [class.active]="isLang('it')"
+                  (click)="setLanguage('it')"
+                  role="menuitem"
+                >
+                  IT - Italiano
+                </button>
+                <button
+                  class="dropdown-option"
+                  [class.active]="isLang('de')"
+                  (click)="setLanguage('de')"
+                  role="menuitem"
+                >
+                  DE - Deutsch
+                </button>
               </div>
             }
           </div>
@@ -118,18 +143,97 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
           </button>
 
           <!-- Notifications with badge -->
-          <button 
-            class="icon-btn notifications-btn" 
-            (click)="toggleNotifications()"
-            [attr.aria-label]="'nav.notifications' | translate"
-            title="Notifications"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span class="notification-badge">3</span>
-          </button>
+          <div class="notifications-container">
+            <button 
+              class="icon-btn notifications-btn" 
+              (click)="toggleNotifications()"
+              [attr.aria-label]="'nav.notifications' | translate"
+              title="Notifications"
+              [attr.aria-expanded]="notificationDropdownOpen()"
+              aria-haspopup="true"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              @if (unreadNotificationsCount() > 0) {
+                <span class="notification-badge">{{ unreadNotificationsCount() }}</span>
+              }
+            </button>
+
+            @if (notificationDropdownOpen()) {
+              <div class="notifications-dropdown" role="menu">
+                @if (notifications().length === 0) {
+                  <div class="no-notifications">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <p>No hay notificaciones</p>
+                  </div>
+                } @else {
+                  <div class="notifications-header">
+                    <h3>Notificaciones</h3>
+                    @if (unreadNotificationsCount() > 0) {
+                      <button class="mark-all-read" (click)="markAllAsRead()">
+                        Marcar todas como leídas
+                      </button>
+                    }
+                  </div>
+                  <div class="notifications-list">
+                    @for (notification of notifications(); track notification.id) {
+                      <div 
+                        class="notification-item" 
+                        [class.unread]="!notification.read"
+                        (click)="markAsRead(notification.id)"
+                        role="menuitem"
+                      >
+                        <div class="notification-icon" [class]="'notification-' + notification.type">
+                          @switch (notification.type) {
+                            @case ('info') {
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
+                              </svg>
+                            }
+                            @case ('success') {
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                              </svg>
+                            }
+                            @case ('warning') {
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                              </svg>
+                            }
+                            @case ('error') {
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>
+                            }
+                          }
+                        </div>
+                        <div class="notification-content">
+                          <p class="notification-title">{{ notification.title }}</p>
+                          <p class="notification-message">{{ notification.message }}</p>
+                          <span class="notification-time">{{ getRelativeTime(notification.createdAt) }}</span>
+                        </div>
+                        @if (!notification.read) {
+                          <div class="unread-indicator"></div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
 
           <!-- User Menu -->
           <div class="user-menu">
@@ -146,7 +250,7 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
               />
               <div class="user-info">
                 <div class="user-name">{{ authV5.user()?.name || 'Usuario' }}</div>
-                <div class="user-role">Administrador</div>
+                <div class="user-role">{{ getUserRole() }}</div>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6,9 12,15 18,9"></polyline>
@@ -155,6 +259,21 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
 
             @if (userDropdownOpen()) {
               <div class="user-dropdown" role="menu">
+                <div class="user-dropdown-header">
+                  <img 
+                    class="user-avatar-large"
+                    [src]="getUserAvatar()"
+                    [alt]="authV5.user()?.name || 'User'"
+                  />
+                  <div class="user-details">
+                    <h3 class="user-name-large">{{ authV5.user()?.name || 'Usuario' }}</h3>
+                    <p class="user-email">{{ authV5.user()?.email || 'usuario@example.com' }}</p>
+                    <span class="user-role-badge">{{ getUserRole() }}</span>
+                  </div>
+                </div>
+                
+                <div class="dropdown-divider"></div>
+                
                 <button class="dropdown-option" role="menuitem">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -164,18 +283,28 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
                 </button>
                 <button class="dropdown-option" role="menuitem">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  Notificaciones
+                  Configuración
                 </button>
-                <button class="dropdown-option danger" (click)="logout()" role="menuitem">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16,17 21,12 16,7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                  Cerrar sesión
+                
+                <div class="dropdown-divider"></div>
+                
+                <button class="dropdown-option danger" (click)="logout()" [disabled]="loggingOut()" role="menuitem">
+                  @if (loggingOut()) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loading-spinner">
+                      <circle cx="12" cy="12" r="10" opacity="0.3"></circle>
+                      <path d="M4 12a8 8 0 0 1 8-8V4a10 10 0 0 0-10 10h2z"></path>
+                    </svg>
+                  } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16,17 21,12 16,7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                  }
+                  {{ loggingOut() ? 'Cerrando sesión...' : 'Cerrar sesión' }}
                 </button>
               </div>
             }
@@ -415,12 +544,48 @@ export class AppShellComponent implements OnInit {
   private readonly _languageDropdownOpen = signal(false);
   private readonly _userDropdownOpen = signal(false);
   private readonly _isDarkMode = signal(false);
+  private readonly _notificationDropdownOpen = signal(false);
+  private readonly _loggingOut = signal(false);
+  private readonly _notifications = signal<Notification[]>([
+    {
+      id: '1',
+      title: 'Nueva reserva',
+      message: 'Juan Pérez ha realizado una nueva reserva para mañana',
+      type: 'info',
+      read: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 5) // 5 minutes ago
+    },
+    {
+      id: '2',
+      title: 'Pago completado',
+      message: 'Se ha recibido el pago de María García',
+      type: 'success',
+      read: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
+    },
+    {
+      id: '3',
+      title: 'Clase cancelada',
+      message: 'La clase de natación de las 15:00 ha sido cancelada',
+      type: 'warning',
+      read: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
+    }
+  ]);
 
   // Public computed properties
   readonly sidebarCollapsed = this._sidebarCollapsed.asReadonly();
   readonly languageDropdownOpen = this._languageDropdownOpen.asReadonly();
   readonly userDropdownOpen = this._userDropdownOpen.asReadonly();
   readonly isDarkMode = this._isDarkMode.asReadonly();
+  readonly notificationDropdownOpen = this._notificationDropdownOpen.asReadonly();
+  readonly notifications = this._notifications.asReadonly();
+  readonly loggingOut = this._loggingOut.asReadonly();
+
+  // Computed for notification count
+  readonly unreadNotificationsCount = computed(() => {
+    return this._notifications().filter(notification => !notification.read).length;
+  });
 
   // Computed to determine when to show full layout
   protected readonly shouldShowFullLayout = computed(() => {
@@ -491,7 +656,9 @@ export class AppShellComponent implements OnInit {
     const langMap: Record<string, string> = {
       'es': 'ES',
       'en': 'EN', 
-      'fr': 'FR'
+      'fr': 'FR',
+      'it': 'IT',
+      'de': 'DE'
     };
     return langMap[lang] || 'ES';
   }
@@ -515,8 +682,44 @@ export class AppShellComponent implements OnInit {
   }
 
   toggleNotifications(): void {
-    // TODO: Implement notifications panel
-    console.log('Toggle notifications');
+    this._notificationDropdownOpen.set(!this._notificationDropdownOpen());
+    // Close other dropdowns if open
+    if (this._languageDropdownOpen()) {
+      this._languageDropdownOpen.set(false);
+    }
+    if (this._userDropdownOpen()) {
+      this._userDropdownOpen.set(false);
+    }
+  }
+
+  markAsRead(notificationId: string): void {
+    const currentNotifications = this._notifications();
+    const updatedNotifications = currentNotifications.map(notification =>
+      notification.id === notificationId ? { ...notification, read: true } : notification
+    );
+    this._notifications.set(updatedNotifications);
+  }
+
+  markAllAsRead(): void {
+    const currentNotifications = this._notifications();
+    const updatedNotifications = currentNotifications.map(notification => ({
+      ...notification,
+      read: true
+    }));
+    this._notifications.set(updatedNotifications);
+  }
+
+  getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return 'hace un momento';
+    if (minutes < 60) return `hace ${minutes}m`;
+    if (hours < 24) return `hace ${hours}h`;
+    return `hace ${days}d`;
   }
 
   getUserAvatar(): string {
@@ -524,9 +727,39 @@ export class AppShellComponent implements OnInit {
     return 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
   }
 
+  getUserRole(): string {
+    const permissions = this.authV5.permissions();
+    
+    // Determine role based on permissions
+    if (permissions.includes('admin') || permissions.includes('super-admin')) {
+      return 'Administrador';
+    } else if (permissions.includes('manager') || permissions.includes('school-manager')) {
+      return 'Gestor';
+    } else if (permissions.includes('instructor')) {
+      return 'Instructor';
+    } else if (permissions.includes('staff')) {
+      return 'Personal';
+    } else {
+      return 'Usuario';
+    }
+  }
+
   logout(): void {
-    this.authV5.logout();
-    this._userDropdownOpen.set(false);
+    if (this._loggingOut()) return; // Prevent multiple clicks
+    
+    // Show confirmation dialog
+    const confirmed = confirm('¿Estás seguro de que deseas cerrar sesión?');
+    
+    if (confirmed) {
+      this._loggingOut.set(true);
+      
+      // Add a small delay to show the loading state
+      setTimeout(() => {
+        this.authV5.logout();
+        this._userDropdownOpen.set(false);
+        this._loggingOut.set(false);
+      }, 500);
+    }
   }
 
   // Click outside handler
@@ -543,6 +776,11 @@ export class AppShellComponent implements OnInit {
     if (this._userDropdownOpen() && !target.closest('.user-menu')) {
       this._userDropdownOpen.set(false);
     }
+    
+    // Close notifications dropdown if clicking outside
+    if (this._notificationDropdownOpen() && !target.closest('.notifications-container')) {
+      this._notificationDropdownOpen.set(false);
+    }
   }
 
   // Keyboard navigation
@@ -552,6 +790,7 @@ export class AppShellComponent implements OnInit {
     if (event.key === 'Escape') {
       this._languageDropdownOpen.set(false);
       this._userDropdownOpen.set(false);
+      this._notificationDropdownOpen.set(false);
     }
     
     // Alt + S toggles sidebar

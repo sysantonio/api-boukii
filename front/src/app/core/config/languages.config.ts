@@ -43,6 +43,32 @@ export const LANGUAGE_CONFIGS: Record<SupportedLanguage, LanguageConfig> = {
     thousandsSeparator: ' ',
     decimalSeparator: ',',
   },
+  it: {
+    code: 'it',
+    name: 'Italian',
+    nativeName: 'Italiano',
+    flag: '🇮🇹',
+    direction: 'ltr',
+    dateFormat: 'dd/MM/yyyy',
+    timeFormat: 'HH:mm',
+    currencyCode: 'EUR',
+    currencySymbol: '€',
+    thousandsSeparator: '.',
+    decimalSeparator: ',',
+  },
+  de: {
+    code: 'de',
+    name: 'German',
+    nativeName: 'Deutsch',
+    flag: '🇩🇪',
+    direction: 'ltr',
+    dateFormat: 'dd.MM.yyyy',
+    timeFormat: 'HH:mm',
+    currencyCode: 'EUR',
+    currencySymbol: '€',
+    thousandsSeparator: '.',
+    decimalSeparator: ',',
+  },
 };
 
 /**

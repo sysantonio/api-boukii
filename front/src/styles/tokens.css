@@ -115,6 +115,7 @@
 
   /* Border Colors */
   --color-border: var(--color-gray-200);
+  --color-border-subtle: var(--color-gray-100);
   --color-border-light: var(--color-gray-100);
   --color-border-strong: var(--color-gray-300);
 
