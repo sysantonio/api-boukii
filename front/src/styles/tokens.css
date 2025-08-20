@@ -95,6 +95,21 @@
 
   /* === SEMANTIC COLORS - BOUKII === */
   /* Background & Surfaces */
+  --bg: var(--color-white);
+  --surface: var(--color-white);
+  --surface-2: var(--color-gray-50);
+  --border: var(--color-gray-200);
+  --text-1: var(--color-gray-900);
+  --text-2: var(--color-gray-600);
+  --muted: var(--color-gray-400);
+  --brand-500: var(--color-turquoise-500);
+  --brand-600: var(--color-turquoise-600);
+  --active: var(--color-turquoise-500);
+  --active-contrast: var(--color-white);
+  --red: var(--color-error-500);
+  --yellow: var(--color-warning-500);
+  
+  /* Extended semantic colors */
   --color-background: var(--color-white);
   --color-background-dashboard: var(--gradient-dashboard);
   --color-surface: var(--color-white);
@@ -282,9 +297,9 @@
 
   /* === BOUKII SPECIFIC TOKENS === */
   /* Layout Dimensions */
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 80px;
-  --navbar-height: 64px;
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 72px;
+  --navbar-h: 56px;
   --content-max-width: 1400px;
 
   /* Glassmorphism Effects */
