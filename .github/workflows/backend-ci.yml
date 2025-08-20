@@ -70,10 +70,10 @@ jobs:
         run: |
           find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 -I{} php -l {}
 
-      - name: PHPUnit
+      - name: PHPUnit (no coverage, more memory)
         run: |
           mkdir -p test-reports
-          php -d memory_limit=1024M artisan test --no-coverage --log-junit test-reports/phpunit.xml
+          php -d memory_limit=2048M -d zend.assertions=-1 artisan test --no-coverage --log-junit test-reports/phpunit.xml
 
       - name: Upload test reports
         if: always()
