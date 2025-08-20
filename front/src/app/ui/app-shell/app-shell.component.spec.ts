@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { ThemeService } from '@core/services/theme.service';
 
 import { AppShellComponent } from './app-shell.component';
 import { UiStore } from '@core/stores/ui.store';
@@ -41,7 +43,7 @@ describe('AppShellComponent interactions', () => {
         { provide: UiStore, useValue: { initializeTheme: () => {} } },
         { provide: AuthStore, useValue: { loadMe: () => {} } },
         { provide: LoadingStore, useValue: { isLoading: () => false, longestRunningRequest: () => null } },
-        { provide: AuthV5Service, useValue: { isAuthenticated: () => true, currentSchool: () => ({}), currentSchoolIdSignal: () => 1, user: () => ({ name: 'Test User' }) } },
+        { provide: AuthV5Service, useValue: { isAuthenticated: () => true, currentSchool: () => ({}), currentSchoolIdSignal: () => 1, user: () => ({ name: 'Test User' }), permissions: () => [] } },
         { provide: TranslationService, useClass: MockTranslationService },
         { provide: EnvironmentService, useValue: { isProduction: () => true, envName: () => 'production' } },
       ],
@@ -55,23 +57,31 @@ describe('AppShellComponent interactions', () => {
     return fixture;
   }
 
-  it('toggleSidebar() persists in localStorage', async () => {
+  it('chevron toggles collapsed class, rotates and persists', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
-    const button = screen.getByLabelText('Collapse sidebar');
+    const button = screen.getByLabelText('Colapsar/Expandir');
+    const shell = fixture.nativeElement.querySelector('.app-shell');
+    expect(shell.classList).not.toContain('app-sidebar--collapsed');
     await user.click(button);
-    expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
+    fixture.detectChanges();
+    expect(shell.classList).toContain('app-sidebar--collapsed');
+    expect(fixture.nativeElement.querySelector('.chev')?.classList).toContain('rot');
+    expect(localStorage.getItem('sidebarCollapsed')).toBe('true');
+    // Click again to expand and ensure button remains focusable
+    await user.click(button);
+    fixture.detectChanges();
+    expect(shell.classList).not.toContain('app-sidebar--collapsed');
     fixture.nativeElement.remove();
   });
 
-  it('toggleTheme() changes data-theme and persists', async () => {
+  it('setTheme() propagates data-theme to OverlayContainer', async () => {
     const fixture = renderComponent();
-    const user = userEvent.setup();
-    const themeButton = screen.getByTitle('Toggle theme');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-    await user.click(themeButton);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
+    const overlay = TestBed.inject(OverlayContainer);
+    const themeService = TestBed.inject(ThemeService);
+    themeService.setTheme('dark');
+    await Promise.resolve();
+    expect(overlay.getContainerElement().getAttribute('data-theme')).toBe('dark');
     fixture.nativeElement.remove();
   });
 });

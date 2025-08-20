@@ -14,7 +14,7 @@
   height: 100vh;
   background: var(--color-background);
 
-  &.sidebar-collapsed {
+  &.app-sidebar--collapsed {
     grid-template-columns: var(--sidebar-collapsed-width) 1fr;
   }
 }
@@ -457,7 +457,7 @@
   flex-direction: column;
   transition: width 180ms ease;
   
-  &.collapsed {
+  &.app-sidebar--collapsed {
     width: var(--sidebar-collapsed-width);
     
     .logo-text {
@@ -474,7 +474,7 @@
       justify-content: center;
     }
     
-    .sidebar-toggle {
+    .collapse {
       position: absolute;
       right: -12px;
       background: var(--color-surface);
@@ -486,216 +486,6 @@
   }
 }
 
-/* Sidebar Header */
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border);
-  min-height: var(--navbar-height);
-  box-sizing: border-box;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-}
-
-.logo-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  transition: opacity 180ms ease;
-}
-
-.logo-accent {
-  color: var(--color-primary);
-}
-
-.sidebar-toggle {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 150ms;
-  
-  &:hover {
-    background: var(--color-surface-elevated);
-  }
-  
-  svg {
-    transition: transform 180ms ease;
-    
-    &.rotated {
-      transform: rotate(180deg);
-    }
-  }
-}
-
-/* Sidebar Navigation */
-.sidebar-nav {
-  flex: 1;
-  padding: 12px 8px;
-  overflow-y: auto;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  padding: 0 12px;
-  margin-bottom: 2px;
-  border-radius: 12px;
-  color: var(--color-text-primary);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 150ms ease;
-  position: relative;
-  
-  &:hover:not(.active) {
-    background: var(--color-surface-elevated);
-  }
-  
-  &.active {
-    background: var(--color-primary);
-    color: var(--color-text-on-primary);
-    
-    .nav-icon svg {
-      color: var(--color-text-on-primary);
-    }
-  }
-}
-
-.nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  
-  svg {
-    color: var(--color-text-primary);
-    transition: color 150ms ease;
-  }
-}
-
-.nav-text {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: opacity 180ms ease;
-}
-
-/* Badges positioned exactly */
-.app-sidebar .badge {
-  transition: opacity 180ms ease;
-}
-
-.app-sidebar.collapsed .badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  font-size: 0;
-}
-
-/* Support Section */
-.sidebar-support {
-  margin-top: auto;
-  padding: 12px 8px;
-  border-top: 1px solid var(--color-border);
-}
-
-.support-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  position: relative;
-}
-
-.support-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  
-  svg {
-    color: var(--color-primary);
-  }
-}
-
-.support-text {
-  flex: 1;
-  transition: opacity 180ms ease;
-}
-
-.support-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  line-height: 1.2;
-}
-
-.support-subtitle {
-  font-size: 11px;
-  color: var(--color-primary);
-  margin-top: 1px;
-}
-
-.support-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 150ms;
-  flex-shrink: 0;
-  
-  &:hover {
-    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-  }
-  
-  svg {
-    color: var(--color-primary);
-  }
-}
-
-/* Support section in collapsed state */
-.app-sidebar.collapsed {
-  .support-content {
-    display: none;
-  }
-
-  .support-btn {
-    opacity: 1;
-    pointer-events: auto;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin: 8px auto;
-  }
-}
 
 /* ============================================= 
    MAIN CONTENT AREA
@@ -796,4 +586,103 @@
   .language-text {
     display: none;
   }
+}
+
+/* Sidebar header and collapsed navigation refinements */
+.sidebar-header {
+  height: 56px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .logo {
+    height: 22px;
+  }
+
+  .collapse {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    cursor: pointer;
+
+    .chev {
+      inline-size: 12px;
+      block-size: 12px;
+      mask: url('/assets/icons/chevron-left.svg') no-repeat center/contain;
+      background: var(--text-1);
+      transition: transform 0.18s;
+    }
+
+    .chev.rot {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.app-sidebar--collapsed .sidebar-header .logo {
+  display: none;
+}
+
+.sidebar-nav .item {
+  height: 44px;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 12px;
+  position: relative;
+}
+
+.sidebar-nav .item .label {
+  white-space: nowrap;
+}
+
+.app-sidebar--collapsed .sidebar-nav .item .label {
+  display: none;
+}
+
+.sidebar-nav .item .counter {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font: 700 10px/1 Inter;
+  color: #fff;
+}
+
+.app-sidebar--collapsed .sidebar-nav .item .counter {
+  margin-left: 0;
+  min-width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+}
+
+.counter--blue {
+  background: var(--blue);
+}
+
+.counter--yellow {
+  background: var(--yellow);
+}
+
+.counter--red {
+  background: var(--red);
+}
+
+.counter--green {
+  background: var(--green);
+}
+
+.sidebar-nav .item--active {
+  background: var(--active);
+  color: var(--active-contrast);
 }
