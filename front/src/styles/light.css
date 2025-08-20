@@ -1,6 +1,9 @@
 /* Light Theme - Overrides para tema claro */
 :root,
 [data-theme='light'] {
+  /* Base semantic colors - already defined in tokens.css but can be overridden */
+  /* --bg, --surface, --surface-2, --border, --text-1, --text-2, --muted are inherited */
+  
   /* Surface Colors */
   --color-background: var(--color-white);
   --color-surface: var(--color-white);
