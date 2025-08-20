@@ -24,6 +24,12 @@ Authorization: Bearer {token}  # Para endpoints autenticados
 X-School-Slug: {school-slug}  # Para endpoints de booking
 ```
 
+## Limitación de Peticiones
+
+La API restringe a cada usuario autenticado a **60 solicitudes por minuto**.
+Las respuestas incluyen los encabezados `X-RateLimit-Limit`, `X-RateLimit-Remaining` y
+`X-RateLimit-Reset` para ayudar a monitorizar el consumo.
+
 ## Formato de Respuesta Estándar
 
 ### Respuesta Exitosa

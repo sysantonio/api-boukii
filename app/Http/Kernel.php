@@ -42,7 +42,8 @@ class Kernel extends HttpKernel
 
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:5000,1',
+            'throttle:60,1',
+            'user.rate.limit',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -69,6 +70,7 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'admin.rate.limit' => \App\Http\Middleware\AdminRateLimit::class,
+        'user.rate.limit' => \App\Http\Middleware\UserRateLimit::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         // V5 Middleware Aliases (cleaned up duplicates)
         'role.permission.middleware' => \App\Http\Middleware\V5\ContextPermissionMiddleware::class,
