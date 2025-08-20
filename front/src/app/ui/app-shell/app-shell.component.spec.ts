@@ -4,7 +4,7 @@ import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { ThemeService } from '@core/services/theme.service';
-import { signal } from '@angular/core';
+import { signal, computed } from '@angular/core';
 
 import { AppShellComponent } from './app-shell.component';
 import { UiStore } from '@core/stores/ui.store';
@@ -36,11 +36,18 @@ class MockTranslationService {
 
 class MockUiStore {
   sidebarCollapsed = signal(false);
+  private theme = signal<'light' | 'dark' | 'system'>('light');
+  isDark = computed(() => this.theme() === 'dark');
   initializeTheme(): void {}
   toggleSidebar(): void {
     const newState = !this.sidebarCollapsed();
     this.sidebarCollapsed.set(newState);
     localStorage.setItem('sidebarCollapsed', String(newState));
+  }
+  toggleTheme(): void {
+    const current = this.theme();
+    const next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
+    this.theme.set(next);
   }
 }
 

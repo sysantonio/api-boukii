@@ -70,7 +70,7 @@ export class UiStore {
     // Apply theme to document
     if (typeof document !== 'undefined') {
       const effectiveTheme = getEffectiveTheme(theme);
-      document.documentElement.dataset['theme'] = effectiveTheme;
+      (document.documentElement.dataset as any).theme = effectiveTheme;
     }
   }
 
@@ -86,14 +86,14 @@ export class UiStore {
     const theme = this._theme();
     if (typeof document !== 'undefined') {
       const effectiveTheme = getEffectiveTheme(theme);
-      document.documentElement.dataset['theme'] = effectiveTheme;
+      (document.documentElement.dataset as any).theme = effectiveTheme;
 
       // Listen for system theme changes if using system preference
       if (theme === 'system') {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const updateSystemTheme = () => {
           if (this._theme() === 'system') {
-            document.documentElement.dataset['theme'] = mediaQuery.matches ? 'dark' : 'light';
+            (document.documentElement.dataset as any).theme = mediaQuery.matches ? 'dark' : 'light';
           }
         };
 
