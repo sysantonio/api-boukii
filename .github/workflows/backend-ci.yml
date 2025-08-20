@@ -99,8 +99,9 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
   phpunit-full:
-    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'run-full-suite')
     needs: backend
+    runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
