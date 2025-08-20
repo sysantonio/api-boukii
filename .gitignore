@@ -12,7 +12,6 @@
 /storage/logs
 /vendor
 .phpunit.result.cache
-composer.lock
 
 # Environment files
 .env
