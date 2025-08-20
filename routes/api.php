@@ -39,12 +39,13 @@ use Payrexx\Models\Request\Transaction as TransactionRequest;
 use Payrexx\Models\Response\Transaction as TransactionResponse;
 use Payrexx\Payrexx;
 
-Route::prefix('api/v5')
+Route::prefix('v5')
     ->middleware(['api', 'throttle:api'])
     ->group(function () {
         require base_path('routes/api_v5/auth.php');
         require base_path('routes/api_v5/schools.php');
         require base_path('routes/api_v5/seasons.php');
+        require base_path('routes/api_v5/logs.php');
     });
 
 /*
