@@ -76,7 +76,7 @@ jobs:
           SESSION_DRIVER: array
         run: |
           mkdir -p test-reports
-          php -d memory_limit=1024M -d zend.assertions=-1 vendor/bin/phpunit --no-coverage --testsuite=Ci --log-junit test-reports/phpunit.xml
+          php -d memory_limit=1024M -d zend.assertions=-1 vendor/bin/phpunit -c phpunit.ci.xml --testsuite=Ci --log-junit test-reports/phpunit.xml
 
       - name: Upload test reports
         if: always()
@@ -158,6 +158,6 @@ jobs:
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
         run: |
-          php -d memory_limit=2048M -d zend.assertions=-1 vendor/bin/phpunit -c phpunit.ci.xml --no-coverage
+          php -d memory_limit=2048M -d zend.assertions=-1 vendor/bin/phpunit -c phpunit.mysql.xml --testsuite=Full
 
 
