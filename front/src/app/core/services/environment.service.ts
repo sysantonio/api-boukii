@@ -104,7 +104,7 @@ export class EnvironmentService {
 
       // Load from remote or fall back to static
       await this.loadFromRemote();
-    } catch (error) {
+    } catch (_error) {
       // Fall back to static configuration
       await this.loadStaticConfiguration();
 
@@ -120,7 +120,7 @@ export class EnvironmentService {
         url: 'environment-service',
         method: 'initializeEnvironment',
         severity: ErrorSeverity.MEDIUM,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: _error instanceof Error ? _error.message : 'Unknown error',
       });
     }
   }
@@ -151,9 +151,9 @@ export class EnvironmentService {
         severity: ErrorSeverity.LOW,
         version: remoteConfig.version,
       });
-    } catch (error) {
+    } catch (_error) {
       throw new Error(
-        `Failed to load remote configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to load remote configuration: ${_error instanceof Error ? _error.message : 'Unknown error'}`
       );
     }
   }
@@ -620,7 +620,7 @@ export class EnvironmentService {
       }
 
       return cacheData.config;
-    } catch (error) {
+    } catch (_error) {
       localStorage.removeItem(this.CONFIG_CACHE_KEY);
       return null;
     }

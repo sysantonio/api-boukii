@@ -1,21 +1,14 @@
 import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@storybook/addon-a11y',
-  ],
-  framework: {
-    name: '@storybook/angular',
-    options: {},
+  framework: { name: '@storybook/angular', options: {} },
+  core: { builder: '@storybook/builder-vite' },
+  stories: ['../src/**/*.stories.@(ts|mdx)'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-a11y'],
+  viteFinal: async (config) => {
+    const { default: tsconfigPaths } = await import('vite-tsconfig-paths');
+    config.plugins = [...(config.plugins ?? []), tsconfigPaths()];
+    return config;
   },
-  docs: {},
-  typescript: {
-    check: false,
-  },
-  staticDirs: ['../src/assets'],
 };
-
 export default config;

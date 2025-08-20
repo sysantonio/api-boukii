@@ -30,7 +30,7 @@ export class AppComponent implements OnInit {
 
   private simulateLogin(): void {
     // Mock user data for demo purposes
-    const mockUser = {
+    const _mockUser = {
       id: 1,
       name: 'Juan Pérez',
       email: 'juan.perez@boukii.com',

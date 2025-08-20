@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const stripJsonComments = require('strip-json-comments');
 const { compilerOptions } = JSON.parse(
-  stripJsonComments(readFileSync('./tsconfig.spec.json', 'utf8'))
+  stripJsonComments(readFileSync('./tsconfig.json', 'utf8'))
 );
 import 'jest-preset-angular/setup-jest';
 
@@ -14,8 +14,15 @@ const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   transform: {
-    '^.+\\.(ts|js|html)$': 'ts-jest'
+    '^.+\\.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.(html)$'
+      }
+    ]
   },
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, { prefix: '<rootDir>/' }),
   collectCoverageFrom: [
     'src/app/**/*.ts',

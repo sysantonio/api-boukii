@@ -254,7 +254,7 @@ export class TextFieldComponent implements ControlValueAccessor {
   public inputId = `text-field-${Math.random().toString(36).substring(2, 15)}`;
   public messageId = `${this.inputId}-message`;
 
-  private onChange = (value: string) => {};
+  private onChange = (_value: string) => {};
   private onTouched = () => {};
 
   public get containerClasses(): string {

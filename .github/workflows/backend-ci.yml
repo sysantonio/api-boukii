@@ -19,6 +19,7 @@ jobs:
           tools: composer
           extensions: sqlite, pdo_sqlite, mbstring, exif, pcntl, bcmath, intl
           coverage: none
+          ini-values: memory_limit=1024M
 
       # ⚠️ Preparar entorno de tests y crear la BD ANTES de composer install
       - name: Prepare .env (sqlite) and database file
@@ -50,6 +51,19 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
+      - name: Migrate database
+        run: |
+          php artisan migrate --force
+
+      - name: Migrate test fixtures
+        run: |
+          if [ -d tests/database/migrations ]; then
+            php artisan migrate --force --path=tests/database/migrations
+          fi
+
+      - name: Seed minimal CI data
+        run: php artisan db:seed --force --class=CiSmokeSeeder || true
+
       - name: PHP lint (syntax)
         run: |
           find app bootstrap config database routes tests -name "*.php" -print0 | xargs -0 -n1 -I{} php -l {}
@@ -57,11 +71,7 @@ jobs:
       - name: PHPUnit
         run: |
           mkdir -p test-reports
-          if [ -f vendor/bin/phpunit ]; then
-            vendor/bin/phpunit --log-junit test-reports/phpunit.xml
-          else
-            php artisan test --log-junit test-reports/phpunit.xml
-          fi
+          php -d memory_limit=1024M artisan test --no-coverage --log-junit test-reports/phpunit.xml
 
       - name: Upload test reports
         if: always()

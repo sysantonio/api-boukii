@@ -145,11 +145,11 @@ export class TranslationService {
         severity: ErrorSeverity.LOW,
         language,
       });
-    } catch (error) {
+    } catch (_error) {
       this._loadingState.set({
         loading: false,
         loaded: false,
-        error: error instanceof Error ? error.message : 'Failed to load translations',
+        error: _error instanceof Error ? _error.message : 'Failed to load translations',
         lastUpdated: null,
       });
 
@@ -158,13 +158,13 @@ export class TranslationService {
         {
           type: 'translation_error',
           title: 'Translation Load Error',
-          detail: error instanceof Error ? error.message : 'Unknown error',
+          detail: _error instanceof Error ? _error.message : 'Unknown error',
           code: 'TRANSLATION_LOAD_ERROR',
         },
         { language }
       );
 
-      throw error;
+      throw _error;
     }
   }
 
@@ -186,13 +186,13 @@ export class TranslationService {
         ...currentTranslations,
         [language]: translations,
       });
-    } catch (error) {
+    } catch (_error) {
       // If loading fails and it's not the fallback language, try fallback
       if (language !== FALLBACK_LANGUAGE) {
         this.logger.logWarning(`Failed to load ${language} translations, trying fallback`);
         await this.loadTranslations(FALLBACK_LANGUAGE);
       } else {
-        throw error;
+        throw _error;
       }
     }
   }
@@ -208,7 +208,7 @@ export class TranslationService {
         this.http.get<TranslationFile>(`/assets/i18n/${language}.json`)
       );
       return response;
-    } catch (error) {
+    } catch (_error) {
       // Fallback to embedded translations if file doesn't exist
       this.logger.logWarning(`Could not load translation file for ${language}, using embedded`);
       return this.getEmbeddedTranslations(language);
@@ -671,7 +671,6 @@ export class TranslationService {
     const pluralMatch = translation.match(/\{(\w+),\s*plural,\s*(.+?)\}/);
     if (pluralMatch) {
       const [, , forms] = pluralMatch;
-      const formPairs = forms.split(/\s+(\w+)\s*\{([^}]+)\}/);
 
       // Basic English/Spanish pluralization
       if (count === 1) {

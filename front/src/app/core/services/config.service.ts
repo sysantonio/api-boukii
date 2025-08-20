@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import type { RuntimeEnvironment } from '../models/environment.models';
 // TIP: Ensure your tsconfig has baseUrl 'src' so this import resolves.
 // If not, adjust the path to '../../environments/environment' or your alias.
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
