@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "db:schema:dump": "bash scripts/db/dump-mysql-schema.sh"
     },
     "devDependencies": {
         "axios": "^1.1.2",

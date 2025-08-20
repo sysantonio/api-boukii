@@ -59,7 +59,8 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "db:schema:dump": "bash scripts/db/dump-mysql-schema.sh"
     },
     "extra": {
         "laravel": {
