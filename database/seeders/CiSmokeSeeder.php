@@ -24,6 +24,8 @@ class CiSmokeSeeder extends Seeder
         // Escuela
         $schoolId = DB::table('schools')->insertGetId([
             'name' => 'CI School',
+            'slug' => 'ci-school',
+            'active' => true,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
