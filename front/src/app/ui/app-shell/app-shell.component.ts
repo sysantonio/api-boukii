@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, signal, HostListener } from '@angular/core';
+import { Component, inject, OnInit, computed, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { ThemeToggleComponent } from '@ui/theme-toggle/theme-toggle.component';
@@ -52,11 +52,12 @@ interface Notification {
 
           <!-- Language Menu -->
           <div class="language-menu">
-            <button 
+            <button
+              #languageButton
               class="icon-btn language-toggle"
               (click)="toggleLanguageDropdown()"
               [attr.aria-expanded]="languageDropdownOpen()"
-              aria-haspopup="true"
+              aria-haspopup="menu"
               [attr.title]="'language.title' | translate"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -71,47 +72,18 @@ interface Notification {
             </button>
 
             @if (languageDropdownOpen()) {
-              <div class="language-dropdown" role="menu">
-                <button
-                  class="dropdown-option"
-                  [class.active]="isLang('es')"
-                  (click)="setLanguage('es')"
-                  role="menuitem"
-                >
-                  {{ 'language.es' | translate }}
-                </button>
-                <button
-                  class="dropdown-option"
-                  [class.active]="isLang('en')"
-                  (click)="setLanguage('en')"
-                  role="menuitem"
-                >
-                  {{ 'language.en' | translate }}
-                </button>
-                <button
-                  class="dropdown-option"
-                  [class.active]="isLang('fr')"
-                  (click)="setLanguage('fr')"
-                  role="menuitem"
-                >
-                  {{ 'language.fr' | translate }}
-                </button>
-                <button
-                  class="dropdown-option"
-                  [class.active]="isLang('it')"
-                  (click)="setLanguage('it')"
-                  role="menuitem"
-                >
-                  {{ 'language.it' | translate }}
-                </button>
-                <button
-                  class="dropdown-option"
-                  [class.active]="isLang('de')"
-                  (click)="setLanguage('de')"
-                  role="menuitem"
-                >
-                  {{ 'language.de' | translate }}
-                </button>
+              <div #languageMenu class="language-dropdown" role="menu">
+                @for (lang of languages; track lang) {
+                  <button
+                    class="dropdown-option"
+                    [class.active]="isLang(lang)"
+                    (click)="setLanguage(lang)"
+                    role="menuitemradio"
+                    [attr.aria-checked]="isLang(lang)"
+                  >
+                    {{ ('language.' + lang) | translate }}
+                  </button>
+                }
               </div>
             }
           </div>
@@ -536,6 +508,9 @@ export class AppShellComponent implements OnInit {
     public readonly environmentService: EnvironmentService,
   ) {}
 
+  @ViewChild('languageMenu') languageMenu?: ElementRef<HTMLDivElement>;
+  @ViewChild('languageButton') languageButton?: ElementRef<HTMLButtonElement>;
+
   // Component state signals
   private readonly _languageDropdownOpen = signal(false);
   private readonly _userDropdownOpen = signal(false);
@@ -610,7 +585,20 @@ export class AppShellComponent implements OnInit {
 
   // Language management
   toggleLanguageDropdown(): void {
-    this._languageDropdownOpen.set(!this._languageDropdownOpen());
+    const opening = !this._languageDropdownOpen();
+    this._languageDropdownOpen.set(opening);
+
+    if (opening) {
+      setTimeout(() => {
+        const firstOption = this.languageMenu?.nativeElement.querySelector<HTMLButtonElement>(
+          '.dropdown-option'
+        );
+        firstOption?.focus();
+      });
+    } else {
+      this.languageButton?.nativeElement.focus();
+    }
+
     // Close user dropdown if open
     if (this._userDropdownOpen()) {
       this._userDropdownOpen.set(false);
@@ -636,6 +624,7 @@ export class AppShellComponent implements OnInit {
   async setLanguage(lang: SupportedLanguage): Promise<void> {
     await this.translationService.setLanguage(lang);
     this._languageDropdownOpen.set(false);
+    this.languageButton?.nativeElement.focus();
   }
 
   // User menu management
