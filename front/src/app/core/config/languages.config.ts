@@ -84,7 +84,7 @@ export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
 /**
  * Storage key for selected language
  */
-export const LANGUAGE_STORAGE_KEY = 'boukii_language';
+export const LANGUAGE_STORAGE_KEY = 'language';
 
 /**
  * Get all available languages as array

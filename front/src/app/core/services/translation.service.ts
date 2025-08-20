@@ -716,6 +716,13 @@ export class TranslationService {
    */
   private getStoredLanguage(): SupportedLanguage | null {
     if (typeof localStorage === 'undefined') return null;
+    const legacyKey = 'boukii_language';
+
+    const legacy = localStorage.getItem(legacyKey);
+    if (legacy && !localStorage.getItem(LANGUAGE_STORAGE_KEY)) {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, legacy);
+      localStorage.removeItem(legacyKey);
+    }
 
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (stored && stored in LANGUAGE_CONFIGS) {
@@ -731,6 +738,7 @@ export class TranslationService {
   private storeLanguage(language: SupportedLanguage): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+      localStorage.removeItem('boukii_language');
     }
   }
 
