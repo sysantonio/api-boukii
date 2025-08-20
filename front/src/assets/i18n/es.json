@@ -190,6 +190,51 @@
     "admin": "Administradores",
     "config": "Configuración"
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "noNotifications": "No hay notificaciones",
+    "markAllAsRead": "Marcar todas como leídas",
+    "justNow": "hace un momento",
+    "minutesAgo": "hace {{count}}m",
+    "hoursAgo": "hace {{count}}h",
+    "daysAgo": "hace {{count}}d"
+  },
+  "userMenu": {
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "loggingOut": "Cerrando sesión...",
+    "logoutConfirm": "¿Estás seguro de que deseas cerrar sesión?",
+    "defaultName": "Usuario",
+    "defaultEmail": "usuario@example.com"
+  },
+  "roles": {
+    "admin": "Administrador",
+    "manager": "Gestor",
+    "instructor": "Instructor",
+    "staff": "Personal",
+    "user": "Usuario"
+  },
+  "language": {
+    "title": "Idioma",
+    "es": "ES - Español",
+    "en": "EN - Inglés",
+    "fr": "FR - Francés",
+    "it": "IT - Italiano",
+    "de": "DE - Alemán"
+  },
+  "theme": {
+    "toggle": "Cambiar tema",
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  },
+  "support": {
+    "needHelp": "¿Necesitas ayuda?",
+    "support": "Soporte"
+  },
+  "sidebar": {
+    "toggle": "Colapsar/Expandir"
+  },
   "errors": {
     "general": "Ha ocurrido un error inesperado",
     "network": "Error de conexión. Verifica tu conexión a internet",

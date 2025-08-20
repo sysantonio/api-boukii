@@ -78,7 +78,7 @@ describe('AppShellComponent interactions', () => {
   it('chevron toggles collapsed class, rotates and persists', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
-    const button = screen.getByLabelText('Colapsar/Expandir');
+    const button = screen.getByLabelText('sidebar.toggle');
     const shell = fixture.nativeElement.querySelector('.app-shell');
     expect(shell.classList).not.toContain('app-sidebar--collapsed');
     await user.click(button);

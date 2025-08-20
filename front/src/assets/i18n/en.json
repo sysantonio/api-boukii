@@ -130,7 +130,54 @@
     "pagos": "Payments",
     "reportes": "Reports",
     "admin": "Administrators",
-    "config": "Settings"
+    "config": "Settings",
+    "notifications": "Notifications",
+    "mainNavigation": "Main navigation"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "noNotifications": "No notifications",
+    "markAllAsRead": "Mark all as read",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "userMenu": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Log out",
+    "loggingOut": "Logging out...",
+    "logoutConfirm": "Are you sure you want to log out?",
+    "defaultName": "User",
+    "defaultEmail": "user@example.com"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "manager": "Manager",
+    "instructor": "Instructor",
+    "staff": "Staff",
+    "user": "User"
+  },
+  "language": {
+    "title": "Language",
+    "es": "ES - Spanish",
+    "en": "EN - English",
+    "fr": "FR - French",
+    "it": "IT - Italian",
+    "de": "DE - German"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "support": {
+    "needHelp": "Need help?",
+    "support": "Support"
+  },
+  "sidebar": {
+    "toggle": "Collapse/Expand"
   },
   "errors": {
     "general": "An unexpected error occurred",
