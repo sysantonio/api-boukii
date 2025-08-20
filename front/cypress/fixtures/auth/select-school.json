@@ -1,0 +1,48 @@
+{
+  "success": true,
+  "data": {
+    "access_token": "final-token",
+    "user": {
+      "id": 1,
+      "name": "Test User",
+      "email": "test@boukii.com",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01"
+    },
+    "school": {
+      "id": 1,
+      "name": "Test School",
+      "slug": "test-school",
+      "status": "active",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01"
+    },
+    "season": {
+      "id": 100,
+      "school_id": 1,
+      "name": "2025 Season",
+      "slug": "2025-season",
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31",
+      "status": "active",
+      "is_current": true,
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01"
+    },
+    "available_seasons": [
+      {
+        "id": 100,
+        "school_id": 1,
+        "name": "2025 Season",
+        "slug": "2025-season",
+        "start_date": "2025-01-01",
+        "end_date": "2025-12-31",
+        "status": "active",
+        "is_current": true,
+        "created_at": "2025-01-01",
+        "updated_at": "2025-01-01"
+      }
+    ],
+    "has_multiple_seasons": false
+  }
+}
