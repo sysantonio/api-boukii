@@ -83,6 +83,7 @@ class MockUiStore {
   ]);
   
   theme = computed(() => this.themeSignal());
+  isDark = computed(() => this.themeSignal() === 'dark');
   sidebarCollapsed = computed(() => this.sidebarCollapsedSignal());
   notifications = computed(() => this.notificationsSignal());
   unreadNotificationsCount = computed(() => 
@@ -92,7 +93,7 @@ class MockUiStore {
   toggleTheme(): void {
     const current = this.themeSignal();
     this.themeSignal.set(current === 'light' ? 'dark' : 'light');
-    document.body.setAttribute('data-theme', this.themeSignal());
+    document.body.dataset.theme = this.themeSignal();
   }
   
   toggleSidebar(): void {
@@ -100,7 +101,7 @@ class MockUiStore {
   }
   
   initializeTheme(): void {
-    document.body.setAttribute('data-theme', this.themeSignal());
+    document.body.dataset.theme = this.themeSignal();
   }
 }
 

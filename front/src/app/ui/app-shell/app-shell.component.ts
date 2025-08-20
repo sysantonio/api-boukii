@@ -117,13 +117,13 @@ interface Notification {
           </div>
 
           <!-- Theme Toggle -->
-          <button 
+          <button
             class="icon-btn"
-            (click)="toggleTheme()"
-            [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+            (click)="ui.toggleTheme()"
+            [attr.aria-label]="ui.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
             title="Toggle theme"
           >
-            @if (isDarkMode()) {
+            @if (ui.isDark()) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -538,7 +538,6 @@ export class AppShellComponent implements OnInit {
   // Component state signals
   private readonly _languageDropdownOpen = signal(false);
   private readonly _userDropdownOpen = signal(false);
-  private readonly _isDarkMode = signal(false);
   private readonly _notificationDropdownOpen = signal(false);
   private readonly _loggingOut = signal(false);
   private readonly _notifications = signal<Notification[]>([
@@ -571,7 +570,6 @@ export class AppShellComponent implements OnInit {
   // Public computed properties
   readonly languageDropdownOpen = this._languageDropdownOpen.asReadonly();
   readonly userDropdownOpen = this._userDropdownOpen.asReadonly();
-  readonly isDarkMode = this._isDarkMode.asReadonly();
   readonly notificationDropdownOpen = this._notificationDropdownOpen.asReadonly();
   readonly notifications = this._notifications.asReadonly();
   readonly loggingOut = this._loggingOut.asReadonly();
@@ -600,27 +598,8 @@ export class AppShellComponent implements OnInit {
     // Initialize theme system
     this.ui.initializeTheme();
 
-    // Load theme state
-    this.loadThemeState();
-
     // Try to load user session if token exists
     this.auth.loadMe();
-  }
-
-  // Theme management
-  private loadThemeState(): void {
-    const theme = localStorage.getItem('theme') || 'light';
-    this._isDarkMode.set(theme === 'dark');
-    document.documentElement.setAttribute('data-theme', theme);
-  }
-
-  toggleTheme(): void {
-    const currentTheme = this._isDarkMode();
-    const newTheme = currentTheme ? 'light' : 'dark';
-    
-    this._isDarkMode.set(!currentTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
   }
 
   // Sidebar management
