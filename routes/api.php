@@ -28,9 +28,6 @@ use App\Models\StationService;
 use App\Models\User;
 use App\Traits\Utils;
 use Carbon\Carbon;
-
-// Include V5 API Routes
-Route::prefix('v5')->group(base_path('routes/api/v5.php'));
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +38,14 @@ use Payrexx\Models\Request\Gateway as GatewayRequest;
 use Payrexx\Models\Request\Transaction as TransactionRequest;
 use Payrexx\Models\Response\Transaction as TransactionResponse;
 use Payrexx\Payrexx;
+
+Route::prefix('api/v5')
+    ->middleware(['api', 'throttle:api'])
+    ->group(function () {
+        require base_path('routes/api_v5/auth.php');
+        require base_path('routes/api_v5/schools.php');
+        require base_path('routes/api_v5/seasons.php');
+    });
 
 /*
 |--------------------------------------------------------------------------
