@@ -26,7 +26,7 @@
     "config:test": "node scripts/configure-environment.js test",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --coverage --runInBand",
+    "test:ci": "jest --clearCache && jest --ci --coverage --runInBand",
     "test:karma": "ng test",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",

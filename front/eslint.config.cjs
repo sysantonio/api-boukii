@@ -12,7 +12,7 @@ module.exports = [
       'node_modules/**',
       '.storybook/**',
       'cypress.config.ts',
-      'jest.config.ts',
+      'jest.config.cjs',
       'src/environments/**'
     ]
   },
