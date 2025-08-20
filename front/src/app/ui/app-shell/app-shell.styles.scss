@@ -94,7 +94,7 @@
 .language-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
   min-width: 140px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 50; overflow: hidden;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 1000; overflow: hidden;
 }
 
 /* Notifications */
@@ -109,6 +109,12 @@
   position: absolute; top: -2px; right: -2px;
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--red);
+}
+
+.notifications-dropdown {
+  position: absolute; top: calc(100% + 4px); right: 0;
+  min-width: 300px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 1000; overflow: hidden;
 }
 
 /* User menu */
@@ -126,7 +132,7 @@
 .user-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
   min-width: 180px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 50; overflow: hidden;
+  border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 1000; overflow: hidden;
 }
 .dropdown-option {
   display: flex; align-items: center; gap: 8px;
