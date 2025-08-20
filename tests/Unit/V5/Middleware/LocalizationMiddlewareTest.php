@@ -17,7 +17,7 @@ class LocalizationMiddlewareTest extends TestCase
         $this->middleware = new LocalizationMiddleware();
     }
 
-    public function test_sets_locale_from_query_parameter()
+    public function test_sets_locale_from_query_parameter(): void
     {
         $request = Request::create('/test', 'GET', ['lang' => 'es']);
         
@@ -27,7 +27,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_sets_locale_from_accept_language_header()
+    public function test_sets_locale_from_accept_language_header(): void
     {
         $request = Request::create('/test', 'GET');
         $request->headers->set('Accept-Language', 'fr-FR,fr;q=0.9,en;q=0.8');
@@ -38,7 +38,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_parses_complex_accept_language_header()
+    public function test_parses_complex_accept_language_header(): void
     {
         $request = Request::create('/test', 'GET');
         $request->headers->set('Accept-Language', 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7,es;q=0.6');
@@ -49,7 +49,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_falls_back_to_default_locale_for_unsupported_language()
+    public function test_falls_back_to_default_locale_for_unsupported_language(): void
     {
         $request = Request::create('/test', 'GET', ['lang' => 'zh']);
         
@@ -59,7 +59,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_falls_back_to_default_locale_when_no_language_specified()
+    public function test_falls_back_to_default_locale_when_no_language_specified(): void
     {
         $request = Request::create('/test', 'GET');
         
@@ -72,7 +72,7 @@ class LocalizationMiddlewareTest extends TestCase
     /**
      * @dataProvider validLocaleProvider
      */
-    public function test_accepts_all_valid_locales($locale)
+    public function test_accepts_all_valid_locales($locale): void
     {
         $request = Request::create('/test', 'GET', ['lang' => $locale]);
         
@@ -82,7 +82,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function validLocaleProvider(): array
+    public static function validLocaleProvider(): array
     {
         return [
             ['en'],
@@ -93,7 +93,7 @@ class LocalizationMiddlewareTest extends TestCase
         ];
     }
 
-    public function test_query_parameter_takes_precedence_over_header()
+    public function test_query_parameter_takes_precedence_over_header(): void
     {
         $request = Request::create('/test', 'GET', ['lang' => 'it']);
         $request->headers->set('Accept-Language', 'fr-FR,fr;q=0.9');
@@ -104,7 +104,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_handles_malformed_accept_language_header_gracefully()
+    public function test_handles_malformed_accept_language_header_gracefully(): void
     {
         $request = Request::create('/test', 'GET');
         $request->headers->set('Accept-Language', 'invalid-header-format');
@@ -115,7 +115,7 @@ class LocalizationMiddlewareTest extends TestCase
         });
     }
 
-    public function test_available_locales_method()
+    public function test_available_locales_method(): void
     {
         $locales = LocalizationMiddleware::getAvailableLocales();
         

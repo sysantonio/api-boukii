@@ -34,7 +34,7 @@ class LocalizedExceptionsTest extends TestCase
     /**
      * @dataProvider localeProvider
      */
-    public function test_season_not_found_returns_localized_message($locale, $expectedContains)
+    public function test_season_not_found_returns_localized_message($locale, $expectedContains): void
     {
         Sanctum::actingAs($this->user);
 
@@ -50,7 +50,7 @@ class LocalizedExceptionsTest extends TestCase
     /**
      * @dataProvider localeProvider
      */
-    public function test_validation_errors_are_localized($locale, $expectedContains)
+    public function test_validation_errors_are_localized($locale, $expectedContains): void
     {
         Sanctum::actingAs($this->user);
 
@@ -70,7 +70,7 @@ class LocalizedExceptionsTest extends TestCase
     /**
      * @dataProvider localeProvider
      */
-    public function test_authentication_errors_are_localized($locale, $expectedContains)
+    public function test_authentication_errors_are_localized($locale, $expectedContains): void
     {
         $response = $this->postJson("/api/v5/auth/login?lang={$locale}", [
             'email' => 'invalid@email.com',
@@ -88,7 +88,7 @@ class LocalizedExceptionsTest extends TestCase
     /**
      * @dataProvider localeProvider
      */
-    public function test_permission_errors_are_localized($locale, $expectedContains)
+    public function test_permission_errors_are_localized($locale, $expectedContains): void
     {
         // Create user without proper permissions
         $unauthorizedUser = User::factory()->create(['active' => true]);
@@ -103,7 +103,7 @@ class LocalizedExceptionsTest extends TestCase
         $this->assertIsString($data['message']);
     }
 
-    public function test_accept_language_header_is_respected()
+    public function test_accept_language_header_is_respected(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -124,7 +124,7 @@ class LocalizedExceptionsTest extends TestCase
         );
     }
 
-    public function test_query_parameter_overrides_accept_language_header()
+    public function test_query_parameter_overrides_accept_language_header(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -145,7 +145,7 @@ class LocalizedExceptionsTest extends TestCase
         );
     }
 
-    public function test_unsupported_locale_falls_back_to_english()
+    public function test_unsupported_locale_falls_back_to_english(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -163,7 +163,7 @@ class LocalizedExceptionsTest extends TestCase
         );
     }
 
-    public function localeProvider(): array
+    public static function localeProvider(): array
     {
         return [
             ['en', 'not found'],

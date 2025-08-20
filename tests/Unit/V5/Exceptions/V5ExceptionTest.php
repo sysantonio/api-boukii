@@ -13,7 +13,7 @@ class V5ExceptionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_season_not_found_exception_structure()
+    public function test_season_not_found_exception_structure(): void
     {
         $exception = SeasonNotFoundException::withId(123);
         
@@ -31,7 +31,7 @@ class V5ExceptionTest extends TestCase
         $this->assertEquals(['season_id' => 123], $data['context']);
     }
 
-    public function test_season_validation_exception_overlapping_seasons()
+    public function test_season_validation_exception_overlapping_seasons(): void
     {
         $conflictingSeasons = [1, 2, 3];
         $exception = SeasonValidationException::overlappingSeasons($conflictingSeasons);
@@ -41,7 +41,7 @@ class V5ExceptionTest extends TestCase
         $this->assertEquals(['conflicting_seasons' => $conflictingSeasons], $exception->getContext());
     }
 
-    public function test_authentication_exception_invalid_credentials()
+    public function test_authentication_exception_invalid_credentials(): void
     {
         $exception = AuthenticationException::invalidCredentials();
         
@@ -52,7 +52,7 @@ class V5ExceptionTest extends TestCase
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    public function test_authorization_exception_missing_permission()
+    public function test_authorization_exception_missing_permission(): void
     {
         $permission = 'view_schools';
         $exception = AuthorizationException::missingPermission($permission);
@@ -62,7 +62,7 @@ class V5ExceptionTest extends TestCase
         $this->assertEquals(['required_permission' => $permission], $exception->getContext());
     }
 
-    public function test_exception_response_includes_debug_info_when_debug_enabled()
+    public function test_exception_response_includes_debug_info_when_debug_enabled(): void
     {
         config(['app.debug' => true]);
         
@@ -76,7 +76,7 @@ class V5ExceptionTest extends TestCase
         $this->assertArrayHasKey('trace', $data['debug']);
     }
 
-    public function test_exception_response_excludes_debug_info_when_debug_disabled()
+    public function test_exception_response_excludes_debug_info_when_debug_disabled(): void
     {
         config(['app.debug' => false]);
         
@@ -90,7 +90,7 @@ class V5ExceptionTest extends TestCase
     /**
      * @dataProvider exceptionLanguageProvider
      */
-    public function test_exception_messages_are_localized($locale, $expectedMessageKey)
+    public function test_exception_messages_are_localized($locale, $expectedMessageKey): void
     {
         app()->setLocale($locale);
         
@@ -103,7 +103,7 @@ class V5ExceptionTest extends TestCase
         $this->assertIsString($data['message']);
     }
 
-    public function exceptionLanguageProvider(): array
+    public static function exceptionLanguageProvider(): array
     {
         return [
             ['en', 'exceptions.season.not_found'],
