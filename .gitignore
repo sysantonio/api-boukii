@@ -17,6 +17,8 @@
 .env
 .env.*
 !.env.example
+!.env.ci.sqlite
+!.env.ci.mysql
 
 # IDE files
 /.fleet
