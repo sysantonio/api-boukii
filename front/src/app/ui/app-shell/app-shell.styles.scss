@@ -105,6 +105,11 @@
   background: var(--red); color: #fff; font: 700 10px/1 Inter;
   display: grid; place-items: center;
 }
+.notification-dot {
+  position: absolute; top: -2px; right: -2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+}
 
 /* User menu */
 .user-menu { position: relative; }
