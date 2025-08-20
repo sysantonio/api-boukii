@@ -1,4 +1,5 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -24,7 +25,7 @@ export class ThemeService {
     return theme;
   });
 
-  constructor() {
+  constructor(private overlay: OverlayContainer) {
     // Effect para aplicar el tema al DOM cuando cambie
     effect(() => {
       const theme = this.effectiveTheme();
@@ -146,6 +147,10 @@ export class ThemeService {
       detail: { theme, previous: theme === 'light' ? 'dark' : 'light' },
     });
     document.dispatchEvent(event);
+
+    // Propagar data-theme al contenedor de overlays para que herede las variables
+    const el = this.overlay.getContainerElement();
+    el.setAttribute('data-theme', theme);
   }
 
   /**

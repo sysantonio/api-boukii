@@ -68,6 +68,7 @@
   /* Elevation */
   --elev-1: 0 1px 2px var(--shadow);
   --elev-2: 0 4px 10px var(--shadow);
+  --elev-3: 0 8px 24px var(--shadow);
 
   /* Typography */
   --fs-12: 12px;
@@ -92,6 +93,11 @@
   --text-1: #f1f5f9;
   --text-2: #cbd5e1;
   --muted: #94a3b8;
+
+  /* Elevation */
+  --elev-1: 0 1px 2px var(--shadow);
+  --elev-2: 0 4px 10px var(--shadow);
+  --elev-3: 0 8px 24px var(--shadow);
   
   /* Improved contrast for yellow chips in dark mode */
   .chip--yellow { 
@@ -112,9 +118,9 @@ a {
   text-decoration: none; 
 }
 
-*:focus-visible { 
-  outline: 2px solid var(--brand-500); 
-  outline-offset: 2px; 
+*:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) { 
@@ -192,9 +198,9 @@ a {
   color: #915e00; 
 }
 
-.chip--red    { 
-  background: color-mix(in srgb, var(--red) 16%, transparent); 
-  color: var(--red); 
+.chip--red    {
+  background: color-mix(in srgb, var(--red) 16%, transparent);
+  color: var(--red);
 }
 
 /* KPI */
@@ -389,4 +395,37 @@ html {
 .icon-btn:focus-visible {
   outline: 2px solid var(--brand-500);
   outline-offset: 2px;
+}
+
+/* Overlay menus */
+.cdk-overlay-container, .cdk-overlay-pane {
+  z-index: 1000;
+}
+
+[data-theme] .mat-mdc-menu-panel,
+[data-theme] .cdk-overlay-pane .menu-panel {
+  background: var(--surface);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  box-shadow: var(--elev-3);
+  border-radius: 12px;
+  min-width: 220px;
+}
+
+.menu-item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.menu-item:hover {
+  background: var(--surface-2);
+}
+
+.menu-section {
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 12px;
 }

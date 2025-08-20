@@ -17,7 +17,7 @@ function getStoredTheme(): Theme {
 // Helper to get stored sidebar state with fallback
 function getStoredSidebarState(): boolean {
   if (typeof localStorage === 'undefined') return false;
-  const stored = localStorage.getItem('sidebar-collapsed');
+  const stored = localStorage.getItem('sidebarCollapsed');
   return stored === 'true';
 }
 
@@ -47,7 +47,7 @@ export class UiStore {
     this._sidebarCollapsed.set(newState);
     // Persist sidebar state
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebar-collapsed', String(newState));
+      localStorage.setItem('sidebarCollapsed', String(newState));
     }
   }
 
@@ -55,7 +55,7 @@ export class UiStore {
     this._sidebarCollapsed.set(collapsed);
     // Persist sidebar state
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebar-collapsed', String(collapsed));
+      localStorage.setItem('sidebarCollapsed', String(collapsed));
     }
   }
 
