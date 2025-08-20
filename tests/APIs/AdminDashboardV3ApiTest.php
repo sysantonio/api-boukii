@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
+/**
+ * @group mysql
+ */
 class AdminDashboardV3ApiTest extends TestCase
 {
     use WithoutMiddleware, DatabaseTransactions;
@@ -165,7 +168,7 @@ class AdminDashboardV3ApiTest extends TestCase
     }
 
     /** @test */
-    public function summary_endpoint_returns_expected_structure()
+    public function summary_endpoint_returns_expected_structure(): void
     {
         $this->seedSummaryData();
 
@@ -179,7 +182,7 @@ class AdminDashboardV3ApiTest extends TestCase
     }
 
     /** @test */
-    public function courses_endpoint_returns_expected_structure()
+    public function courses_endpoint_returns_expected_structure(): void
     {
         $this->getJson('/api/v3/admin/dashboard/courses')
             ->assertStatus(200)
@@ -187,7 +190,7 @@ class AdminDashboardV3ApiTest extends TestCase
     }
 
     /** @test */
-    public function sales_endpoint_returns_expected_structure()
+    public function sales_endpoint_returns_expected_structure(): void
     {
         $this->getJson('/api/v3/admin/dashboard/sales')
             ->assertStatus(200)
@@ -195,7 +198,7 @@ class AdminDashboardV3ApiTest extends TestCase
     }
 
     /** @test */
-    public function reservations_endpoint_returns_expected_structure()
+    public function reservations_endpoint_returns_expected_structure(): void
     {
         $this->getJson('/api/v3/admin/dashboard/reservations')
             ->assertStatus(200)
@@ -203,10 +206,11 @@ class AdminDashboardV3ApiTest extends TestCase
     }
 
     /** @test */
-    public function weather_endpoint_returns_expected_structure()
+    public function weather_endpoint_returns_expected_structure(): void
     {
         $this->getJson('/api/v3/admin/dashboard/weather?station_id=1')
             ->assertStatus(200)
             ->assertJson(['message' => 'weather']);
     }
 }
+

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
 
+/**
+ * @group mysql
+ */
 class AvailabilityTest extends TestCase
 {
     protected function setUp(): void
@@ -139,7 +142,7 @@ class AvailabilityTest extends TestCase
         ]);
     }
 
-    public function test_availability_matrix()
+    public function test_availability_matrix(): void
     {
         $this->seedData();
 
@@ -155,7 +158,7 @@ class AvailabilityTest extends TestCase
         $response->assertJsonPath('data.summary.totalSlots', 1);
     }
 
-    public function test_realtime_check_detects_conflict()
+    public function test_realtime_check_detects_conflict(): void
     {
         $this->seedData();
 
@@ -169,7 +172,7 @@ class AvailabilityTest extends TestCase
         $response->assertJsonCount(1, 'data.conflicts');
     }
 
-    public function test_realtime_check_no_conflict()
+    public function test_realtime_check_no_conflict(): void
     {
         $this->seedData();
 
@@ -183,3 +186,4 @@ class AvailabilityTest extends TestCase
         $response->assertJsonCount(0, 'data.conflicts');
     }
 }
+
