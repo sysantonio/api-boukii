@@ -8,7 +8,7 @@ import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { UiStore } from '@core/stores/ui.store';
 import { AuthStore } from '@core/stores/auth.store';
 import { LoadingStore } from '@core/stores/loading.store';
-import { TranslationService } from '@core/services/translation.service';
+import { TranslationService, SupportedLanguage, SUPPORTED_LANGUAGES } from '@core/services/translation.service';
 import { EnvironmentService } from '@core/services/environment.service';
 import { AuthV5Service } from '@core/services/auth-v5.service';
 
@@ -63,25 +63,25 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
 
             @if (languageDropdownOpen()) {
               <div class="language-dropdown" role="menu">
-                <button 
+                <button
                   class="dropdown-option"
-                  [class.active]="translationService.currentLanguage() === 'es'"
+                  [class.active]="isLang('es')"
                   (click)="setLanguage('es')"
                   role="menuitem"
                 >
                   ES - Español
                 </button>
-                <button 
+                <button
                   class="dropdown-option"
-                  [class.active]="translationService.currentLanguage() === 'en'"
+                  [class.active]="isLang('en')"
                   (click)="setLanguage('en')"
                   role="menuitem"
                 >
                   EN - English
                 </button>
-                <button 
+                <button
                   class="dropdown-option"
-                  [class.active]="translationService.currentLanguage() === 'fr'"
+                  [class.active]="isLang('fr')"
                   (click)="setLanguage('fr')"
                   role="menuitem"
                 >
@@ -377,10 +377,10 @@ import { AuthV5Service } from '@core/services/auth-v5.service';
           </div>
         }
         
-        <!-- Environment Badge (Development) -->
-        @if (environmentService.isDevelopment()) {
+        <!-- Environment Badge -->
+        @if (!environmentService.isProduction()) {
           <div class="env-badge">
-            DEVELOPMENT
+            {{ environmentService.envName() | uppercase }}
           </div>
         }
       </div>
@@ -402,8 +402,13 @@ export class AppShellComponent implements OnInit {
   protected readonly auth = inject(AuthStore);
   protected readonly loadingStore = inject(LoadingStore);
   protected readonly authV5 = inject(AuthV5Service);
-  protected readonly translationService = inject(TranslationService);
-  protected readonly environmentService = inject(EnvironmentService);
+
+  languages: SupportedLanguage[] = [...SUPPORTED_LANGUAGES];
+
+  constructor(
+    public readonly translationService: TranslationService,
+    public readonly environmentService: EnvironmentService,
+  ) {}
 
   // Component state signals
   private readonly _sidebarCollapsed = signal(false);
@@ -491,9 +496,12 @@ export class AppShellComponent implements OnInit {
     return langMap[lang] || 'ES';
   }
 
-  setLanguage(lang: string): void {
-    // Type assertion since we know the values are valid from the template
-    this.translationService.setLanguage(lang as 'en' | 'es' | 'fr');
+  isLang(lang: SupportedLanguage): boolean {
+    return this.translationService.currentLanguage() === lang;
+  }
+
+  setLanguage(lang: SupportedLanguage): void {
+    this.translationService.setLanguage(lang);
     this._languageDropdownOpen.set(false);
   }
 

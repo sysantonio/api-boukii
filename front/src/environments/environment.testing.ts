@@ -1,6 +1,7 @@
 // Test environment for CI/CD and automated testing
 export const environment = {
   name: 'Test',
+  envName: 'test',
   production: false,
   development: false,
   staging: false,

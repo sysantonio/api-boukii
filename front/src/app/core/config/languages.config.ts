@@ -30,6 +30,19 @@ export const LANGUAGE_CONFIGS: Record<SupportedLanguage, LanguageConfig> = {
     thousandsSeparator: '.',
     decimalSeparator: ',',
   },
+  fr: {
+    code: 'fr',
+    name: 'French',
+    nativeName: 'Français',
+    flag: '🇫🇷',
+    direction: 'ltr',
+    dateFormat: 'dd/MM/yyyy',
+    timeFormat: 'HH:mm',
+    currencyCode: 'EUR',
+    currencySymbol: '€',
+    thousandsSeparator: ' ',
+    decimalSeparator: ',',
+  },
 };
 
 /**
