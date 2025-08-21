@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata, applicationConfig } from '@storybook/angular';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { within, userEvent } from '@storybook/testing-library';
+import { within, userEvent } from '@storybook/test';
 import { signal, computed } from '@angular/core';
 
 import { AppShellComponent } from './app-shell.component';
@@ -34,7 +34,7 @@ class MockUiStore {
   theme = computed(() => this.themeSignal());
   isDark = computed(() => this.themeSignal() === 'dark');
   sidebarCollapsed = computed(() => this.collapsedSignal());
-  initializeTheme() { document.body.dataset.theme = this.themeSignal(); }
+  initializeTheme() { (document.body.dataset as any)['theme'] = this.themeSignal(); }
 }
 
 const meta: Meta<AppShellComponent> = {
