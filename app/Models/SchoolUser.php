@@ -50,9 +50,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          format="date-time"
  *      )
  * )
- */class SchoolUser extends Model
+*/class SchoolUser extends Model
 {
-      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'school_users';
+      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'school_user';
+    public $primaryKey = null;
+    public $incrementing = false;
 
     public $fillable = [
         'school_id',

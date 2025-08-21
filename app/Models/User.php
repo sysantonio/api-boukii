@@ -187,7 +187,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     {
         return $this->belongsToMany(
             \App\Models\School::class,
-            'school_users', // Tabla pivote
+            'school_user', // Tabla pivote
             'user_id', // Clave foránea del modelo actual
             'school_id' // Clave foránea del modelo relacionado
         )->where('schools.active', 1)
