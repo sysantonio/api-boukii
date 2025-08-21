@@ -40,6 +40,9 @@
     }
   },
   "auth": {
+    "brand": {
+      "line": "Manage your sports school professionally"
+    },
     "common": {
       "email": "Email",
       "password": "Password",
@@ -73,6 +76,9 @@
       "button": "Sign In",
       "success": "Successfully signed in",
       "error": "Login failed",
+      "processing": "Processing...",
+      "selectingSchool": "Selecting school...",
+      "selectingSeason": "Selecting season...",
       "welcome": {
         "title": "Welcome back",
         "subtitle": "Access your Boukii V5 administration panel"
@@ -98,6 +104,7 @@
       "button": "Create Account",
       "success": "Account created successfully",
       "error": "Registration failed",
+      "processing": "Processing registration...",
       "welcome": {
         "title": "Join Boukii V5",
         "subtitle": "Manage your sports school professionally and modernly."
@@ -123,10 +130,13 @@
       "button": "Send Reset Link",
       "success": "Reset link sent successfully",
       "error": "Failed to send reset link",
+      "processing": "Processing...",
+      "emailSent": "If an account exists with that email, we've sent instructions.",
       "successTitle": "Reset Link Sent!",
       "successMessage": "We've sent recovery instructions to:",
       "checkSpam": "If you don't see the email, check your spam folder.",
-      "sendAnother": "Send Another Link"
+      "sendAnother": "Send Another Link",
+      "rememberedPassword": "Remembered your password?"
     },
     "email": {
       "label": "Email",

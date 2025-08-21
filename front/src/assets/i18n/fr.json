@@ -40,29 +40,32 @@
     }
   },
   "auth": {
+    "brand": {
+      "line": "Gérez votre école de sport en toute simplicité"
+    },
     "common": {
       "email": "Email",
       "password": "Mot de passe",
       "showPassword": "Afficher le mot de passe",
       "hidePassword": "Masquer le mot de passe",
       "signin": "Se connecter",
-      "signup": "S'inscrire",
+      "signup": "Créer un compte",
       "forgot": "Mot de passe oublié ?",
       "haveAccount": "Vous avez déjà un compte ?",
       "noAccount": "Vous n'avez pas de compte ?"
     },
     "errors": {
       "requiredEmail": "L'email est requis",
-      "invalidEmail": "Veuillez saisir un email valide",
+      "invalidEmail": "Veuillez entrer un email valide",
       "requiredPassword": "Le mot de passe est requis",
       "passwordsNoMatch": "Les mots de passe ne correspondent pas"
     },
     "hero": {
       "welcomeBack": "Bon retour",
       "join": "Rejoignez Boukii V5",
-      "feature1": "Gestion Complète",
+      "feature1": "Gestion complète",
       "feature1Desc": "Gestion, réservations et plus.",
-      "feature2": "Multi-Saisons",
+      "feature2": "Multi-saison",
       "feature2Desc": "Organisez par saisons.",
       "feature3": "Professionnalisation",
       "feature3Desc": "Outils professionnels."
@@ -70,118 +73,125 @@
     "login": {
       "title": "Se connecter",
       "subtitle": "Entrez vos identifiants pour continuer",
-      "button": "Iniciar Sesión",
-      "success": "Sesión iniciada correctamente",
-      "error": "Error al iniciar sesión",
+      "button": "Se connecter",
+      "success": "Connexion réussie",
+      "error": "Échec de la connexion",
+      "processing": "Traitement...",
+      "selectingSchool": "Sélection de l'école...",
+      "selectingSeason": "Sélection de la saison...",
       "welcome": {
-        "title": "Bienvenido de vuelta",
-        "subtitle": "Accede a tu panel de administración de Boukii V5"
+        "title": "Bon retour",
+        "subtitle": "Accédez à votre panneau d'administration Boukii V5"
       },
       "features": {
         "dashboard": {
-          "title": "Dashboard Intuitivo",
-          "description": "Visualiza métricas en tiempo real"
+          "title": "Tableau de bord intuitif",
+          "description": "Visualisez des métriques en temps réel"
         },
         "management": {
-          "title": "Gestión Completa",
-          "description": "Clientes, reservas y planificación"
+          "title": "Gestion complète",
+          "description": "Clients, réservations et planification"
         },
         "reports": {
-          "title": "Reportes Avanzados",
-          "description": "Análisis de datos y tendencias"
+          "title": "Rapports avancés",
+          "description": "Analyse de données et tendances"
         }
       }
     },
     "register": {
-      "title": "Crear Cuenta",
-      "subtitle": "Únete a Boukii V5 y gestiona tu escuela de forma profesional",
-      "button": "Crear Cuenta",
-      "success": "Cuenta creada correctamente",
-      "error": "Error al crear la cuenta",
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez Boukii V5 et gérez votre école professionnellement",
+      "confirmPassword": "Confirmer le mot de passe",
+      "button": "Créer un compte",
+      "success": "Compte créé avec succès",
+      "error": "Erreur lors de la création du compte",
+      "processing": "Traitement de l'inscription...",
       "welcome": {
-        "title": "Únete a Boukii V5",
-        "subtitle": "Gestiona tu escuela deportiva de forma profesional y moderna."
+        "title": "Rejoignez Boukii V5",
+        "subtitle": "Gérez votre école sportive de manière professionnelle et moderne."
       },
       "features": {
         "management": {
-          "title": "Gestión Completa",
-          "description": "Administra cursos, reservas, monitores y temporadas desde un solo lugar."
+          "title": "Gestion complète",
+          "description": "Gérez cours, réservations, moniteurs et saisons depuis un seul endroit."
         },
         "seasons": {
-          "title": "Multi-Temporada",
-          "description": "Organiza tus actividades por temporadas y mantén un control detallado."
+          "title": "Multi-saison",
+          "description": "Organisez vos activités par saisons et gardez un contrôle détaillé."
         },
         "professional": {
-          "title": "Profesionalización",
-          "description": "Herramientas avanzadas para escuelas deportivas modernas y eficientes."
+          "title": "Professionnalisation",
+          "description": "Outils avancés pour des écoles sportives modernes et efficaces."
         }
       }
     },
     "forgotPassword": {
-      "title": "Recuperar Contraseña",
-      "subtitle": "Te enviaremos un enlace para restablecer tu contraseña",
-      "button": "Enviar Enlace",
-      "success": "Enlace enviado correctamente",
-      "error": "Error al enviar el enlace",
-      "successTitle": "¡Enlace Enviado!",
-      "successMessage": "Hemos enviado las instrucciones de recuperación a:",
-      "checkSpam": "Si no encuentras el email, revisa tu carpeta de spam.",
-      "sendAnother": "Enviar Otro Enlace",
-      "rememberedPassword": "¿Recordaste tu contraseña?",
+      "title": "Réinitialiser le mot de passe",
+      "subtitle": "Nous vous enverrons un lien pour réinitialiser votre mot de passe",
+      "button": "Envoyer le lien",
+      "success": "Lien envoyé avec succès",
+      "error": "Erreur lors de l'envoi du lien",
+      "processing": "Traitement...",
+      "emailSent": "Si un compte existe avec cet email, nous avons envoyé les instructions.",
+      "successTitle": "Lien envoyé !",
+      "successMessage": "Nous avons envoyé les instructions de récupération à :",
+      "checkSpam": "Si vous ne trouvez pas l'email, vérifiez votre dossier spam.",
+      "sendAnother": "Envoyer un autre lien",
+      "rememberedPassword": "Vous vous souvenez de votre mot de passe ?",
       "welcome": {
-        "title": "Recupera Tu Acceso",
-        "subtitle": "Te ayudamos a recuperar el acceso a tu cuenta de forma segura y rápida."
+        "title": "Récupérez votre accès",
+        "subtitle": "Nous vous aidons à récupérer l'accès à votre compte de manière sûre et rapide."
       },
       "features": {
         "secure": {
-          "title": "Proceso Seguro",
-          "description": "Utilizamos encriptación de alta seguridad para proteger tu información."
+          "title": "Processus sécurisé",
+          "description": "Nous utilisons un chiffrement de haute sécurité pour protéger vos informations."
         },
         "email": {
-          "title": "Envío Instantáneo",
-          "description": "Recibirás el enlace de recuperación en tu email en segundos."
+          "title": "Envoi instantané",
+          "description": "Vous recevrez le lien de récupération dans votre email en quelques secondes."
         },
         "quick": {
-          "title": "Acceso Rápido",
-          "description": "Recupera el acceso a tu cuenta en menos de 2 minutos."
+          "title": "Accès rapide",
+          "description": "Récupérez l'accès à votre compte en moins de 2 minutes."
         }
       }
     },
     "email": {
       "label": "Email",
-      "placeholder": "Ingresa tu email",
-      "required": "El email es requerido",
-      "invalid": "El email no es válido"
+      "placeholder": "Entrez votre email",
+      "required": "L'email est requis",
+      "invalid": "L'email n'est pas valide"
     },
     "password": {
-      "label": "Contraseña",
-      "placeholder": "Ingresa tu contraseña",
-      "required": "La contraseña es requerida",
-      "minLength": "La contraseña debe tener al menos 6 caracteres"
+      "label": "Mot de passe",
+      "placeholder": "Entrez votre mot de passe",
+      "required": "Le mot de passe est requis",
+      "minLength": "Le mot de passe doit contenir au moins 6 caractères"
     },
     "name": {
-      "label": "Nombre",
-      "placeholder": "Ingresa tu nombre completo",
-      "required": "El nombre es requerido",
-      "minLength": "El nombre debe tener al menos 2 caracteres"
+      "label": "Nom",
+      "placeholder": "Entrez votre nom complet",
+      "required": "Le nom est requis",
+      "minLength": "Le nom doit contenir au moins 2 caractères"
     },
     "confirmPassword": {
-      "label": "Confirmar Contraseña",
-      "placeholder": "Confirma tu contraseña",
-      "required": "Debes confirmar la contraseña",
-      "mismatch": "Las contraseñas no coinciden"
+      "label": "Confirmer le mot de passe",
+      "placeholder": "Confirmez votre mot de passe",
+      "required": "La confirmation du mot de passe est requise",
+      "mismatch": "Les mots de passe ne correspondent pas"
     },
-    "forgotPassword": "¿Olvidaste tu contraseña?",
-    "noAccount": "¿No tienes cuenta?",
-    "alreadyHaveAccount": "¿Ya tienes cuenta?",
-    "createAccount": "Crear cuenta",
-    "signIn": "Iniciar sesión",
-    "signOut": "Cerrar sesión",
-    "backToLogin": "Volver al login",
-    "allRightsReserved": "Todos los derechos reservados",
-    "terms": "Términos",
-    "privacy": "Privacidad",
-    "support": "Soporte"
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "createAccount": "Créer un compte",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "backToLogin": "Retour à la connexion",
+    "allRightsReserved": "Tous droits réservés",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "support": "Support"
   },
   "schoolSelection": {
     "title": "Seleccionar Escuela",
