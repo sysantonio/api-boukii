@@ -1,24 +1,8 @@
 import { Routes } from '@angular/router';
 
+// DEPRECATED: Auth routes are now handled directly in app.routes.ts
+// This file is kept for compatibility but is no longer used
+// All auth pages (login, register, forgot-password) now use AuthShellComponent directly
 export const authRoutes: Routes = [
-  {
-    path: '',
-    loadComponent: () => import('@ui/auth-layout/auth-layout.component').then(c => c.AuthLayoutComponent),
-    children: [
-      {
-        path: '',
-        redirectTo: 'register',
-        pathMatch: 'full'
-      },
-      // Note: login route is now handled directly in app.routes.ts
-      {
-        path: 'register', 
-        loadComponent: () => import('./pages/register.page').then(m => m.RegisterPage)
-      },
-      {
-        path: 'forgot-password',
-        loadComponent: () => import('./pages/forgot-password.page').then(m => m.ForgotPasswordPage)
-      }
-    ]
-  }
+  // Empty routes - all auth routes moved to app.routes.ts
 ];

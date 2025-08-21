@@ -8,7 +8,6 @@ import { TranslationService } from '../../../core/services/translation.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
-import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
 
 @Component({
   selector: 'app-forgot-password-page',
@@ -19,43 +18,45 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
     RouterLink,
     TranslatePipe,
     AuthShellComponent,
-    TextFieldComponent
   ],
+  styleUrls: ['./forgot-password.page.scss'],
   template: `
     <bk-auth-shell
       [titleKey]="'auth.forgotPassword.welcome.title'"
       [subtitleKey]="'auth.forgotPassword.subtitle'"
       [features]="features">
 
-      <h2 id="forgotPasswordTitle" class="visually-hidden">{{ 'auth.forgotPassword.title' | translate }}</h2>
+      <div class="card-header">
+        <h1 class="card-title">{{ 'auth.forgotPassword.title' | translate }}</h1>
+        <p class="card-subtitle">{{ 'auth.forgotPassword.subtitle' | translate }}</p>
+      </div>
 
+      <!-- Form State -->
       @if (!emailSent()) {
-        <!-- Reset Password Form -->
-        <div class="card-header">
-          <h1 class="card-title">{{ 'auth.forgotPassword.title' | translate }}</h1>
-          <p class="card-subtitle">{{ 'auth.forgotPassword.subtitle' | translate }}</p>
-        </div>
-
-        <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()" class="auth-form">
-          <!-- Email -->
-          <ui-text-field
-            [label]="'auth.common.email' | translate"
-            [placeholder]="'auth.common.email' | translate"
-            [errorMessage]="getFieldError('email')"
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <label class="field">
+            <span>{{ 'auth.common.email' | translate }}</span>
+            <input
               type="email"
+              formControlName="email"
               autocomplete="email"
-              (valueChange)="onFieldChange('email', $event)">
-            </ui-text-field>
+              [class.is-invalid]="isFieldInvalid('email')"
+            />
+            <small class="field-error" *ngIf="isFieldInvalid('email')">
+              {{ getFieldError('email') }}
+            </small>
+          </label>
 
-            <button 
-              type="submit" 
-              class="btn btn--primary w-100" 
-              [disabled]="forgotPasswordForm.invalid || isLoading()"
-              [attr.aria-describedby]="statusMessage() ? 'status-message' : null">
+          @if (statusMessage() && isLoading()) {
+            <div class="status-message" role="status" aria-live="polite">
+              {{ statusMessage() }}
+            </div>
+          }
+
+          <div class="card-actions">
+            <button class="btn btn--primary" type="submit" [disabled]="form.invalid || isLoading()">
               @if (isLoading()) {
-                <div class="loading-spinner">
-                  <div class="spinner"></div>
-                </div>
+                <div class="loading-spinner"></div>
                 {{ 'common.loading' | translate }}
               } @else {
                 {{ 'auth.forgotPassword.button' | translate }}
@@ -65,166 +66,133 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             <div class="links">
               <a routerLink="/auth/login">{{ 'auth.forgotPassword.rememberedPassword' | translate }}</a>
             </div>
+          </div>
         </form>
+      }
 
-      } @else {
-        <!-- Success State -->
-        <div class="success-state" role="status" aria-live="polite">
+      <!-- Success State -->
+      @if (emailSent()) {
+        <div class="success-state">
           <div class="success-icon">
-            <i class="i-mail" aria-hidden="true"></i>
+            <i class="i-mail"></i>
+          </div>
+          
+          <div class="success-content">
+            <h3 class="success-title">{{ 'auth.forgotPassword.successTitle' | translate }}</h3>
+            <p class="success-message">{{ statusMessage() }}</p>
+            <p class="help-text">{{ 'auth.forgotPassword.checkSpam' | translate }}</p>
           </div>
 
-          <div class="card-header">
-            <h1 class="card-title">{{ 'auth.forgotPassword.successTitle' | translate }}</h1>
-            <p class="card-subtitle">{{ 'auth.forgotPassword.emailSent' | translate }}</p>
-          </div>
-
-          @if (submittedEmail()) {
-            <div class="email-confirmation">
-              <p class="email-sent-message">
-                <strong>{{ submittedEmail() }}</strong>
-              </p>
-              <p class="help-text">{{ 'auth.forgotPassword.checkSpam' | translate }}</p>
-            </div>
-          }
-
-          <div class="success-actions">
-            <button
-              type="button"
-              class="btn btn--secondary w-100"
-              (click)="resetForm()"
-              [disabled]="isLoading()">
+          <div class="card-actions">
+            <button class="btn btn--primary" type="button" (click)="sendAnother()">
               {{ 'auth.forgotPassword.sendAnother' | translate }}
             </button>
-
             <div class="links">
               <a routerLink="/auth/login">{{ 'auth.forgotPassword.rememberedPassword' | translate }}</a>
             </div>
           </div>
         </div>
       }
-
-      <div
-        id="status-message"
-        class="visually-hidden"
-        role="status"
-        aria-live="polite"
-        [attr.aria-hidden]="!statusMessage()">
-        {{ statusMessage() }}
-      </div>
     </bk-auth-shell>
   `,
-  styleUrls: ['./forgot-password.page.scss']
 })
 export class ForgotPasswordPage implements OnInit {
+  // DI
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly authV5 = inject(AuthV5Service);
-  private readonly translation = inject(TranslationService);
+  private readonly t = inject(TranslationService);
   private readonly toast = inject(ToastService);
 
-  // Reactive state
+  // Señales reactivas
   readonly isLoading = signal(false);
-  readonly statusMessage = signal('');
   readonly emailSent = signal(false);
-  readonly submittedEmail = signal('');
+  readonly statusMessage = signal('');
 
+  // Formulario (usamos 'form' porque así lo referencia la plantilla)
+  form!: FormGroup;
+
+  // Features for AuthShell
   readonly features = [
-    { icon: 'i-grid', titleKey: 'auth.hero.feature1', descKey: 'auth.hero.feature1Desc' },
-    { icon: 'i-clock', titleKey: 'auth.hero.feature2', descKey: 'auth.hero.feature2Desc' },
-    { icon: 'i-trending-up', titleKey: 'auth.hero.feature3', descKey: 'auth.hero.feature3Desc' }
+    { title: 'auth.hero.feature1', subtitle: 'auth.hero.feature1Desc' },
+    { title: 'auth.hero.feature2', subtitle: 'auth.hero.feature2Desc' },
+    { title: 'auth.hero.feature3', subtitle: 'auth.hero.feature3Desc' }
   ];
 
-  forgotPasswordForm!: FormGroup;
-
   ngOnInit(): void {
-    this.initializeForm();
+    this.form = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+    });
 
-    // Redirect if already authenticated
-    if (this.authV5.isAuthenticated()) {
+    // Si ya está autenticado, fuera de aquí
+    if (this.authV5.isAuthenticated?.()) {
       this.router.navigate(['/dashboard']);
     }
   }
 
-  private initializeForm(): void {
-    this.forgotPasswordForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]]
-    });
-  }
-
-  onFieldChange(field: string, value: string): void {
-    this.forgotPasswordForm.patchValue({ [field]: value });
-    this.forgotPasswordForm.get(field)?.markAsTouched();
-  }
-
-  getFieldError(field: string): string {
-    const control = this.forgotPasswordForm.get(field);
-    if (control?.invalid && control?.touched) {
-      if (control.errors?.['required']) {
-        return this.translation.get('auth.errors.requiredEmail');
-      }
-      if (control.errors?.['email']) {
-        return this.translation.get('auth.errors.invalidEmail');
-      }
-    }
-    return '';
-  }
-
-  isFieldInvalid(field: string): boolean {
-    const control = this.forgotPasswordForm.get(field);
-    return !!(control?.invalid && control?.touched);
-  }
-
-  onSubmit(): void {
-    if (this.forgotPasswordForm.invalid) {
-      this.markFormGroupTouched();
+  // === Template API (coincide con el HTML) ===
+  submit(): void {
+    if (this.form.invalid || this.isLoading()) {
+      this.form.markAllAsTouched();
       return;
     }
 
     this.isLoading.set(true);
-    this.statusMessage.set(this.translation.get('auth.forgotPassword.processing'));
-    
-    const { email } = this.forgotPasswordForm.value;
+    const email: string = this.form.value.email;
 
-    this.authV5.forgotPassword(email).subscribe({
-      next: (response: any) => {
-        this.isLoading.set(false);
-        
-        if (response.success) {
-          this.emailSent.set(true);
-          this.submittedEmail.set(email);
-          this.statusMessage.set(this.translation.get('auth.forgotPassword.emailSent'));
-          this.toast.success(this.translation.get('auth.forgotPassword.success'));
-        } else {
-          // Show generic success message for security
-          this.emailSent.set(true);
-          this.submittedEmail.set(email);
-          this.statusMessage.set(this.translation.get('auth.forgotPassword.emailSent'));
-        }
-      },
-      error: (_error: any) => {
-        this.isLoading.set(false);
-        
-        // For security, always show success message
-        // Don't reveal whether email exists or not
-        this.emailSent.set(true);
-        this.submittedEmail.set(email);
-        this.statusMessage.set(this.translation.get('auth.forgotPassword.emailSent'));
-      }
-    });
+    // Mensaje optimista inmediato (patrón seguro)
+    const sentMsg = this.t.get('auth.forgotPassword.emailSent');
+    const processingMsg = this.t.get('auth.forgotPassword.processing');
+    this.statusMessage.set(processingMsg);
+
+    // Soporta tanto Promise como Observable; si tu servicio devuelve Observable, .subscribe sigue funcionando
+    const maybe$ = this.authV5.forgotPassword?.(email);
+    if (!maybe$) {
+      // Fallback (si el servicio aún no está implementado)
+      this.finishAsSent(sentMsg);
+      return;
+    }
+
+    // Si es Observable
+    if (typeof (maybe$ as any).subscribe === 'function') {
+      (maybe$ as any).subscribe({
+        next: () => this.finishAsSent(sentMsg),
+        error: () => this.finishAsSent(sentMsg),
+      });
+      return;
+    }
+
+    // Si es Promise
+    Promise.resolve(maybe$ as any)
+      .then(() => this.finishAsSent(sentMsg))
+      .catch(() => this.finishAsSent(sentMsg));
   }
 
-  resetForm(): void {
+  isFieldInvalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c && c.invalid && (c.dirty || c.touched));
+  }
+
+  getFieldError(field: string): string {
+    const c = this.form.get(field);
+    if (!c || !c.errors) return '';
+    if (c.errors['required']) return this.t.get('auth.errors.requiredEmail');
+    if (c.errors['email']) return this.t.get('auth.errors.invalidEmail');
+    return this.t.get('auth.errors.fieldInvalid');
+  }
+
+  sendAnother(): void {
     this.emailSent.set(false);
-    this.submittedEmail.set('');
     this.statusMessage.set('');
-    this.forgotPasswordForm.reset();
+    this.form.reset();
   }
 
-  private markFormGroupTouched(): void {
-    Object.keys(this.forgotPasswordForm.controls).forEach(key => {
-      const control = this.forgotPasswordForm.get(key);
-      control?.markAsTouched();
-    });
+  // === Helpers ===
+  private finishAsSent(message: string) {
+    this.isLoading.set(false);
+    this.emailSent.set(true);
+    this.statusMessage.set(message);
+    // Mensaje de toast “silencioso” y genérico
+    this.toast.success?.(message);
   }
 }

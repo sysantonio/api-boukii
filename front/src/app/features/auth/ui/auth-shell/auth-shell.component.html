@@ -1,27 +1,60 @@
-<div class="auth-shell">
-  <div class="auth-shell__hero">
-    <div class="brand">
-      <img src="assets/logo.svg" alt="boukii" class="brand__logo" />
-      <span class="brand__tag">V5</span>
+<div class="auth">
+  <!-- Header común (solo idioma a la derecha) -->
+  <header class="auth__header" aria-label="Authentication header">
+    <div class="auth__brand">
+      <img class="auth__logo" src="assets/brand/boukii-logo.svg" alt="boukii" />
+      <span class="auth__tag">V5</span>
     </div>
 
-    <h1 class="auth-shell__title">{{ titleKey | translate }}</h1>
-    <p class="auth-shell__subtitle">{{ subtitleKey | translate }}</p>
+    <div class="auth__tools">
+      <button
+        class="lang"
+        type="button"
+        aria-haspopup="menu"
+[attr.aria-expanded]="langOpen"
+        (click)="toggleLang()"
+      >
+        {{ currentLangLabel }}
+        <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg>
+      </button>
 
-    <ul class="features" *ngIf="features?.length">
-      <li class="features__item" *ngFor="let feature of features">
-        <i [ngClass]="feature.icon" aria-hidden="true"></i>
-        <div>
-          <div class="feat__title">{{ feature.titleKey | translate }}</div>
-          <div class="feat__desc">{{ feature.descKey | translate }}</div>
-        </div>
-      </li>
-    </ul>
-  </div>
+      <nav
+        class="langmenu"
+        *ngIf="langOpen"
+        role="menu"
+        aria-label="Choose language"
+      >
+        <button role="menuitemradio" [attr.aria-checked]="isLang('es')" (click)="setLang('es')">ES · Español</button>
+        <button role="menuitemradio" [attr.aria-checked]="isLang('en')" (click)="setLang('en')">EN · English</button>
+        <button role="menuitemradio" [attr.aria-checked]="isLang('fr')" (click)="setLang('fr')">FR · Français</button>
+      </nav>
+    </div>
+  </header>
 
-  <div class="auth-shell__card">
-    <div class="card">
+  <!-- Cuerpo a 2 columnas, verticalmente centrado -->
+  <main class="auth__main">
+    <section class="hero" aria-label="Welcome and features">
+      <img class="hero__logo" src="assets/brand/boukii-logo.svg" alt="" />
+      <h1 class="hero__title">{{ titleKey | translate }}</h1>
+      <p class="hero__subtitle">{{ subtitleKey | translate }}</p>
+
+      <ul class="hero__features" *ngIf="features?.length">
+        <li *ngFor="let f of features">
+          <div class="ic"></div>
+          <div class="txt">
+            <strong>{{ f.title | translate }}</strong>
+            <span>{{ f.subtitle | translate }}</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card" aria-live="polite">
       <ng-content></ng-content>
-    </div>
-  </div>
+    </section>
+  </main>
+
+  <!-- Decoraciones suaves -->
+  <div class="blob blob--tl" aria-hidden="true"></div>
+  <div class="blob blob--br" aria-hidden="true"></div>
 </div>

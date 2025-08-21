@@ -8,15 +8,18 @@ export const routes: Routes = [
     redirectTo: '/dashboard',
     pathMatch: 'full',
   },
-  // Direct login route (bypasses auth-layout)
+  // All auth routes use AuthShellComponent directly (no auth-layout wrapper)
   {
     path: 'auth/login',
     loadComponent: () => import('./features/auth/pages/login.page').then(m => m.LoginPage)
   },
-  // Other auth routes still use auth-layout
   {
-    path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
+    path: 'auth/register',
+    loadComponent: () => import('./features/auth/pages/register.page').then(m => m.RegisterPage)
+  },
+  {
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./features/auth/pages/forgot-password.page').then(m => m.ForgotPasswordPage)
   },
   {
     path: 'dashboard',

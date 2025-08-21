@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 describe('ForgotPasswordPage', () => {
   let component: ForgotPasswordPage;
   let fixture: ComponentFixture<ForgotPasswordPage>;
-  let mockAuth: jest.Mocked<AuthV5Service>;
+  let _mockAuth: jest.Mocked<AuthV5Service>;
   let mockTranslation: jest.Mocked<TranslationService>;
 
   beforeEach(async () => {

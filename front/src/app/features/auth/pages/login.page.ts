@@ -27,40 +27,34 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
       [subtitleKey]="'auth.login.subtitle'"
       [features]="features">
 
-      <h2 id="loginTitle" class="visually-hidden">{{ 'auth.login.title' | translate }}</h2>
-
       <div class="card-header">
         <h1 class="card-title">{{ 'auth.login.title' | translate }}</h1>
         <p class="card-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
       </div>
 
-      <form
-        [formGroup]="loginForm"
-        (ngSubmit)="onSubmit()"
-        class="auth-form"
-        [attr.aria-labelledby]="'loginTitle'">
-          <!-- Email -->
-          <ui-text-field
-            [label]="'auth.common.email' | translate"
-            [placeholder]="'auth.common.email' | translate"
-            [errorMessage]="getFieldError('email')"
-            type="email"
-            autocomplete="email"
-            (valueChange)="onFieldChange('email', $event)">
-          </ui-text-field>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <label class="field">
+          <span>{{ 'auth.common.email' | translate }}</span>
+          <input 
+            type="email" 
+            formControlName="email" 
+            autocomplete="username"
+            [class.is-invalid]="isFieldInvalid('email')" />
+          <small class="field-error" *ngIf="isFieldInvalid('email')">
+            {{ getFieldError('email') }}
+          </small>
+        </label>
 
-          <!-- Password -->
-          <ui-text-field
-            [label]="'auth.common.password' | translate"
-            [type]="showPassword() ? 'text' : 'password'"
-            [placeholder]="'auth.common.password' | translate"
-            [errorMessage]="getFieldError('password')"
-            [suffixIcon]="true"
-            autocomplete="current-password"
-            (valueChange)="onFieldChange('password', $event)">
+        <label class="field">
+          <span>{{ 'auth.common.password' | translate }}</span>
+          <div class="password-wrapper">
+            <input 
+              [type]="showPassword() ? 'text' : 'password'" 
+              formControlName="password" 
+              autocomplete="current-password"
+              [class.is-invalid]="isFieldInvalid('password')" />
             <button 
-              slot="suffix-icon"
-              type="button"
+              type="button" 
               class="password-toggle"
               [attr.aria-label]="(showPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
               [attr.aria-pressed]="showPassword()"
@@ -71,39 +65,34 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
                 <i class="i-eye"></i>
               }
             </button>
-          </ui-text-field>
+          </div>
+          <small class="field-error" *ngIf="isFieldInvalid('password')">
+            {{ getFieldError('password') }}
+          </small>
+        </label>
 
-          <button
-            type="submit"
-            class="btn btn--primary w-100"
-            [disabled]="loginForm.invalid || isLoading()"
-            [attr.aria-describedby]="statusMessage() ? 'status-message' : null">
+        @if (statusMessage()) {
+          <div class="status-message" role="status" aria-live="polite">
+            {{ statusMessage() }}
+          </div>
+        }
+
+        <div class="card-actions">
+          <button class="btn btn--primary" type="submit" [disabled]="loginForm.invalid || isLoading()">
             @if (isLoading()) {
-              <div class="loading-spinner">
-                <div class="spinner"></div>
-              </div>
+              <div class="loading-spinner"></div>
               {{ 'common.loading' | translate }}
             } @else {
               {{ 'auth.common.signin' | translate }}
             }
           </button>
-
           <div class="links">
             <a routerLink="/auth/forgot-password">{{ 'auth.common.forgot' | translate }}</a>
-            <span>·</span>
-            <span>{{ 'auth.common.noAccount' | translate }}</span>
-            <a routerLink="/auth/register">{{ 'auth.common.signup' | translate }}</a>
+            <span> · </span>
+            <a routerLink="/auth/register">{{ 'auth.common.noAccount' | translate }}</a>
           </div>
-
-          <div
-            id="status-message"
-            class="visually-hidden"
-            role="status"
-            aria-live="polite"
-            [attr.aria-hidden]="!statusMessage()">
-            {{ statusMessage() }}
-          </div>
-        </form>
+        </div>
+      </form>
     </bk-auth-shell>
   `,
   styleUrls: ['./login.page.scss']
@@ -121,9 +110,9 @@ export class LoginPage implements OnInit {
   readonly statusMessage = signal('');
 
   readonly features = [
-    { icon: 'i-grid', titleKey: 'auth.hero.feature1', descKey: 'auth.hero.feature1Desc' },
-    { icon: 'i-clock', titleKey: 'auth.hero.feature2', descKey: 'auth.hero.feature2Desc' },
-    { icon: 'i-trending-up', titleKey: 'auth.hero.feature3', descKey: 'auth.hero.feature3Desc' }
+    { title: 'auth.hero.feature1', subtitle: 'auth.hero.feature1Desc' },
+    { title: 'auth.hero.feature2', subtitle: 'auth.hero.feature2Desc' },
+    { title: 'auth.hero.feature3', subtitle: 'auth.hero.feature3Desc' }
   ];
 
   loginForm!: FormGroup;
@@ -153,6 +142,11 @@ export class LoginPage implements OnInit {
     this.showPassword.set(!this.showPassword());
   }
 
+  isFieldInvalid(field: string): boolean {
+    const control = this.loginForm.get(field);
+    return !!(control?.invalid && control?.touched);
+  }
+
   getFieldError(field: string): string {
     const control = this.loginForm.get(field);
     if (control?.invalid && control?.touched) {
@@ -167,11 +161,6 @@ export class LoginPage implements OnInit {
       }
     }
     return '';
-  }
-
-  isFieldInvalid(field: string): boolean {
-    const control = this.loginForm.get(field);
-    return !!(control?.invalid && control?.touched);
   }
 
   onSubmit(): void {
@@ -212,7 +201,7 @@ export class LoginPage implements OnInit {
 
   private handleSingleSchoolUser(school: any, tempToken: string): void {
     this.statusMessage.set(this.translation.get('auth.login.selectingSchool'));
-    
+
     this.authV5.selectSchool(school.id, tempToken).subscribe({
       next: (response) => {
         if (!response.success || !response.data) {
@@ -221,7 +210,7 @@ export class LoginPage implements OnInit {
         }
 
         const { available_seasons, access_token } = response.data;
-        
+
         if (available_seasons && available_seasons.length > 0) {
           const firstSeason = available_seasons[0];
           this.handleSingleSeason(firstSeason, response.data.school.id, access_token);
@@ -238,7 +227,7 @@ export class LoginPage implements OnInit {
   private handleMultiSchoolUser(schools: any[], tempToken: string): void {
     localStorage.setItem('boukii_temp_token', tempToken);
     localStorage.setItem('boukii_temp_schools', JSON.stringify(schools));
-    
+
     this.isLoading.set(false);
     this.router.navigate(['/select-school']);
   }
@@ -250,7 +239,7 @@ export class LoginPage implements OnInit {
       next: (_response) => {
         this.isLoading.set(false);
         this.statusMessage.set(this.translation.get('auth.login.success'));
-        
+
         this.toast.success(this.translation.get('auth.login.success'));
         this.router.navigate(['/dashboard']);
       },
