@@ -7,9 +7,9 @@ use App\Models\User;
 class ContextService
 {
     /**
-     * Get context information for the given user.
+     * Obtain the current context for the provided user.
      */
-    public function getContext(User $user): array
+    public function get(User $user): array
     {
         $token = $user->currentAccessToken();
 
@@ -21,18 +21,19 @@ class ContextService
         if ($token && $token->context_data) {
             $data = $token->context_data;
             $context['school_id'] = $data['school_id'] ?? null;
-            $context['season_id'] = $data['season_id'] ?? null;
+            if (array_key_exists('season_id', $data)) {
+                $context['season_id'] = $data['season_id'];
+            }
         }
 
         return $context;
     }
 
     /**
-     * Switch the current school for the authenticated user.
-     *
-     * @return array|null Returns updated context or null if no active token.
+     * Update the current school for the authenticated user without affecting
+     * other context keys.
      */
-    public function switchSchool(User $user, int $schoolId): ?array
+    public function setSchool(User $user, int $schoolId): ?array
     {
         $token = $user->currentAccessToken();
 
@@ -42,14 +43,18 @@ class ContextService
 
         $contextData = $token->context_data ?? [];
         $contextData['school_id'] = $schoolId;
-        $contextData['season_id'] = null;
+
+        // Ensure the key exists but preserve existing value if present.
+        if (! array_key_exists('season_id', $contextData)) {
+            $contextData['season_id'] = null;
+        }
 
         $token->context_data = $contextData;
         $token->save();
 
         return [
-            'school_id' => $schoolId,
-            'season_id' => null,
+            'school_id' => $contextData['school_id'],
+            'season_id' => $contextData['season_id'],
         ];
     }
 }

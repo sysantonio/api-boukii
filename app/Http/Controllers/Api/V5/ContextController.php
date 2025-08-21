@@ -22,7 +22,7 @@ class ContextController extends Controller
     public function show(Request $request): JsonResponse
     {
         return response()->json(
-            $this->contextService->getContext($request->user())
+            $this->contextService->get($request->user())
         );
     }
 
@@ -41,7 +41,7 @@ class ContextController extends Controller
 
         $this->authorize('switch', $school);
 
-        $context = $this->contextService->switchSchool($user, $schoolId);
+        $context = $this->contextService->setSchool($user, $schoolId);
         if (! $context) {
             return $this->problem('No active access token', Response::HTTP_UNAUTHORIZED);
         }
