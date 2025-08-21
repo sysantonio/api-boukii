@@ -1,12 +1,43 @@
 {
   "common": {
-    "loading": "Cargando...",
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "close": "Cerrar"
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "noResults": "Aucun résultat trouvé",
+    "error": "Erreur",
+    "retry": "Réessayer"
+  },
+  "schools": {
+    "selectSchool": {
+      "title": "Sélectionner l'École",
+      "subtitle": "Choisissez l'école avec laquelle vous souhaitez travailler",
+      "breadcrumb": "Compte / Sélectionner l'école",
+      "searchPlaceholder": "Rechercher des écoles...",
+      "useThisSchool": "Utiliser cette école",
+      "noSchools": "Aucune école trouvée",
+      "noSchoolsMessage": "Vous n'avez accès à aucune école. Contactez l'administrateur.",
+      "loadingSchools": "Chargement des écoles...",
+      "errorLoading": "Erreur lors du chargement des écoles",
+      "errorSelecting": "Erreur lors de la sélection de l'école"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "pagination": {
+      "showing": "Affichage",
+      "to": "à",
+      "of": "de",
+      "results": "résultats",
+      "page": "Page",
+      "previous": "Précédent",
+      "next": "Suivant"
+    }
   },
   "auth": {
     "login": {

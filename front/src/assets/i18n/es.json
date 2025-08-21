@@ -6,7 +6,38 @@
     "confirm": "Confirmar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "error": "Error",
+    "retry": "Reintentar"
+  },
+  "schools": {
+    "selectSchool": {
+      "title": "Seleccionar Escuela",
+      "subtitle": "Elige la escuela con la que deseas trabajar",
+      "breadcrumb": "Cuenta / Seleccionar escuela",
+      "searchPlaceholder": "Buscar escuelas...",
+      "useThisSchool": "Usar esta escuela",
+      "noSchools": "No se encontraron escuelas",
+      "noSchoolsMessage": "No tienes acceso a ninguna escuela. Contacta al administrador.",
+      "loadingSchools": "Cargando escuelas...",
+      "errorLoading": "Error al cargar las escuelas",
+      "errorSelecting": "Error al seleccionar la escuela"
+    },
+    "status": {
+      "active": "Activa",
+      "inactive": "Inactiva"
+    },
+    "pagination": {
+      "showing": "Mostrando",
+      "to": "a",
+      "of": "de",
+      "results": "resultados",
+      "page": "Página",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    }
   },
   "auth": {
     "login": {

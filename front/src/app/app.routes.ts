@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authV5Guard } from './core/guards/auth-v5.guard';
+import { schoolSelectionGuard } from './core/guards/school-selection.guard';
 
 export const routes: Routes = [
   {
@@ -26,7 +27,13 @@ export const routes: Routes = [
   {
     path: 'select-school',
     loadComponent: () => 
-      import('./features/school-selection/school-selection.page').then(c => c.SchoolSelectionPage),
+      import('./features/school-selection/select-school.page').then(c => c.SelectSchoolPageComponent),
+    canActivate: [authV5Guard, schoolSelectionGuard]
+  },
+  {
+    path: 'select-season',
+    loadComponent: () => 
+      import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent), // TODO: Replace with actual SeasonSelectionPage
     canActivate: [authV5Guard]
   },
   {

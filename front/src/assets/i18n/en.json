@@ -6,7 +6,38 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "search": "Search",
+    "noResults": "No results found",
+    "error": "Error",
+    "retry": "Retry"
+  },
+  "schools": {
+    "selectSchool": {
+      "title": "Select School",
+      "subtitle": "Choose the school you want to work with",
+      "breadcrumb": "Account / Select school",
+      "searchPlaceholder": "Search schools...",
+      "useThisSchool": "Use this school",
+      "noSchools": "No schools found",
+      "noSchoolsMessage": "You don't have access to any schools. Contact the administrator.",
+      "loadingSchools": "Loading schools...",
+      "errorLoading": "Error loading schools",
+      "errorSelecting": "Error selecting school"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "results": "results",
+      "page": "Page",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "auth": {
     "login": {

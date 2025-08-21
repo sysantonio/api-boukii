@@ -6,7 +6,38 @@
     "confirm": "Bestätigen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
-    "close": "Schließen"
+    "close": "Schließen",
+    "search": "Suchen",
+    "noResults": "Keine Ergebnisse gefunden",
+    "error": "Fehler",
+    "retry": "Wiederholen"
+  },
+  "schools": {
+    "selectSchool": {
+      "title": "Schule auswählen",
+      "subtitle": "Wählen Sie die Schule aus, mit der Sie arbeiten möchten",
+      "breadcrumb": "Konto / Schule auswählen",
+      "searchPlaceholder": "Schulen suchen...",
+      "useThisSchool": "Diese Schule verwenden",
+      "noSchools": "Keine Schulen gefunden",
+      "noSchoolsMessage": "Sie haben keinen Zugang zu Schulen. Kontaktieren Sie den Administrator.",
+      "loadingSchools": "Schulen laden...",
+      "errorLoading": "Fehler beim Laden der Schulen",
+      "errorSelecting": "Fehler bei der Schulauswahl"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "results": "Ergebnissen",
+      "page": "Seite",
+      "previous": "Vorherige",
+      "next": "Nächste"
+    }
   },
   "auth": {
     "login": {
