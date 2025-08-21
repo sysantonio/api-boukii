@@ -40,6 +40,33 @@
     }
   },
   "auth": {
+    "common": {
+      "email": "Email",
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "signin": "Sign in",
+      "signup": "Sign up",
+      "forgot": "Forgot your password?",
+      "haveAccount": "Already have an account?",
+      "noAccount": "Don't have an account?"
+    },
+    "errors": {
+      "requiredEmail": "Email is required",
+      "invalidEmail": "Please enter a valid email",
+      "requiredPassword": "Password is required",
+      "passwordsNoMatch": "Passwords don't match"
+    },
+    "hero": {
+      "welcomeBack": "Welcome back",
+      "join": "Join Boukii V5",
+      "feature1": "Complete Management",
+      "feature1Desc": "Management, bookings and more.",
+      "feature2": "Multi-Season",
+      "feature2Desc": "Organize by seasons.",
+      "feature3": "Professionalization",
+      "feature3Desc": "Professional tools."
+    },
     "login": {
       "title": "Sign In",
       "subtitle": "Enter your credentials to continue",

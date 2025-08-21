@@ -1,0 +1,39 @@
+<div class="auth">
+  <div class="auth__hero">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="boukii" class="brand__logo" />
+      <span class="brand__tag">V5</span>
+    </div>
+    
+    <h1 class="auth__title">{{ title }}</h1>
+    <p class="auth__subtitle">{{ subtitle }}</p>
+    
+    <ul class="features">
+      <li class="features__item">
+        <i class="i-grid" aria-hidden="true"></i>
+        <div>
+          <div class="feat__title">{{ 'auth.hero.feature1' | translate }}</div>
+          <div class="feat__desc">{{ 'auth.hero.feature1Desc' | translate }}</div>
+        </div>
+      </li>
+      <li class="features__item">
+        <i class="i-clock" aria-hidden="true"></i>
+        <div>
+          <div class="feat__title">{{ 'auth.hero.feature2' | translate }}</div>
+          <div class="feat__desc">{{ 'auth.hero.feature2Desc' | translate }}</div>
+        </div>
+      </li>
+      <li class="features__item">
+        <i class="i-trending-up" aria-hidden="true"></i>
+        <div>
+          <div class="feat__title">{{ 'auth.hero.feature3' | translate }}</div>
+          <div class="feat__desc">{{ 'auth.hero.feature3Desc' | translate }}</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="auth__card">
+    <ng-content></ng-content>
+  </div>
+</div>

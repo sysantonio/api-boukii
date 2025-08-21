@@ -40,6 +40,17 @@
     }
   },
   "auth": {
+    "common": {
+      "email": "Email",
+      "password": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "signin": "Iniciar sesión",
+      "signup": "Crear cuenta",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "noAccount": "¿No tienes cuenta?"
+    },
     "login": {
       "title": "Iniciar Sesión",
       "subtitle": "Ingresa tus credenciales para continuar",
@@ -66,8 +77,9 @@
       }
     },
     "register": {
-      "title": "Crear Cuenta",
-      "subtitle": "Únete a Boukii V5 y gestiona tu escuela de forma profesional",
+      "title": "Crear cuenta",
+      "subtitle": "Únete a Boukii V5",
+      "confirmPassword": "Confirmar contraseña",
       "button": "Crear Cuenta",
       "success": "Cuenta creada correctamente",
       "error": "Error al crear la cuenta",
@@ -91,8 +103,9 @@
       }
     },
     "forgotPassword": {
-      "title": "Recuperar Contraseña",
-      "subtitle": "Te enviaremos un enlace para restablecer tu contraseña",
+      "title": "Recuperar contraseña",
+      "subtitle": "Te enviaremos un enlace de recuperación a tu email",
+      "emailSent": "Si existe una cuenta con ese email, hemos enviado instrucciones.",
       "button": "Enviar Enlace",
       "success": "Enlace enviado correctamente",
       "error": "Error al enviar el enlace",
@@ -143,6 +156,22 @@
       "placeholder": "Confirma tu contraseña",
       "required": "Debes confirmar la contraseña",
       "mismatch": "Las contraseñas no coinciden"
+    },
+    "errors": {
+      "requiredEmail": "El email es requerido",
+      "invalidEmail": "Introduce un email válido",
+      "requiredPassword": "La contraseña es requerida",
+      "passwordsNoMatch": "Las contraseñas no coinciden"
+    },
+    "hero": {
+      "welcomeBack": "Bienvenido de vuelta",
+      "join": "Únete a Boukii V5",
+      "feature1": "Gestión Completa",
+      "feature1Desc": "Gestión, reservas y más.",
+      "feature2": "Multi-Temporada",
+      "feature2Desc": "Organiza por temporadas.",
+      "feature3": "Profesionalización",
+      "feature3Desc": "Herramientas profesionales."
     },
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "noAccount": "¿No tienes cuenta?",

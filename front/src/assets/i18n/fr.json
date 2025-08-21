@@ -40,9 +40,36 @@
     }
   },
   "auth": {
+    "common": {
+      "email": "Email",
+      "password": "Mot de passe",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "signin": "Se connecter",
+      "signup": "S'inscrire",
+      "forgot": "Mot de passe oublié ?",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "noAccount": "Vous n'avez pas de compte ?"
+    },
+    "errors": {
+      "requiredEmail": "L'email est requis",
+      "invalidEmail": "Veuillez saisir un email valide",
+      "requiredPassword": "Le mot de passe est requis",
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas"
+    },
+    "hero": {
+      "welcomeBack": "Bon retour",
+      "join": "Rejoignez Boukii V5",
+      "feature1": "Gestion Complète",
+      "feature1Desc": "Gestion, réservations et plus.",
+      "feature2": "Multi-Saisons",
+      "feature2Desc": "Organisez par saisons.",
+      "feature3": "Professionnalisation",
+      "feature3Desc": "Outils professionnels."
+    },
     "login": {
-      "title": "Iniciar Sesión",
-      "subtitle": "Ingresa tus credenciales para continuar",
+      "title": "Se connecter",
+      "subtitle": "Entrez vos identifiants pour continuer",
       "button": "Iniciar Sesión",
       "success": "Sesión iniciada correctamente",
       "error": "Error al iniciar sesión",

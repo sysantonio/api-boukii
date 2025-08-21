@@ -196,6 +196,13 @@ export class AuthV5Service {
   }
 
   /**
+   * Request password reset (forgot password)
+   */
+  public forgotPassword(email: string): Observable<ApiResponse<{ message: string }>> {
+    return this.requestPasswordReset({ email });
+  }
+
+  /**
    * Request password reset
    */
   public requestPasswordReset(data: { email: string }): Observable<ApiResponse<{ message: string }>> {
