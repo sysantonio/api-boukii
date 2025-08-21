@@ -496,6 +496,11 @@ class School extends Model
         return $this->hasMany(\App\Models\SchoolUser::class, 'school_id');
     }
 
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'school_user', 'school_id', 'user_id');
+    }
+
     public function seasons(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Season::class, 'school_id');
