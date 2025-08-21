@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\F
 use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Support\Pivot;
 
 /**
  * @OA\Schema(
@@ -498,7 +499,7 @@ class School extends Model
 
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'school_user', 'school_id', 'user_id');
+        return $this->belongsToMany(User::class, Pivot::schoolUserTable(), 'school_id', 'user_id');
     }
 
     public function seasons(): \Illuminate\Database\Eloquent\Relations\HasMany

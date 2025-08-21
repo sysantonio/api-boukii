@@ -15,6 +15,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasRoles;
 use App\V5\Models\UserSeasonRole;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Support\Pivot;
 
 /**
  * @OA\Schema(
@@ -187,7 +188,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     {
         return $this->belongsToMany(
             \App\Models\School::class,
-            'school_user', // Tabla pivote
+            Pivot::schoolUserTable(), // Tabla pivote
             'user_id', // Clave foránea del modelo actual
             'school_id' // Clave foránea del modelo relacionado
         )->where('schools.active', 1)
