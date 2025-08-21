@@ -7,7 +7,7 @@ import { AuthV5Service } from '../../../core/services/auth-v5.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
-import { AuthLayoutComponent } from '../ui/auth-layout/auth-layout.component';
+import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
 import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
 
 // Custom validator for password confirmation
@@ -30,23 +30,27 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
-    AuthLayoutComponent,
+    AuthShellComponent,
     TextFieldComponent
   ],
   template: `
-    <auth-layout 
-      [title]="'auth.hero.join' | translate" 
-      [subtitle]="'auth.register.subtitle' | translate">
-      
-      <div class="card" role="form" [attr.aria-labelledby]="'registerTitle'">
-        <h2 id="registerTitle" class="visually-hidden">{{ 'auth.register.title' | translate }}</h2>
-        
-        <div class="card-header">
-          <h1 class="card-title">{{ 'auth.register.title' | translate }}</h1>
-          <p class="card-subtitle">{{ 'auth.register.subtitle' | translate }}</p>
-        </div>
+    <bk-auth-shell
+      [titleKey]="'auth.hero.join'"
+      [subtitleKey]="'auth.register.subtitle'"
+      [features]="features">
 
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <h2 id="registerTitle" class="visually-hidden">{{ 'auth.register.title' | translate }}</h2>
+
+      <div class="card-header">
+        <h1 class="card-title">{{ 'auth.register.title' | translate }}</h1>
+        <p class="card-subtitle">{{ 'auth.register.subtitle' | translate }}</p>
+      </div>
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        class="auth-form"
+        [attr.aria-labelledby]="'registerTitle'">
           <!-- Name -->
           <ui-text-field
             [label]="'auth.name.label' | translate"
@@ -135,17 +139,16 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
             <a routerLink="/auth/login">{{ 'auth.common.signin' | translate }}</a>
           </div>
 
-          <div 
+          <div
             id="status-message"
-            class="sr-only" 
-            role="status" 
+            class="visually-hidden"
+            role="status"
             aria-live="polite"
             [attr.aria-hidden]="!statusMessage()">
             {{ statusMessage() }}
           </div>
         </form>
-      </div>
-    </auth-layout>
+    </bk-auth-shell>
   `,
   styleUrls: ['./register.page.scss']
 })
@@ -161,6 +164,12 @@ export class RegisterPage implements OnInit {
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
   readonly statusMessage = signal('');
+
+  readonly features = [
+    { icon: 'i-grid', titleKey: 'auth.hero.feature1', descKey: 'auth.hero.feature1Desc' },
+    { icon: 'i-clock', titleKey: 'auth.hero.feature2', descKey: 'auth.hero.feature2Desc' },
+    { icon: 'i-trending-up', titleKey: 'auth.hero.feature3', descKey: 'auth.hero.feature3Desc' }
+  ];
 
   registerForm!: FormGroup;
 
