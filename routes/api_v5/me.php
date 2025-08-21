@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V5\MeSchoolController;
 
-Route::middleware(['auth:sanctum', 'throttle:api'])
+Route::middleware(['auth:sanctum', 'throttle:context'])
     ->prefix('me')
     ->name('v5.me.')
     ->group(function () {
