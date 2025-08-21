@@ -7,6 +7,21 @@ paths:
     get:
       summary: List schools visible to the authenticated user
       tags: [Schools]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            default: 15
+          description: Items per page
       responses:
         '200':
           description: Paginated list of schools
@@ -19,6 +34,15 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/School'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                forbidden:
+                  $ref: '#/components/examples/Forbidden'
   /api/v5/context:
     get:
       summary: Get current user context
@@ -40,6 +64,8 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - school_id
               properties:
                 school_id:
                   type: integer
@@ -50,6 +76,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserContext'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                forbidden:
+                  $ref: '#/components/examples/Forbidden'
+        '404':
+          description: School not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                notFound:
+                  $ref: '#/components/examples/NotFound'
+        '422':
+          description: Validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                validationFailed:
+                  $ref: '#/components/examples/ValidationFailed'
 components:
   schemas:
     School:
@@ -68,3 +121,52 @@ components:
         season_id:
           type: integer
           nullable: true
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Error
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Error details
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Validation errors
+  examples:
+    Forbidden:
+      value:
+        type: about:blank
+        title: Forbidden
+        status: 403
+        detail: This action is unauthorized.
+    NotFound:
+      value:
+        type: about:blank
+        title: Not Found
+        status: 404
+        detail: School not found
+    ValidationFailed:
+      value:
+        type: about:blank
+        title: Unprocessable Content
+        status: 422
+        detail: Validation failed
+        errors:
+          school_id:
+            - The school_id field is required.
