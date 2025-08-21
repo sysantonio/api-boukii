@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Boukii API V5
+  version: '1.0'
+paths:
+  /api/v5/me/schools:
+    get:
+      summary: List schools visible to the authenticated user
+      tags: [Schools]
+      responses:
+        '200':
+          description: Paginated list of schools
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/School'
+  /api/v5/context:
+    get:
+      summary: Get current user context
+      tags: [Context]
+      responses:
+        '200':
+          description: Current context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserContext'
+  /api/v5/context/school:
+    post:
+      summary: Switch current school
+      tags: [Context]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                school_id:
+                  type: integer
+      responses:
+        '200':
+          description: Updated context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserContext'
+components:
+  schemas:
+    School:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    UserContext:
+      type: object
+      properties:
+        school_id:
+          type: integer
+          nullable: true
+        season_id:
+          type: integer
+          nullable: true
