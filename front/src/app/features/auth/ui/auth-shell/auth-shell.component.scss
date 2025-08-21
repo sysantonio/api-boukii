@@ -1,0 +1,157 @@
+.auth-shell {
+  --card-w: 420px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-1);
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &__logo {
+      height: 32px;
+    }
+
+    &__tag {
+      font: 700 11px/1 Inter;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+    }
+  }
+
+  &__title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  &__subtitle {
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .features__item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: var(--border-focus);
+    }
+
+    i {
+      color: var(--brand-500);
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+  }
+
+  .feat__title {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 4px 0;
+  }
+
+  .feat__desc {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > .card {
+      width: var(--card-w);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--elev-2);
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 992px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    min-height: auto;
+
+    &__hero {
+      order: 1;
+    }
+
+    &__card {
+      order: 2;
+      margin-top: 0;
+
+      > .card {
+        width: 100%;
+        max-width: var(--card-w);
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-shell {
+    padding: 16px;
+
+    &__card > .card {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .brand__logo {
+      height: 28px;
+    }
+
+    &__title {
+      font-size: 24px;
+    }
+
+    .features__item {
+      padding: 12px;
+    }
+  }
+}
