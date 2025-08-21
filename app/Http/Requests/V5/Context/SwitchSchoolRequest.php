@@ -17,7 +17,7 @@ class SwitchSchoolRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['required', 'integer'],
+            'school_id' => 'required|integer',
         ];
     }
 
