@@ -30,7 +30,7 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
-                
+
             Route::middleware('api')
                 ->prefix('api/v3/admin')
                 ->group(base_path('routes/api/admin_v3.php'));
@@ -70,5 +70,7 @@ class RouteServiceProvider extends ServiceProvider
 
             return Limit::perMinutes($decayMinutes, $maxAttempts)->by($request->ip());
         });
+
+        RateLimiter::for('context', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
     }
 }
