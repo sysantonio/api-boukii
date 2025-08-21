@@ -2,39 +2,23 @@
 
 namespace App\Http\Requests\V5\Context;
 
-use App\Models\School;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
 class SwitchSchoolRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $schoolId = $this->input('school_id');
-        if (! $schoolId) {
-            return false;
-        }
-
-        $school = School::find($schoolId);
-        if (! $school) {
-            return false;
-        }
-
-        return $this->user()->can('switch', $school);
+        return true;
     }
 
     public function rules(): array
     {
         return [
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'school_id' => ['required', 'integer'],
         ];
-    }
-
-    protected function failedAuthorization()
-    {
-        throw new HttpResponseException($this->problem('Access denied', Response::HTTP_FORBIDDEN));
     }
 
     protected function failedValidation(Validator $validator)

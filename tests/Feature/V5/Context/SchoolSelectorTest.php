@@ -63,6 +63,19 @@ class SchoolSelectorTest extends TestCase
     }
 
     /** @test */
+    public function retorna_404_si_school_no_existe()
+    {
+        $response = $this->postJson('/api/v5/context/school', [
+            'school_id' => 999999,
+        ], [
+            'Authorization' => 'Bearer ' . $this->token,
+        ]);
+
+        $response->assertStatus(404);
+        $response->assertJson(['status' => 404]);
+    }
+
+    /** @test */
     public function cambio_valido_actualiza_el_contexto()
     {
         $response = $this->postJson('/api/v5/context/school', [
