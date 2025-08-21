@@ -90,6 +90,8 @@ Route::middleware(['auth:sanctum', 'context.middleware'])->group(function () {
 
 ## 🎪 Tokens y Context Data
 
+La columna `personal_access_tokens.context_data` almacena un objeto JSON con las claves `school_id` y `season_id`, por lo que no debe crearse una tabla separada para el contexto.
+
 ### Estructura del Token
 ```php
 'context_data' => json_encode([
