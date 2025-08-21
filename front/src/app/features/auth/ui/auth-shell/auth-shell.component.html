@@ -1,0 +1,27 @@
+<div class="auth-shell">
+  <div class="auth-shell__hero">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="boukii" class="brand__logo" />
+      <span class="brand__tag">V5</span>
+    </div>
+
+    <h1 class="auth-shell__title">{{ titleKey | translate }}</h1>
+    <p class="auth-shell__subtitle">{{ subtitleKey | translate }}</p>
+
+    <ul class="features" *ngIf="features?.length">
+      <li class="features__item" *ngFor="let feature of features">
+        <i [ngClass]="feature.icon" aria-hidden="true"></i>
+        <div>
+          <div class="feat__title">{{ feature.titleKey | translate }}</div>
+          <div class="feat__desc">{{ feature.descKey | translate }}</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="auth-shell__card">
+    <div class="card">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>
