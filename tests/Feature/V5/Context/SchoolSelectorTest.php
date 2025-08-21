@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\V5\Context;
 
-use App\Models\PersonalAccessToken;
 use App\Models\School;
 use App\Models\User;
+use App\Services\V5\ContextService;
+use App\Support\Pivot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -31,7 +33,10 @@ class SchoolSelectorTest extends TestCase
         $this->schoolOwned = School::factory()->create(['active' => true]);
         $this->otherSchool = School::factory()->create(['active' => true]);
 
-        $this->user->schools()->attach($this->schoolOwned->id);
+        DB::table(Pivot::schoolUserTable())->insert([
+            'user_id' => $this->user->id,
+            'school_id' => $this->schoolOwned->id,
+        ]);
 
         $this->token = $this->user->createToken('test-token')->plainTextToken;
     }
@@ -65,8 +70,10 @@ class SchoolSelectorTest extends TestCase
     /** @test */
     public function retorna_404_si_school_no_existe()
     {
+        $nonExistingId = School::max('id') + 1;
+
         $response = $this->postJson('/api/v5/context/school', [
-            'school_id' => 999999,
+            'school_id' => $nonExistingId,
         ], [
             'Authorization' => 'Bearer ' . $this->token,
         ]);
@@ -90,10 +97,11 @@ class SchoolSelectorTest extends TestCase
             'season_id' => null,
         ]);
 
-        $tokenId = explode('|', $this->token)[0];
-        $tokenModel = PersonalAccessToken::find($tokenId);
-        $this->assertEquals($this->schoolOwned->id, $tokenModel->context_data['school_id']);
-        $this->assertNull($tokenModel->context_data['season_id']);
+        $contextService = app(ContextService::class);
+        $context = $contextService->get($this->user);
+
+        $this->assertEquals($this->schoolOwned->id, $context['school_id']);
+        $this->assertNull($context['season_id']);
     }
 
     /** @test */
