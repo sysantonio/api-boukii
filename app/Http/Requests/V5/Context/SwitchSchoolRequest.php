@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V5\Context;
 
+use App\Traits\ProblemDetails;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -9,6 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SwitchSchoolRequest extends FormRequest
 {
+    use ProblemDetails;
+
     public function authorize(): bool
     {
         return true;
@@ -24,22 +27,8 @@ class SwitchSchoolRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         $errors = $validator->errors()->toArray();
-        throw new HttpResponseException($this->problem('Validation failed', Response::HTTP_UNPROCESSABLE_ENTITY, $errors));
-    }
-
-    private function problem(string $detail, int $status, array $errors = null)
-    {
-        $problem = [
-            'type' => 'about:blank',
-            'title' => Response::$statusTexts[$status] ?? 'Error',
-            'status' => $status,
-            'detail' => $detail,
-        ];
-
-        if ($errors) {
-            $problem['errors'] = $errors;
-        }
-
-        return response()->json($problem, $status, ['Content-Type' => 'application/problem+json']);
+        throw new HttpResponseException(
+            $this->problem('Validation failed', Response::HTTP_UNPROCESSABLE_ENTITY, $errors)
+        );
     }
 }

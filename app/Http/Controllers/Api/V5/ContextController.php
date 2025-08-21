@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V5\Context\SwitchSchoolRequest;
 use App\Models\School;
 use App\Services\V5\ContextService;
+use App\Traits\ProblemDetails;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContextController extends Controller
 {
+    use ProblemDetails;
+
     public function __construct(private ContextService $contextService)
     {
     }
@@ -39,7 +43,11 @@ class ContextController extends Controller
             return $this->problem('School not found', Response::HTTP_NOT_FOUND);
         }
 
-        $this->authorize('switch', $school);
+        try {
+            $this->authorize('switch', $school);
+        } catch (AuthorizationException $e) {
+            return $this->problem($e->getMessage(), Response::HTTP_FORBIDDEN);
+        }
 
         $context = $this->contextService->setSchool($user, $schoolId);
         if (! $context) {
@@ -49,13 +57,5 @@ class ContextController extends Controller
         return response()->json($context);
     }
 
-    private function problem(string $detail, int $status): JsonResponse
-    {
-        return response()->json([
-            'type' => 'about:blank',
-            'title' => Response::$statusTexts[$status] ?? 'Error',
-            'status' => $status,
-            'detail' => $detail,
-        ], $status, ['Content-Type' => 'application/problem+json']);
-    }
+    // Problem details generator provided by ProblemDetails trait.
 }
