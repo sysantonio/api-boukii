@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V5\ContextController;
 
-Route::middleware(['auth:sanctum', 'throttle:api'])
+Route::middleware(['auth:sanctum', 'throttle:context'])
     ->prefix('context')
     ->name('v5.context.')
     ->group(function () {
