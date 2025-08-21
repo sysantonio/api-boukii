@@ -53,7 +53,7 @@ export type TextFieldType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'sea
       </div>
       
       @if (hint || errorMessage) {
-        <div class="field-message" [id]="messageId">
+        <div class="field-message" [id]="messageId" aria-live="polite">
           @if (hasError && errorMessage) {
             <span class="error-message">{{ errorMessage }}</span>
           } @else if (hint) {

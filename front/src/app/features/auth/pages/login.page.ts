@@ -7,7 +7,7 @@ import { AuthV5Service } from '../../../core/services/auth-v5.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
-import { AuthLayoutComponent } from '../ui/auth-layout/auth-layout.component';
+import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
 import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
 
 @Component({
@@ -18,23 +18,27 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
-    AuthLayoutComponent,
+    AuthShellComponent,
     TextFieldComponent
   ],
   template: `
-    <auth-layout 
-      [title]="'auth.hero.welcomeBack' | translate" 
-      [subtitle]="'auth.login.subtitle' | translate">
-      
-      <div class="card" role="form" [attr.aria-labelledby]="'loginTitle'">
-        <h2 id="loginTitle" class="visually-hidden">{{ 'auth.login.title' | translate }}</h2>
-        
-        <div class="card-header">
-          <h1 class="card-title">{{ 'auth.login.title' | translate }}</h1>
-          <p class="card-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
-        </div>
+    <bk-auth-shell
+      [titleKey]="'auth.hero.welcomeBack'"
+      [subtitleKey]="'auth.login.subtitle'"
+      [features]="features">
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <h2 id="loginTitle" class="visually-hidden">{{ 'auth.login.title' | translate }}</h2>
+
+      <div class="card-header">
+        <h1 class="card-title">{{ 'auth.login.title' | translate }}</h1>
+        <p class="card-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
+      </div>
+
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        class="auth-form"
+        [attr.aria-labelledby]="'loginTitle'">
           <!-- Email -->
           <ui-text-field
             [label]="'auth.common.email' | translate"
@@ -69,9 +73,9 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             </button>
           </ui-text-field>
 
-          <button 
-            type="submit" 
-            class="btn btn--primary w-100" 
+          <button
+            type="submit"
+            class="btn btn--primary w-100"
             [disabled]="loginForm.invalid || isLoading()"
             [attr.aria-describedby]="statusMessage() ? 'status-message' : null">
             @if (isLoading()) {
@@ -91,17 +95,16 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             <a routerLink="/auth/register">{{ 'auth.common.signup' | translate }}</a>
           </div>
 
-          <div 
+          <div
             id="status-message"
-            class="sr-only" 
-            role="status" 
+            class="visually-hidden"
+            role="status"
             aria-live="polite"
             [attr.aria-hidden]="!statusMessage()">
             {{ statusMessage() }}
           </div>
         </form>
-      </div>
-    </auth-layout>
+    </bk-auth-shell>
   `,
   styleUrls: ['./login.page.scss']
 })
@@ -116,6 +119,12 @@ export class LoginPage implements OnInit {
   readonly isLoading = signal(false);
   readonly showPassword = signal(false);
   readonly statusMessage = signal('');
+
+  readonly features = [
+    { icon: 'i-grid', titleKey: 'auth.hero.feature1', descKey: 'auth.hero.feature1Desc' },
+    { icon: 'i-clock', titleKey: 'auth.hero.feature2', descKey: 'auth.hero.feature2Desc' },
+    { icon: 'i-trending-up', titleKey: 'auth.hero.feature3', descKey: 'auth.hero.feature3Desc' }
+  ];
 
   loginForm!: FormGroup;
 
