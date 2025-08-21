@@ -38,25 +38,36 @@ class MockUiStore {
   sidebarCollapsed = signal(false);
   private theme = signal<'light' | 'dark' | 'system'>('light');
   isDark = computed(() => this.theme() === 'dark');
-  initializeTheme(): void {}
+
+  initializeTheme(): void {
+    this.setTheme(this.theme());
+  }
   toggleSidebar(): void {
     const newState = !this.sidebarCollapsed();
     this.sidebarCollapsed.set(newState);
     localStorage.setItem('sidebarCollapsed', String(newState));
   }
+  setTheme(theme: 'light' | 'dark' | 'system'): void {
+    this.theme.set(theme);
+    localStorage.setItem('theme', theme);
+    const effective = theme === 'system' ? 'light' : theme;
+    (document.documentElement.dataset as any).theme = effective;
+  }
+
   toggleTheme(): void {
     const current = this.theme();
     const next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
-    this.theme.set(next);
+    this.setTheme(next);
   }
 }
 
 describe('AppShellComponent interactions', () => {
-  const logoutSpy = jasmine.createSpy('logout');
+  const logoutSpy = jest.fn();
 
   beforeEach(async () => {
     localStorage.clear();
-    logoutSpy.calls.reset();
+    delete (document.documentElement.dataset as any).theme;
+    logoutSpy.mockReset();
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
       providers: [
@@ -116,6 +127,69 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
+  it('theme toggle persists selection and updates document dataset', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+    const button = screen.getByTitle('theme.toggle');
+
+    await user.click(button); // light -> dark
+    fixture.detectChanges();
+    expect(localStorage.getItem('theme')).toBe('dark');
+    expect((document.documentElement.dataset as any).theme).toBe('dark');
+
+    await user.click(button); // dark -> system (effective light)
+    fixture.detectChanges();
+    expect(localStorage.getItem('theme')).toBe('system');
+    expect((document.documentElement.dataset as any).theme).toBe('light');
+
+    fixture.nativeElement.remove();
+  });
+
+  it('changes language via TranslationService and updates active option', async () => {
+    const translation = TestBed.inject(TranslationService) as unknown as MockTranslationService;
+    const setLangSpy = jest.spyOn(translation, 'setLanguage');
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    const languageButton = screen.getByRole('button', { name: 'ES' });
+    await user.click(languageButton);
+    fixture.detectChanges();
+
+    const enOption = screen.getByRole('menuitemradio', { name: 'language.en' });
+    await user.click(enOption);
+    fixture.detectChanges();
+
+    expect(setLangSpy).toHaveBeenCalledWith('en');
+
+    // reopen to check active state
+    await user.click(languageButton);
+    fixture.detectChanges();
+    const enOptionActive = screen.getByRole('menuitemradio', { name: 'language.en' });
+    const esOption = screen.getByRole('menuitemradio', { name: 'language.es' });
+    expect(enOptionActive.classList).toContain('active');
+    expect(enOptionActive.getAttribute('aria-checked')).toBe('true');
+    expect(esOption.classList).not.toContain('active');
+    fixture.nativeElement.remove();
+  });
+
+  it('shows notification badge or dot based on sidebar state', async () => {
+    const fixture = renderComponent();
+    const ui = TestBed.inject(UiStore) as unknown as MockUiStore;
+
+    // sidebar expanded => number badge
+    let badge = fixture.nativeElement.querySelector('.notification-badge');
+    expect(badge?.textContent).toBe('2');
+    expect(fixture.nativeElement.querySelector('.notification-dot')).toBeNull();
+
+    // collapse sidebar => dot
+    ui.toggleSidebar();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.notification-badge')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.notification-dot')).not.toBeNull();
+
+    fixture.nativeElement.remove();
+  });
+
   it('invokes logout without confirmation dialog', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
@@ -125,7 +199,7 @@ describe('AppShellComponent interactions', () => {
     await user.click(menuButton);
     fixture.detectChanges();
 
-    const confirmSpy = spyOn(window, 'confirm');
+    const confirmSpy = jest.spyOn(window, 'confirm');
 
     const logoutButton = screen.getByRole('menuitem', { name: 'userMenu.logout' });
     await user.click(logoutButton);
