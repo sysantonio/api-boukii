@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
+use App\Services\V5\ContextService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,8 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Weather\WeatherProviderInterface::class,
             \App\Services\Weather\AccuWeatherProvider::class
         );
+
+        $this->app->singleton(ContextService::class);
     }
 
     /**
