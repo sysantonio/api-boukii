@@ -40,6 +40,9 @@
     }
   },
   "auth": {
+    "brand": {
+      "line": "Gestiona tu escuela deportiva de forma profesional"
+    },
     "common": {
       "email": "Email",
       "password": "Contraseña",
@@ -57,6 +60,9 @@
       "button": "Iniciar Sesión",
       "success": "Sesión iniciada correctamente",
       "error": "Error al iniciar sesión",
+      "processing": "Procesando...",
+      "selectingSchool": "Seleccionando escuela...",
+      "selectingSeason": "Seleccionando temporada...",
       "welcome": {
         "title": "Bienvenido de vuelta",
         "subtitle": "Accede a tu panel de administración de Boukii V5"
@@ -83,6 +89,7 @@
       "button": "Crear Cuenta",
       "success": "Cuenta creada correctamente",
       "error": "Error al crear la cuenta",
+      "processing": "Procesando registro...",
       "welcome": {
         "title": "Únete a Boukii V5",
         "subtitle": "Gestiona tu escuela deportiva de forma profesional y moderna."
@@ -109,6 +116,7 @@
       "button": "Enviar Enlace",
       "success": "Enlace enviado correctamente",
       "error": "Error al enviar el enlace",
+      "processing": "Procesando...",
       "successTitle": "¡Enlace Enviado!",
       "successMessage": "Hemos enviado las instrucciones de recuperación a:",
       "checkSpam": "Si no encuentras el email, revisa tu carpeta de spam.",
