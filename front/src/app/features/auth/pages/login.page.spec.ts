@@ -80,7 +80,7 @@ describe('LoginPage', () => {
   it('should use translation keys for rendering', () => {
     mockTranslation.get.mockClear();
     fixture.detectChanges();
-    expect(mockTranslation.get).toHaveBeenCalledWith('auth.common.signin');
+    expect(mockTranslation.get).toHaveBeenCalledWith('auth.login.cta');
   });
 });
 

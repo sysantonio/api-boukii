@@ -40,19 +40,19 @@
     }
   },
   "auth": {
-    "brandLine": "Manage your sports school professionally",
+    "brandLine": "All-in-one sports management",
     "features": {
       "suite": {
-        "title": "Complete Suite",
-        "subtitle": "Everything you need for your sports school"
+        "title": "Complete suite",
+        "subtitle": "Bookings, courses and planning"
       },
-      "analytics": {
-        "title": "Advanced Analytics",
-        "subtitle": "Real-time metrics and reports"
+      "multiseason": {
+        "title": "Multi-season",
+        "subtitle": "Work by school and season"
       },
-      "security": {
-        "title": "Total Security",
-        "subtitle": "Data protection and controlled access"
+      "pro": {
+        "title": "Professional level",
+        "subtitle": "Roles, permissions and auditing"
       }
     },
     "common": {
@@ -83,71 +83,38 @@
       "feature3Desc": "Professional tools."
     },
     "login": {
-      "title": "Sign In",
-      "subtitle": "Enter your credentials to continue",
-      "button": "Sign In",
+      "title": "Access Boukii",
+      "subtitle": "Manage your schools and seasons",
+      "cta": "Sign in",
+      "links": { "register": "Create account", "forgot": "Forgot your password?" },
       "success": "Successfully signed in",
       "error": "Login failed",
       "processing": "Processing...",
       "selectingSchool": "Selecting school...",
-      "selectingSeason": "Selecting season...",
-      "welcome": {
-        "title": "Welcome back",
-        "subtitle": "Access your Boukii V5 administration panel"
-      },
-      "features": {
-        "dashboard": {
-          "title": "Intuitive Dashboard",
-          "description": "Visualize real-time metrics"
-        },
-        "management": {
-          "title": "Complete Management",
-          "description": "Clients, bookings and planning"
-        },
-        "reports": {
-          "title": "Advanced Reports",
-          "description": "Data analysis and trends"
-        }
-      }
+      "selectingSeason": "Selecting season..."
     },
     "register": {
-      "title": "Create Account",
-      "subtitle": "Join Boukii V5 and manage your school professionally",
-      "button": "Create Account",
+      "title": "Create account",
+      "subtitle": "Set up your first school",
+      "cta": "Register",
+      "links": { "login": "I already have an account" },
       "success": "Account created successfully",
       "error": "Registration failed",
-      "processing": "Processing registration...",
-      "welcome": {
-        "title": "Join Boukii V5",
-        "subtitle": "Manage your sports school professionally and modernly."
-      },
-      "features": {
-        "management": {
-          "title": "Complete Management",
-          "description": "Manage courses, bookings, instructors and seasons from one place."
-        },
-        "seasons": {
-          "title": "Multi-Season",
-          "description": "Organize your activities by seasons and maintain detailed control."
-        },
-        "professional": {
-          "title": "Professionalization",
-          "description": "Advanced tools for modern and efficient sports schools."
-        }
-      }
+      "processing": "Processing registration..."
     },
     "forgotPassword": {
-      "title": "Reset Password",
-      "subtitle": "We'll send you a link to reset your password",
-      "button": "Send Reset Link",
+      "title": "Reset password",
+      "subtitle": "We'll send you a recovery link",
+      "cta": "Send link",
+      "links": { "login": "Back to sign in" },
       "success": "Reset link sent successfully",
       "error": "Failed to send reset link",
       "processing": "Processing...",
       "emailSent": "If an account exists with that email, we've sent instructions.",
-      "successTitle": "Reset Link Sent!",
+      "successTitle": "Reset link sent!",
       "successMessage": "We've sent recovery instructions to:",
       "checkSpam": "If you don't see the email, check your spam folder.",
-      "sendAnother": "Send Another Link",
+      "sendAnother": "Send another link",
       "rememberedPassword": "Remembered your password?"
     },
     "email": {
