@@ -40,19 +40,19 @@
     }
   },
   "auth": {
-    "brandLine": "Gestiona tu escuela deportiva de forma profesional",
+    "brandLine": "Gestión deportiva integral",
     "features": {
       "suite": {
-        "title": "Suite Completa",
-        "subtitle": "Todo lo que necesitas para tu escuela deportiva"
+        "title": "Suite completa",
+        "subtitle": "Reservas, cursos y planificación"
       },
-      "analytics": {
-        "title": "Analytics Avanzados",
-        "subtitle": "Métricas e informes en tiempo real"
+      "multiseason": {
+        "title": "Multi-temporada",
+        "subtitle": "Trabaja por escuela y temporada"
       },
-      "security": {
-        "title": "Seguridad Total",
-        "subtitle": "Protección de datos y acceso controlado"
+      "pro": {
+        "title": "Nivel profesional",
+        "subtitle": "Roles, permisos y auditoría"
       }
     },
     "common": {
@@ -67,65 +67,32 @@
       "noAccount": "¿No tienes cuenta?"
     },
     "login": {
-      "title": "Iniciar Sesión",
-      "subtitle": "Ingresa tus credenciales para continuar",
-      "button": "Iniciar Sesión",
+      "title": "Accede a Boukii",
+      "subtitle": "Gestiona tus escuelas y temporadas",
+      "cta": "Entrar",
+      "links": { "register": "Crear cuenta", "forgot": "¿Olvidaste tu contraseña?" },
       "success": "Sesión iniciada correctamente",
       "error": "Error al iniciar sesión",
       "processing": "Procesando...",
       "selectingSchool": "Seleccionando escuela...",
-      "selectingSeason": "Seleccionando temporada...",
-      "welcome": {
-        "title": "Bienvenido de vuelta",
-        "subtitle": "Accede a tu panel de administración de Boukii V5"
-      },
-      "features": {
-        "dashboard": {
-          "title": "Dashboard Intuitivo",
-          "description": "Visualiza métricas en tiempo real"
-        },
-        "management": {
-          "title": "Gestión Completa",
-          "description": "Clientes, reservas y planificación"
-        },
-        "reports": {
-          "title": "Reportes Avanzados",
-          "description": "Análisis de datos y tendencias"
-        }
-      }
+      "selectingSeason": "Seleccionando temporada..."
     },
     "register": {
       "title": "Crear cuenta",
-      "subtitle": "Únete a Boukii V5",
+      "subtitle": "Configura tu primera escuela",
       "confirmPassword": "Confirmar contraseña",
-      "button": "Crear Cuenta",
+      "cta": "Registrarme",
+      "links": { "login": "Ya tengo cuenta" },
       "success": "Cuenta creada correctamente",
       "error": "Error al crear la cuenta",
-      "processing": "Procesando registro...",
-      "welcome": {
-        "title": "Únete a Boukii V5",
-        "subtitle": "Gestiona tu escuela deportiva de forma profesional y moderna."
-      },
-      "features": {
-        "management": {
-          "title": "Gestión Completa",
-          "description": "Administra cursos, reservas, monitores y temporadas desde un solo lugar."
-        },
-        "seasons": {
-          "title": "Multi-Temporada",
-          "description": "Organiza tus actividades por temporadas y mantén un control detallado."
-        },
-        "professional": {
-          "title": "Profesionalización",
-          "description": "Herramientas avanzadas para escuelas deportivas modernas y eficientes."
-        }
-      }
+      "processing": "Procesando registro..."
     },
     "forgotPassword": {
       "title": "Recuperar contraseña",
-      "subtitle": "Te enviaremos un enlace de recuperación a tu email",
+      "subtitle": "Te enviaremos un enlace de recuperación",
+      "cta": "Enviar enlace",
+      "links": { "login": "Volver a iniciar sesión" },
       "emailSent": "Si existe una cuenta con ese email, hemos enviado instrucciones.",
-      "button": "Enviar Enlace",
       "success": "Enlace enviado correctamente",
       "error": "Error al enviar el enlace",
       "processing": "Procesando...",
@@ -133,25 +100,7 @@
       "successMessage": "Hemos enviado las instrucciones de recuperación a:",
       "checkSpam": "Si no encuentras el email, revisa tu carpeta de spam.",
       "sendAnother": "Enviar Otro Enlace",
-      "rememberedPassword": "¿Recordaste tu contraseña?",
-      "welcome": {
-        "title": "Recupera Tu Acceso",
-        "subtitle": "Te ayudamos a recuperar el acceso a tu cuenta de forma segura y rápida."
-      },
-      "features": {
-        "secure": {
-          "title": "Proceso Seguro",
-          "description": "Utilizamos encriptación de alta seguridad para proteger tu información."
-        },
-        "email": {
-          "title": "Envío Instantáneo",
-          "description": "Recibirás el enlace de recuperación en tu email en segundos."
-        },
-        "quick": {
-          "title": "Acceso Rápido",
-          "description": "Recupera el acceso a tu cuenta en menos de 2 minutos."
-        }
-      }
+      "rememberedPassword": "¿Recordaste tu contraseña?"
     },
     "email": {
       "label": "Email",

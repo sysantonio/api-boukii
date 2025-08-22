@@ -45,15 +45,15 @@ describe('ForgotPasswordPage', () => {
   });
 
   it('should show required email error', () => {
-    component.forgotPasswordForm.get('email')?.markAsTouched();
+    component.form.get('email')?.markAsTouched();
     const error = component.getFieldError('email');
     expect(mockTranslation.get).toHaveBeenCalledWith('auth.errors.requiredEmail');
     expect(error).toBe('auth.errors.requiredEmail');
   });
 
   it('should validate email format', () => {
-    component.forgotPasswordForm.patchValue({ email: 'invalid' });
-    component.forgotPasswordForm.get('email')?.markAsTouched();
+    component.form.patchValue({ email: 'invalid' });
+    component.form.get('email')?.markAsTouched();
     const error = component.getFieldError('email');
     expect(mockTranslation.get).toHaveBeenCalledWith('auth.errors.invalidEmail');
     expect(error).toBe('auth.errors.invalidEmail');
@@ -63,7 +63,7 @@ describe('ForgotPasswordPage', () => {
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('button[type="submit"]');
     expect(button.disabled).toBe(true);
 
-    component.forgotPasswordForm.patchValue({ email: 'test@example.com' });
+    component.form.patchValue({ email: 'test@example.com' });
     fixture.detectChanges();
 
     expect(button.disabled).toBe(false);
@@ -72,7 +72,7 @@ describe('ForgotPasswordPage', () => {
   it('should use translation keys for rendering', () => {
     mockTranslation.get.mockClear();
     fixture.detectChanges();
-    expect(mockTranslation.get).toHaveBeenCalledWith('auth.forgotPassword.button');
+    expect(mockTranslation.get).toHaveBeenCalledWith('auth.forgotPassword.cta');
   });
 });
 
