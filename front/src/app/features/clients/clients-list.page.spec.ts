@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ClientsListPageComponent } from './clients-list.page';
-import { ClientsV5Service, ClientsResponse } from '@core/services/clients-v5.service';
+import { ClientsV5Service, ClientsResponse, Client } from '@core/services/clients-v5.service';
 import { ContextService } from '@core/services/context.service';
 import { TranslationService } from '@core/services/translation.service';
 
@@ -88,6 +88,21 @@ describe('ClientsListPageComponent', () => {
       sport_id: 3,
       active: false
     });
+  });
+
+  it('should open and close preview', () => {
+    const c = { id: 1, fullName: 'John', email: 'j@d.com', phone: '123' } as Client;
+    component.openPreview(c);
+    expect(component.selectedClient).toBe(c);
+    component.closePreview();
+    expect(component.selectedClient).toBeNull();
+  });
+
+  it('should close preview on escape key', () => {
+    const c = { id: 2 } as Client;
+    component.openPreview(c);
+    component.handleEscape(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(component.selectedClient).toBeNull();
   });
 });
 

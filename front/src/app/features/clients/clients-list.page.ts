@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
@@ -39,7 +39,7 @@ import { ContextService } from '@core/services/context.service';
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let client of clients">
+          <tr *ngFor="let client of clients" (click)="openPreview(client)">
             <td>{{ client.fullName }}</td>
             <td>{{ client.email }}</td>
             <td>{{ client.phone }}</td>
@@ -50,6 +50,28 @@ import { ContextService } from '@core/services/context.service';
           </tr>
         </tbody>
       </table>
+
+      <div class="preview-overlay" *ngIf="selectedClient" (click)="closePreview()">
+        <div class="preview-drawer" (click)="$event.stopPropagation()">
+          <h2>{{ selectedClient.fullName }}</h2>
+          <div class="contact">
+            <p>Email: {{ selectedClient.email }}</p>
+            <p>Phone: {{ selectedClient.phone }}</p>
+          </div>
+          <div class="utilizadores">
+            <h3>Utilizadores</h3>
+            <ul>
+              <li *ngFor="let u of (selectedClient.utilizadores || [])">
+                {{ u.name }} - {{ u.age }} - {{ u.sport }}
+              </li>
+            </ul>
+          </div>
+          <div class="actions">
+            <button class="btn">Ver ficha</button>
+            <button class="btn">Nueva reserva</button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [
@@ -65,6 +87,36 @@ import { ContextService } from '@core/services/context.service';
         margin-bottom: 1rem;
         display: flex;
         gap: 0.5rem;
+      }
+      .preview-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: flex-end;
+      }
+      .preview-drawer {
+        width: 320px;
+        background: var(--surface);
+        color: var(--text-1);
+        padding: var(--space-4);
+        box-shadow: var(--elev-2);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+      .actions {
+        display: flex;
+        gap: var(--space-2);
+        margin-top: var(--space-4);
+      }
+      .btn {
+        padding: var(--space-2) var(--space-4);
+        background: var(--brand-500);
+        color: var(--surface);
+        border: none;
+        border-radius: var(--radius-8);
+        cursor: pointer;
       }
     `,
   ],
@@ -83,6 +135,7 @@ export class ClientsListPageComponent implements OnInit {
   });
 
   clients: Client[] = [];
+  selectedClient: Client | null = null;
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
@@ -101,6 +154,21 @@ export class ClientsListPageComponent implements OnInit {
       this.updateQueryParams();
       this.loadClients();
     });
+  }
+
+  openPreview(client: Client): void {
+    this.selectedClient = client;
+  }
+
+  closePreview(): void {
+    this.selectedClient = null;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  handleEscape(event: KeyboardEvent): void {
+    if (this.selectedClient) {
+      this.closePreview();
+    }
   }
 
   private updateQueryParams(): void {
