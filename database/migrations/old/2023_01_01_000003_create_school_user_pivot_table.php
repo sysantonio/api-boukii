@@ -15,24 +15,29 @@ return new class extends Migration
                 $table->json('role_data')->nullable(); // For storing role information
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
-                
+                $table->softDeletes();
+
                 // Primary key is composite
                 $table->primary(['user_id', 'school_id']);
-                
+
                 // Foreign key constraints
                 $table->foreign('user_id')
                     ->references('id')
                     ->on('users')
                     ->cascadeOnDelete();
-                    
+
                 $table->foreign('school_id')
                     ->references('id')
                     ->on('schools')
                     ->cascadeOnDelete();
-                    
+
                 // Indexes for performance
                 $table->index('is_active');
                 $table->index('created_at');
+            });
+        } elseif (!Schema::hasColumn('school_user', 'deleted_at')) {
+            Schema::table('school_user', function (Blueprint $table) {
+                $table->softDeletes();
             });
         }
     }
