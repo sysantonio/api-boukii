@@ -4,9 +4,10 @@ namespace Tests\Feature\V5\Context;
 
 use App\Models\School;
 use App\Models\User;
-use App\Services\V5\ContextService;
+use App\Services\ContextService;
 use App\Support\Pivot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -23,6 +24,8 @@ class SchoolSelectorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Config::set('v5.pivot.school_user_table', 'school_users');
 
         Permission::create(['name' => 'schools.view']);
         Permission::create(['name' => 'schools.switch']);
@@ -64,7 +67,11 @@ class SchoolSelectorTest extends TestCase
         ]);
 
         $response->assertStatus(403);
-        $response->assertJson(['status' => 403]);
+        $response->assertJson([
+            'type' => 'about:blank',
+            'title' => 'Forbidden',
+            'status' => 403,
+        ]);
     }
 
     /** @test */
@@ -79,7 +86,11 @@ class SchoolSelectorTest extends TestCase
         ]);
 
         $response->assertStatus(404);
-        $response->assertJson(['status' => 404]);
+        $response->assertJson([
+            'type' => 'about:blank',
+            'title' => 'Not Found',
+            'status' => 404,
+        ]);
     }
 
     /** @test */

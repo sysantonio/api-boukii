@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
-use App\Services\V5\ContextService;
+use App\Services\ContextService;
 
 class AppServiceProvider extends ServiceProvider
 {

@@ -17,8 +17,9 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
         'abilities',
         'expires_at',
         'school_id',
-        'season_id', 
+        'season_id',
         'context_data',
+        'meta',
     ];
 
     /**
@@ -29,6 +30,7 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
     protected $casts = [
         'abilities' => 'json',
         'context_data' => 'json',
+        'meta' => 'array',
         'last_used_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
