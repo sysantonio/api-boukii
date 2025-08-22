@@ -22,9 +22,11 @@ import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
   styleUrls: ['./forgot-password.page.scss'],
   template: `
     <bk-auth-shell
-      [titleKey]="'auth.forgotPassword.welcome.title'"
-      [subtitleKey]="'auth.forgotPassword.subtitle'"
-      [features]="features">
+      [title]="t.get('auth.forgotPassword.welcome.title')"
+      [subtitle]="t.get('auth.forgotPassword.welcome.subtitle')"
+      [brandLine]="t.get('auth.brandLine')"
+      [features]="features"
+      [footerLinks]="footerLinks">
 
       <div class="card-header">
         <h1 class="card-title">{{ 'auth.forgotPassword.title' | translate }}</h1>
@@ -62,10 +64,6 @@ import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
                 {{ 'auth.forgotPassword.button' | translate }}
               }
             </button>
-
-            <div class="links">
-              <a routerLink="/auth/login">{{ 'auth.forgotPassword.rememberedPassword' | translate }}</a>
-            </div>
           </div>
         </form>
       }
@@ -87,9 +85,6 @@ import { AuthShellComponent } from '../ui/auth-shell/auth-shell.component';
             <button class="btn btn--primary" type="button" (click)="sendAnother()">
               {{ 'auth.forgotPassword.sendAnother' | translate }}
             </button>
-            <div class="links">
-              <a routerLink="/auth/login">{{ 'auth.forgotPassword.rememberedPassword' | translate }}</a>
-            </div>
           </div>
         </div>
       }
@@ -114,9 +109,25 @@ export class ForgotPasswordPage implements OnInit {
 
   // Features for AuthShell
   readonly features = [
-    { title: 'auth.hero.feature1', subtitle: 'auth.hero.feature1Desc' },
-    { title: 'auth.hero.feature2', subtitle: 'auth.hero.feature2Desc' },
-    { title: 'auth.hero.feature3', subtitle: 'auth.hero.feature3Desc' }
+    { 
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>`,
+      title: this.t.get('auth.features.suite.title'), 
+      subtitle: this.t.get('auth.features.suite.subtitle') 
+    },
+    { 
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>`,
+      title: this.t.get('auth.features.analytics.title'), 
+      subtitle: this.t.get('auth.features.analytics.subtitle') 
+    },
+    { 
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`,
+      title: this.t.get('auth.features.security.title'), 
+      subtitle: this.t.get('auth.features.security.subtitle') 
+    }
+  ];
+
+  readonly footerLinks = [
+    { label: this.t.get('auth.backToLogin'), routerLink: '/auth/login' }
   ];
 
   ngOnInit(): void {

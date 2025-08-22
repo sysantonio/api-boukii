@@ -40,8 +40,20 @@
     }
   },
   "auth": {
-    "brand": {
-      "line": "Gestiona tu escuela deportiva de forma profesional"
+    "brandLine": "Gestiona tu escuela deportiva de forma profesional",
+    "features": {
+      "suite": {
+        "title": "Suite Completa",
+        "subtitle": "Todo lo que necesitas para tu escuela deportiva"
+      },
+      "analytics": {
+        "title": "Analytics Avanzados",
+        "subtitle": "Métricas e informes en tiempo real"
+      },
+      "security": {
+        "title": "Seguridad Total",
+        "subtitle": "Protección de datos y acceso controlado"
+      }
     },
     "common": {
       "email": "Email",

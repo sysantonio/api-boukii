@@ -40,8 +40,20 @@
     }
   },
   "auth": {
-    "brand": {
-      "line": "Manage your sports school professionally"
+    "brandLine": "Manage your sports school professionally",
+    "features": {
+      "suite": {
+        "title": "Complete Suite",
+        "subtitle": "Everything you need for your sports school"
+      },
+      "analytics": {
+        "title": "Advanced Analytics",
+        "subtitle": "Real-time metrics and reports"
+      },
+      "security": {
+        "title": "Total Security",
+        "subtitle": "Data protection and controlled access"
+      }
     },
     "common": {
       "email": "Email",

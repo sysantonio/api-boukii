@@ -1,5 +1,5 @@
 <div class="auth">
-  <!-- Header común (solo idioma a la derecha) -->
+  <!-- Header común (logo + idioma) -->
   <header class="auth__header" aria-label="Authentication header">
     <div class="auth__brand">
       <img class="auth__logo" src="assets/brand/boukii-logo.svg" alt="boukii" />
@@ -11,11 +11,14 @@
         class="lang"
         type="button"
         aria-haspopup="menu"
-[attr.aria-expanded]="langOpen"
+        [attr.aria-expanded]="langOpen"
         (click)="toggleLang()"
+        [attr.aria-label]="'language.toggle' | translate"
       >
         {{ currentLangLabel }}
-        <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg>
+        <svg class="chev" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M6 8l4 4 4-4"/>
+        </svg>
       </button>
 
       <nav
@@ -24,26 +27,45 @@
         role="menu"
         aria-label="Choose language"
       >
-        <button role="menuitemradio" [attr.aria-checked]="isLang('es')" (click)="setLang('es')">ES · Español</button>
-        <button role="menuitemradio" [attr.aria-checked]="isLang('en')" (click)="setLang('en')">EN · English</button>
-        <button role="menuitemradio" [attr.aria-checked]="isLang('fr')" (click)="setLang('fr')">FR · Français</button>
+        <button 
+          role="menuitemradio" 
+          [attr.aria-checked]="isLang('es')" 
+          (click)="setLang('es')"
+          [attr.aria-label]="'language.spanish' | translate">
+          ES · Español
+        </button>
+        <button 
+          role="menuitemradio" 
+          [attr.aria-checked]="isLang('en')" 
+          (click)="setLang('en')"
+          [attr.aria-label]="'language.english' | translate">
+          EN · English
+        </button>
+        <button 
+          role="menuitemradio" 
+          [attr.aria-checked]="isLang('fr')" 
+          (click)="setLang('fr')"
+          [attr.aria-label]="'language.french' | translate">
+          FR · Français
+        </button>
       </nav>
     </div>
   </header>
 
-  <!-- Cuerpo a 2 columnas, verticalmente centrado -->
+  <!-- Cuerpo a 2 columnas centrado -->
   <main class="auth__main">
     <section class="hero" aria-label="Welcome and features">
       <img class="hero__logo" src="assets/brand/boukii-logo.svg" alt="" />
-      <h1 class="hero__title">{{ titleKey | translate }}</h1>
-      <p class="hero__subtitle">{{ subtitleKey | translate }}</p>
+      <h1 class="hero__title">{{ title }}</h1>
+      <p class="hero__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+      <p class="hero__brandline" *ngIf="brandLine">{{ brandLine }}</p>
 
-      <ul class="hero__features" *ngIf="features?.length">
-        <li *ngFor="let f of features">
-          <div class="ic"></div>
-          <div class="txt">
-            <strong>{{ f.title | translate }}</strong>
-            <span>{{ f.subtitle | translate }}</span>
+      <ul class="hero__features" *ngIf="features?.length" role="list">
+        <li *ngFor="let feature of features; trackBy: trackFeature" role="listitem">
+          <div class="feature__icon" [innerHTML]="feature.icon"></div>
+          <div class="feature__content">
+            <strong class="feature__title">{{ feature.title }}</strong>
+            <span class="feature__subtitle">{{ feature.subtitle }}</span>
           </div>
         </li>
       </ul>
@@ -51,6 +73,18 @@
 
     <section class="card" aria-live="polite">
       <ng-content></ng-content>
+      
+      <!-- Footer links si existen -->
+      <div class="card__footer" *ngIf="footerLinks?.length">
+        <nav class="footer-links" role="navigation" aria-label="Additional navigation">
+          <a 
+            *ngFor="let link of footerLinks; trackBy: trackFooterLink"
+            [routerLink]="link.routerLink"
+            class="footer-link">
+            {{ link.label }}
+          </a>
+        </nav>
+      </div>
     </section>
   </main>
 

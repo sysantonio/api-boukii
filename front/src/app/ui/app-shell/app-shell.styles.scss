@@ -24,8 +24,8 @@
   background: var(--bg);
 }
 
-/* Colapsado: puedes aplicar a .app-shell o a .app-sidebar */
-.app-shell.app-sidebar--collapsed {
+/* Colapsado: aplicar a .app-shell */
+.app-shell.sidebar-collapsed {
   grid-template-columns: var(--sidebar-w-collapsed) 1fr;
 }
 
@@ -168,7 +168,7 @@
 .logo-text { font-size: 18px; font-weight: 700; color: var(--text-1); transition: opacity 180ms; }
 .logo-accent { color: var(--brand-600); }
 
-.sidebar-toggle {
+.collapse {
   width: 32px; height: 32px; border: 0; background: transparent; border-radius: 6px;
   display: grid; place-items: center; cursor: pointer; transition: background-color 150ms;
   &:hover { background: var(--surface-2); }
@@ -186,8 +186,8 @@
 /* Ocultar textos en colapsado */
 .app-sidebar.collapsed .logo-text,
 .app-sidebar.collapsed .nav-text,
-.app-shell.app-sidebar--collapsed .logo-text,
-.app-shell.app-sidebar--collapsed .nav-text {
+.app-shell.sidebar-collapsed .logo-text,
+.app-shell.sidebar-collapsed .nav-text {
   opacity: 0; pointer-events: none;
 }
 
@@ -217,10 +217,23 @@
 
 /* En colapsado: convertir en punto */
 .app-sidebar.collapsed .badge,
-.app-shell.app-sidebar--collapsed .badge {
+.app-shell.sidebar-collapsed .badge {
   position: absolute; top: 8px; right: 8px;
   width: 8px; height: 8px; min-width: 8px; border-radius: 50%;
   padding: 0; font-size: 0;
+}
+
+/* Badge específico para notificaciones */
+.notification-badge {
+  position: absolute; top: -2px; right: -2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--red); color: var(--active-contrast); font: 700 10px/1 Inter;
+  display: grid; place-items: center;
+}
+.notification-dot {
+  position: absolute; top: -2px; right: -2px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red);
 }
 
 /* Support Section */
@@ -241,7 +254,7 @@
 
 /* En colapsado: ocultar contenido y mostrar FAB opcional (si lo tienes) */
 .app-sidebar.collapsed .support-content,
-.app-shell.app-sidebar--collapsed .support-content { display: none; }
+.app-shell.sidebar-collapsed .support-content { display: none; }
 
 /* =============================================
    MAIN CONTENT

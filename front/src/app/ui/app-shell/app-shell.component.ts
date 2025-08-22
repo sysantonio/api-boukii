@@ -37,7 +37,7 @@ interface Notification {
     <!-- Show full layout only when authenticated and has school selected -->
     @if (shouldShowFullLayout()) {
       {{ logFullLayoutRender() }}
-      <div class="app-shell" [class.app-sidebar--collapsed]="ui.sidebarCollapsed()">
+      <div class="app-shell" [class.sidebar-collapsed]="ui.sidebarCollapsed()">
         
         <!-- NAVBAR -->
         <header class="app-navbar" role="banner">
@@ -45,8 +45,8 @@ interface Notification {
           <div class="search">
             <input
               type="text"
-              [placeholder]="'nav.searchPlaceholder' | translate"
-              [attr.aria-label]="'nav.searchPlaceholder' | translate"
+              [placeholder]="translationService.instant('nav.searchPlaceholder')"
+              [attr.aria-label]="translationService.instant('nav.searchPlaceholder')"
             />
           </div>
 
@@ -58,7 +58,7 @@ interface Notification {
               (click)="toggleLanguageDropdown()"
               [attr.aria-expanded]="languageDropdownOpen()"
               aria-haspopup="menu"
-              [attr.title]="'language.title' | translate"
+              [attr.title]="translationService.instant('language.title')"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -81,7 +81,7 @@ interface Notification {
                     role="menuitemradio"
                     [attr.aria-checked]="isLang(lang)"
                   >
-                    {{ ('language.' + lang) | translate }}
+                    {{ translationService.instant('language.' + lang) }}
                   </button>
                 }
               </div>
@@ -92,8 +92,8 @@ interface Notification {
           <button
             class="icon-btn"
             (click)="ui.toggleTheme()"
-            [attr.aria-label]="ui.isDark() ? ('theme.switchToLight' | translate) : ('theme.switchToDark' | translate)"
-            [attr.title]="'theme.toggle' | translate"
+            [attr.aria-label]="ui.isDark() ? translationService.instant('theme.switchToLight') : translationService.instant('theme.switchToDark')"
+            [attr.title]="translationService.instant('theme.toggle')"
           >
             @if (ui.isDark()) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -119,8 +119,8 @@ interface Notification {
             <button 
               class="icon-btn notifications-btn" 
               (click)="toggleNotifications()"
-              [attr.aria-label]="'nav.notifications' | translate"
-              [attr.title]="'nav.notifications' | translate"
+              [attr.aria-label]="translationService.instant('nav.notifications')"
+              [attr.title]="translationService.instant('nav.notifications')"
               [attr.aria-expanded]="notificationDropdownOpen()"
               aria-haspopup="true"
             >
@@ -129,11 +129,11 @@ interface Notification {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
               @if (unreadNotificationsCount() > 0) {
-                @if (ui.sidebarCollapsed()) {
-                  <span class="notification-dot"></span>
-                } @else {
-                  <span class="notification-badge">{{ unreadNotificationsCount() }}</span>
-                }
+                <span 
+                  class="badge"
+                  [class.notification-dot]="ui.sidebarCollapsed()"
+                  [class.notification-badge]="!ui.sidebarCollapsed()"
+                >{{ ui.sidebarCollapsed() ? '' : unreadNotificationsCount() }}</span>
               }
             </button>
 
@@ -145,14 +145,14 @@ interface Notification {
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <p>{{ 'notifications.noNotifications' | translate }}</p>
+                    <p>{{ translationService.instant('notifications.noNotifications') }}</p>
                   </div>
                 } @else {
                   <div class="notifications-header">
-                    <h3>{{ 'notifications.title' | translate }}</h3>
+                    <h3>{{ translationService.instant('notifications.title') }}</h3>
                     @if (unreadNotificationsCount() > 0) {
                       <button class="mark-all-read" (click)="markAllAsRead()">
-                        {{ 'notifications.markAllAsRead' | translate }}
+                        {{ translationService.instant('notifications.markAllAsRead') }}
                       </button>
                     }
                   </div>
@@ -222,10 +222,10 @@ interface Notification {
               <img
                 class="user-avatar"
                 [src]="getUserAvatar()"
-                [alt]="authV5.user()?.name || ('userMenu.defaultName' | translate)"
+                [alt]="authV5.user()?.name || translationService.instant('userMenu.defaultName')"
               />
               <div class="user-info">
-                <div class="user-name">{{ authV5.user()?.name || ('userMenu.defaultName' | translate) }}</div>
+                <div class="user-name">{{ authV5.user()?.name || translationService.instant('userMenu.defaultName') }}</div>
                 <div class="user-role">{{ getUserRole() }}</div>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -239,11 +239,11 @@ interface Notification {
                   <img
                     class="user-avatar-large"
                     [src]="getUserAvatar()"
-                    [alt]="authV5.user()?.name || ('userMenu.defaultName' | translate)"
+                    [alt]="authV5.user()?.name || translationService.instant('userMenu.defaultName')"
                   />
                   <div class="user-details">
-                    <h3 class="user-name-large">{{ authV5.user()?.name || ('userMenu.defaultName' | translate) }}</h3>
-                    <p class="user-email">{{ authV5.user()?.email || ('userMenu.defaultEmail' | translate) }}</p>
+                    <h3 class="user-name-large">{{ authV5.user()?.name || translationService.instant('userMenu.defaultName') }}</h3>
+                    <p class="user-email">{{ authV5.user()?.email || translationService.instant('userMenu.defaultEmail') }}</p>
                     <span class="user-role-badge">{{ getUserRole() }}</span>
                   </div>
                 </div>
@@ -255,14 +255,14 @@ interface Notification {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  {{ 'userMenu.profile' | translate }}
+                  {{ translationService.instant('userMenu.profile') }}
                 </button>
                 <button class="dropdown-option" role="menuitem">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  {{ 'userMenu.settings' | translate }}
+                  {{ translationService.instant('userMenu.settings') }}
                 </button>
                 
                 <div class="dropdown-divider"></div>
@@ -280,7 +280,7 @@ interface Notification {
                       <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                   }
-                  {{ loggingOut() ? ('userMenu.loggingOut' | translate) : ('userMenu.logout' | translate) }}
+                  {{ loggingOut() ? translationService.instant('userMenu.loggingOut') : translationService.instant('userMenu.logout') }}
                 </button>
               </div>
             }
@@ -288,15 +288,15 @@ interface Notification {
         </header>
 
         <!-- SIDEBAR -->
-        <aside class="app-sidebar" [class.collapsed]="ui.sidebarCollapsed()" role="navigation" [attr.aria-label]="'nav.mainNavigation' | translate">
+        <aside class="app-sidebar" [class.collapsed]="ui.sidebarCollapsed()" role="navigation" [attr.aria-label]="translationService.instant('nav.mainNavigation')">
           <!-- Sidebar Header -->
           <div class="sidebar-header">
             <img class="logo" src="assets/logo.svg" alt="boukii" />
             <button
               class="collapse"
               type="button"
-              (click)="toggleSidebar()"
-              [attr.aria-label]="'sidebar.toggle' | translate"
+              (click)="ui.toggleSidebar()"
+              [attr.aria-label]="translationService.instant('sidebar.toggle')"
             >
               <i class="chev" [class.rot]="ui.sidebarCollapsed()"></i>
             </button>
@@ -305,135 +305,135 @@ interface Notification {
           <!-- Navigation Menu -->
           <nav class="sidebar-nav">              
             <!-- Dashboard -->
-            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? ('nav.dashboard' | translate) : null">
+            <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.dashboard') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.dashboard' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.dashboard') }}</span>
               <span class="badge counter counter--yellow">3</span>
             </a>
 
             <!-- Reservas -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.reservas' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.reservas') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.reservas' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.reservas') }}</span>
               <span class="badge counter counter--blue">12</span>
             </a>
 
             <!-- Clientes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.clientes' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.clientes') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.clientes' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.clientes') }}</span>
               <span class="badge counter counter--green">8</span>
             </a>
 
             <!-- Planificador -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.planificador' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.planificador') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.planificador' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.planificador') }}</span>
               <span class="badge counter counter--red">2</span>
             </a>
 
             <!-- Instructores -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.instructores' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.instructores') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.instructores' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.instructores') }}</span>
               <span class="badge counter counter--green">5</span>
             </a>
 
             <!-- Cursos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.cursos' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.cursos') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.cursos' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.cursos') }}</span>
               <span class="badge counter counter--blue">15</span>
             </a>
 
             <!-- Material -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.material' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.material') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.material' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.material') }}</span>
               <span class="badge counter counter--yellow">4</span>
             </a>
 
             <!-- Bonos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.bonos' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.bonos') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M4 4h16v2H4zm0 5h16v6H4zm0 11h16v-2H4z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.bonos' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.bonos') }}</span>
               <span class="badge counter counter--green">7</span>
             </a>
 
             <!-- Comunicación -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.comunicacion' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.comunicacion') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v6l4-3 4 3v-6h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.comunicacion' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.comunicacion') }}</span>
               <span class="badge counter counter--red">3</span>
             </a>
 
             <!-- Pagos -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.pagos' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.pagos') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.pagos' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.pagos') }}</span>
               <span class="badge counter counter--blue">11</span>
             </a>
 
             <!-- Reportes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.reportes' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.reportes') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.reportes' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.reportes') }}</span>
               <span class="badge counter counter--green">2</span>
             </a>
 
             <!-- Notificaciones -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.notifications' | translate) : null">
+            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.notifications') : null">
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
               </div>
-              <span class="nav-text label">{{ 'nav.notifications' | translate }}</span>
+              <span class="nav-text label">{{ translationService.instant('nav.notifications') }}</span>
             </a>
           </nav>
 
@@ -447,13 +447,13 @@ interface Notification {
                 </svg>
               </div>
               <div class="support-text">
-                <div class="support-title">{{ 'support.needHelp' | translate }}</div>
-                <div class="support-subtitle">{{ 'support.support' | translate }}</div>
+                <div class="support-title">{{ translationService.instant('support.needHelp') }}</div>
+                <div class="support-subtitle">{{ translationService.instant('support.support') }}</div>
               </div>
             </div>
             <button
               class="support-btn"
-              [title]="ui.sidebarCollapsed() ? ('support.support' | translate) : null"
+              [title]="ui.sidebarCollapsed() ? translationService.instant('support.support') : null"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18l6-6-6-6"/>
@@ -473,7 +473,7 @@ interface Notification {
         @if (loadingStore.isLoading()) {
           <div
             class="global-loading"
-            [attr.aria-label]="loadingStore.longestRunningRequest()?.description || ('common.loading' | translate)"
+            [attr.aria-label]="loadingStore.longestRunningRequest()?.description || translationService.instant('common.loading')"
           >
             <div class="loading-spinner"></div>
           </div>
@@ -582,10 +582,7 @@ export class AppShellComponent implements OnInit {
     this.auth.loadMe();
   }
 
-  // Sidebar management
-  toggleSidebar(): void {
-    this.ui.toggleSidebar();
-  }
+  // Sidebar management - removed, delegated to UiStore directly
 
   // Language management
   toggleLanguageDropdown(): void {
@@ -673,12 +670,11 @@ export class AppShellComponent implements OnInit {
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return this.translationService.get('notifications.justNow');
-    if (minutes < 60) return this.translationService.get('notifications.minutesAgo', { count: minutes });
-    if (hours < 24) return this.translationService.get('notifications.hoursAgo', { count: hours });
-    return this.translationService.get('notifications.daysAgo', { count: days });
+    if (minutes < 1) return this.translationService.instant('notifications.justNow');
+    if (minutes < 60) return this.translationService.instant('notifications.minutesAgo');
+    if (hours < 24) return this.translationService.instant('notifications.hoursAgo');
+    return this.translationService.instant('notifications.daysAgo');
   }
 
   getUserAvatar(): string {
@@ -691,15 +687,15 @@ export class AppShellComponent implements OnInit {
     
     // Determine role based on permissions
     if (permissions.includes('admin') || permissions.includes('super-admin')) {
-      return this.translationService.get('roles.admin');
+      return this.translationService.instant('roles.admin');
     } else if (permissions.includes('manager') || permissions.includes('school-manager')) {
-      return this.translationService.get('roles.manager');
+      return this.translationService.instant('roles.manager');
     } else if (permissions.includes('instructor')) {
-      return this.translationService.get('roles.instructor');
+      return this.translationService.instant('roles.instructor');
     } else if (permissions.includes('staff')) {
-      return this.translationService.get('roles.staff');
+      return this.translationService.instant('roles.staff');
     } else {
-      return this.translationService.get('roles.user');
+      return this.translationService.instant('roles.user');
     }
   }
 
@@ -746,7 +742,7 @@ export class AppShellComponent implements OnInit {
     // Alt + S toggles sidebar
     if (event.altKey && event.key === 's') {
       event.preventDefault();
-      this.toggleSidebar();
+      this.ui.toggleSidebar();
     }
   }
 
