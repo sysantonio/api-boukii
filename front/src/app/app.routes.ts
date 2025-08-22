@@ -23,13 +23,19 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent),
     canActivate: [authV5Guard]
   },
   {
+    path: 'clients',
+    loadComponent: () =>
+      import('./features/clients/clients-list.page').then(c => c.ClientsListPageComponent),
+    canActivate: [authV5Guard]
+  },
+  {
     path: 'select-school',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./features/school-selection/select-school.page').then(c => c.SelectSchoolPageComponent),
     canActivate: [authV5Guard, schoolSelectionGuard]
   },
