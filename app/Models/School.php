@@ -499,7 +499,15 @@ class School extends Model
 
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, Pivot::schoolUserTable(), 'school_id', 'user_id');
+        return $this->belongsToMany(
+            User::class,
+            Pivot::USER_SCHOOLS,
+            'school_id',
+            'user_id'
+        )
+        ->whereNull(Pivot::USER_SCHOOLS . '.deleted_at')
+        ->where('users.active', 1)
+        ->whereNull('users.deleted_at');
     }
 
     public function seasons(): \Illuminate\Database\Eloquent\Relations\HasMany

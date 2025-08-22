@@ -188,11 +188,13 @@ use App\Support\Pivot;
     {
         return $this->belongsToMany(
             \App\Models\School::class,
-            Pivot::schoolUserTable(), // Tabla pivote
-            'user_id', // Clave foránea del modelo actual
-            'school_id' // Clave foránea del modelo relacionado
-        )->where('schools.active', 1)
-         ->whereNull('schools.deleted_at');
+            Pivot::USER_SCHOOLS,
+            'user_id',
+            'school_id'
+        )
+        ->whereNull(Pivot::USER_SCHOOLS . '.deleted_at')
+        ->where('schools.active', 1)
+        ->whereNull('schools.deleted_at');
     }
 
     /**
