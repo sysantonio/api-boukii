@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api\V5;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V5\Context\SwitchSchoolRequest;
 use App\Models\School;
-use App\Services\V5\ContextService;
+use App\Services\ContextService;
 use App\Traits\ProblemDetails;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ContextController extends Controller
@@ -38,8 +39,9 @@ class ContextController extends Controller
         $user = $request->user();
         $schoolId = (int) $request->validated()['school_id'];
 
-        $school = School::find($schoolId);
-        if (! $school) {
+        try {
+            $school = School::findOrFail($schoolId);
+        } catch (ModelNotFoundException $e) {
             return $this->problem('School not found', Response::HTTP_NOT_FOUND);
         }
 
@@ -50,9 +52,6 @@ class ContextController extends Controller
         }
 
         $context = $this->contextService->setSchool($user, $schoolId);
-        if (! $context) {
-            return $this->problem('No active access token', Response::HTTP_UNAUTHORIZED);
-        }
 
         return response()->json($context);
     }

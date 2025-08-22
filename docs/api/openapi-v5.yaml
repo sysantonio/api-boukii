@@ -34,6 +34,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/School'
+              examples:
+                success:
+                  value:
+                    data:
+                      - id: 1
+                        name: Example School
         '403':
           description: Forbidden
           content:
@@ -43,6 +49,24 @@ paths:
               examples:
                 forbidden:
                   $ref: '#/components/examples/Forbidden'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                notFound:
+                  $ref: '#/components/examples/NotFound'
+        '422':
+          description: Validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                validationFailed:
+                  $ref: '#/components/examples/ValidationFailed'
   /api/v5/context:
     get:
       summary: Get current user context
@@ -54,6 +78,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserContext'
+              examples:
+                success:
+                  value:
+                    school_id: 1
+                    season_id: null
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                forbidden:
+                  $ref: '#/components/examples/Forbidden'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                notFound:
+                  $ref: '#/components/examples/NotFound'
+        '422':
+          description: Validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                validationFailed:
+                  $ref: '#/components/examples/ValidationFailed'
   /api/v5/context/school:
     post:
       summary: Switch current school
@@ -76,6 +132,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserContext'
+              examples:
+                success:
+                  value:
+                    school_id: 1
+                    season_id: null
         '403':
           description: Forbidden
           content:
