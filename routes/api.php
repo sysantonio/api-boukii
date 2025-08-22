@@ -48,6 +48,44 @@ Route::prefix('v5')
         require base_path('routes/api_v5/logs.php');
         require base_path('routes/api_v5/me.php');
         require base_path('routes/api_v5/context.php');
+        
+        // V5 Feature Flags routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::prefix('feature-flags')->group(function () {
+                Route::get('/school/{schoolId}', [App\Http\Controllers\V5\FeatureFlagController::class, 'getFlagsForSchool']);
+                Route::post('/school/{schoolId}', [App\Http\Controllers\V5\FeatureFlagController::class, 'updateFlagsForSchool'])
+                    ->middleware('can:manage-feature-flags');
+                Route::get('/school/{schoolId}/history', [App\Http\Controllers\V5\FeatureFlagController::class, 'getFlagHistory'])
+                    ->middleware('can:view-feature-flag-history');
+                Route::get('/stats', [App\Http\Controllers\V5\FeatureFlagController::class, 'getUsageStats'])
+                    ->middleware('can:view-system-stats');
+                Route::post('/gradual-rollout', [App\Http\Controllers\V5\FeatureFlagController::class, 'enableGradualRollout'])
+                    ->middleware('can:manage-rollouts');
+            });
+        });
+
+        // V5 Monitoring routes
+        Route::get('/monitoring/health', [App\Http\Controllers\V5\MonitoringController::class, 'healthCheck']);
+        
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::prefix('monitoring')->group(function () {
+                // System stats and general monitoring
+                Route::get('/system-stats', [App\Http\Controllers\V5\MonitoringController::class, 'getSystemStats']);
+                Route::get('/performance-comparison', [App\Http\Controllers\V5\MonitoringController::class, 'getPerformanceComparison']);
+                Route::get('/alerts', [App\Http\Controllers\V5\MonitoringController::class, 'getRecentAlerts']);
+                
+                // Performance metrics recording
+                Route::post('/performance', [App\Http\Controllers\V5\MonitoringController::class, 'recordPerformance']);
+                Route::post('/migration-error', [App\Http\Controllers\V5\MonitoringController::class, 'recordMigrationError']);
+                
+                // School-specific metrics
+                Route::get('/school/{schoolId}', [App\Http\Controllers\V5\MonitoringController::class, 'getSchoolMetrics']);
+                
+                // Development/debugging routes
+                Route::delete('/cache', [App\Http\Controllers\V5\MonitoringController::class, 'clearMetricsCache'])
+                    ->middleware('can:manage-system');
+            });
+        });
     });
 
 /*

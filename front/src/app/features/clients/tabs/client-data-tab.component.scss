@@ -1,0 +1,320 @@
+.client-data-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.tab-header {
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 var(--space-2);
+    color: var(--text-1);
+  }
+
+  .tab-description {
+    color: var(--text-2);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.data-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.form-section {
+  .section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 var(--space-4);
+    color: var(--text-1);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-weight: 500;
+    color: var(--text-1);
+    font-size: 0.875rem;
+  }
+}
+
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-8);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+
+  &:hover {
+    background: var(--surface-2);
+    border-color: var(--border-hover, var(--text-2));
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--brand-500);
+    outline-offset: 2px;
+  }
+
+  span {
+    flex: 1;
+    color: var(--text-1);
+
+    &:empty::before {
+      content: '—';
+      color: var(--text-3);
+    }
+  }
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  border-radius: var(--radius-4);
+  transition: all 0.2s ease;
+  opacity: 0;
+
+  .field-value:hover & {
+    opacity: 1;
+    color: var(--text-2);
+  }
+
+  &:hover {
+    background: var(--surface-3);
+    color: var(--brand-600);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Input styles when editing
+input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-8);
+  background: var(--surface);
+  color: var(--text-1);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 10%, transparent);
+  }
+
+  &.is-invalid {
+    border-color: var(--error-500, #dc2626);
+    
+    &:focus {
+      border-color: var(--error-500, #dc2626);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--error-500, #dc2626) 10%, transparent);
+    }
+  }
+
+  &[type="date"] {
+    cursor: pointer;
+  }
+}
+
+.field-error {
+  color: var(--error-500, #dc2626);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// Form actions for unsaved changes
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: var(--space-4);
+  margin: var(--space-6) calc(-1 * var(--space-4)) calc(-1 * var(--space-4));
+}
+
+.unsaved-changes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.changes-indicator {
+  color: var(--warning-600, #d97706);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+// Button styles
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-8);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: var(--brand-500);
+    color: var(--surface);
+    border-color: var(--brand-500);
+
+    &:hover:not(:disabled) {
+      background: var(--brand-600);
+      border-color: var(--brand-600);
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    color: var(--text-1);
+    border-color: var(--border);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--border-hover, var(--text-2));
+    }
+  }
+}
+
+// Loading spinner
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .unsaved-changes {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .changes-indicator {
+    text-align: center;
+  }
+
+  .actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .client-data-tab {
+    gap: var(--space-4);
+  }
+
+  .form-section {
+    .section-title {
+      font-size: 1rem;
+    }
+  }
+
+  .field-value {
+    padding: var(--space-2);
+    min-height: 44px;
+  }
+
+  input {
+    padding: var(--space-2);
+  }
+}
+
+// Accessibility enhancements
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .field-value {
+    border-width: 2px;
+  }
+
+  .edit-btn {
+    background: var(--surface-2);
+    opacity: 1;
+  }
+
+  input:focus {
+    box-shadow: 0 0 0 3px var(--text-1);
+  }
+}

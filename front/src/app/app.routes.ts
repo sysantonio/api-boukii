@@ -29,9 +29,19 @@ export const routes: Routes = [
   },
   {
     path: 'clients',
-    loadComponent: () =>
-      import('./features/clients/clients-list.page').then(c => c.ClientsListPageComponent),
-    canActivate: [authV5Guard]
+    canActivate: [authV5Guard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/clients/clients-list.page').then(c => c.ClientsListPageComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./features/clients/client-detail.page').then(c => c.ClientDetailPageComponent)
+      }
+    ]
   },
   {
     path: 'select-school',
