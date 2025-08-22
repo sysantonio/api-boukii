@@ -5,13 +5,13 @@ namespace App\V5\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @OA\Schema(
  *     schema="V5UserSeasonRole",
  *     required={"user_id","season_id","role"},
  *
- *     @OA\Property(property="id", type="integer", readOnly=true),
  *     @OA\Property(property="user_id", type="integer"),
  *     @OA\Property(property="season_id", type="integer"),
  *     @OA\Property(property="role", type="string")
@@ -20,8 +20,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserSeasonRole extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'user_season_roles';
+
+    public $incrementing = false;
+    protected $primaryKey = ['user_id', 'season_id', 'role'];
+    protected $keyType = 'string';
 
     protected $fillable = [
         'user_id',

@@ -60,6 +60,7 @@ class MigrationIntegrityTest extends TestCase
         $this->assertTrue(Schema::hasColumn('seasons', 'is_historical'));
         $this->assertTrue(Schema::hasColumn('user_season_roles', 'is_active'));
         $this->assertTrue(Schema::hasColumn('user_season_roles', 'assigned_at'));
+        $this->assertTrue(Schema::hasColumn('user_season_roles', 'deleted_at'));
         $this->assertTrue(Schema::hasColumn('personal_access_tokens', 'school_id'));
         $this->assertTrue(Schema::hasColumn('personal_access_tokens', 'season_id'));
     }
@@ -93,8 +94,8 @@ class MigrationIntegrityTest extends TestCase
     public function test_user_season_roles_table_structure(): void
     {
         $expectedColumns = [
-            'id', 'user_id', 'season_id', 'role', 'is_active', 
-            'assigned_at', 'assigned_by', 'created_at', 'updated_at'
+            'user_id', 'season_id', 'role', 'is_active',
+            'assigned_at', 'assigned_by', 'created_at', 'updated_at', 'deleted_at'
         ];
 
         foreach ($expectedColumns as $column) {
@@ -213,6 +214,52 @@ class MigrationIntegrityTest extends TestCase
 
         $this->assertNotNull($userSeasonRole);
         $this->assertEquals('school_admin', $userSeasonRole->role);
+    }
+
+    /**
+     * Ensure composite key enforces uniqueness.
+     */
+    public function test_user_season_role_composite_key_uniqueness(): void
+    {
+        $school = School::factory()->create();
+        $season = Season::factory()->create(['school_id' => $school->id]);
+        $user = User::factory()->create();
+        $user->schools()->attach($school->id);
+
+        $data = [
+            'user_id' => $user->id,
+            'season_id' => $season->id,
+            'role' => 'school_admin',
+            'is_active' => true,
+            'assigned_at' => now(),
+            'assigned_by' => $user->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('user_season_roles')->insert($data);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        DB::table('user_season_roles')->insert($data);
+    }
+
+    /**
+     * Ensure foreign key constraints are enforced.
+     */
+    public function test_user_season_role_foreign_keys(): void
+    {
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        DB::table('user_season_roles')->insert([
+            'user_id' => 99999,
+            'season_id' => 99999,
+            'role' => 'school_admin',
+            'is_active' => true,
+            'assigned_at' => now(),
+            'assigned_by' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**
