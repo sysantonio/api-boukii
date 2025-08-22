@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, computed, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeToggleComponent } from '@ui/theme-toggle/theme-toggle.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import { LanguageSelectorComponent } from '@shared/components/language-selector/language-selector.component';
@@ -27,6 +27,8 @@ interface Notification {
   imports: [
     CommonModule,
     RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
     ThemeToggleComponent,
     ToastComponent,
     LanguageSelectorComponent,
@@ -327,7 +329,13 @@ interface Notification {
             </a>
 
             <!-- Clientes -->
-            <a href="#" class="nav-item item" role="menuitem" [title]="ui.sidebarCollapsed() ? ('nav.clientes' | translate) : null">
+            <a
+              routerLink="/clients"
+              routerLinkActive="active"
+              class="nav-item item"
+              role="menuitem"
+              [title]="ui.sidebarCollapsed() ? ('nav.clientes' | translate) : null"
+            >
               <div class="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
