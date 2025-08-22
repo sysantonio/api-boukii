@@ -64,6 +64,15 @@
 ./scripts/migrate-v5.sh status # Check status
 ```
 
+## 🧠 Contexto V5
+
+- **Persistencia**: el contexto (school_id, season_id) se guarda en `personal_access_tokens.meta['context']`, por lo que no se requieren nuevas migraciones para soportarlo.
+- **Sin contexto**: si el token de acceso no existe o no contiene información, la API devuelve `school_id` y `season_id` como `null`.
+- **Endpoints**:
+  - `GET /api/v5/context` – obtiene el contexto actual.
+  - `POST /api/v5/context/school` – cambia la escuela y reinicia la temporada.
+  - *Política aplicada*: protegidos por `auth:sanctum` y limitados por `throttle:context` (30 solicitudes/minuto por usuario o IP).
+
 ## 🎯 Benefits
 
 1. **✅ No More Conflicts**: Eliminated duplicate table creation
