@@ -46,13 +46,13 @@
         "title": "Suite Completa",
         "subtitle": "Todo lo que necesitas para tu escuela deportiva"
       },
-      "analytics": {
-        "title": "Analytics Avanzados",
-        "subtitle": "Métricas e informes en tiempo real"
+      "multiseason": {
+        "title": "Multi-Temporada",
+        "subtitle": "Organiza tus actividades por temporadas"
       },
-      "security": {
-        "title": "Seguridad Total",
-        "subtitle": "Protección de datos y acceso controlado"
+      "pro": {
+        "title": "Modo Pro",
+        "subtitle": "Herramientas avanzadas para escuelas deportivas"
       }
     },
     "common": {
@@ -69,7 +69,11 @@
     "login": {
       "title": "Iniciar Sesión",
       "subtitle": "Ingresa tus credenciales para continuar",
-      "button": "Iniciar Sesión",
+      "cta": "Iniciar sesión",
+      "links": {
+        "register": "Crear cuenta",
+        "forgot": "¿Olvidaste tu contraseña?"
+      },
       "success": "Sesión iniciada correctamente",
       "error": "Error al iniciar sesión",
       "processing": "Procesando...",
@@ -98,7 +102,10 @@
       "title": "Crear cuenta",
       "subtitle": "Únete a Boukii V5",
       "confirmPassword": "Confirmar contraseña",
-      "button": "Crear Cuenta",
+      "cta": "Crear cuenta",
+      "links": {
+        "login": "Iniciar sesión"
+      },
       "success": "Cuenta creada correctamente",
       "error": "Error al crear la cuenta",
       "processing": "Procesando registro...",
@@ -124,8 +131,11 @@
     "forgotPassword": {
       "title": "Recuperar contraseña",
       "subtitle": "Te enviaremos un enlace de recuperación a tu email",
+      "cta": "Enviar enlace",
+      "links": {
+        "login": "Iniciar sesión"
+      },
       "emailSent": "Si existe una cuenta con ese email, hemos enviado instrucciones.",
-      "button": "Enviar Enlace",
       "success": "Enlace enviado correctamente",
       "error": "Error al enviar el enlace",
       "processing": "Procesando...",

@@ -46,13 +46,13 @@
         "title": "Complete Suite",
         "subtitle": "Everything you need for your sports school"
       },
-      "analytics": {
-        "title": "Advanced Analytics",
-        "subtitle": "Real-time metrics and reports"
+      "multiseason": {
+        "title": "Multi-Season",
+        "subtitle": "Organize your activities by seasons"
       },
-      "security": {
-        "title": "Total Security",
-        "subtitle": "Data protection and controlled access"
+      "pro": {
+        "title": "Pro Tools",
+        "subtitle": "Advanced tools for sports schools"
       }
     },
     "common": {
@@ -85,7 +85,11 @@
     "login": {
       "title": "Sign In",
       "subtitle": "Enter your credentials to continue",
-      "button": "Sign In",
+      "cta": "Sign in",
+      "links": {
+        "register": "Create account",
+        "forgot": "Forgot your password?"
+      },
       "success": "Successfully signed in",
       "error": "Login failed",
       "processing": "Processing...",
@@ -113,7 +117,10 @@
     "register": {
       "title": "Create Account",
       "subtitle": "Join Boukii V5 and manage your school professionally",
-      "button": "Create Account",
+      "cta": "Create account",
+      "links": {
+        "login": "Sign in"
+      },
       "success": "Account created successfully",
       "error": "Registration failed",
       "processing": "Processing registration...",
@@ -139,7 +146,10 @@
     "forgotPassword": {
       "title": "Reset Password",
       "subtitle": "We'll send you a link to reset your password",
-      "button": "Send Reset Link",
+      "cta": "Send reset link",
+      "links": {
+        "login": "Sign in"
+      },
       "success": "Reset link sent successfully",
       "error": "Failed to send reset link",
       "processing": "Processing...",

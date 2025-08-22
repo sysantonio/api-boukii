@@ -1,7 +1,0 @@
-// Import shared auth styles
-@import './login.page.scss';
-
-// Register-specific adjustments
-.auth-form {
-  gap: 18px; // Slightly tighter spacing for 4 fields
-}

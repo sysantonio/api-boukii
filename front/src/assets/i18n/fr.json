@@ -46,13 +46,13 @@
         "title": "Suite Complète",
         "subtitle": "Tout ce dont vous avez besoin pour votre école de sport"
       },
-      "analytics": {
-        "title": "Analytics Avancés",
-        "subtitle": "Métriques et rapports en temps réel"
+      "multiseason": {
+        "title": "Multi-saison",
+        "subtitle": "Organisez vos activités par saisons"
       },
-      "security": {
-        "title": "Sécurité Totale",
-        "subtitle": "Protection des données et accès contrôlé"
+      "pro": {
+        "title": "Mode Pro",
+        "subtitle": "Outils avancés pour écoles sportives"
       }
     },
     "common": {
@@ -85,7 +85,11 @@
     "login": {
       "title": "Se connecter",
       "subtitle": "Entrez vos identifiants pour continuer",
-      "button": "Se connecter",
+      "cta": "Se connecter",
+      "links": {
+        "register": "Créer un compte",
+        "forgot": "Mot de passe oublié ?"
+      },
       "success": "Connexion réussie",
       "error": "Échec de la connexion",
       "processing": "Traitement...",
@@ -114,7 +118,10 @@
       "title": "Créer un compte",
       "subtitle": "Rejoignez Boukii V5 et gérez votre école professionnellement",
       "confirmPassword": "Confirmer le mot de passe",
-      "button": "Créer un compte",
+      "cta": "Créer un compte",
+      "links": {
+        "login": "Se connecter"
+      },
       "success": "Compte créé avec succès",
       "error": "Erreur lors de la création du compte",
       "processing": "Traitement de l'inscription...",
@@ -140,7 +147,10 @@
     "forgotPassword": {
       "title": "Réinitialiser le mot de passe",
       "subtitle": "Nous vous enverrons un lien pour réinitialiser votre mot de passe",
-      "button": "Envoyer le lien",
+      "cta": "Envoyer le lien",
+      "links": {
+        "login": "Se connecter"
+      },
       "success": "Lien envoyé avec succès",
       "error": "Erreur lors de l'envoi du lien",
       "processing": "Traitement...",

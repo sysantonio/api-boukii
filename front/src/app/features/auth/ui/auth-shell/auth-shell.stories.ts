@@ -72,13 +72,13 @@ type Story = StoryObj<AuthShellComponent>;
 const renderTemplate = (content: string) => (args: any) => ({
   props: args,
   template: `
-    <bk-auth-shell
+    <auth-shell
       [brandLine]="brandLine"
       [title]="title"
       [subtitle]="subtitle"
       [features]="features">
       ${content}
-    </bk-auth-shell>
+    </auth-shell>
   `,
 });
 
