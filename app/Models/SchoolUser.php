@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
- use Illuminate\Database\Eloquent\SoftDeletes; use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -11,6 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @OA\Schema(
  *      schema="SchoolUser",
  *      required={"school_id","user_id"},
+ *
  *      @OA\Property(
  *           property="school_id",
  *           description="ID of the school",
@@ -50,15 +52,20 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *          format="date-time"
  *      )
  * )
-*/class SchoolUser extends Model
+ */
+class SchoolUser extends Model
 {
-      use LogsActivity, SoftDeletes, HasFactory;     public $table = 'school_user';
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    public $table = 'school_user';
+
     public $primaryKey = null;
+
     public $incrementing = false;
 
     public $fillable = [
         'school_id',
-        'user_id'
+        'user_id',
     ];
 
     protected $casts = [
@@ -70,7 +77,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
         'user_id' => 'required',
         'created_at' => 'nullable',
         'updated_at' => 'nullable',
-        'deleted_at' => 'nullable'
+        'deleted_at' => 'nullable',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -85,6 +92,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
-         return LogOptions::defaults();
+        return LogOptions::defaults();
     }
 }
