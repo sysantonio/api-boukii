@@ -1,25 +1,33 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
-/*interface AuthShellFeature {
+interface AuthShellFeature {
   icon: string;
-  titleKey: string;
-  descKey: string;
-}*/
+  title: string;
+  subtitle: string;
+}
+
+interface AuthShellFooterLink {
+  label: string;
+  routerLink: string;
+}
 
 @Component({
   selector: 'bk-auth-shell',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, RouterLink],
   templateUrl: './auth-shell.component.html',
   styleUrls: ['./auth-shell.component.scss'],
 })
 export class AuthShellComponent {
-  @Input() titleKey = 'auth.welcome.title';
-  @Input() subtitleKey = 'auth.welcome.subtitle';
-  @Input() features: Array<{ title: string; subtitle: string }> = [];
+  @Input() title!: string;
+  @Input() subtitle?: string;
+  @Input() brandLine?: string;
+  @Input() features?: Array<AuthShellFeature>;
+  @Input() footerLinks?: Array<AuthShellFooterLink>;
 
   private readonly translation = inject(TranslationService);
 
@@ -51,5 +59,13 @@ export class AuthShellComponent {
     this.translation.setLanguage(code);
     this.langOpen = false;
   }
-}
 
+  // TrackBy functions for performance
+  trackFeature(index: number, feature: AuthShellFeature): string {
+    return feature.title;
+  }
+
+  trackFooterLink(index: number, link: AuthShellFooterLink): string {
+    return link.routerLink;
+  }
+}
