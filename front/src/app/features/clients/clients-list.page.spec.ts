@@ -68,7 +68,8 @@ describe('ClientsListPageComponent', () => {
       school_id: 1,
       q: 'john',
       sport_id: 2,
-      active: true
+      active: true,
+      page: 1
     });
   });
 
@@ -79,14 +80,15 @@ describe('ClientsListPageComponent', () => {
     component.filtersForm.setValue({ q: 'jane', sport_id: '3', active: 'false' });
 
     expect(router.navigate).toHaveBeenCalledWith([], {
-      queryParams: { q: 'jane', sport_id: '3', active: 'false' },
+      queryParams: { q: 'jane', sport_id: '3', active: 'false', page: 1 },
       queryParamsHandling: 'merge'
     });
     expect(clientsService.getClients).toHaveBeenCalledWith({
       school_id: 1,
       q: 'jane',
       sport_id: 3,
-      active: false
+      active: false,
+      page: 1
     });
   });
 
