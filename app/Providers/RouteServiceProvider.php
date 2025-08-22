@@ -71,6 +71,6 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinutes($decayMinutes, $maxAttempts)->by($request->ip());
         });
 
-        RateLimiter::for('context', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('context', fn (Request $r) => Limit::perMinute(30)->by(optional($r->user())->id ?: $r->ip()));
     }
 }
