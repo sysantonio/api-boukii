@@ -8,163 +8,210 @@ class MockTranslationService {
   currentLanguage() {
     return 'en';
   }
-  get(key: string): string {
-    const translations: Record<string, string> = {
-      'auth.login.title': 'Sign In',
-      'auth.login.subtitle': 'Enter your credentials to continue',
-      'auth.register.title': 'Create Account',
-      'auth.register.subtitle': 'Join Boukii V5',
-      'auth.forgot.title': 'Reset Password',
-      'auth.forgot.subtitle': 'We\'ll send you a recovery link to your email',
-      'auth.hero.feature1': 'Complete Management',
-      'auth.hero.feature1Desc': 'Management, bookings and more.',
-      'auth.hero.feature2': 'Multi-Season',
-      'auth.hero.feature2Desc': 'Organize by seasons.',
-      'auth.hero.feature3': 'Professionalization',
-      'auth.hero.feature3Desc': 'Professional tools.',
-      'common.loading': 'Loading...'
-    };
-    return translations[key] || key;
+  setLanguage(_: string) {}
+  get(key: string) {
+    return key;
   }
 }
 
 const themeDecorator = (theme: 'light' | 'dark') =>
-  componentWrapperDecorator(
-    (story) => `
+  componentWrapperDecorator((story) => {
+    localStorage.setItem('theme', theme);
+    document.body.dataset.theme = theme;
+    return `
       <div data-theme="${theme}" style="min-height:100vh;background:var(--bg);padding:1rem;">
         ${story}
       </div>
-    `
-  );
+    `;
+  });
 
 const defaultFeatures = [
-  { icon: 'i-grid', titleKey: 'auth.hero.feature1', descKey: 'auth.hero.feature1Desc' },
-  { icon: 'i-clock', titleKey: 'auth.hero.feature2', descKey: 'auth.hero.feature2Desc' },
-  { icon: 'i-trending-up', titleKey: 'auth.hero.feature3', descKey: 'auth.hero.feature3Desc' }
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg>`,
+    title: 'Complete Suite',
+    subtitle: 'Everything you need for your sports school',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>`,
+    title: 'Advanced Analytics',
+    subtitle: 'Metrics and reports in real time',
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`,
+    title: 'Total Security',
+    subtitle: 'Protected data and controlled access',
+  },
 ];
 
-const meta: Meta<AuthShellComponent & { showFeatures: boolean }> = {
+const meta: Meta<AuthShellComponent> = {
   title: 'Features/Auth/AuthShell',
   component: AuthShellComponent,
   decorators: [
     applicationConfig({
-      providers: [
-        { provide: TranslationService, useClass: MockTranslationService },
-        TranslatePipe
-      ]
-    })
+      providers: [{ provide: TranslationService, useClass: MockTranslationService }, TranslatePipe],
+    }),
   ],
-  parameters: {
-    layout: 'fullscreen'
-  },
+  parameters: { layout: 'fullscreen' },
   argTypes: {
-    showFeatures: { control: { type: 'boolean' } }
+    brandLine: { control: 'text' },
+    title: { control: 'text' },
+    subtitle: { control: 'text' },
+    features: { control: 'object' },
   },
   args: {
-    titleKey: 'auth.login.title',
-    subtitleKey: 'auth.login.subtitle',
+    brandLine: 'Manage your sports school professionally',
+    title: 'Sign In',
+    subtitle: 'Enter your credentials to continue',
     features: defaultFeatures,
-    showFeatures: true
-  }
+  },
 };
 export default meta;
 
-type Story = StoryObj<AuthShellComponent & { showFeatures: boolean }>;
+type Story = StoryObj<AuthShellComponent>;
 
 const renderTemplate = (content: string) => (args: any) => ({
   props: args,
   template: `
     <bk-auth-shell
-      [titleKey]="titleKey"
-      [subtitleKey]="subtitleKey"
-      [features]="showFeatures ? features : []">
+      [brandLine]="brandLine"
+      [title]="title"
+      [subtitle]="subtitle"
+      [features]="features">
       ${content}
     </bk-auth-shell>
-  `
+  `,
 });
+
+const loginForm = `
+  <form class="auth-form">
+    <label>Email <input type="email" /></label>
+    <label>Password <input type="password" /></label>
+    <button type="submit">Login</button>
+  </form>
+`;
+
+const loginFormErrors = `
+  <form class="auth-form">
+    <label>Email
+      <input type="email" class="invalid" />
+      <div class="error">Email is required</div>
+    </label>
+    <label>Password
+      <input type="password" class="invalid" />
+      <div class="error">Password is too short</div>
+    </label>
+    <button type="submit" disabled>Login</button>
+  </form>
+`;
+
+const registerForm = `
+  <form class="auth-form">
+    <label>Email <input type="email" /></label>
+    <label>Password <input type="password" /></label>
+    <label>Confirm Password <input type="password" /></label>
+    <button type="submit">Register</button>
+  </form>
+`;
+
+const registerFormErrors = `
+  <form class="auth-form">
+    <label>Email
+      <input type="email" class="invalid" />
+      <div class="error">Email is required</div>
+    </label>
+    <label>Password
+      <input type="password" class="invalid" />
+      <div class="error">Password is too short</div>
+    </label>
+    <label>Confirm Password
+      <input type="password" class="invalid" />
+      <div class="error">Passwords must match</div>
+    </label>
+    <button type="submit" disabled>Register</button>
+  </form>
+`;
+
+const forgotForm = `
+  <form class="auth-form">
+    <label>Email <input type="email" /></label>
+    <button type="submit">Send Reset Link</button>
+  </form>
+`;
+
+const forgotFormErrors = `
+  <form class="auth-form">
+    <label>Email
+      <input type="email" class="invalid" />
+      <div class="error">Email is required</div>
+    </label>
+    <button type="submit" disabled>Send Reset Link</button>
+  </form>
+`;
 
 export const LoginLight: Story = {
   decorators: [themeDecorator('light')],
-  render: renderTemplate(`
-    <form class="auth-form">
-      <label>Email <input type="email" /></label>
-      <label>Password <input type="password" /></label>
-      <button type="submit">Login</button>
-    </form>
-  `)
+  render: renderTemplate(loginForm),
 };
 
 export const LoginDark: Story = {
   decorators: [themeDecorator('dark')],
-  render: LoginLight.render
+  render: renderTemplate(loginForm),
 };
 
-export const Register: Story = {
+export const LoginLightWithErrors: Story = {
   decorators: [themeDecorator('light')],
-  args: {
-    titleKey: 'auth.register.title',
-    subtitleKey: 'auth.register.subtitle'
-  },
-  render: renderTemplate(`
-    <form class="auth-form">
-      <label>Email <input type="email" /></label>
-      <label>Password <input type="password" /></label>
-      <label>Confirm Password <input type="password" /></label>
-      <button type="submit">Register</button>
-    </form>
-  `)
+  render: renderTemplate(loginFormErrors),
 };
 
-export const ForgotPassword: Story = {
+export const LoginDarkWithErrors: Story = {
+  decorators: [themeDecorator('dark')],
+  render: renderTemplate(loginFormErrors),
+};
+
+export const RegisterLight: Story = {
   decorators: [themeDecorator('light')],
-  args: {
-    titleKey: 'auth.forgot.title',
-    subtitleKey: 'auth.forgot.subtitle'
-  },
-  render: renderTemplate(`
-    <form class="auth-form">
-      <label>Email <input type="email" /></label>
-      <button type="submit">Send Reset Link</button>
-    </form>
-  `)
+  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
+  render: renderTemplate(registerForm),
 };
 
-export const ValidationErrors: Story = {
+export const RegisterDark: Story = {
+  decorators: [themeDecorator('dark')],
+  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
+  render: renderTemplate(registerForm),
+};
+
+export const RegisterLightWithErrors: Story = {
   decorators: [themeDecorator('light')],
-  render: renderTemplate(`
-    <form class="auth-form">
-      <label>Email
-        <input type="email" class="invalid" />
-        <div class="error">Email is required</div>
-      </label>
-      <label>Password
-        <input type="password" class="invalid" />
-        <div class="error">Password is too short</div>
-      </label>
-      <button type="submit" disabled>Login</button>
-    </form>
-  `)
+  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
+  render: renderTemplate(registerFormErrors),
 };
 
-export const LoadingState: Story = {
+export const RegisterDarkWithErrors: Story = {
+  decorators: [themeDecorator('dark')],
+  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
+  render: renderTemplate(registerFormErrors),
+};
+
+export const ForgotLight: Story = {
   decorators: [themeDecorator('light')],
-  render: renderTemplate(`
-    <form class="auth-form">
-      <label>Email <input type="email" /></label>
-      <label>Password <input type="password" /></label>
-      <button type="submit" disabled>
-        <span class="spinner" style="margin-right:8px;"></span>
-        {{ 'common.loading' | translate }}
-      </button>
-    </form>
-  `)
+  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
+  render: renderTemplate(forgotForm),
 };
 
-export const MobileView: Story = {
+export const ForgotDark: Story = {
+  decorators: [themeDecorator('dark')],
+  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
+  render: renderTemplate(forgotForm),
+};
+
+export const ForgotLightWithErrors: Story = {
   decorators: [themeDecorator('light')],
-  parameters: {
-    viewport: { defaultViewport: 'mobile1' }
-  },
-  render: LoginLight.render
+  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
+  render: renderTemplate(forgotFormErrors),
 };
 
+export const ForgotDarkWithErrors: Story = {
+  decorators: [themeDecorator('dark')],
+  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
+  render: renderTemplate(forgotFormErrors),
+};
