@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { ClientsV5Service, Client, GetClientsParams } from '@core/services/clients-v5.service';
 import { ContextService } from '@core/services/context.service';
@@ -38,7 +38,7 @@ import { ContextService } from '@core/services/context.service';
             <th>{{ 'clients.signupDate' | translate }}</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody *ngIf="!loading && clients.length > 0">
           <tr *ngFor="let client of clients" (click)="openPreview(client)">
             <td>{{ client.fullName }}</td>
             <td>{{ client.email }}</td>
@@ -49,7 +49,25 @@ import { ContextService } from '@core/services/context.service';
             <td>{{ client.signupDate }}</td>
           </tr>
         </tbody>
+        <tbody *ngIf="loading">
+          <tr *ngFor="let _ of skeletonRows">
+            <td colspan="7" class="skeleton-row"></td>
+          </tr>
+        </tbody>
+        <tbody *ngIf="!loading && clients.length === 0">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">No clients found</div>
+            </td>
+          </tr>
+        </tbody>
       </table>
+
+      <div class="pagination" *ngIf="!loading && totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+      </div>
 
       <div class="preview-overlay" *ngIf="selectedClient" (click)="closePreview()">
         <div class="preview-drawer" (click)="$event.stopPropagation()">
@@ -118,6 +136,27 @@ import { ContextService } from '@core/services/context.service';
         border-radius: var(--radius-8);
         cursor: pointer;
       }
+      .skeleton-row {
+        height: 1.5rem;
+        background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .empty-state {
+        text-align: center;
+        padding: 1rem;
+        color: var(--text-2);
+      }
+      .pagination {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
     `,
   ],
 })
@@ -136,6 +175,10 @@ export class ClientsListPageComponent implements OnInit {
 
   clients: Client[] = [];
   selectedClient: Client | null = null;
+  loading = false;
+  currentPage = 1;
+  totalPages = 1;
+  skeletonRows = Array.from({ length: 5 });
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
@@ -147,10 +190,13 @@ export class ClientsListPageComponent implements OnInit {
       },
       { emitEvent: false }
     );
+    const pageParam = Number(params.get('page'));
+    this.currentPage = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
 
     this.loadClients();
 
     this.filtersForm.valueChanges.subscribe(() => {
+      this.currentPage = 1;
       this.updateQueryParams();
       this.loadClients();
     });
@@ -173,7 +219,7 @@ export class ClientsListPageComponent implements OnInit {
 
   private updateQueryParams(): void {
     const value = this.filtersForm.value;
-    const queryParams: any = {};
+    const queryParams: any = { page: this.currentPage };
     if (value.q) queryParams.q = value.q;
     if (value.sport_id) queryParams.sport_id = value.sport_id;
     if (value.active) queryParams.active = value.active;
@@ -190,10 +236,21 @@ export class ClientsListPageComponent implements OnInit {
       q: value.q || undefined,
       sport_id: value.sport_id ? Number(value.sport_id) : undefined,
       active: value.active !== '' ? value.active === 'true' : undefined,
+      page: this.currentPage,
     };
+    this.loading = true;
     this.clientsService.getClients(params).subscribe((res) => {
       this.clients = res.data;
+      this.totalPages = res.meta.pagination.totalPages;
+      this.loading = false;
     });
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    this.updateQueryParams();
+    this.loadClients();
   }
 }
 
