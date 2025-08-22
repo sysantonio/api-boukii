@@ -19,7 +19,7 @@ class RolePermissionSeeder extends Seeder
         // Crear roles
         $roles = ['superadmin', 'admin', 'monitor', 'client'];
         foreach ($roles as $role) {
-            Role::create(['name' => $role]);
+            Role::firstOrCreate(['name' => $role]);
         }
 
         // Crear permisos para cada tabla
@@ -27,12 +27,14 @@ class RolePermissionSeeder extends Seeder
         foreach ($tablas as $tabla) {
             $permisos = ["view $tabla", "create $tabla", "update $tabla", "delete $tabla"];
             foreach ($permisos as $permiso) {
-                Permission::create(['name' => $permiso]);
+                Permission::firstOrCreate(['name' => $permiso]);
             }
         }
 
         // Asignar todos los permisos al rol superadmin
-        $superAdmin = Role::findByName('superadmin');
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin = Role::where('name', 'superadmin')->first();
+        if ($superAdmin && Permission::count() > 0) {
+            $superAdmin->givePermissionTo(Permission::all());
+        }
     }
 }
