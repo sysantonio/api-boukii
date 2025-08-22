@@ -9,18 +9,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_season_roles', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedInteger('user_id'); // Match existing users table
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('season_id');
             $table->string('role');
             $table->timestamps();
-            
-            // Foreign keys without cascade to avoid issues
+            $table->softDeletes();
+
+            $table->primary(['user_id', 'season_id', 'role']);
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('season_id')->references('id')->on('seasons')->onDelete('cascade');
+
             $table->index('user_id');
             $table->index('season_id');
-            
-            // Unique constraint
-            $table->unique(['user_id', 'season_id'], 'uniq_user_season');
+            $table->index('role');
         });
     }
 

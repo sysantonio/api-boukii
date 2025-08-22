@@ -14,18 +14,25 @@ return new class extends Migration
         // Verificar si la tabla user_season_roles existe, si no, crearla
         if (!Schema::hasTable('user_season_roles')) {
             Schema::create('user_season_roles', function (Blueprint $table) {
-                $table->id();
                 $table->unsignedBigInteger('user_id');
                 $table->unsignedBigInteger('season_id');
                 $table->string('role');
+                $table->boolean('is_active')->default(true);
+                $table->timestamp('assigned_at')->nullable();
+                $table->unsignedBigInteger('assigned_by')->nullable();
                 $table->timestamps();
-                
-                // Foreign keys
+                $table->softDeletes();
+
+                $table->primary(['user_id', 'season_id', 'role']);
+
                 $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
                 $table->foreign('season_id')->references('id')->on('seasons')->onDelete('cascade');
-                
-                // Unique constraint
-                $table->unique(['user_id', 'season_id'], 'uniq_user_season');
+                $table->foreign('assigned_by')->references('id')->on('users')->onDelete('set null');
+
+                $table->index('user_id');
+                $table->index('season_id');
+                $table->index('role');
+                $table->index(['user_id', 'is_active'], 'idx_user_season_active');
             });
         }
 
@@ -34,14 +41,18 @@ return new class extends Migration
             if (!Schema::hasColumn('user_season_roles', 'is_active')) {
                 $table->boolean('is_active')->default(true)->after('role');
             }
-            
+
             if (!Schema::hasColumn('user_season_roles', 'assigned_at')) {
                 $table->timestamp('assigned_at')->nullable()->after('is_active');
             }
-            
+
             if (!Schema::hasColumn('user_season_roles', 'assigned_by')) {
                 $table->unsignedBigInteger('assigned_by')->nullable()->after('assigned_at');
                 $table->foreign('assigned_by')->references('id')->on('users')->onDelete('set null');
+            }
+
+            if (!Schema::hasColumn('user_season_roles', 'deleted_at')) {
+                $table->softDeletes();
             }
         });
 
