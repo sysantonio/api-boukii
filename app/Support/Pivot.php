@@ -4,9 +4,11 @@ namespace App\Support;
 
 class Pivot
 {
+    public const USER_SCHOOLS = 'school_user';
+
     public static function schoolUserTable(): string
     {
-        return config('v5.pivot.school_user_table', 'school_user');
+        return self::USER_SCHOOLS;
     }
 }
 

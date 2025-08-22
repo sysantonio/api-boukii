@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Services\ContextService;
 use App\Support\Pivot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -25,8 +24,6 @@ class SchoolSelectorTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('v5.pivot.school_user_table', 'school_users');
-
         Permission::create(['name' => 'schools.view']);
         Permission::create(['name' => 'schools.switch']);
 
@@ -36,7 +33,7 @@ class SchoolSelectorTest extends TestCase
         $this->schoolOwned = School::factory()->create(['active' => true]);
         $this->otherSchool = School::factory()->create(['active' => true]);
 
-        DB::table(Pivot::schoolUserTable())->insert([
+        DB::table(Pivot::USER_SCHOOLS)->insert([
             'user_id' => $this->user->id,
             'school_id' => $this->schoolOwned->id,
         ]);
