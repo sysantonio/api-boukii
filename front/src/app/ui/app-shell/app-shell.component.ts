@@ -531,7 +531,9 @@ export class AppShellComponent implements OnInit {
   constructor(
     public readonly translationService: TranslationService,
     public readonly environmentService: EnvironmentService,
-  ) {}
+  ) {
+    this.ui.initTheme();
+  }
 
   @ViewChild('languageMenu') languageMenu?: ElementRef<HTMLDivElement>;
   @ViewChild('languageButton') languageButton?: ElementRef<HTMLButtonElement>;
@@ -602,8 +604,6 @@ export class AppShellComponent implements OnInit {
   ngOnInit(): void {
     // Load stored UI preferences
     this.ui.initFromStorage();
-    // Initialize theme system
-    this.ui.initTheme();
 
     // Try to load user session if token exists
     this.auth.loadMe();
