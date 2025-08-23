@@ -90,6 +90,8 @@ export interface BookingHistoryItem {
   service?: string;
   instructor?: string;
   date: string;
+  time?: string;
+  courseName?: string;
   amount?: number;
   duration_hours?: number;
 }
@@ -161,7 +163,7 @@ type TabType = 'datos' | 'utilizadores' | 'deportes' | 'observaciones' | 'histor
         <div class="tab-navigation">
           <nav class="tabs" role="tablist">
             <button
-              *ngFor="let tab of availableTabs; trackBy: trackTab"
+              *ngFor="let tab of availableTabs(); trackBy: trackTab"
               type="button"
               class="tab"
               [class.active]="activeTab() === tab.id"
@@ -367,6 +369,8 @@ export class ClientDetailPageComponent implements OnInit {
             client_id: id,
             sport_id: 1,
             degree_id: 2,
+            person_type: 'client',
+            person_id: id,
             created_at: '2023-03-01T10:00:00Z',
             updated_at: '2024-10-01T12:30:00Z',
             sport: { id: 1, name: 'Esquí Alpino' },
@@ -386,10 +390,13 @@ export class ClientDetailPageComponent implements OnInit {
         booking_history: [
           {
             id: 1,
-            course_name: 'Esquí Principiantes - Grupo A',
-            course_date: '2024-12-15',
+            client_id: id,
+            type: 'course',
             status: 'completed',
-            created_at: '2024-11-20T10:00:00Z'
+            title: 'Esquí Principiantes - Grupo A',
+            courseName: 'Esquí Principiantes - Grupo A',
+            date: '2025-03-08',
+            time: '10:00'
           }
         ]
       };

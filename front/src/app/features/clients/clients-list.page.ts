@@ -3,8 +3,20 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
-import { ClientsV5Service, Client, GetClientsParams } from '@core/services/clients-v5.service';
+import { ClientsV5Service, GetClientsParams } from '@core/services/clients-v5.service';
 import { ContextService } from '@core/services/context.service';
+
+export interface ClientListItem {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  utilizadores: number;
+  utilizadoresDetails?: { name: string; age: number; sport: string }[];
+  sportsSummary: string;
+  status: 'active' | 'inactive' | 'blocked';
+  signupDate: string;
+}
 
 @Component({
   selector: 'app-clients-list-page',
@@ -79,7 +91,7 @@ import { ContextService } from '@core/services/context.service';
           <div class="utilizadores">
             <h3>Utilizadores</h3>
             <ul>
-              <li *ngFor="let u of (selectedClient.utilizadores || [])">
+              <li *ngFor="let u of (selectedClient?.utilizadoresDetails || [])">
                 {{ u.name }} - {{ u.age }} - {{ u.sport }}
               </li>
             </ul>
@@ -173,8 +185,8 @@ export class ClientsListPageComponent implements OnInit {
     active: [''],
   });
 
-  clients: Client[] = [];
-  selectedClient: Client | null = null;
+  clients: ClientListItem[] = [];
+  selectedClient?: ClientListItem | null;
   loading = false;
   currentPage = 1;
   totalPages = 1;
@@ -202,7 +214,7 @@ export class ClientsListPageComponent implements OnInit {
     });
   }
 
-  openPreview(client: Client): void {
+  openPreview(client: ClientListItem): void {
     this.selectedClient = client;
   }
 
@@ -240,7 +252,7 @@ export class ClientsListPageComponent implements OnInit {
     };
     this.loading = true;
     this.clientsService.getClients(params).subscribe((res) => {
-      this.clients = res.data;
+      this.clients = res.data as ClientListItem[];
       this.totalPages = res.meta.pagination.totalPages;
       this.loading = false;
     });
