@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, computed, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ThemeToggleComponent } from '@ui/theme-toggle/theme-toggle.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import { LanguageSelectorComponent } from '@shared/components/language-selector/language-selector.component';
@@ -58,8 +58,9 @@ interface Notification {
               #languageButton
               class="icon-btn language-toggle"
               (click)="toggleLanguageDropdown()"
-              [attr.aria-expanded]="languageDropdownOpen()"
+              [attr.aria-expanded]="languageDropdownOpen() ? 'true' : 'false'"
               aria-haspopup="menu"
+              [attr.aria-controls]="'language-menu'"
               [attr.title]="translationService.instant('language.title')"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,7 +75,7 @@ interface Notification {
             </button>
 
             @if (languageDropdownOpen()) {
-              <div #languageMenu class="language-dropdown" role="menu">
+              <div #languageMenu id="language-menu" class="language-dropdown" role="menu">
                 @for (lang of languages; track lang) {
                   <button
                     class="dropdown-option"
@@ -82,6 +83,7 @@ interface Notification {
                     (click)="setLanguage(lang)"
                     role="menuitemradio"
                     [attr.aria-checked]="isLang(lang)"
+                    tabindex="-1"
                   >
                     {{ translationService.instant('language.' + lang) }}
                   </button>
@@ -118,13 +120,15 @@ interface Notification {
 
           <!-- Notifications with badge -->
           <div class="notifications-container">
-            <button 
-              class="icon-btn notifications-btn" 
+            <button
+              #notificationsButton
+              class="icon-btn notifications-btn"
               (click)="toggleNotifications()"
               [attr.aria-label]="translationService.instant('nav.notifications')"
               [attr.title]="translationService.instant('nav.notifications')"
-              [attr.aria-expanded]="notificationDropdownOpen()"
-              aria-haspopup="true"
+              [attr.aria-expanded]="notificationDropdownOpen() ? 'true' : 'false'"
+              aria-haspopup="menu"
+              [attr.aria-controls]="'notifications-menu'"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -140,7 +144,7 @@ interface Notification {
             </button>
 
             @if (notificationDropdownOpen()) {
-              <div class="notifications-dropdown" role="menu">
+              <div #notificationsMenu id="notifications-menu" class="notifications-dropdown" role="menu">
                 @if (notifications().length === 0) {
                   <div class="no-notifications">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -160,11 +164,12 @@ interface Notification {
                   </div>
                   <div class="notifications-list">
                     @for (notification of notifications(); track notification.id) {
-                      <div 
-                        class="notification-item" 
+                      <div
+                        class="notification-item"
                         [class.unread]="!notification.read"
                         (click)="markAsRead(notification.id)"
                         role="menuitem"
+                        tabindex="-1"
                       >
                         <div class="notification-icon" [class]="'notification-' + notification.type">
                           @switch (notification.type) {
@@ -215,11 +220,13 @@ interface Notification {
 
           <!-- User Menu -->
           <div class="user-menu">
-            <button 
+            <button
+              #userButton
               class="user-trigger"
               (click)="toggleUserDropdown()"
-              [attr.aria-expanded]="userDropdownOpen()"
-              aria-haspopup="true"
+              [attr.aria-expanded]="userDropdownOpen() ? 'true' : 'false'"
+              aria-haspopup="menu"
+              [attr.aria-controls]="'user-menu'"
             >
               <img
                 class="user-avatar"
@@ -236,7 +243,7 @@ interface Notification {
             </button>
 
             @if (userDropdownOpen()) {
-              <div class="user-dropdown" role="menu">
+              <div #userMenu id="user-menu" class="user-dropdown" role="menu">
                 <div class="user-dropdown-header">
                   <img
                     class="user-avatar-large"
@@ -252,14 +259,14 @@ interface Notification {
                 
                 <div class="dropdown-divider"></div>
                 
-                <button class="dropdown-option" role="menuitem">
+                <button class="dropdown-option" role="menuitem" tabindex="-1">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                   {{ translationService.instant('userMenu.profile') }}
                 </button>
-                <button class="dropdown-option" role="menuitem">
+                <button class="dropdown-option" role="menuitem" tabindex="-1">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
@@ -269,7 +276,7 @@ interface Notification {
                 
                 <div class="dropdown-divider"></div>
                 
-                <button class="dropdown-option danger" (click)="logout()" [disabled]="loggingOut()" role="menuitem">
+                <button class="dropdown-option danger" (click)="logout()" [disabled]="loggingOut()" role="menuitem" tabindex="-1">
                   @if (loggingOut()) {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loading-spinner">
                       <circle cx="12" cy="12" r="10" opacity="0.3"></circle>
@@ -515,6 +522,7 @@ export class AppShellComponent implements OnInit {
   protected readonly auth = inject(AuthStore);
   protected readonly loadingStore = inject(LoadingStore);
   protected readonly authV5 = inject(AuthV5Service);
+  protected readonly router = inject(Router);
 
   languages: SupportedLanguage[] = [...SUPPORTED_LANGUAGES];
 
@@ -525,6 +533,10 @@ export class AppShellComponent implements OnInit {
 
   @ViewChild('languageMenu') languageMenu?: ElementRef<HTMLDivElement>;
   @ViewChild('languageButton') languageButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('userMenu') userMenu?: ElementRef<HTMLDivElement>;
+  @ViewChild('userButton') userButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('notificationsMenu') notificationsMenu?: ElementRef<HTMLDivElement>;
+  @ViewChild('notificationsButton') notificationsButton?: ElementRef<HTMLButtonElement>;
 
   // Component state signals
   private readonly _languageDropdownOpen = signal(false);
@@ -593,6 +605,7 @@ export class AppShellComponent implements OnInit {
 
     // Try to load user session if token exists
     this.auth.loadMe();
+    this.router.events.subscribe(() => this.closeAll());
   }
 
   // Sidebar management - removed, delegated to UiStore directly
@@ -613,9 +626,12 @@ export class AppShellComponent implements OnInit {
       this.languageButton?.nativeElement.focus();
     }
 
-    // Close user dropdown if open
+    // Close other dropdowns if open
     if (this._userDropdownOpen()) {
       this._userDropdownOpen.set(false);
+    }
+    if (this._notificationDropdownOpen()) {
+      this._notificationDropdownOpen.set(false);
     }
   }
 
@@ -643,16 +659,43 @@ export class AppShellComponent implements OnInit {
 
   // User menu management
   toggleUserDropdown(): void {
-    this._userDropdownOpen.set(!this._userDropdownOpen());
-    // Close language dropdown if open
+    const opening = !this._userDropdownOpen();
+    this._userDropdownOpen.set(opening);
+
+    if (opening) {
+      setTimeout(() => {
+        const firstOption = this.userMenu?.nativeElement.querySelector<HTMLButtonElement>(
+          '.dropdown-option'
+        );
+        firstOption?.focus();
+      });
+    } else {
+      this.userButton?.nativeElement.focus();
+    }
+
     if (this._languageDropdownOpen()) {
       this._languageDropdownOpen.set(false);
+    }
+    if (this._notificationDropdownOpen()) {
+      this._notificationDropdownOpen.set(false);
     }
   }
 
   toggleNotifications(): void {
-    this._notificationDropdownOpen.set(!this._notificationDropdownOpen());
-    // Close other dropdowns if open
+    const opening = !this._notificationDropdownOpen();
+    this._notificationDropdownOpen.set(opening);
+
+    if (opening) {
+      setTimeout(() => {
+        const firstItem = this.notificationsMenu?.nativeElement.querySelector<HTMLElement>(
+          '[role="menuitem"]'
+        );
+        firstItem?.focus();
+      });
+    } else {
+      this.notificationsButton?.nativeElement.focus();
+    }
+
     if (this._languageDropdownOpen()) {
       this._languageDropdownOpen.set(false);
     }
@@ -725,37 +768,38 @@ export class AppShellComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
-    // Close language dropdown if clicking outside
-    if (this._languageDropdownOpen() && !target.closest('.language-menu')) {
-      this._languageDropdownOpen.set(false);
-    }
-    
-    // Close user dropdown if clicking outside
-    if (this._userDropdownOpen() && !target.closest('.user-menu')) {
-      this._userDropdownOpen.set(false);
-    }
-    
-    // Close notifications dropdown if clicking outside
-    if (this._notificationDropdownOpen() && !target.closest('.notifications-container')) {
-      this._notificationDropdownOpen.set(false);
+    if (
+      !target.closest('.language-menu') &&
+      !target.closest('.user-menu') &&
+      !target.closest('.notifications-container')
+    ) {
+      this.closeAll();
     }
   }
 
   // Keyboard navigation
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    // Escape key closes dropdowns
-    if (event.key === 'Escape') {
-      this._languageDropdownOpen.set(false);
-      this._userDropdownOpen.set(false);
-      this._notificationDropdownOpen.set(false);
-    }
-    
     // Alt + S toggles sidebar
     if (event.altKey && event.key === 's') {
       event.preventDefault();
       this.ui.toggleSidebar();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  closeAll(): void {
+    if (this._languageDropdownOpen()) {
+      this._languageDropdownOpen.set(false);
+      this.languageButton?.nativeElement.focus();
+    }
+    if (this._userDropdownOpen()) {
+      this._userDropdownOpen.set(false);
+      this.userButton?.nativeElement.focus();
+    }
+    if (this._notificationDropdownOpen()) {
+      this._notificationDropdownOpen.set(false);
+      this.notificationsButton?.nativeElement.focus();
     }
   }
 
