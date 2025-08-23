@@ -14,16 +14,25 @@ class MockTranslationService {
   }
 }
 
-const themeDecorator = (theme: 'light' | 'dark') =>
-  componentWrapperDecorator((story) => {
-    localStorage.setItem('theme', theme);
-    document.body.dataset.theme = theme;
-    return `
-      <div data-theme="${theme}" style="min-height:100vh;background:var(--bg);padding:1rem;">
-        ${story}
-      </div>
-    `;
-  });
+const lightDecorator = componentWrapperDecorator((story) => {
+  document.body.dataset.theme = 'light';
+  localStorage.setItem('theme', 'light');
+  return `
+    <div data-theme="light" style="min-height:100vh;background:var(--bg);padding:1rem;">
+      ${story}
+    </div>
+  `;
+});
+
+const darkDecorator = componentWrapperDecorator((story) => {
+  document.body.dataset.theme = 'dark';
+  localStorage.setItem('theme', 'dark');
+  return `
+    <div data-theme="dark" style="min-height:100vh;background:var(--bg);padding:1rem;">
+      ${story}
+    </div>
+  `;
+});
 
 const defaultFeatures = [
   {
@@ -83,29 +92,15 @@ const renderTemplate = (content: string) => (args: any) => ({
 });
 
 const loginForm = `
-  <form class="auth-form">
+  <form auth-form class="auth-form">
     <label>Email <input type="email" /></label>
     <label>Password <input type="password" /></label>
     <button type="submit">Login</button>
   </form>
 `;
 
-const loginFormErrors = `
-  <form class="auth-form">
-    <label>Email
-      <input type="email" class="invalid" />
-      <div class="error">Email is required</div>
-    </label>
-    <label>Password
-      <input type="password" class="invalid" />
-      <div class="error">Password is too short</div>
-    </label>
-    <button type="submit" disabled>Login</button>
-  </form>
-`;
-
 const registerForm = `
-  <form class="auth-form">
+  <form auth-form class="auth-form">
     <label>Email <input type="email" /></label>
     <label>Password <input type="password" /></label>
     <label>Confirm Password <input type="password" /></label>
@@ -113,105 +108,74 @@ const registerForm = `
   </form>
 `;
 
-const registerFormErrors = `
-  <form class="auth-form">
-    <label>Email
-      <input type="email" class="invalid" />
-      <div class="error">Email is required</div>
-    </label>
-    <label>Password
-      <input type="password" class="invalid" />
-      <div class="error">Password is too short</div>
-    </label>
-    <label>Confirm Password
-      <input type="password" class="invalid" />
-      <div class="error">Passwords must match</div>
-    </label>
-    <button type="submit" disabled>Register</button>
-  </form>
-`;
-
 const forgotForm = `
-  <form class="auth-form">
+  <form auth-form class="auth-form">
     <label>Email <input type="email" /></label>
     <button type="submit">Send Reset Link</button>
   </form>
 `;
 
-const forgotFormErrors = `
-  <form class="auth-form">
-    <label>Email
-      <input type="email" class="invalid" />
-      <div class="error">Email is required</div>
+const loginFormErrors = `
+  <form auth-form class="auth-form ng-invalid">
+    <label>
+      Email
+      <input
+        type="email"
+        class="ng-invalid ng-touched"
+        aria-invalid="true"
+        aria-describedby="login-email-error"
+      />
+      <span id="login-email-error" role="alert">Email is required</span>
     </label>
-    <button type="submit" disabled>Send Reset Link</button>
+    <label>
+      Password
+      <input
+        type="password"
+        class="ng-invalid ng-touched"
+        aria-invalid="true"
+        aria-describedby="login-password-error"
+      />
+      <span id="login-password-error" role="alert">Password is too short</span>
+    </label>
+    <button type="submit" disabled>Login</button>
   </form>
 `;
 
 export const LoginLight: Story = {
-  decorators: [themeDecorator('light')],
+  decorators: [lightDecorator],
   render: renderTemplate(loginForm),
 };
 
 export const LoginDark: Story = {
-  decorators: [themeDecorator('dark')],
+  decorators: [darkDecorator],
   render: renderTemplate(loginForm),
 };
 
-export const LoginLightWithErrors: Story = {
-  decorators: [themeDecorator('light')],
-  render: renderTemplate(loginFormErrors),
-};
-
-export const LoginDarkWithErrors: Story = {
-  decorators: [themeDecorator('dark')],
-  render: renderTemplate(loginFormErrors),
-};
-
 export const RegisterLight: Story = {
-  decorators: [themeDecorator('light')],
+  decorators: [lightDecorator],
   args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
   render: renderTemplate(registerForm),
 };
 
 export const RegisterDark: Story = {
-  decorators: [themeDecorator('dark')],
+  decorators: [darkDecorator],
   args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
   render: renderTemplate(registerForm),
 };
 
-export const RegisterLightWithErrors: Story = {
-  decorators: [themeDecorator('light')],
-  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
-  render: renderTemplate(registerFormErrors),
-};
-
-export const RegisterDarkWithErrors: Story = {
-  decorators: [themeDecorator('dark')],
-  args: { title: 'Create Account', subtitle: 'Join Boukii V5' },
-  render: renderTemplate(registerFormErrors),
-};
-
 export const ForgotLight: Story = {
-  decorators: [themeDecorator('light')],
+  decorators: [lightDecorator],
   args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
   render: renderTemplate(forgotForm),
 };
 
 export const ForgotDark: Story = {
-  decorators: [themeDecorator('dark')],
+  decorators: [darkDecorator],
   args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
   render: renderTemplate(forgotForm),
 };
 
-export const ForgotLightWithErrors: Story = {
-  decorators: [themeDecorator('light')],
-  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
-  render: renderTemplate(forgotFormErrors),
-};
-
-export const ForgotDarkWithErrors: Story = {
-  decorators: [themeDecorator('dark')],
-  args: { title: 'Reset Password', subtitle: "We'll send you a recovery link to your email" },
-  render: renderTemplate(forgotFormErrors),
+export const WithErrors: Story = {
+  decorators: [lightDecorator],
+  render: renderTemplate(loginFormErrors),
 };
