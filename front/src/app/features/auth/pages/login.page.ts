@@ -33,6 +33,8 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
           <label class="field">
             <span>{{ 'auth.common.email' | translate }}</span>
             <input
+              id="email"
+              data-testid="email"
               type="email"
               formControlName="email"
               autocomplete="username"
@@ -48,6 +50,8 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             <span>{{ 'auth.common.password' | translate }}</span>
             <div class="password-wrapper">
               <input
+                id="password"
+                data-testid="password"
                 [type]="showPassword() ? 'text' : 'password'"
                 formControlName="password"
                 autocomplete="current-password"
@@ -57,6 +61,7 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
               <button
                 type="button"
                 class="password-toggle"
+                data-testid="toggle-password"
                 [attr.aria-label]="(showPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
                 [attr.aria-pressed]="showPassword()"
                 (click)="togglePassword()">
@@ -82,6 +87,7 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
               <button
                 class="btn btn--primary"
                 type="submit"
+                data-testid="submit"
                 [disabled]="loginForm.invalid || isSubmitting()"
                 [attr.aria-busy]="isSubmitting() ? 'true' : null">
                 @if (isSubmitting()) {

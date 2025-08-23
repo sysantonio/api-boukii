@@ -33,7 +33,9 @@ import { AuthShellComponent } from '@features/auth/ui/auth-shell/auth-shell.comp
             <form role="form" data-testid="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
               <label class="field">
                 <span>{{ 'auth.common.email' | translate }}</span>
-                <input
+              <input
+                  id="email"
+                  data-testid="email"
                   type="email"
                   formControlName="email"
                   autocomplete="email"
@@ -56,6 +58,7 @@ import { AuthShellComponent } from '@features/auth/ui/auth-shell/auth-shell.comp
                 <button
                   class="btn btn--primary"
                   type="submit"
+                  data-testid="submit"
                   [disabled]="form.invalid || isSubmitting()"
                   [attr.aria-busy]="isSubmitting() ? 'true' : null"
                 >

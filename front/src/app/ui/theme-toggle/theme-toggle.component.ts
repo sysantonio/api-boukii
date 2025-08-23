@@ -12,6 +12,7 @@ import { TranslatePipe } from '@shared/pipes/translate.pipe';
       <!-- Toggle rápido light/dark -->
       <button
         class="theme-toggle-btn quick-toggle"
+        data-testid="theme-toggle"
         (click)="quickToggle()"
         [attr.aria-label]="
           'theme.switchTo'
