@@ -3,8 +3,12 @@ import { Injectable, signal, computed } from '@angular/core';
 export type Theme = 'light' | 'dark';
 
 function getStoredSidebarState(): boolean {
-  if (typeof localStorage === 'undefined') return false;
-  return localStorage.getItem('sidebar-collapsed') === 'true';
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  } catch {
+    return false;
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -25,28 +29,35 @@ export class UiStore {
 
   // Methods
   initFromStorage(): void {
-    if (typeof localStorage === 'undefined') return;
-    const stored = localStorage.getItem('sidebar-collapsed');
-    this._sidebarCollapsed.set(stored === 'true');
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('sidebar-collapsed');
+      this._sidebarCollapsed.set(stored === 'true');
+    } catch {}
   }
 
   toggleSidebar(): void {
     const newState = !this._sidebarCollapsed();
     this._sidebarCollapsed.set(newState);
     // Persist sidebar state
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebar-collapsed', String(newState));
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('sidebar-collapsed', String(newState));
+      } catch {}
     }
   }
 
   setTheme(theme: Theme): void {
-    this._theme.set(theme);
-    if (typeof document !== 'undefined') {
-      document.body.dataset['theme'] = theme as 'light' | 'dark';
-    }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('theme', theme);
-    }
+    const nextTheme = theme;
+    this._theme.set(nextTheme);
+    try {
+      if (typeof document !== 'undefined') {
+        document.body.dataset['theme'] = nextTheme;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', nextTheme);
+      }
+    } catch {}
   }
 
   toggleTheme(): void {
@@ -55,12 +66,17 @@ export class UiStore {
   }
 
   initTheme(): void {
-    const v =
-      (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as Theme)) ||
-      'light';
+    let v: Theme = 'light';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        v = (localStorage.getItem('theme') as Theme) || 'light';
+      }
+    } catch {}
     this._theme.set(v);
-    if (typeof document !== 'undefined') {
-      document.body.dataset['theme'] = v as 'light' | 'dark';
-    }
+    try {
+      if (typeof document !== 'undefined') {
+        document.body.dataset['theme'] = v;
+      }
+    } catch {}
   }
 }

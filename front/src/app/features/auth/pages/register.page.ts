@@ -45,6 +45,8 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
             <label class="field">
               <span>{{ 'auth.name.label' | translate }}</span>
               <input
+                id="name"
+                data-testid="name"
                 type="text"
                 formControlName="name"
                 autocomplete="name"
@@ -59,6 +61,8 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
             <label class="field">
               <span>{{ 'auth.common.email' | translate }}</span>
               <input
+                id="email"
+                data-testid="email"
                 type="email"
                 formControlName="email"
                 autocomplete="email"
@@ -74,6 +78,8 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
               <span>{{ 'auth.common.password' | translate }}</span>
               <div class="password-wrapper">
                 <input
+                  id="password"
+                  data-testid="password"
                   [type]="showPassword() ? 'text' : 'password'"
                   formControlName="password"
                   autocomplete="new-password"
@@ -83,6 +89,7 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
                 <button
                   type="button"
                   class="password-toggle"
+                  data-testid="toggle-password"
                   [attr.aria-label]="(showPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
                   [attr.aria-pressed]="showPassword()"
                   (click)="togglePassword()">
@@ -111,6 +118,7 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
                 <button
                   type="button"
                   class="password-toggle"
+                  data-testid="toggle-password"
                   [attr.aria-label]="(showConfirmPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
                   [attr.aria-pressed]="showConfirmPassword()"
                   (click)="toggleConfirmPassword()">
@@ -140,6 +148,7 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
               <button
                 class="btn btn--primary"
                 type="submit"
+                data-testid="submit"
                 [disabled]="registerForm.invalid || isSubmitting()"
                 [attr.aria-busy]="isSubmitting() ? 'true' : null">
                 @if (isSubmitting()) {
