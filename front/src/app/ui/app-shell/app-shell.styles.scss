@@ -94,17 +94,6 @@
 
 /* Notifications */
 .notifications-btn { position: relative; }
-.notification-badge {
-  position: absolute; top: -2px; right: -2px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--red); color: var(--active-contrast); font: 700 10px/1 Inter;
-  display: grid; place-items: center;
-}
-.notification-dot {
-  position: absolute; top: -2px; right: -2px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--red);
-}
 
 .notifications-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
@@ -197,9 +186,19 @@
 
 /* Badges */
 .badge {
-  min-width: 18px; height: 18px; border-radius: 9px;
-  font-size: 10px; font-weight: 700; display: grid; place-items: center;
-  padding: 0 6px; line-height: 1; transition: opacity 180ms;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  line-height: 1;
+  transition: opacity 180ms;
+  &::after {
+    content: attr(data-count);
+  }
 }
 .badge--yellow { background: var(--yellow); color: var(--text-1); }
 .badge--blue   { background: var(--blue, var(--brand-500)); color: var(--active-contrast); }
@@ -207,24 +206,22 @@
 .badge--red    { background: var(--red); color: var(--active-contrast); }
 
 /* En colapsado: convertir en punto */
-.app-sidebar.collapsed .badge {
-  position: absolute; top: 8px; right: 8px;
-  width: 8px; height: 8px; min-width: 8px; border-radius: 50%;
-  padding: 0; font-size: 0;
+.app-sidebar.collapsed .badge,
+.app-shell.sidebar-collapsed .badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+  &::after {
+    content: '';
+  }
 }
 
-/* Badge específico para notificaciones */
-.notification-badge {
-  position: absolute; top: -2px; right: -2px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--red); color: var(--active-contrast); font: 700 10px/1 Inter;
-  display: grid; place-items: center;
-}
-.notification-dot {
-  position: absolute; top: -2px; right: -2px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--red);
-}
 
 /* Support Section */
 .sidebar-support { margin-top: auto; padding: 12px 8px; border-top: 1px solid var(--border); }

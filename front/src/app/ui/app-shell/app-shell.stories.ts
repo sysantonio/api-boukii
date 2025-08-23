@@ -102,7 +102,7 @@ export const Default: Story = {
 
 // Collapsed sidebar
 export const SidebarCollapsed: Story = {
-  name: '📐 Sidebar Colapsado',
+  name: '🔔 Collapsed badge dot',
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Click the sidebar collapse button

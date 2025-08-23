@@ -131,11 +131,11 @@ interface Notification {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
               @if (unreadNotificationsCount() > 0) {
-                <span 
-                  class="badge"
-                  [class.notification-dot]="ui.sidebarCollapsed()"
-                  [class.notification-badge]="!ui.sidebarCollapsed()"
-                >{{ ui.sidebarCollapsed() ? '' : unreadNotificationsCount() }}</span>
+                <span
+                  class="badge badge--red"
+                  [attr.data-count]="unreadNotificationsCount()"
+                  [attr.aria-label]="translationService.instant('nav.notifications', { count: unreadNotificationsCount() })"
+                ></span>
               }
             </button>
 
