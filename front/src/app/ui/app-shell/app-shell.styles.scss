@@ -18,15 +18,10 @@
   grid-template-areas:
     "sidebar navbar"
     "sidebar main";
-  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-rows: var(--navbar-h) 1fr;
   height: 100vh;
   background: var(--bg);
-}
-
-/* Colapsado: aplicar a .app-shell */
-.app-shell.sidebar-collapsed {
-  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
 }
 
 /* =============================================
@@ -41,7 +36,7 @@
   align-items: center;
   gap: var(--space-3, 12px);
   padding-inline: 16px;
-  z-index: 10;
+  z-index: var(--z-navbar);
 }
 
 .icon-btn {
@@ -94,27 +89,16 @@
 .language-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
   min-width: 140px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; box-shadow: var(--elev-2); z-index: 1000; overflow: hidden;
+  border-radius: 8px; box-shadow: var(--elev-2); z-index: var(--z-overlay); overflow: hidden;
 }
 
 /* Notifications */
 .notifications-btn { position: relative; }
-.notification-badge {
-  position: absolute; top: -2px; right: -2px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--red); color: var(--active-contrast); font: 700 10px/1 Inter;
-  display: grid; place-items: center;
-}
-.notification-dot {
-  position: absolute; top: -2px; right: -2px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--red);
-}
 
 .notifications-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
   min-width: 300px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; box-shadow: var(--elev-2); z-index: 1000; overflow: hidden;
+  border-radius: 8px; box-shadow: var(--elev-2); z-index: var(--z-overlay); overflow: hidden;
 }
 
 /* User menu */
@@ -132,7 +116,7 @@
 .user-dropdown {
   position: absolute; top: calc(100% + 4px); right: 0;
   min-width: 180px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; box-shadow: var(--elev-2); z-index: 1000; overflow: hidden;
+  border-radius: 8px; box-shadow: var(--elev-2); z-index: var(--z-overlay); overflow: hidden;
 }
 .dropdown-option {
   display: flex; align-items: center; gap: 8px;
@@ -178,16 +162,12 @@
     background: var(--text-1);
     mask: url('/assets/icons/chevron-left.svg') no-repeat center/contain;
     transition: transform .18s;
-    &.rot {
-      transform: rotate(180deg);
-    }
   }
 }
+.sidebar-header .chev.rot { transform: rotate(180deg); }
 /* Ocultar textos en colapsado */
 .app-sidebar.collapsed .logo-text,
-.app-sidebar.collapsed .nav-text,
-.app-shell.sidebar-collapsed .logo-text,
-.app-shell.sidebar-collapsed .nav-text {
+.app-sidebar.collapsed .nav-text {
   opacity: 0; pointer-events: none;
 }
 
@@ -206,9 +186,19 @@
 
 /* Badges */
 .badge {
-  min-width: 18px; height: 18px; border-radius: 9px;
-  font-size: 10px; font-weight: 700; display: grid; place-items: center;
-  padding: 0 6px; line-height: 1; transition: opacity 180ms;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  line-height: 1;
+  transition: opacity 180ms;
+  &::after {
+    content: attr(data-count);
+  }
 }
 .badge--yellow { background: var(--yellow); color: var(--text-1); }
 .badge--blue   { background: var(--blue, var(--brand-500)); color: var(--active-contrast); }
@@ -218,23 +208,20 @@
 /* En colapsado: convertir en punto */
 .app-sidebar.collapsed .badge,
 .app-shell.sidebar-collapsed .badge {
-  position: absolute; top: 8px; right: 8px;
-  width: 8px; height: 8px; min-width: 8px; border-radius: 50%;
-  padding: 0; font-size: 0;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+  &::after {
+    content: '';
+  }
 }
 
-/* Badge específico para notificaciones */
-.notification-badge {
-  position: absolute; top: -2px; right: -2px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: var(--red); color: var(--active-contrast); font: 700 10px/1 Inter;
-  display: grid; place-items: center;
-}
-.notification-dot {
-  position: absolute; top: -2px; right: -2px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--red);
-}
 
 /* Support Section */
 .sidebar-support { margin-top: auto; padding: 12px 8px; border-top: 1px solid var(--border); }
@@ -253,8 +240,7 @@
 }
 
 /* En colapsado: ocultar contenido y mostrar FAB opcional (si lo tienes) */
-.app-sidebar.collapsed .support-content,
-.app-shell.sidebar-collapsed .support-content { display: none; }
+.app-sidebar.collapsed .support-content { display: none; }
 
 /* =============================================
    MAIN CONTENT

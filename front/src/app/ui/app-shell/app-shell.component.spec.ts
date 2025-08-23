@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { ThemeService } from '@core/services/theme.service';
 import { signal, computed } from '@angular/core';
+import { expect } from '@jest/globals';
 
 import { AppShellComponent } from './app-shell.component';
 import { UiStore } from '@core/stores/ui.store';
@@ -39,13 +40,21 @@ class MockUiStore {
   private theme = signal<'light' | 'dark'>('light');
   isDark = computed(() => this.theme() === 'dark');
 
+
   initTheme(): void {
+     this.setTheme(this.theme());
+  }
+  initFromStorage(): void {
+    const stored = localStorage.getItem('sidebar-collapsed');
+    this.sidebarCollapsed.set(stored === 'true');
+  }
+  initializeTheme(): void {
     this.setTheme(this.theme());
   }
   toggleSidebar(): void {
     const newState = !this.sidebarCollapsed();
     this.sidebarCollapsed.set(newState);
-    localStorage.setItem('sidebarCollapsed', String(newState));
+    localStorage.setItem('sidebar-collapsed', String(newState));
   }
   setTheme(theme: 'light' | 'dark'): void {
     this.theme.set(theme);
@@ -100,18 +109,18 @@ describe('AppShellComponent interactions', () => {
   it('chevron toggles collapsed class, rotates and persists', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
-    const button = screen.getByLabelText('sidebar.toggle');
-    const shell = fixture.nativeElement.querySelector('.app-shell');
-    expect(shell.classList).not.toContain('app-sidebar--collapsed');
+    const button = screen.getByLabelText('nav.collapse');
+    const sidebar = fixture.nativeElement.querySelector('aside.app-sidebar');
+    expect(sidebar.classList).not.toContain('collapsed');
     await user.click(button);
     fixture.detectChanges();
-    expect(shell.classList).toContain('app-sidebar--collapsed');
+    expect(sidebar.classList).toContain('collapsed');
     expect(fixture.nativeElement.querySelector('.chev')?.classList).toContain('rot');
-    expect(localStorage.getItem('sidebarCollapsed')).toBe('true');
+    expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
     // Click again to expand and ensure button remains focusable
     await user.click(button);
     fixture.detectChanges();
-    expect(shell.classList).not.toContain('app-sidebar--collapsed');
+    expect(sidebar.classList).not.toContain('collapsed');
     fixture.nativeElement.remove();
   });
 
@@ -143,47 +152,78 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
-  it('changes language via TranslationService and updates active option', async () => {
+  it('changes language via TranslationService, persists selection, and updates active option', async () => {
     const translation = TestBed.inject(TranslationService) as unknown as MockTranslationService;
     const setLangSpy = jest.spyOn(translation, 'setLanguage');
     const fixture = renderComponent();
     const user = userEvent.setup();
 
-    const languageButton = screen.getByRole('button', { name: 'ES' });
+    const languageButton = screen.getByRole('button', { name: 'Español' });
     await user.click(languageButton);
     fixture.detectChanges();
 
-    const enOption = screen.getByRole('menuitemradio', { name: 'language.en' });
+    const enOption = screen.getByRole('menuitemradio', { name: 'English' });
     await user.click(enOption);
     fixture.detectChanges();
 
     expect(setLangSpy).toHaveBeenCalledWith('en');
+    expect(localStorage.getItem('language')).toBe('en');
 
     // reopen to check active state
-    await user.click(languageButton);
+    await user.click(screen.getByRole('button', { name: 'English' }));
     fixture.detectChanges();
-    const enOptionActive = screen.getByRole('menuitemradio', { name: 'language.en' });
-    const esOption = screen.getByRole('menuitemradio', { name: 'language.es' });
+    const enOptionActive = screen.getByRole('menuitemradio', { name: 'English' });
+    const esOption = screen.getByRole('menuitemradio', { name: 'Español' });
     expect(enOptionActive.classList).toContain('active');
     expect(enOptionActive.getAttribute('aria-checked')).toBe('true');
     expect(esOption.classList).not.toContain('active');
     fixture.nativeElement.remove();
   });
 
-  it('shows notification badge or dot based on sidebar state', async () => {
+  it('shows numeric badge when expanded and dot when collapsed', () => {
     const fixture = renderComponent();
     const ui = TestBed.inject(UiStore) as unknown as MockUiStore;
 
-    // sidebar expanded => number badge
-    let badge = fixture.nativeElement.querySelector('.notification-badge');
-    expect(badge?.textContent).toBe('2');
-    expect(fixture.nativeElement.querySelector('.notification-dot')).toBeNull();
+    const badge = fixture.nativeElement.querySelector('.notifications-container .badge') as HTMLElement;
+    expect(badge.getAttribute('data-count')).toBe('2');
+    expect(getComputedStyle(badge).width).toBe('18px');
 
-    // collapse sidebar => dot
     ui.toggleSidebar();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.notification-badge')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.notification-dot')).not.toBeNull();
+
+    expect(getComputedStyle(badge).width).toBe('6px');
+
+    fixture.nativeElement.remove();
+  });
+
+  it('closes dropdowns with Escape key', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    const languageButton = screen.getByRole('button', { name: 'ES' });
+    await user.click(languageButton);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.language-dropdown')).not.toBeNull();
+
+    await user.keyboard('{Escape}');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.language-dropdown')).toBeNull();
+
+    fixture.nativeElement.remove();
+  });
+
+  it('closes dropdowns on click outside', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    const menuButton = screen.getByRole('button', { name: /Test User/ });
+    await user.click(menuButton);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.user-dropdown')).not.toBeNull();
+
+    await user.click(document.body);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.user-dropdown')).toBeNull();
 
     fixture.nativeElement.remove();
   });

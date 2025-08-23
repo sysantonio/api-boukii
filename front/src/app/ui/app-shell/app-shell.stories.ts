@@ -38,23 +38,29 @@ class MockAuthV5Service {
 
 class MockUiStore {
   private themeSignal = signal<'light' | 'dark'>('light');
-  private collapsedSignal = signal(false);
+  sidebarCollapsed = signal(false);
   theme = computed(() => this.themeSignal());
   isDark = computed(() => this.themeSignal() === 'dark');
-  sidebarCollapsed = computed(() => this.collapsedSignal());
-  
-  toggleTheme() { 
+
+  initFromStorage() {}
+  toggleTheme() {
     const newTheme = this.themeSignal() === 'light' ? 'dark' : 'light';
     this.themeSignal.set(newTheme);
     document.body.dataset['theme'] = newTheme;
+    document.documentElement.dataset['theme'] = newTheme;
   }
-  
+
   toggleSidebar() {
-    this.collapsedSignal.set(!this.collapsedSignal());
+    this.sidebarCollapsed.set(!this.sidebarCollapsed());
   }
+
   
   initTheme() {
     document.body.dataset['theme'] = this.themeSignal();
+  }
+
+  initializeTheme() {
+    document.documentElement.dataset['theme'] = this.themeSignal();
   }
 }
 
@@ -102,10 +108,11 @@ export const Default: Story = {
 
 // Collapsed sidebar
 export const SidebarCollapsed: Story = {
+  name: '🔔 Collapsed badge dot',
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Click the sidebar collapse button
-    const collapseBtn = canvas.getByLabelText('sidebar.toggle');
+    const collapseBtn = canvas.getByLabelText('nav.collapse');
     await userEvent.click(collapseBtn);
   },
   parameters: {
@@ -141,9 +148,9 @@ export const DarkCollapsed: Story = {
     // Toggle theme first
     const themeBtn = canvas.getByTitle('theme.toggle');
     await userEvent.click(themeBtn);
-    
+
     // Then collapse sidebar
-    const collapseBtn = canvas.getByLabelText('sidebar.toggle');
+    const collapseBtn = canvas.getByLabelText('nav.collapse');
     await userEvent.click(collapseBtn);
   },
   parameters: {

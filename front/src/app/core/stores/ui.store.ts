@@ -2,16 +2,11 @@ import { Injectable, signal, computed } from '@angular/core';
 
 export type Theme = 'light' | 'dark';
 
-// Helper to get stored sidebar state with fallback
-function getStoredSidebarState(): boolean {
-  if (typeof localStorage === 'undefined') return false;
-  const stored = localStorage.getItem('sidebarCollapsed');
-  return stored === 'true';
-}
 
 @Injectable({ providedIn: 'root' })
 export class UiStore {
   // Private signals
+
   private readonly _sidebarCollapsed = signal(getStoredSidebarState());
   private readonly _theme = signal<Theme>('light');
 
@@ -25,20 +20,18 @@ export class UiStore {
   readonly sidebarIcon = computed(() => (this._sidebarCollapsed() ? 'panel-right' : 'panel-left'));
 
   // Methods
+  initFromStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    const stored = localStorage.getItem('sidebar-collapsed');
+    this._sidebarCollapsed.set(stored === 'true');
+  }
+
   toggleSidebar(): void {
     const newState = !this._sidebarCollapsed();
     this._sidebarCollapsed.set(newState);
     // Persist sidebar state
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebarCollapsed', String(newState));
-    }
-  }
-
-  setSidebarCollapsed(collapsed: boolean): void {
-    this._sidebarCollapsed.set(collapsed);
-    // Persist sidebar state
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebarCollapsed', String(collapsed));
+      localStorage.setItem('sidebar-collapsed', String(newState));
     }
   }
 
