@@ -18,15 +18,10 @@
   grid-template-areas:
     "sidebar navbar"
     "sidebar main";
-  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-rows: var(--navbar-h) 1fr;
   height: 100vh;
   background: var(--bg);
-}
-
-/* Colapsado: aplicar a .app-shell */
-.app-shell.sidebar-collapsed {
-  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
 }
 
 /* =============================================
@@ -167,16 +162,12 @@
     background: var(--text-1);
     mask: url('/assets/icons/chevron-left.svg') no-repeat center/contain;
     transition: transform .18s;
-    &.rot {
-      transform: rotate(180deg);
-    }
   }
 }
+.sidebar-header .chev.rot { transform: rotate(180deg); }
 /* Ocultar textos en colapsado */
 .app-sidebar.collapsed .logo-text,
-.app-sidebar.collapsed .nav-text,
-.app-shell.sidebar-collapsed .logo-text,
-.app-shell.sidebar-collapsed .nav-text {
+.app-sidebar.collapsed .nav-text {
   opacity: 0; pointer-events: none;
 }
 
@@ -249,8 +240,7 @@
 }
 
 /* En colapsado: ocultar contenido y mostrar FAB opcional (si lo tienes) */
-.app-sidebar.collapsed .support-content,
-.app-shell.sidebar-collapsed .support-content { display: none; }
+.app-sidebar.collapsed .support-content { display: none; }
 
 /* =============================================
    MAIN CONTENT
