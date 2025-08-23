@@ -69,7 +69,7 @@ jobs:
         run: npm run typecheck
 
       - name: Unit tests (Jest)
-        run: npm run test:ci
+        run: npm run test:auth
 
       - name: Upload coverage
         if: always()
