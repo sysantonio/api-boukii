@@ -11,6 +11,7 @@ import { LoadingStore } from '@core/stores/loading.store';
 import { TranslationService, SupportedLanguage, SUPPORTED_LANGUAGES } from '@core/services/translation.service';
 import { EnvironmentService } from '@core/services/environment.service';
 import { AuthV5Service } from '@core/services/auth-v5.service';
+import { LANGUAGE_STORAGE_KEY, getLanguageConfig } from '@core/config/languages.config';
 
 interface Notification {
   id: string;
@@ -83,7 +84,8 @@ interface Notification {
                     role="menuitemradio"
                     [attr.aria-checked]="isLang(lang)"
                   >
-                    {{ translationService.instant('language.' + lang) }}
+                    <img [src]="flag(lang)" alt="" aria-hidden="true" />
+                    {{ label(lang) }}
                   </button>
                 }
               </div>
@@ -515,7 +517,7 @@ export class AppShellComponent implements OnInit {
   protected readonly loadingStore = inject(LoadingStore);
   protected readonly authV5 = inject(AuthV5Service);
 
-  languages: SupportedLanguage[] = [...SUPPORTED_LANGUAGES];
+  readonly languages = SUPPORTED_LANGUAGES;
 
   constructor(
     public readonly translationService: TranslationService,
@@ -617,15 +619,15 @@ export class AppShellComponent implements OnInit {
   }
 
   getCurrentLanguage(): string {
-    const lang = this.translationService.currentLanguage();
-    const langMap: Record<string, string> = {
-      'es': 'ES',
-      'en': 'EN', 
-      'fr': 'FR',
-      'it': 'IT',
-      'de': 'DE'
-    };
-    return langMap[lang] || 'ES';
+    return this.label(this.translationService.currentLanguage());
+  }
+
+  flag(lang: SupportedLanguage): string {
+    return `assets/img/icons/flags/${lang}.svg`;
+  }
+
+  label(lang: SupportedLanguage): string {
+    return getLanguageConfig(lang).nativeName;
   }
 
   isLang(lang: SupportedLanguage): boolean {
@@ -633,6 +635,7 @@ export class AppShellComponent implements OnInit {
   }
 
   async setLanguage(lang: SupportedLanguage): Promise<void> {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
     await this.translationService.setLanguage(lang);
     this._languageDropdownOpen.set(false);
     this.languageButton?.nativeElement.focus();
