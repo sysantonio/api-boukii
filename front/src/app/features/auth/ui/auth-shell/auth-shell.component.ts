@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { A11yModule } from '@angular/cdk/a11y';
 
 @Component({
-  selector: 'bk-auth-shell',
+  selector: 'auth-shell',
   standalone: true,
   imports: [CommonModule, A11yModule],
   templateUrl: './auth-shell.component.html',

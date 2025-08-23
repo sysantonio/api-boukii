@@ -38,9 +38,9 @@ describe('AuthShellComponent', () => {
     @Component({
       selector: 'test-host',
       template: `
-        <bk-auth-shell>
+        <auth-shell>
           <form auth-form><span class="inner">Form</span></form>
-        </bk-auth-shell>
+        </auth-shell>
       `,
       standalone: true,
       imports: [AuthShellComponent],
