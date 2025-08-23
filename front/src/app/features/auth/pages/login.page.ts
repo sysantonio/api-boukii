@@ -29,17 +29,19 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
       [features]="features"
     >
       <ng-container auth-form>
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <form role="form" data-testid="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
           <label class="field">
             <span>{{ 'auth.common.email' | translate }}</span>
             <input
               type="email"
               formControlName="email"
               autocomplete="username"
-              [class.is-invalid]="isFieldInvalid('email')" />
-            <small class="field-error" *ngIf="isFieldInvalid('email')">
+              [class.is-invalid]="isFieldInvalid('email')"
+              [attr.aria-invalid]="isFieldInvalid('email') ? 'true' : 'false'"
+              [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null" />
+            <p class="field-error" [id]="'email-error'" role="alert" *ngIf="isFieldInvalid('email')">
               {{ getFieldError('email') }}
-            </small>
+            </p>
           </label>
 
           <label class="field">
@@ -49,7 +51,9 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
                 [type]="showPassword() ? 'text' : 'password'"
                 formControlName="password"
                 autocomplete="current-password"
-                [class.is-invalid]="isFieldInvalid('password')" />
+                [class.is-invalid]="isFieldInvalid('password')"
+                [attr.aria-invalid]="isFieldInvalid('password') ? 'true' : 'false'"
+                [attr.aria-describedby]="isFieldInvalid('password') ? 'password-error' : null" />
               <button
                 type="button"
                 class="password-toggle"
@@ -63,9 +67,9 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
                 }
               </button>
             </div>
-            <small class="field-error" *ngIf="isFieldInvalid('password')">
+            <p class="field-error" [id]="'password-error'" role="alert" *ngIf="isFieldInvalid('password')">
               {{ getFieldError('password') }}
-            </small>
+            </p>
           </label>
 
           @if (statusMessage()) {
@@ -74,16 +78,20 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             </div>
           }
 
-          <div class="card-actions">
-            <button class="btn btn--primary" type="submit" [disabled]="loginForm.invalid || isLoading()">
-              @if (isLoading()) {
-                <div class="loading-spinner"></div>
-                {{ 'common.loading' | translate }}
-              } @else {
-                {{ 'auth.login.cta' | translate }}
-              }
-            </button>
-          </div>
+            <div class="card-actions">
+              <button
+                class="btn btn--primary"
+                type="submit"
+                [disabled]="loginForm.invalid || isSubmitting()"
+                [attr.aria-busy]="isSubmitting() ? 'true' : null">
+                @if (isSubmitting()) {
+                  <div class="loading-spinner"></div>
+                  {{ 'common.loading' | translate }}
+                } @else {
+                  {{ 'auth.login.cta' | translate }}
+                }
+              </button>
+            </div>
         </form>
       </ng-container>
     </auth-shell>
@@ -102,7 +110,7 @@ export class LoginPage implements OnInit {
   pageSubtitleKey = 'auth.login.subtitle';
 
   // Reactive state
-  readonly isLoading = signal(false);
+  readonly isSubmitting = signal(false);
   readonly showPassword = signal(false);
   readonly statusMessage = signal('');
 
@@ -153,12 +161,12 @@ export class LoginPage implements OnInit {
 
   isFieldInvalid(field: string): boolean {
     const control = this.loginForm.get(field);
-    return !!(control?.invalid && control?.touched);
+    return !!(control?.invalid && (control?.dirty || control?.touched));
   }
 
   getFieldError(field: string): string {
     const control = this.loginForm.get(field);
-    if (control?.invalid && control?.touched) {
+    if (control?.invalid && (control?.dirty || control?.touched)) {
       if (control.errors?.['required']) {
         return this.translationService.get(`auth.errors.required${field.charAt(0).toUpperCase() + field.slice(1)}`);
       }
@@ -178,7 +186,7 @@ export class LoginPage implements OnInit {
       return;
     }
 
-    this.isLoading.set(true);
+    this.isSubmitting.set(true);
     this.statusMessage.set(this.translationService.get('auth.login.processing'));
     const { email, password } = this.loginForm.value;
 
@@ -237,7 +245,7 @@ export class LoginPage implements OnInit {
     localStorage.setItem('boukii_temp_token', tempToken);
     localStorage.setItem('boukii_temp_schools', JSON.stringify(schools));
 
-    this.isLoading.set(false);
+    this.isSubmitting.set(false);
     this.router.navigate(['/select-school']);
   }
 
@@ -246,7 +254,7 @@ export class LoginPage implements OnInit {
 
     this.authV5.selectSeason(season.id, schoolId, accessToken).subscribe({
       next: (_response) => {
-        this.isLoading.set(false);
+        this.isSubmitting.set(false);
         this.statusMessage.set(this.translationService.get('auth.login.success'));
 
         this.toast.success(this.translationService.get('auth.login.success'));
@@ -259,7 +267,7 @@ export class LoginPage implements OnInit {
   }
 
   private handleLoginError(message: string): void {
-    this.isLoading.set(false);
+    this.isSubmitting.set(false);
     this.statusMessage.set(message);
     this.toast.error(message);
   }

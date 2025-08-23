@@ -29,39 +29,46 @@ import { AuthShellComponent } from '@features/auth/ui/auth-shell/auth-shell.comp
     >
       <ng-container auth-form>
         <!-- Form State -->
-        @if (!emailSent()) {
-          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-            <label class="field">
-              <span>{{ 'auth.common.email' | translate }}</span>
-              <input
-                type="email"
-                formControlName="email"
-                autocomplete="email"
-                [class.is-invalid]="isFieldInvalid('email')"
-              />
-              <small class="field-error" *ngIf="isFieldInvalid('email')">
-                {{ getFieldError('email') }}
-              </small>
-            </label>
+          @if (!emailSent()) {
+            <form role="form" data-testid="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+              <label class="field">
+                <span>{{ 'auth.common.email' | translate }}</span>
+                <input
+                  type="email"
+                  formControlName="email"
+                  autocomplete="email"
+                  [class.is-invalid]="isFieldInvalid('email')"
+                  [attr.aria-invalid]="isFieldInvalid('email') ? 'true' : 'false'"
+                  [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null"
+                />
+                <p class="field-error" [id]="'email-error'" role="alert" *ngIf="isFieldInvalid('email')">
+                  {{ getFieldError('email') }}
+                </p>
+              </label>
 
-            @if (statusMessage() && isLoading()) {
-              <div class="status-message" role="status" aria-live="polite">
-                {{ statusMessage() }}
+              @if (statusMessage() && isSubmitting()) {
+                <div class="status-message" role="status" aria-live="polite">
+                  {{ statusMessage() }}
+                </div>
+              }
+
+              <div class="card-actions">
+                <button
+                  class="btn btn--primary"
+                  type="submit"
+                  [disabled]="form.invalid || isSubmitting()"
+                  [attr.aria-busy]="isSubmitting() ? 'true' : null"
+                >
+                  @if (isSubmitting()) {
+                    <div class="loading-spinner"></div>
+                    {{ 'common.loading' | translate }}
+                  } @else {
+                    {{ 'auth.forgotPassword.cta' | translate }}
+                  }
+                </button>
               </div>
-            }
-
-            <div class="card-actions">
-              <button class="btn btn--primary" type="submit" [disabled]="form.invalid || isLoading()">
-                @if (isLoading()) {
-                  <div class="loading-spinner"></div>
-                  {{ 'common.loading' | translate }}
-                } @else {
-                  {{ 'auth.forgotPassword.cta' | translate }}
-                }
-              </button>
-            </div>
-          </form>
-        }
+            </form>
+          }
 
         <!-- Success State -->
         @if (emailSent()) {
@@ -100,7 +107,7 @@ export class ForgotPasswordPage implements OnInit {
   pageSubtitleKey = 'auth.forgotPassword.subtitle';
 
   // Señales reactivas
-  readonly isLoading = signal(false);
+  readonly isSubmitting = signal(false);
   readonly emailSent = signal(false);
   readonly statusMessage = signal('');
 
@@ -139,12 +146,12 @@ export class ForgotPasswordPage implements OnInit {
 
   // === Template API (coincide con el HTML) ===
   submit(): void {
-    if (this.form.invalid || this.isLoading()) {
+    if (this.form.invalid || this.isSubmitting()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.isLoading.set(true);
+    this.isSubmitting.set(true);
     const email: string = this.form.value.email;
 
     // Mensaje optimista inmediato (patrón seguro)
@@ -196,7 +203,7 @@ export class ForgotPasswordPage implements OnInit {
 
   // === Helpers ===
   private finishAsSent(message: string) {
-    this.isLoading.set(false);
+    this.isSubmitting.set(false);
     this.emailSent.set(true);
     this.statusMessage.set(message);
     // Mensaje de toast “silencioso” y genérico
