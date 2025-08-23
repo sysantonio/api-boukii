@@ -5,18 +5,18 @@ export type Theme = 'light' | 'dark';
 
 @Injectable({ providedIn: 'root' })
 export class UiStore {
-  // Private signals
-
+  // Signals
   private readonly _sidebarCollapsed = signal(getStoredSidebarState());
-  private readonly _theme = signal<Theme>('light');
+
+  // Public theme signal
+  readonly theme = signal<Theme>('light');
 
   // Public readonly signals
   readonly sidebarCollapsed = this._sidebarCollapsed.asReadonly();
-  readonly theme = this._theme.asReadonly();
 
   // Computed signals
-  readonly effectiveTheme = computed(() => this._theme());
-  readonly isDark = computed(() => this._theme() === 'dark');
+  readonly effectiveTheme = computed(() => this.theme());
+  readonly isDark = computed(() => this.theme() === 'dark');
   readonly sidebarIcon = computed(() => (this._sidebarCollapsed() ? 'panel-right' : 'panel-left'));
 
   // Methods
@@ -36,7 +36,7 @@ export class UiStore {
   }
 
   setTheme(theme: Theme): void {
-    this._theme.set(theme);
+    this.theme.set(theme);
     if (typeof document !== 'undefined') {
       document.body.dataset.theme = theme;
     }
@@ -46,17 +46,26 @@ export class UiStore {
   }
 
   toggleTheme(): void {
-    const next = this._theme() === 'light' ? 'dark' : 'light';
-    this.setTheme(next);
+    this.theme.update((v) => (v === 'light' ? 'dark' : 'light'));
+    if (typeof document !== 'undefined') {
+      document.body.dataset.theme = this.theme();
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('theme', this.theme());
+    }
   }
 
   initTheme(): void {
     const v =
-      (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as Theme)) ||
-      'light';
-    this._theme.set(v);
+      (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as Theme)) || 'light';
+    this.theme.set(v);
     if (typeof document !== 'undefined') {
       document.body.dataset.theme = v;
     }
   }
+}
+
+function getStoredSidebarState(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem('sidebar-collapsed') === 'true';
 }
