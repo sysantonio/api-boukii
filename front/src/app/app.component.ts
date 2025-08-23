@@ -19,7 +19,7 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     // Initialize app-level stores
-    this.ui.initializeTheme();
+    this.ui.initTheme();
 
     // For demo purposes, simulate a logged-in user after 2 seconds
     // In real app, this would happen after successful login

@@ -19,13 +19,10 @@ const meta: Meta<ThemeToggleComponent> = {
     docs: {
       description: {
         component: `
-Theme Toggle Component allows users to switch between light, dark, and system themes.
+Theme Toggle Component allows users to switch between light and dark themes.
 
 ## Features
-- Light/Dark/System theme options
-- Dropdown menu with theme selection
 - Quick toggle between light and dark
-- System theme detection
 - Smooth transitions
 - Accessible keyboard navigation
 
@@ -61,7 +58,7 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Default theme toggle with dropdown menu for theme selection.',
+        story: 'Default theme toggle.',
       },
     },
   },

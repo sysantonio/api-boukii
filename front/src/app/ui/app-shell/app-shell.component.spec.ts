@@ -2,8 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { OverlayContainer } from '@angular/cdk/overlay';
-import { ThemeService } from '@core/services/theme.service';
 import { signal, computed } from '@angular/core';
 
 import { AppShellComponent } from './app-shell.component';
@@ -36,28 +34,22 @@ class MockTranslationService {
 
 class MockUiStore {
   sidebarCollapsed = signal(false);
-  private theme = signal<'light' | 'dark' | 'system'>('light');
+  theme = signal<'light' | 'dark'>('light');
   isDark = computed(() => this.theme() === 'dark');
 
-  initializeTheme(): void {
-    this.setTheme(this.theme());
+  initTheme(): void {
+    (document.body.dataset as any).theme = this.theme();
   }
   toggleSidebar(): void {
     const newState = !this.sidebarCollapsed();
     this.sidebarCollapsed.set(newState);
     localStorage.setItem('sidebarCollapsed', String(newState));
   }
-  setTheme(theme: 'light' | 'dark' | 'system'): void {
-    this.theme.set(theme);
-    localStorage.setItem('theme', theme);
-    const effective = theme === 'system' ? 'light' : theme;
-    (document.documentElement.dataset as any).theme = effective;
-  }
-
   toggleTheme(): void {
-    const current = this.theme();
-    const next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
-    this.setTheme(next);
+    const next = this.theme() === 'light' ? 'dark' : 'light';
+    this.theme.set(next);
+    localStorage.setItem('theme', next);
+    (document.body.dataset as any).theme = next;
   }
 }
 
@@ -66,7 +58,7 @@ describe('AppShellComponent interactions', () => {
 
   beforeEach(async () => {
     localStorage.clear();
-    delete (document.documentElement.dataset as any).theme;
+    delete (document.body.dataset as any).theme;
     logoutSpy.mockReset();
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
@@ -117,16 +109,6 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
-  it('setTheme() propagates data-theme to OverlayContainer', async () => {
-    const fixture = renderComponent();
-    const overlay = TestBed.inject(OverlayContainer);
-    const themeService = TestBed.inject(ThemeService);
-    themeService.setTheme('dark');
-    await Promise.resolve();
-    expect(overlay.getContainerElement().getAttribute('data-theme')).toBe('dark');
-    fixture.nativeElement.remove();
-  });
-
   it('theme toggle persists selection and updates document dataset', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
@@ -135,12 +117,12 @@ describe('AppShellComponent interactions', () => {
     await user.click(button); // light -> dark
     fixture.detectChanges();
     expect(localStorage.getItem('theme')).toBe('dark');
-    expect((document.documentElement.dataset as any).theme).toBe('dark');
+    expect((document.body.dataset as any).theme).toBe('dark');
 
-    await user.click(button); // dark -> system (effective light)
+    await user.click(button); // dark -> light
     fixture.detectChanges();
-    expect(localStorage.getItem('theme')).toBe('system');
-    expect((document.documentElement.dataset as any).theme).toBe('light');
+    expect(localStorage.getItem('theme')).toBe('light');
+    expect((document.body.dataset as any).theme).toBe('light');
 
     fixture.nativeElement.remove();
   });

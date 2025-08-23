@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, computed, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { ThemeToggleComponent } from '@ui/theme-toggle/theme-toggle.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import { LanguageSelectorComponent } from '@shared/components/language-selector/language-selector.component';
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
@@ -29,7 +28,6 @@ interface Notification {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    ThemeToggleComponent,
     ToastComponent,
     LanguageSelectorComponent,
     TranslatePipe,
@@ -586,7 +584,7 @@ export class AppShellComponent implements OnInit {
 
   ngOnInit(): void {
     // Initialize theme system
-    this.ui.initializeTheme();
+    this.ui.initTheme();
 
     // Try to load user session if token exists
     this.auth.loadMe();

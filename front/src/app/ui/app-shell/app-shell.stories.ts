@@ -42,19 +42,20 @@ class MockUiStore {
   theme = computed(() => this.themeSignal());
   isDark = computed(() => this.themeSignal() === 'dark');
   sidebarCollapsed = computed(() => this.collapsedSignal());
-  
-  toggleTheme() { 
+
+  toggleTheme() {
     const newTheme = this.themeSignal() === 'light' ? 'dark' : 'light';
-    this.themeSignal.set(newTheme); 
-    document.documentElement.dataset['theme'] = newTheme;
+    this.themeSignal.set(newTheme);
+    document.body.dataset['theme'] = newTheme;
+    localStorage.setItem('theme', newTheme);
   }
   
   toggleSidebar() {
     this.collapsedSignal.set(!this.collapsedSignal());
   }
   
-  initializeTheme() { 
-    document.documentElement.dataset['theme'] = this.themeSignal();
+  initTheme() {
+    document.body.dataset['theme'] = this.themeSignal();
   }
 }
 
