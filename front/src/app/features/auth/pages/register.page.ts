@@ -40,102 +40,118 @@ function passwordMatchValidator(control: AbstractControl): { [key: string]: bool
       [subtitle]="t(pageSubtitleKey)"
       [features]="features"
     >
-      <ng-container auth-form>
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
-          <label class="field">
-            <span>{{ 'auth.name.label' | translate }}</span>
-            <input
-              type="text"
-              formControlName="name"
-              autocomplete="name"
-              [class.is-invalid]="isFieldInvalid('name')" />
-            <small class="field-error" *ngIf="isFieldInvalid('name')">
-              {{ getFieldError('name') }}
-            </small>
-          </label>
-
-          <label class="field">
-            <span>{{ 'auth.common.email' | translate }}</span>
-            <input
-              type="email"
-              formControlName="email"
-              autocomplete="email"
-              [class.is-invalid]="isFieldInvalid('email')" />
-            <small class="field-error" *ngIf="isFieldInvalid('email')">
-              {{ getFieldError('email') }}
-            </small>
-          </label>
-
-          <label class="field">
-            <span>{{ 'auth.common.password' | translate }}</span>
-            <div class="password-wrapper">
+        <ng-container auth-form>
+          <form role="form" data-testid="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+            <label class="field">
+              <span>{{ 'auth.name.label' | translate }}</span>
               <input
-                [type]="showPassword() ? 'text' : 'password'"
-                formControlName="password"
-                autocomplete="new-password"
-                [class.is-invalid]="isFieldInvalid('password')" />
+                type="text"
+                formControlName="name"
+                autocomplete="name"
+                [class.is-invalid]="isFieldInvalid('name')"
+                [attr.aria-invalid]="isFieldInvalid('name') ? 'true' : 'false'"
+                [attr.aria-describedby]="isFieldInvalid('name') ? 'name-error' : null" />
+              <p class="field-error" [id]="'name-error'" role="alert" *ngIf="isFieldInvalid('name')">
+                {{ getFieldError('name') }}
+              </p>
+            </label>
+
+            <label class="field">
+              <span>{{ 'auth.common.email' | translate }}</span>
+              <input
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+                [class.is-invalid]="isFieldInvalid('email')"
+                [attr.aria-invalid]="isFieldInvalid('email') ? 'true' : 'false'"
+                [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null" />
+              <p class="field-error" [id]="'email-error'" role="alert" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+              </p>
+            </label>
+
+            <label class="field">
+              <span>{{ 'auth.common.password' | translate }}</span>
+              <div class="password-wrapper">
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  [class.is-invalid]="isFieldInvalid('password')"
+                  [attr.aria-invalid]="isFieldInvalid('password') ? 'true' : 'false'"
+                  [attr.aria-describedby]="isFieldInvalid('password') ? 'password-error' : null" />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  [attr.aria-label]="(showPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
+                  [attr.aria-pressed]="showPassword()"
+                  (click)="togglePassword()">
+                  @if (showPassword()) {
+                    <i class="i-eye-off"></i>
+                  } @else {
+                    <i class="i-eye"></i>
+                  }
+                </button>
+              </div>
+              <p class="field-error" [id]="'password-error'" role="alert" *ngIf="isFieldInvalid('password')">
+                {{ getFieldError('password') }}
+              </p>
+            </label>
+
+            <label class="field">
+              <span>{{ 'auth.register.confirmPassword' | translate }}</span>
+              <div class="password-wrapper">
+                <input
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  autocomplete="new-password"
+                  [class.is-invalid]="isFieldInvalid('confirmPassword') || hasPasswordMismatch()"
+                  [attr.aria-invalid]="(isFieldInvalid('confirmPassword') || hasPasswordMismatch()) ? 'true' : 'false'"
+                  [attr.aria-describedby]="(isFieldInvalid('confirmPassword') || hasPasswordMismatch()) ? 'confirmPassword-error' : null" />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  [attr.aria-label]="(showConfirmPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
+                  [attr.aria-pressed]="showConfirmPassword()"
+                  (click)="toggleConfirmPassword()">
+                  @if (showConfirmPassword()) {
+                    <i class="i-eye-off"></i>
+                  } @else {
+                    <i class="i-eye"></i>
+                  }
+                </button>
+              </div>
+              <p
+                class="field-error"
+                [id]="'confirmPassword-error'"
+                role="alert"
+                *ngIf="isFieldInvalid('confirmPassword') || hasPasswordMismatch()">
+                {{ getFieldError('confirmPassword') || getPasswordMatchError() }}
+              </p>
+            </label>
+
+            @if (statusMessage()) {
+              <div class="status-message" role="status" aria-live="polite">
+                {{ statusMessage() }}
+              </div>
+            }
+
+            <div class="card-actions">
               <button
-                type="button"
-                class="password-toggle"
-                [attr.aria-label]="(showPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
-                [attr.aria-pressed]="showPassword()"
-                (click)="togglePassword()">
-                @if (showPassword()) {
-                  <i class="i-eye-off"></i>
+                class="btn btn--primary"
+                type="submit"
+                [disabled]="registerForm.invalid || isSubmitting()"
+                [attr.aria-busy]="isSubmitting() ? 'true' : null">
+                @if (isSubmitting()) {
+                  <div class="loading-spinner"></div>
+                  {{ 'common.loading' | translate }}
                 } @else {
-                  <i class="i-eye"></i>
+                  {{ 'auth.register.cta' | translate }}
                 }
               </button>
             </div>
-            <small class="field-error" *ngIf="isFieldInvalid('password')">
-              {{ getFieldError('password') }}
-            </small>
-          </label>
-
-          <label class="field">
-            <span>{{ 'auth.register.confirmPassword' | translate }}</span>
-            <div class="password-wrapper">
-              <input
-                [type]="showConfirmPassword() ? 'text' : 'password'"
-                formControlName="confirmPassword"
-                autocomplete="new-password"
-                [class.is-invalid]="isFieldInvalid('confirmPassword') || hasPasswordMismatch()" />
-              <button
-                type="button"
-                class="password-toggle"
-                [attr.aria-label]="(showConfirmPassword() ? 'auth.common.hidePassword' : 'auth.common.showPassword') | translate"
-                [attr.aria-pressed]="showConfirmPassword()"
-                (click)="toggleConfirmPassword()">
-                @if (showConfirmPassword()) {
-                  <i class="i-eye-off"></i>
-                } @else {
-                  <i class="i-eye"></i>
-                }
-              </button>
-            </div>
-            <small class="field-error" *ngIf="isFieldInvalid('confirmPassword') || hasPasswordMismatch()">
-              {{ getFieldError('confirmPassword') || getPasswordMatchError() }}
-            </small>
-          </label>
-
-          @if (statusMessage()) {
-            <div class="status-message" role="status" aria-live="polite">
-              {{ statusMessage() }}
-            </div>
-          }
-
-          <div class="card-actions">
-            <button class="btn btn--primary" type="submit" [disabled]="registerForm.invalid || isLoading()">
-              @if (isLoading()) {
-                <div class="loading-spinner"></div>
-                {{ 'common.loading' | translate }}
-              } @else {
-                {{ 'auth.register.cta' | translate }}
-              }
-            </button>
-          </div>
-        </form>
-      </ng-container>
+          </form>
+        </ng-container>
     </auth-shell>
   `,
   styleUrls: ['./register.page.scss']
@@ -152,7 +168,7 @@ export class RegisterPage implements OnInit {
   pageSubtitleKey = 'auth.register.subtitle';
 
   // Reactive state
-  readonly isLoading = signal(false);
+  readonly isSubmitting = signal(false);
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
   readonly statusMessage = signal('');
@@ -215,7 +231,7 @@ export class RegisterPage implements OnInit {
 
   getFieldError(field: string): string {
     const control = this.registerForm.get(field);
-    if (control?.invalid && control?.touched) {
+    if (control?.invalid && (control?.dirty || control?.touched)) {
       if (control.errors?.['required']) {
         return this.translationService.get(`auth.errors.required${field.charAt(0).toUpperCase() + field.slice(1)}`);
       }
@@ -241,13 +257,16 @@ export class RegisterPage implements OnInit {
   }
 
   hasPasswordMismatch(): boolean {
-    return !!(this.registerForm.errors?.['passwordMismatch'] &&
-              this.registerForm.get('confirmPassword')?.touched);
+    return !!(
+      this.registerForm.errors?.['passwordMismatch'] &&
+      (this.registerForm.get('confirmPassword')?.dirty ||
+        this.registerForm.get('confirmPassword')?.touched)
+    );
   }
 
   isFieldInvalid(field: string): boolean {
     const control = this.registerForm.get(field);
-    return !!(control?.invalid && control?.touched);
+    return !!(control?.invalid && (control?.dirty || control?.touched));
   }
 
   onSubmit(): void {
@@ -256,14 +275,14 @@ export class RegisterPage implements OnInit {
       return;
     }
 
-    this.isLoading.set(true);
+    this.isSubmitting.set(true);
     this.statusMessage.set(this.translationService.get('auth.register.processing'));
 
     const { name, email, password } = this.registerForm.value;
 
     this.authV5.register({ name, email, password }).subscribe({
       next: (response) => {
-        this.isLoading.set(false);
+        this.isSubmitting.set(false);
 
         if (response.success) {
           this.statusMessage.set(this.translationService.get('auth.register.success'));
@@ -284,7 +303,7 @@ export class RegisterPage implements OnInit {
   }
 
   private handleRegisterError(message: string): void {
-    this.isLoading.set(false);
+    this.isSubmitting.set(false);
     this.statusMessage.set(message);
     this.toast.error(message);
   }
