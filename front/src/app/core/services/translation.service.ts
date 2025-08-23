@@ -21,7 +21,12 @@ import {
 } from '../config/languages.config';
 import { LoggingService } from './logging.service';
 
-export const SUPPORTED_LANGUAGES: ReadonlyArray<SupportedLanguage> = ['es', 'en', 'fr', 'it', 'de'] as const;
+export const SUPPORTED_LANGUAGES: ReadonlyArray<SupportedLanguage> =
+  Object.keys(LANGUAGE_CONFIGS) as SupportedLanguage[];
+
+const EMPTY_TRANSLATIONS = Object.fromEntries(
+  SUPPORTED_LANGUAGES.map((lang) => [lang, null])
+) as Record<SupportedLanguage, TranslationFile | null>;
 
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
@@ -30,13 +35,7 @@ export class TranslationService {
 
   // Private signals
   private readonly _current = signal<SupportedLanguage>(DEFAULT_LANGUAGE);
-  private readonly _translations = signal<Record<SupportedLanguage, TranslationFile | null>>({
-    en: null,
-    es: null,
-    fr: null,
-    it: null,
-    de: null,
-  });
+  private readonly _translations = signal<Record<SupportedLanguage, TranslationFile | null>>(EMPTY_TRANSLATIONS);
   private readonly _loadingState = signal<TranslationLoadingState>({
     loading: false,
     loaded: false,

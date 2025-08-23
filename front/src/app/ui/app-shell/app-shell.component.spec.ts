@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { ThemeService } from '@core/services/theme.service';
 import { signal, computed } from '@angular/core';
+import { expect } from '@jest/globals';
 
 import { AppShellComponent } from './app-shell.component';
 import { UiStore } from '@core/stores/ui.store';
@@ -149,27 +150,28 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
-  it('changes language via TranslationService and updates active option', async () => {
+  it('changes language via TranslationService, persists selection, and updates active option', async () => {
     const translation = TestBed.inject(TranslationService) as unknown as MockTranslationService;
     const setLangSpy = jest.spyOn(translation, 'setLanguage');
     const fixture = renderComponent();
     const user = userEvent.setup();
 
-    const languageButton = screen.getByRole('button', { name: 'ES' });
+    const languageButton = screen.getByRole('button', { name: 'Español' });
     await user.click(languageButton);
     fixture.detectChanges();
 
-    const enOption = screen.getByRole('menuitemradio', { name: 'language.en' });
+    const enOption = screen.getByRole('menuitemradio', { name: 'English' });
     await user.click(enOption);
     fixture.detectChanges();
 
     expect(setLangSpy).toHaveBeenCalledWith('en');
+    expect(localStorage.getItem('language')).toBe('en');
 
     // reopen to check active state
-    await user.click(languageButton);
+    await user.click(screen.getByRole('button', { name: 'English' }));
     fixture.detectChanges();
-    const enOptionActive = screen.getByRole('menuitemradio', { name: 'language.en' });
-    const esOption = screen.getByRole('menuitemradio', { name: 'language.es' });
+    const enOptionActive = screen.getByRole('menuitemradio', { name: 'English' });
+    const esOption = screen.getByRole('menuitemradio', { name: 'Español' });
     expect(enOptionActive.classList).toContain('active');
     expect(enOptionActive.getAttribute('aria-checked')).toBe('true');
     expect(esOption.classList).not.toContain('active');
