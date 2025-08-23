@@ -172,20 +172,18 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
-  it('shows notification badge or dot based on sidebar state', async () => {
+  it('shows numeric badge when expanded and dot when collapsed', () => {
     const fixture = renderComponent();
     const ui = TestBed.inject(UiStore) as unknown as MockUiStore;
 
-    // sidebar expanded => number badge
-    let badge = fixture.nativeElement.querySelector('.notification-badge');
-    expect(badge?.textContent).toBe('2');
-    expect(fixture.nativeElement.querySelector('.notification-dot')).toBeNull();
+    const badge = fixture.nativeElement.querySelector('.notifications-container .badge') as HTMLElement;
+    expect(badge.getAttribute('data-count')).toBe('2');
+    expect(getComputedStyle(badge).width).toBe('18px');
 
-    // collapse sidebar => dot
     ui.toggleSidebar();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.notification-badge')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.notification-dot')).not.toBeNull();
+
+    expect(getComputedStyle(badge).width).toBe('6px');
 
     fixture.nativeElement.remove();
   });
