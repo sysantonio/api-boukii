@@ -25,6 +25,7 @@
     "config:production": "node scripts/configure-environment.js production",
     "config:test": "node scripts/configure-environment.js test",
     "test": "jest",
+    "test:auth": "jest --runInBand --testPathPattern=src/app/features/auth",
     "test:watch": "jest --watch",
     "test:ci": "jest --clearCache && jest --ci --coverage --runInBand",
     "test:karma": "ng test",

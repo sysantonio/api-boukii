@@ -1,11 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./out-tsc/spec",
-    "types": ["jest", "node"],
-    "typeRoots": ["./node_modules/@types"],
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/test-setup.ts"]
+  "compilerOptions": { "types": ["jest", "node"] }
 }
