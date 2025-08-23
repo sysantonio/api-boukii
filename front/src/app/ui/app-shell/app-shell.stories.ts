@@ -46,11 +46,17 @@ class MockUiStore {
   toggleTheme() {
     const newTheme = this.themeSignal() === 'light' ? 'dark' : 'light';
     this.themeSignal.set(newTheme);
+    document.body.dataset['theme'] = newTheme;
     document.documentElement.dataset['theme'] = newTheme;
   }
 
   toggleSidebar() {
     this.sidebarCollapsed.set(!this.sidebarCollapsed());
+  }
+
+  
+  initTheme() {
+    document.body.dataset['theme'] = this.themeSignal();
   }
 
   initializeTheme() {

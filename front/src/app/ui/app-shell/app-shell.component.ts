@@ -603,7 +603,7 @@ export class AppShellComponent implements OnInit {
     // Load stored UI preferences
     this.ui.initFromStorage();
     // Initialize theme system
-    this.ui.initializeTheme();
+    this.ui.initTheme();
 
     // Try to load user session if token exists
     this.auth.loadMe();

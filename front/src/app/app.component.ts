@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AppShellComponent } from '@ui/app-shell/app-shell.component';
 import { AuthStore } from '@core/stores/auth.store';
-import { UiStore } from '@core/stores/ui.store';
 
 @Component({
   selector: 'app-root',
@@ -15,12 +14,8 @@ export class AppComponent implements OnInit {
   public title = 'boukii-admin-v5';
 
   private readonly auth = inject(AuthStore);
-  private readonly ui = inject(UiStore);
 
   public ngOnInit(): void {
-    // Initialize app-level stores
-    this.ui.initializeTheme();
-
     // For demo purposes, simulate a logged-in user after 2 seconds
     // In real app, this would happen after successful login
     setTimeout(() => {

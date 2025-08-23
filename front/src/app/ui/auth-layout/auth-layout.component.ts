@@ -252,6 +252,6 @@ export class AuthLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     // Initialize theme system
-    this.ui.initializeTheme();
+    this.ui.initTheme();
   }
 }
