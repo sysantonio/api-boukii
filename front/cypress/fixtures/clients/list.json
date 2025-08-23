@@ -1,0 +1,4 @@
+{ "data":[
+  {"id":1,"fullName":"Jane Doe","email":"jane@ex.com","phone":"+41 111","utilizadores":2,"sportsSummary":"Ski, SB","status":"active","signupDate":"2024-01-01"},
+  {"id":2,"fullName":"John Roe","email":"john@ex.com","phone":"+41 222","utilizadores":1,"sportsSummary":"Ski","status":"inactive","signupDate":"2024-02-01"}
+], "meta":{"total":2} }

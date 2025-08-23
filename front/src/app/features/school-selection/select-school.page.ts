@@ -101,7 +101,7 @@ interface PaginationState {
           <!-- Schools Grid -->
           <div class="schools-grid">
             @for (school of schools(); track school.id) {
-              <article class="school-card" [class.selecting]="isSelecting() === school.id">
+              <article class="school-card" data-testid="school-card" [class.selecting]="isSelecting() === school.id">
                 <div class="school-header">
                   <h3 class="school-name">{{ school.name }}</h3>
                   @if (school.slug) {
