@@ -358,7 +358,7 @@ export const DarkTheme: Story = {
   name: '🌙 Tema Oscuro',
   decorators: [
     (story) => {
-      document.body.setAttribute('data-theme', 'dark');
+      document.body.dataset.theme = 'dark';
       return story();
     },
   ],

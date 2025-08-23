@@ -586,7 +586,7 @@ export class AppShellComponent implements OnInit {
 
   ngOnInit(): void {
     // Initialize theme system
-    this.ui.initializeTheme();
+    this.ui.initTheme();
 
     // Try to load user session if token exists
     this.auth.loadMe();

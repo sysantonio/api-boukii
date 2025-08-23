@@ -130,13 +130,13 @@ export class ThemeService {
       return;
     }
 
-    const root = document.documentElement;
+    const root = document.body;
 
     // Remover clases de tema anteriores
-    root.removeAttribute('data-theme');
+    delete root.dataset.theme;
 
     // Aplicar nuevo tema
-    root.setAttribute('data-theme', theme);
+    root.dataset.theme = theme;
 
     // También agregar clase para compatibilidad con CSS que use clases
     root.classList.remove('theme-light', 'theme-dark');
@@ -150,7 +150,7 @@ export class ThemeService {
 
     // Propagar data-theme al contenedor de overlays para que herede las variables
     const el = this.overlay.getContainerElement();
-    el.setAttribute('data-theme', theme);
+    el.dataset.theme = theme;
   }
 
   /**

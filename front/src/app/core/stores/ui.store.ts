@@ -1,18 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 
-export type Theme = 'light' | 'dark' | 'system';
-
-// Helper to get system theme preference
-function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-// Helper to get stored theme with fallback
-function getStoredTheme(): Theme {
-  if (typeof localStorage === 'undefined') return 'system';
-  return (localStorage.getItem('theme') as Theme) ?? 'system';
-}
+export type Theme = 'light' | 'dark';
 
 // Helper to get stored sidebar state with fallback
 function getStoredSidebarState(): boolean {
@@ -21,24 +9,19 @@ function getStoredSidebarState(): boolean {
   return stored === 'true';
 }
 
-// Helper to get effective theme (resolve 'system' to actual theme)
-function getEffectiveTheme(theme: Theme): 'light' | 'dark' {
-  return theme === 'system' ? getSystemTheme() : theme;
-}
-
 @Injectable({ providedIn: 'root' })
 export class UiStore {
   // Private signals
   private readonly _sidebarCollapsed = signal(getStoredSidebarState());
-  private readonly _theme = signal<Theme>(getStoredTheme());
+  private readonly _theme = signal<Theme>('light');
 
   // Public readonly signals
   readonly sidebarCollapsed = this._sidebarCollapsed.asReadonly();
   readonly theme = this._theme.asReadonly();
 
   // Computed signals
-  readonly effectiveTheme = computed(() => getEffectiveTheme(this._theme()));
-  readonly isDark = computed(() => getEffectiveTheme(this._theme()) === 'dark');
+  readonly effectiveTheme = computed(() => this._theme());
+  readonly isDark = computed(() => this._theme() === 'dark');
   readonly sidebarIcon = computed(() => (this._sidebarCollapsed() ? 'panel-right' : 'panel-left'));
 
   // Methods
@@ -61,44 +44,26 @@ export class UiStore {
 
   setTheme(theme: Theme): void {
     this._theme.set(theme);
-
-    // Persist theme preference
+    if (typeof document !== 'undefined') {
+      document.body.dataset.theme = theme;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('theme', theme);
-    }
-
-    // Apply theme to document
-    if (typeof document !== 'undefined') {
-      const effectiveTheme = getEffectiveTheme(theme);
-      (document.documentElement.dataset as any).theme = effectiveTheme;
     }
   }
 
   toggleTheme(): void {
-    const currentTheme = this._theme();
-    const nextTheme: Theme =
-      currentTheme === 'light' ? 'dark' : currentTheme === 'dark' ? 'system' : 'light';
-    this.setTheme(nextTheme);
+    const next = this._theme() === 'light' ? 'dark' : 'light';
+    this.setTheme(next);
   }
 
-  // Initialize theme on app start
-  initializeTheme(): void {
-    const theme = this._theme();
+  initTheme(): void {
+    const v =
+      (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as Theme)) ||
+      'light';
+    this._theme.set(v);
     if (typeof document !== 'undefined') {
-      const effectiveTheme = getEffectiveTheme(theme);
-      (document.documentElement.dataset as any).theme = effectiveTheme;
-
-      // Listen for system theme changes if using system preference
-      if (theme === 'system') {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const updateSystemTheme = () => {
-          if (this._theme() === 'system') {
-            (document.documentElement.dataset as any).theme = mediaQuery.matches ? 'dark' : 'light';
-          }
-        };
-
-        mediaQuery.addEventListener('change', updateSystemTheme);
-      }
+      document.body.dataset.theme = v;
     }
   }
 }
