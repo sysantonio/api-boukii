@@ -39,13 +39,17 @@ class MockUiStore {
   private theme = signal<'light' | 'dark' | 'system'>('light');
   isDark = computed(() => this.theme() === 'dark');
 
+  initFromStorage(): void {
+    const stored = localStorage.getItem('sidebar-collapsed');
+    this.sidebarCollapsed.set(stored === 'true');
+  }
   initializeTheme(): void {
     this.setTheme(this.theme());
   }
   toggleSidebar(): void {
     const newState = !this.sidebarCollapsed();
     this.sidebarCollapsed.set(newState);
-    localStorage.setItem('sidebarCollapsed', String(newState));
+    localStorage.setItem('sidebar-collapsed', String(newState));
   }
   setTheme(theme: 'light' | 'dark' | 'system'): void {
     this.theme.set(theme);
@@ -102,18 +106,18 @@ describe('AppShellComponent interactions', () => {
   it('chevron toggles collapsed class, rotates and persists', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
-    const button = screen.getByLabelText('sidebar.toggle');
-    const shell = fixture.nativeElement.querySelector('.app-shell');
-    expect(shell.classList).not.toContain('app-sidebar--collapsed');
+    const button = screen.getByLabelText('nav.collapse');
+    const sidebar = fixture.nativeElement.querySelector('aside.app-sidebar');
+    expect(sidebar.classList).not.toContain('collapsed');
     await user.click(button);
     fixture.detectChanges();
-    expect(shell.classList).toContain('app-sidebar--collapsed');
+    expect(sidebar.classList).toContain('collapsed');
     expect(fixture.nativeElement.querySelector('.chev')?.classList).toContain('rot');
-    expect(localStorage.getItem('sidebarCollapsed')).toBe('true');
+    expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
     // Click again to expand and ensure button remains focusable
     await user.click(button);
     fixture.detectChanges();
-    expect(shell.classList).not.toContain('app-sidebar--collapsed');
+    expect(sidebar.classList).not.toContain('collapsed');
     fixture.nativeElement.remove();
   });
 

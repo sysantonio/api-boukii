@@ -14,12 +14,6 @@ function getStoredTheme(): Theme {
   return (localStorage.getItem('theme') as Theme) ?? 'system';
 }
 
-// Helper to get stored sidebar state with fallback
-function getStoredSidebarState(): boolean {
-  if (typeof localStorage === 'undefined') return false;
-  const stored = localStorage.getItem('sidebarCollapsed');
-  return stored === 'true';
-}
 
 // Helper to get effective theme (resolve 'system' to actual theme)
 function getEffectiveTheme(theme: Theme): 'light' | 'dark' {
@@ -29,7 +23,7 @@ function getEffectiveTheme(theme: Theme): 'light' | 'dark' {
 @Injectable({ providedIn: 'root' })
 export class UiStore {
   // Private signals
-  private readonly _sidebarCollapsed = signal(getStoredSidebarState());
+  private readonly _sidebarCollapsed = signal(false);
   private readonly _theme = signal<Theme>(getStoredTheme());
 
   // Public readonly signals
@@ -42,20 +36,18 @@ export class UiStore {
   readonly sidebarIcon = computed(() => (this._sidebarCollapsed() ? 'panel-right' : 'panel-left'));
 
   // Methods
+  initFromStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    const stored = localStorage.getItem('sidebar-collapsed');
+    this._sidebarCollapsed.set(stored === 'true');
+  }
+
   toggleSidebar(): void {
     const newState = !this._sidebarCollapsed();
     this._sidebarCollapsed.set(newState);
     // Persist sidebar state
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebarCollapsed', String(newState));
-    }
-  }
-
-  setSidebarCollapsed(collapsed: boolean): void {
-    this._sidebarCollapsed.set(collapsed);
-    // Persist sidebar state
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('sidebarCollapsed', String(collapsed));
+      localStorage.setItem('sidebar-collapsed', String(newState));
     }
   }
 

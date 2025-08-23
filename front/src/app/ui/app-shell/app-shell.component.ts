@@ -39,7 +39,7 @@ interface Notification {
     <!-- Show full layout only when authenticated and has school selected -->
     @if (shouldShowFullLayout()) {
       {{ logFullLayoutRender() }}
-      <div class="app-shell" [class.sidebar-collapsed]="ui.sidebarCollapsed()">
+      <div class="app-shell">
         
         <!-- NAVBAR -->
         <header class="app-navbar" role="banner">
@@ -298,7 +298,8 @@ interface Notification {
               class="collapse"
               type="button"
               (click)="ui.toggleSidebar()"
-              [attr.aria-label]="translationService.instant('sidebar.toggle')"
+              [attr.aria-expanded]="!ui.sidebarCollapsed()"
+              [attr.aria-label]="ui.sidebarCollapsed() ? translationService.instant('nav.expand') : translationService.instant('nav.collapse')"
             >
               <i class="chev" [class.rot]="ui.sidebarCollapsed()"></i>
             </button>
@@ -585,6 +586,8 @@ export class AppShellComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Load stored UI preferences
+    this.ui.initFromStorage();
     // Initialize theme system
     this.ui.initializeTheme();
 
