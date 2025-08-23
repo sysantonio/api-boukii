@@ -1,5 +1,8 @@
 /** @type {import('eslint').Linter.FlatConfig[]} */
-const tseslint = require('typescript-eslint');
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const angularTemplateParser = require('@angular-eslint/template-parser');
+const angularTemplatePlugin = require('@angular-eslint/eslint-plugin-template');
 
 module.exports = [
   {
@@ -13,19 +16,23 @@ module.exports = [
       '.storybook/**',
       'cypress.config.ts',
       'jest.config.cjs',
-      'src/environments/**'
+      'src/environments/**',
+      '**/*.scss',
+      '**/*.stories.ts'
     ]
   },
   {
-    files: ['src/**/*.ts'],
+    files: ['src/app/features/auth/**/*.ts'],
     languageOptions: {
-      parser: tseslint.parser,
+      parser: tsParser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module'
       }
     },
-    plugins: { '@typescript-eslint': tseslint.plugin },
+    plugins: {
+      '@typescript-eslint': tsPlugin
+    },
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -36,5 +43,15 @@ module.exports = [
         }
       ]
     }
+  },
+  {
+    files: ['src/app/features/auth/**/*.html'],
+    languageOptions: {
+      parser: angularTemplateParser
+    },
+    plugins: {
+      '@angular-eslint/template': angularTemplatePlugin
+    },
+    rules: {}
   }
 ];

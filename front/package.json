@@ -30,6 +30,7 @@
     "test:karma": "ng test",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "lint:auth": "eslint src/app/features/auth --ext .ts,.html,.scss",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
@@ -162,7 +163,8 @@
     "storybook": "^8.6.14",
     "ts-jest": "^29.1.1",
     "typescript": "^5.4.0",
-    "typescript-eslint": "8.34.1",
+    "@typescript-eslint/parser": "8.34.1",
+    "@typescript-eslint/eslint-plugin": "8.34.1",
     "vite": "^5.0.0",
     "vite-tsconfig-paths": "^4.2.0"
   }
