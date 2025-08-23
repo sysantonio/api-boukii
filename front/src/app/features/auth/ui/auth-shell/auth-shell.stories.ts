@@ -15,7 +15,7 @@ class MockTranslationService {
 }
 
 const lightDecorator = componentWrapperDecorator((story) => {
-  document.body.dataset.theme = 'light';
+  document.body.dataset['theme'] = 'light';
   localStorage.setItem('theme', 'light');
   return `
     <div data-theme="light" style="min-height:100vh;background:var(--bg);padding:1rem;">
@@ -25,7 +25,7 @@ const lightDecorator = componentWrapperDecorator((story) => {
 });
 
 const darkDecorator = componentWrapperDecorator((story) => {
-  document.body.dataset.theme = 'dark';
+  document.body.dataset['theme'] = 'dark';
   localStorage.setItem('theme', 'dark');
   return `
     <div data-theme="dark" style="min-height:100vh;background:var(--bg);padding:1rem;">

@@ -102,6 +102,8 @@ export interface BookingHistoryItem {
   service?: string;
   instructor?: string;
   date: string;
+  time?: string;
+  courseName?: string;
   amount?: number;
   duration_hours?: number;
 }

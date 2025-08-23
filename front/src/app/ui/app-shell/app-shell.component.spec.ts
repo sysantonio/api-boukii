@@ -59,7 +59,7 @@ class MockUiStore {
   setTheme(theme: 'light' | 'dark'): void {
     this.theme.set(theme);
     localStorage.setItem('theme', theme);
-    document.body.dataset.theme = theme;
+    document.body.dataset['theme'] = theme;
   }
 
   toggleTheme(): void {
@@ -73,7 +73,7 @@ describe('AppShellComponent interactions', () => {
 
   beforeEach(async () => {
     localStorage.clear();
-    delete document.body.dataset.theme;
+    delete document.body.dataset['theme'];
     logoutSpy.mockReset();
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
@@ -130,7 +130,7 @@ describe('AppShellComponent interactions', () => {
     const themeService = TestBed.inject(ThemeService);
     themeService.setTheme('dark');
     await Promise.resolve();
-    expect(overlay.getContainerElement().dataset.theme).toBe('dark');
+    expect(overlay.getContainerElement().dataset['theme']).toBe('dark');
     fixture.nativeElement.remove();
   });
 
@@ -142,12 +142,12 @@ describe('AppShellComponent interactions', () => {
     await user.click(button); // light -> dark
     fixture.detectChanges();
     expect(localStorage.getItem('theme')).toBe('dark');
-    expect(document.body.dataset.theme).toBe('dark');
+    expect(document.body.dataset['theme']).toBe('dark');
 
     await user.click(button); // dark -> light
     fixture.detectChanges();
     expect(localStorage.getItem('theme')).toBe('light');
-    expect(document.body.dataset.theme).toBe('light');
+    expect(document.body.dataset['theme']).toBe('light');
 
     fixture.nativeElement.remove();
   });

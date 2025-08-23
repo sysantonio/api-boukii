@@ -2,6 +2,10 @@ import { Injectable, signal, computed } from '@angular/core';
 
 export type Theme = 'light' | 'dark';
 
+function getStoredSidebarState(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem('sidebar-collapsed') === 'true';
+}
 
 @Injectable({ providedIn: 'root' })
 export class UiStore {
@@ -38,7 +42,7 @@ export class UiStore {
   setTheme(theme: Theme): void {
     this._theme.set(theme);
     if (typeof document !== 'undefined') {
-      document.body.dataset.theme = theme;
+      document.body.dataset['theme'] = theme as 'light' | 'dark';
     }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('theme', theme);
@@ -56,7 +60,7 @@ export class UiStore {
       'light';
     this._theme.set(v);
     if (typeof document !== 'undefined') {
-      document.body.dataset.theme = v;
+      document.body.dataset['theme'] = v as 'light' | 'dark';
     }
   }
 }
