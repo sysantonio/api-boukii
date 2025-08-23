@@ -190,6 +190,38 @@ describe('AppShellComponent interactions', () => {
     fixture.nativeElement.remove();
   });
 
+  it('closes dropdowns with Escape key', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    const languageButton = screen.getByRole('button', { name: 'ES' });
+    await user.click(languageButton);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.language-dropdown')).not.toBeNull();
+
+    await user.keyboard('{Escape}');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.language-dropdown')).toBeNull();
+
+    fixture.nativeElement.remove();
+  });
+
+  it('closes dropdowns on click outside', async () => {
+    const fixture = renderComponent();
+    const user = userEvent.setup();
+
+    const menuButton = screen.getByRole('button', { name: /Test User/ });
+    await user.click(menuButton);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.user-dropdown')).not.toBeNull();
+
+    await user.click(document.body);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.user-dropdown')).toBeNull();
+
+    fixture.nativeElement.remove();
+  });
+
   it('invokes logout without confirmation dialog', async () => {
     const fixture = renderComponent();
     const user = userEvent.setup();
