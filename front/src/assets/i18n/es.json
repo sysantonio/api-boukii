@@ -10,7 +10,11 @@
     "search": "Buscar",
     "noResults": "No se encontraron resultados",
     "error": "Error",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "view": "Ver",
+    "reset": "Restablecer",
+    "saving": "Guardando...",
+    "more": "más"
   },
   "schools": {
     "selectSchool": {
@@ -371,5 +375,66 @@
         "description": "Seguimiento del rendimiento del sistema"
       }
     }
+  },
+  "users": {
+    "title": "Gestión de Usuarios",
+    "list": {
+      "subtitle": "Administra usuarios y sus roles en el sistema",
+      "createUser": "Crear Usuario",
+      "filters": {
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar usuarios por nombre o email...",
+        "role": "Rol",
+        "status": "Estado",
+        "allRoles": "Todos los roles",
+        "allStatuses": "Todos los estados"
+      },
+      "table": {
+        "name": "Nombre",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Estado",
+        "createdAt": "Fecha de creación",
+        "actions": "Acciones"
+      },
+      "empty": {
+        "title": "No hay usuarios",
+        "message": "No se han encontrado usuarios que coincidan con los filtros aplicados."
+      }
+    },
+    "detail": {
+      "title": "Detalle de Usuario",
+      "userInfo": "Información del Usuario",
+      "status": "Estado",
+      "phone": "Teléfono",
+      "permissions": "Permisos",
+      "rolesSection": "Asignación de Roles",
+      "rolesSubtitle": "Selecciona los roles que deseas asignar a este usuario",
+      "saveRoles": "Guardar Roles"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "pending": "Pendiente"
+    }
+  },
+  "roles": {
+    "title": "Gestión de Roles",
+    "subtitle": "Administra los roles y permisos del sistema",
+    "permissions": "Permisos",
+    "noRoles": "No hay roles disponibles",
+    "empty": {
+      "title": "No hay roles",
+      "message": "No se han encontrado roles en el sistema."
+    }
+  },
+  "pagination": {
+    "showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "page": "Página",
+    "previous": "Anterior",
+    "next": "Siguiente"
   }
 }

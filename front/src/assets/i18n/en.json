@@ -10,7 +10,11 @@
     "search": "Search",
     "noResults": "No results found",
     "error": "Error",
-    "retry": "Retry"
+    "retry": "Retry",
+    "view": "View",
+    "reset": "Reset",
+    "saving": "Saving...",
+    "more": "more"
   },
   "schools": {
     "selectSchool": {
@@ -333,5 +337,66 @@
         "description": "System performance tracking"
       }
     }
+  },
+  "users": {
+    "title": "User Management",
+    "list": {
+      "subtitle": "Manage users and their roles in the system",
+      "createUser": "Create User",
+      "filters": {
+        "search": "Search",
+        "searchPlaceholder": "Search users by name or email...",
+        "role": "Role",
+        "status": "Status",
+        "allRoles": "All roles",
+        "allStatuses": "All statuses"
+      },
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Status",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No users found",
+        "message": "No users match the applied filters."
+      }
+    },
+    "detail": {
+      "title": "User Detail",
+      "userInfo": "User Information",
+      "status": "Status",
+      "phone": "Phone",
+      "permissions": "Permissions",
+      "rolesSection": "Role Assignment",
+      "rolesSubtitle": "Select the roles you want to assign to this user",
+      "saveRoles": "Save Roles"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    }
+  },
+  "roles": {
+    "title": "Role Management",
+    "subtitle": "Manage system roles and permissions",
+    "permissions": "Permissions",
+    "noRoles": "No roles available",
+    "empty": {
+      "title": "No roles found",
+      "message": "No roles found in the system."
+    }
+  },
+  "pagination": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "page": "Page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }
