@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="12.344" tests="14" failures="0">
-  <testsuite name="Root Suite" timestamp="2025-08-24T14:59:51" tests="0" file="cypress\e2e\theme-switching.cy.ts" time="0.000" failures="0">
+<testsuites name="Mocha Tests" time="12.490" tests="14" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-08-24T15:11:15" tests="0" file="cypress\e2e\theme-switching.cy.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Theme Switching" timestamp="2025-08-24T14:59:51" tests="0" time="0.000" failures="0">
+  <testsuite name="Theme Switching" timestamp="2025-08-24T15:11:15" tests="0" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Default Theme Behavior" timestamp="2025-08-24T14:59:51" tests="3" time="1.503" failures="0">
-    <testcase name="Theme Switching Default Theme Behavior should have a theme attribute set" time="0.552" classname="should have a theme attribute set">
+  <testsuite name="Default Theme Behavior" timestamp="2025-08-24T15:11:15" tests="3" time="1.519" failures="0">
+    <testcase name="Theme Switching Default Theme Behavior should have a theme attribute set" time="0.561" classname="should have a theme attribute set">
     </testcase>
-    <testcase name="Theme Switching Default Theme Behavior should store theme in localStorage" time="0.335" classname="should store theme in localStorage">
+    <testcase name="Theme Switching Default Theme Behavior should store theme in localStorage" time="0.312" classname="should store theme in localStorage">
     </testcase>
-    <testcase name="Theme Switching Default Theme Behavior should apply default theme on first visit" time="0.508" classname="should apply default theme on first visit">
-    </testcase>
-  </testsuite>
-  <testsuite name="Theme Toggle Functionality" timestamp="2025-08-24T14:59:53" tests="3" time="1.876" failures="0">
-    <testcase name="Theme Switching Theme Toggle Functionality should handle theme toggle functionality" time="0.515" classname="should handle theme toggle functionality">
-    </testcase>
-    <testcase name="Theme Switching Theme Toggle Functionality should persist theme across page reloads" time="0.613" classname="should persist theme across page reloads">
-    </testcase>
-    <testcase name="Theme Switching Theme Toggle Functionality should handle invalid theme values gracefully" time="0.677" classname="should handle invalid theme values gracefully">
+    <testcase name="Theme Switching Default Theme Behavior should apply default theme on first visit" time="0.547" classname="should apply default theme on first visit">
     </testcase>
   </testsuite>
-  <testsuite name="Theme in Auth Pages" timestamp="2025-08-24T14:59:55" tests="3" time="2.573" failures="0">
-    <testcase name="Theme Switching Theme in Auth Pages should apply theme to auth pages" time="0.484" classname="should apply theme to auth pages">
+  <testsuite name="Theme Toggle Functionality" timestamp="2025-08-24T15:11:16" tests="3" time="1.928" failures="0">
+    <testcase name="Theme Switching Theme Toggle Functionality should handle theme toggle functionality" time="0.511" classname="should handle theme toggle functionality">
     </testcase>
-    <testcase name="Theme Switching Theme in Auth Pages should maintain consistent theme across auth pages" time="1.158" classname="should maintain consistent theme across auth pages">
+    <testcase name="Theme Switching Theme Toggle Functionality should persist theme across page reloads" time="0.660" classname="should persist theme across page reloads">
     </testcase>
-    <testcase name="Theme Switching Theme in Auth Pages should handle theme switching on register page" time="0.859" classname="should handle theme switching on register page">
-    </testcase>
-  </testsuite>
-  <testsuite name="Theme and Form Interaction" timestamp="2025-08-24T14:59:57" tests="2" time="3.574" failures="0">
-    <testcase name="Theme Switching Theme and Form Interaction should maintain form functionality across themes" time="2.103" classname="should maintain form functionality across themes">
-    </testcase>
-    <testcase name="Theme Switching Theme and Form Interaction should handle password visibility toggle across themes" time="1.406" classname="should handle password visibility toggle across themes">
+    <testcase name="Theme Switching Theme Toggle Functionality should handle invalid theme values gracefully" time="0.688" classname="should handle invalid theme values gracefully">
     </testcase>
   </testsuite>
-  <testsuite name="Responsive Theme Behavior" timestamp="2025-08-24T15:00:01" tests="1" time="0.840" failures="0">
-    <testcase name="Theme Switching Responsive Theme Behavior should maintain theme across different viewports" time="0.821" classname="should maintain theme across different viewports">
+  <testsuite name="Theme in Auth Pages" timestamp="2025-08-24T15:11:18" tests="3" time="2.533" failures="0">
+    <testcase name="Theme Switching Theme in Auth Pages should apply theme to auth pages" time="0.487" classname="should apply theme to auth pages">
+    </testcase>
+    <testcase name="Theme Switching Theme in Auth Pages should maintain consistent theme across auth pages" time="1.141" classname="should maintain consistent theme across auth pages">
+    </testcase>
+    <testcase name="Theme Switching Theme in Auth Pages should handle theme switching on register page" time="0.834" classname="should handle theme switching on register page">
     </testcase>
   </testsuite>
-  <testsuite name="Theme System Integration" timestamp="2025-08-24T15:00:02" tests="2" time="1.978" failures="0">
-    <testcase name="Theme Switching Theme System Integration should handle theme during navigation" time="1.261" classname="should handle theme during navigation">
+  <testsuite name="Theme and Form Interaction" timestamp="2025-08-24T15:11:21" tests="2" time="3.597" failures="0">
+    <testcase name="Theme Switching Theme and Form Interaction should maintain form functionality across themes" time="2.076" classname="should maintain form functionality across themes">
     </testcase>
-    <testcase name="Theme Switching Theme System Integration should handle theme with localStorage errors" time="0.676" classname="should handle theme with localStorage errors">
+    <testcase name="Theme Switching Theme and Form Interaction should handle password visibility toggle across themes" time="1.454" classname="should handle password visibility toggle across themes">
+    </testcase>
+  </testsuite>
+  <testsuite name="Responsive Theme Behavior" timestamp="2025-08-24T15:11:24" tests="1" time="0.867" failures="0">
+    <testcase name="Theme Switching Responsive Theme Behavior should maintain theme across different viewports" time="0.843" classname="should maintain theme across different viewports">
+    </testcase>
+  </testsuite>
+  <testsuite name="Theme System Integration" timestamp="2025-08-24T15:11:25" tests="2" time="2.044" failures="0">
+    <testcase name="Theme Switching Theme System Integration should handle theme during navigation" time="1.235" classname="should handle theme during navigation">
+    </testcase>
+    <testcase name="Theme Switching Theme System Integration should handle theme with localStorage errors" time="0.769" classname="should handle theme with localStorage errors">
     </testcase>
   </testsuite>
 </testsuites>
