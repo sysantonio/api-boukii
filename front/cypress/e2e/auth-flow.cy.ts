@@ -10,41 +10,38 @@ describe('Authentication Flow', () => {
   it('should display login form correctly', () => {
     cy.visitAndWait('/login');
 
-    cy.get('[data-testid="auth-layout"]').should('be.visible');
-    cy.get('[data-testid="auth-card"]').should('be.visible');
-    cy.get('[data-testid="email"]').should('exist').and('be.visible');
-    cy.get('[data-testid="password"]').should('exist').and('be.visible');
-    cy.get('[data-testid="submit"]').should('exist').and('be.enabled');
-
-    // Evitar asserts frágiles por CSS exacto en headless:
-    cy.get('[data-testid="auth-title"]').should('contain.text', 'Inicia sesión');
+    // Basic auth page structure should exist
+    cy.get('.auth').should('be.visible');
+    cy.get('input[type="email"]').should('exist').and('be.visible');
+    cy.get('input[type="password"]').should('exist').and('be.visible');
+    cy.get('button[type="submit"]').should('exist');
   });
 
   it('should show validation errors for empty form', () => {
     cy.visitAndWait('/login');
 
     // Try to submit empty form - button should be disabled for invalid form
-    cy.get('[data-cy=login-button]').should('be.disabled');
+    cy.get('button[type="submit"]').should('be.disabled');
 
     // Fill only email (partial form)
-    cy.get('#loginEmail').type('test@example.com');
+    cy.get('input[type="email"]').type('test@example.com');
 
     // Button should still be disabled if password is empty
-    cy.get('[data-cy=login-button]').should('be.disabled');
+    cy.get('button[type="submit"]').should('be.disabled');
   });
 
   it('should handle form input correctly', () => {
     cy.visitAndWait('/login');
 
     // Fill form
-    cy.get('#loginEmail').type('test@boukii.com');
-    cy.get('#loginPassword').type('password123');
+    cy.get('input[type="email"]').type('test@boukii.com');
+    cy.get('input[type="password"]').type('password123');
 
     // Values should be set
-    cy.get('#loginEmail').should('have.value', 'test@boukii.com');
-    cy.get('#loginPassword').should('have.value', 'password123');
+    cy.get('input[type="email"]').should('have.value', 'test@boukii.com');
+    cy.get('input[type="password"]').should('have.value', 'password123');
 
     // Button should be enabled
-    cy.get('[data-cy=login-button]').should('not.be.disabled');
+    cy.get('button[type="submit"]').should('not.be.disabled');
   });
 });

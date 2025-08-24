@@ -24,8 +24,11 @@ Cypress.on('uncaught:exception', (err) => {
   return true;
 });
 beforeEach(() => {
-  // 1) runtime-config primero de todo (algunas pantallas lo leen antes de bootstrap)
-  cy.intercept('GET','/assets/config/runtime-config.json',{ fixture:'config/runtime-config.json' }).as('runtime');
+  // 1) CRITICAL for CI: runtime-config primero de todo (algunas pantallas lo leen antes de bootstrap)
+  cy.intercept('GET', '/assets/config/runtime-config.json', { 
+    fixture: 'config/runtime-config.json',
+    delay: 0 // No artificial delay in CI for faster, more deterministic tests
+  }).as('runtime');
 
   // 2) inyectar CSS para desactivar animaciones/transiciones (evita flakes de layout en headless)
   cy.document().then((doc) => {
@@ -41,19 +44,43 @@ beforeEach(() => {
   window.localStorage.setItem('theme', 'light');
   document.body.dataset['theme'] = 'light';
 
-  // Basic auth endpoints
-  cy.intercept('GET','**/me',{fixture:'auth/me.json'}).as('me');
-  cy.intercept('GET','**/context',{fixture:'auth/context.json'}).as('context');
-  cy.intercept('GET','**/feature-flags',{fixture:'auth/feature-flags.json'}).as('flags');
+  // 4) Basic auth endpoints with deterministic timing for CI
+  cy.intercept('GET', '**/me', { fixture: 'auth/me.json', delay: 0 }).as('me');
+  cy.intercept('GET', '**/context', { fixture: 'auth/context.json', delay: 0 }).as('context');
+  cy.intercept('GET', '**/feature-flags', { fixture: 'auth/feature-flags.json', delay: 0 }).as('flags');
 
-  // Data endpoints
-  cy.intercept('GET','**/schools*',{fixture:'schools/list.json'}).as('schools');
-  cy.intercept('GET','**/seasons*',{fixture:'seasons/list.json'}).as('seasons');
-  cy.intercept('GET','**/clients*',{fixture:'clients/list.json'}).as('clients');
-  cy.intercept('GET','**/clients/*',{fixture:'clients/detail.json'}).as('clientDetail');
+  // 5) Data endpoints with consistent timing
+  cy.intercept('GET', '**/schools*', { fixture: 'schools/list.json', delay: 0 }).as('schools');
+  cy.intercept('GET', '**/seasons*', { fixture: 'seasons/list.json', delay: 0 }).as('seasons');
+  cy.intercept('GET', '**/clients*', { fixture: 'clients/list.json', delay: 0 }).as('clients');
+  cy.intercept('GET', '**/clients/*', { fixture: 'clients/detail.json', delay: 0 }).as('clientDetail');
 
-  // Default success for any other API calls
-  cy.intercept({method: /GET|POST|PUT|PATCH|DELETE/, url: '**/api/**'}, (req) => {
-    req.reply({ statusCode: 200, body: { success: true, data: {} } });
+  // 6) Improved fallback with deterministic responses by route pattern
+  cy.intercept({ method: /GET|POST|PUT|PATCH|DELETE/, url: '**/api/**' }, (req) => {
+    // More specific route-based responses for better test reliability
+    const ok = { ok: true, timestamp: Date.now() };
+    
+    if (req.url.includes('/clients')) {
+      return req.reply({ 
+        statusCode: 200, 
+        body: { data: [], meta: { total: 0, page: 1, limit: 10 }, ...ok },
+        delay: 0
+      });
+    }
+    
+    if (req.url.includes('/auth/')) {
+      return req.reply({ 
+        statusCode: 200, 
+        body: { success: true, data: {}, ...ok },
+        delay: 0
+      });
+    }
+    
+    // Default fallback
+    return req.reply({ 
+      statusCode: 200, 
+      body: { success: true, data: {}, ...ok },
+      delay: 0
+    });
   }).as('apiFallback');
 });

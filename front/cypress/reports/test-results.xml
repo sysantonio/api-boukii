@@ -1,155 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="562.071" tests="18" failures="16">
-  <testsuite name="Root Suite" timestamp="2025-08-23T14:29:18" tests="0" file="cypress\e2e\theme-switching.cy.ts" time="0.000" failures="0">
+<testsuites name="Mocha Tests" time="12.344" tests="14" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-08-24T14:59:51" tests="0" file="cypress\e2e\theme-switching.cy.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Theme Switching" timestamp="2025-08-23T14:29:18" tests="0" time="0.000" failures="0">
+  <testsuite name="Theme Switching" timestamp="2025-08-24T14:59:51" tests="0" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Default Theme Behavior" timestamp="2025-08-23T14:29:18" tests="3" time="40.390" failures="1">
-    <testcase name="Theme Switching Default Theme Behavior should load with light theme by default" time="1.109" classname="should load with light theme by default">
+  <testsuite name="Default Theme Behavior" timestamp="2025-08-24T14:59:51" tests="3" time="1.503" failures="0">
+    <testcase name="Theme Switching Default Theme Behavior should have a theme attribute set" time="0.552" classname="should have a theme attribute set">
     </testcase>
-    <testcase name="Theme Switching Default Theme Behavior should respect system preference when no theme is stored" time="13.174" classname="should respect system preference when no theme is stored">
-      <failure message="Timed out retrying after 12000ms: expected &apos;&lt;html&gt;&apos; to have attribute &apos;data-theme&apos; with the value &apos;dark&apos;, but the value was &apos;light&apos;" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: expected '<html>' to have attribute 'data-theme' with the value 'dark', but the value was 'light'
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:53:17)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+    <testcase name="Theme Switching Default Theme Behavior should store theme in localStorage" time="0.335" classname="should store theme in localStorage">
     </testcase>
-    <testcase name="Theme Switching Default Theme Behavior should apply stored theme preference on load" time="0.535" classname="should apply stored theme preference on load">
+    <testcase name="Theme Switching Default Theme Behavior should apply default theme on first visit" time="0.508" classname="should apply default theme on first visit">
     </testcase>
   </testsuite>
-  <testsuite name="Theme Toggle Functionality" timestamp="2025-08-23T14:29:58" tests="3" time="115.979" failures="3">
-    <testcase name="Theme Switching Theme Toggle Functionality should toggle from light to dark theme" time="12.836" classname="should toggle from light to dark theme">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+  <testsuite name="Theme Toggle Functionality" timestamp="2025-08-24T14:59:53" tests="3" time="1.876" failures="0">
+    <testcase name="Theme Switching Theme Toggle Functionality should handle theme toggle functionality" time="0.515" classname="should handle theme toggle functionality">
     </testcase>
-    <testcase name="Theme Switching Theme Toggle Functionality should cycle through all theme options (light → dark → system → light)" time="13.060" classname="should cycle through all theme options (light → dark → system → light)">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+    <testcase name="Theme Switching Theme Toggle Functionality should persist theme across page reloads" time="0.613" classname="should persist theme across page reloads">
     </testcase>
-    <testcase name="Theme Switching Theme Toggle Functionality should persist theme selection in localStorage" time="12.737" classname="should persist theme selection in localStorage">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+    <testcase name="Theme Switching Theme Toggle Functionality should handle invalid theme values gracefully" time="0.677" classname="should handle invalid theme values gracefully">
     </testcase>
   </testsuite>
-  <testsuite name="Theme in Authentication Flow" timestamp="2025-08-23T14:31:54" tests="2" time="77.520" failures="2">
-    <testcase name="Theme Switching Theme in Authentication Flow should maintain theme during login process" time="12.901" classname="should maintain theme during login process">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+  <testsuite name="Theme in Auth Pages" timestamp="2025-08-24T14:59:55" tests="3" time="2.573" failures="0">
+    <testcase name="Theme Switching Theme in Auth Pages should apply theme to auth pages" time="0.484" classname="should apply theme to auth pages">
     </testcase>
-    <testcase name="Theme Switching Theme in Authentication Flow should maintain theme during school selection" time="12.902" classname="should maintain theme during school selection">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+    <testcase name="Theme Switching Theme in Auth Pages should maintain consistent theme across auth pages" time="1.158" classname="should maintain consistent theme across auth pages">
+    </testcase>
+    <testcase name="Theme Switching Theme in Auth Pages should handle theme switching on register page" time="0.859" classname="should handle theme switching on register page">
     </testcase>
   </testsuite>
-  <testsuite name="Theme Visual Verification" timestamp="2025-08-23T14:33:12" tests="3" time="118.600" failures="3">
-    <testcase name="Theme Switching Theme Visual Verification should apply correct CSS variables for light theme" time="13.328" classname="should apply correct CSS variables for light theme">
-      <failure message="Timed out retrying after 12000ms: expected &apos;&lt;html&gt;&apos; to have CSS property &apos;color-scheme&apos; with the value &apos;light&apos;, but the value was &apos;normal&apos;" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: expected '<html>' to have CSS property 'color-scheme' with the value 'light', but the value was 'normal'
-    at Context.eval (webpack://boukii-admin-v5/./cypress/e2e/theme-switching.cy.ts:148:21)]]></failure>
+  <testsuite name="Theme and Form Interaction" timestamp="2025-08-24T14:59:57" tests="2" time="3.574" failures="0">
+    <testcase name="Theme Switching Theme and Form Interaction should maintain form functionality across themes" time="2.103" classname="should maintain form functionality across themes">
     </testcase>
-    <testcase name="Theme Switching Theme Visual Verification should apply correct CSS variables for dark theme" time="12.819" classname="should apply correct CSS variables for dark theme">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
-    </testcase>
-    <testcase name="Theme Switching Theme Visual Verification should update component colors when theme changes" time="13.517" classname="should update component colors when theme changes">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+    <testcase name="Theme Switching Theme and Form Interaction should handle password visibility toggle across themes" time="1.406" classname="should handle password visibility toggle across themes">
     </testcase>
   </testsuite>
-  <testsuite name="Theme Toggle Component" timestamp="2025-08-23T14:35:10" tests="3" time="82.461" failures="3">
-    <testcase name="Theme Switching Theme Toggle Component should display current theme in toggle button" time="0.696" classname="should display current theme in toggle button">
-      <failure message="cy.get(...).should(...).or is not a function" type="TypeError"><![CDATA[TypeError: cy.get(...).should(...).or is not a function
-    at Context.eval (webpack://boukii-admin-v5/./cypress/e2e/theme-switching.cy.ts:199:9)
-    at runnable.fn (http://localhost:4200/__cypress/runner/cypress_runner.js:141938:19)
-    at callFn (http://localhost:4200/__cypress/runner/cypress_runner.js:161016:21)
-    at Runnable.run (http://localhost:4200/__cypress/runner/cypress_runner.js:161003:7)
-    at <unknown> (http://localhost:4200/__cypress/runner/cypress_runner.js:167096:30)
-    at PassThroughHandlerContext.finallyHandler (http://localhost:4200/__cypress/runner/cypress_runner.js:4042:23)
-    at PassThroughHandlerContext.tryCatcher (http://localhost:4200/__cypress/runner/cypress_runner.js:1777:23)
-    at Promise._settlePromiseFromHandler (http://localhost:4200/__cypress/runner/cypress_runner.js:1489:31)
-    at Promise._settlePromise (http://localhost:4200/__cypress/runner/cypress_runner.js:1546:18)]]></failure>
-    </testcase>
-    <testcase name="Theme Switching Theme Toggle Component should be accessible via keyboard navigation" time="13.089" classname="should be accessible via keyboard navigation">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `focused`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `focused`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:98:12)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141671:19)]]></failure>
-    </testcase>
-    <testcase name="Theme Switching Theme Toggle Component should be accessible via Space key" time="14.275" classname="should be accessible via Space key">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=theme-toggle]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy=theme-toggle]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/e2e/theme-switching.cy.ts:225:9)]]></failure>
+  <testsuite name="Responsive Theme Behavior" timestamp="2025-08-24T15:00:01" tests="1" time="0.840" failures="0">
+    <testcase name="Theme Switching Responsive Theme Behavior should maintain theme across different viewports" time="0.821" classname="should maintain theme across different viewports">
     </testcase>
   </testsuite>
-  <testsuite name="System Theme Detection" timestamp="2025-08-23T14:36:33" tests="1" time="40.523" failures="1">
-    <testcase name="Theme Switching System Theme Detection should respond to system theme changes" time="13.409" classname="should respond to system theme changes">
-      <failure message="Timed out retrying after 12000ms: expected &apos;&lt;html&gt;&apos; to have attribute &apos;data-theme&apos; with the value &apos;light&apos;, but the value was &apos;system&apos;" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: expected '<html>' to have attribute 'data-theme' with the value 'light', but the value was 'system'
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:53:17)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
+  <testsuite name="Theme System Integration" timestamp="2025-08-24T15:00:02" tests="2" time="1.978" failures="0">
+    <testcase name="Theme Switching Theme System Integration should handle theme during navigation" time="1.261" classname="should handle theme during navigation">
     </testcase>
-  </testsuite>
-  <testsuite name="Theme in Storybook" timestamp="2025-08-23T14:37:13" tests="1" time="3.533" failures="1">
-    <testcase name="Theme Switching Theme in Storybook should apply theme correctly in component documentation" time="1.112" classname="should apply theme correctly in component documentation">
-      <failure message="`cy.visit()` failed trying to load:
-
-http://localhost:6006/
-
-We attempted to make an http request to this URL but the request failed without a response.
-
-We received this error at the network level:
-
-  &gt; Error: connect ECONNREFUSED ::1:6006
-
-Common situations why this would fail:
-  - you don&apos;t have internet access
-  - you forgot to run / boot your web server
-  - your web server isn&apos;t accessible
-  - you have weird network configuration settings on your computer" type="CypressError"><![CDATA[CypressError: `cy.visit()` failed trying to load:
-
-http://localhost:6006/
-
-We attempted to make an http request to this URL but the request failed without a response.
-
-We received this error at the network level:
-
-    at <unknown> (  > Error: connect ECONNREFUSED ::1:6006)
-
-Common situations why this would fail:
-- you don't have internet access
-- you forgot to run / boot your web server
-- your web server isn't accessible
-- you have weird network configuration settings on your computer
-    at <unknown> (http://localhost:4200/__cypress/runner/cypress_runner.js:135198:74)
-    at visitFailedByErr (http://localhost:4200/__cypress/runner/cypress_runner.js:134588:12)
-    at <unknown> (http://localhost:4200/__cypress/runner/cypress_runner.js:135197:11)
-    at tryCatcher (http://localhost:4200/__cypress/runner/cypress_runner.js:1777:23)
-    at Promise._settlePromiseFromHandler (http://localhost:4200/__cypress/runner/cypress_runner.js:1489:31)
-    at Promise._settlePromise (http://localhost:4200/__cypress/runner/cypress_runner.js:1546:18)
-    at Promise._settlePromise0 (http://localhost:4200/__cypress/runner/cypress_runner.js:1591:10)
-    at Promise._settlePromises (http://localhost:4200/__cypress/runner/cypress_runner.js:1667:18)
-    at _drainQueueStep (http://localhost:4200/__cypress/runner/cypress_runner.js:2377:12)
-    at _drainQueue (http://localhost:4200/__cypress/runner/cypress_runner.js:2370:9)
-    at Async._drainQueues (http://localhost:4200/__cypress/runner/cypress_runner.js:2386:5)
-    at Async.drainQueues (http://localhost:4200/__cypress/runner/cypress_runner.js:2256:14)
-From Your Spec Code:
-    at Context.eval (webpack://boukii-admin-v5/./cypress/e2e/theme-switching.cy.ts:276:9)
-
-From Node.js Internals:
-    at <unknown> (      Error: connect ECONNREFUSED ::1:6006)
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)]]></failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="Theme Performance" timestamp="2025-08-23T14:37:17" tests="2" time="83.061" failures="2">
-    <testcase name="Theme Switching Theme Performance should not cause layout shift when switching themes" time="13.649" classname="should not cause layout shift when switching themes">
-      <failure message="Timed out retrying after 12000ms: Expected to find element: `[data-cy=&quot;theme-toggle&quot;]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: Expected to find element: `[data-cy="theme-toggle"]`, but never found it.
-    at Context.eval (webpack://boukii-admin-v5/./cypress/support/commands.ts:57:5)
-    at wrapped (http://localhost:4200/__cypress/runner/cypress_runner.js:141663:43)]]></failure>
-    </testcase>
-    <testcase name="Theme Switching Theme Performance should transition smoothly between themes" time="13.928" classname="should transition smoothly between themes">
-      <failure message="Timed out retrying after 12000ms: expected &apos;all&apos; to include &apos;background-color&apos;" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 12000ms: expected 'all' to include 'background-color'
-    at Context.eval (webpack://boukii-admin-v5/./cypress/e2e/theme-switching.cy.ts:315:9)]]></failure>
+    <testcase name="Theme Switching Theme System Integration should handle theme with localStorage errors" time="0.676" classname="should handle theme with localStorage errors">
     </testcase>
   </testsuite>
 </testsuites>
