@@ -7,7 +7,7 @@ import { TranslatePipe } from '@shared/pipes/translate.pipe';
   standalone: true,
   imports: [CommonModule, TranslatePipe],
   template: `
-    <div class="page">
+    <div class="page" data-cy="dashboard">
       <div class="page-header">
         <h1>{{ 'dashboard.title' | translate }}</h1>
         <div class="subtitle">{{ 'dashboard.welcome' | translate }}</div>

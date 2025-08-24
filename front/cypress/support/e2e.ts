@@ -6,15 +6,29 @@ Cypress.on('uncaught:exception', (err) => {
   return true;
 });
 beforeEach(() => {
+  // Configuration
   cy.intercept('GET','/assets/config/runtime-config.json',{fixture:'config/runtime-config.json'}).as('runtime');
-  cy.intercept('GET','/api/v5/me',{fixture:'auth/me.json'}).as('me');
-  cy.intercept('GET','/api/v5/context',{fixture:'auth/context.json'}).as('context');
-  cy.intercept('GET','/api/v5/feature-flags',{fixture:'auth/feature-flags.json'}).as('flags');
-  cy.intercept('GET','/api/v5/schools*',{fixture:'schools/list.json'}).as('schools');
-  cy.intercept('GET','/api/v5/seasons*',{fixture:'seasons/list.json'}).as('seasons');
-  cy.intercept('GET','/api/v5/clients*',{fixture:'clients/list.json'}).as('clients');
-  cy.intercept('GET','/api/v5/clients/*',{fixture:'clients/detail.json'}).as('clientDetail');
-  cy.intercept({method:/GET|POST|PUT|PATCH|DELETE/,url:'/api/**'}, (req)=> req.reply({ok:true})).as('apiFallback');
-  window.localStorage.setItem('theme','light');
-  document.body.dataset.theme = 'light';
+  
+  // Basic auth endpoints
+  cy.intercept('GET','**/me',{fixture:'auth/me.json'}).as('me');
+  cy.intercept('GET','**/context',{fixture:'auth/context.json'}).as('context');
+  cy.intercept('GET','**/feature-flags',{fixture:'auth/feature-flags.json'}).as('flags');
+  
+  // Data endpoints
+  cy.intercept('GET','**/schools*',{fixture:'schools/list.json'}).as('schools');
+  cy.intercept('GET','**/seasons*',{fixture:'seasons/list.json'}).as('seasons');
+  cy.intercept('GET','**/clients*',{fixture:'clients/list.json'}).as('clients');
+  cy.intercept('GET','**/clients/*',{fixture:'clients/detail.json'}).as('clientDetail');
+  
+  // Default success for any other API calls
+  cy.intercept({method: /GET|POST|PUT|PATCH|DELETE/, url: '**/api/**'}, (req) => {
+    req.reply({ statusCode: 200, body: { success: true, data: {} } });
+  }).as('apiFallback');
+  
+  // Set default theme
+  cy.window().then((win) => {
+    win.localStorage.setItem('theme', 'light');
+    win.document.documentElement.dataset.theme = 'light';
+    win.document.body.dataset.theme = 'light';
+  });
 });

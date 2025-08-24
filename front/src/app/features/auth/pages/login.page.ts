@@ -29,19 +29,20 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
       [features]="features"
     >
       <ng-container auth-form>
-        <form role="form" data-testid="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <form role="form" data-testid="auth-form" data-cy="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
           <label class="field">
             <span>{{ 'auth.common.email' | translate }}</span>
             <input
-              id="email"
+              id="loginEmail"
               data-testid="email"
+              data-cy="email-input"
               type="email"
               formControlName="email"
               autocomplete="username"
               [class.is-invalid]="isFieldInvalid('email')"
               [attr.aria-invalid]="isFieldInvalid('email') ? 'true' : 'false'"
               [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null" />
-            <p class="field-error" [id]="'email-error'" role="alert" *ngIf="isFieldInvalid('email')">
+            <p class="field-error" [id]="'email-error'" data-cy="email-error" role="alert" *ngIf="isFieldInvalid('email')">
               {{ getFieldError('email') }}
             </p>
           </label>
@@ -50,8 +51,9 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
             <span>{{ 'auth.common.password' | translate }}</span>
             <div class="password-wrapper">
               <input
-                id="password"
+                id="loginPassword"
                 data-testid="password"
+                data-cy="password-input"
                 [type]="showPassword() ? 'text' : 'password'"
                 formControlName="password"
                 autocomplete="current-password"
@@ -72,7 +74,7 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
                 }
               </button>
             </div>
-            <p class="field-error" [id]="'password-error'" role="alert" *ngIf="isFieldInvalid('password')">
+            <p class="field-error" [id]="'password-error'" data-cy="password-error" role="alert" *ngIf="isFieldInvalid('password')">
               {{ getFieldError('password') }}
             </p>
           </label>
@@ -88,6 +90,7 @@ import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
                 class="btn btn--primary"
                 type="submit"
                 data-testid="submit"
+                data-cy="login-button"
                 [disabled]="loginForm.invalid || isSubmitting()"
                 [attr.aria-busy]="isSubmitting() ? 'true' : null">
                 @if (isSubmitting()) {

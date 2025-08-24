@@ -52,6 +52,7 @@ export class UiStore {
     this._theme.set(nextTheme);
     try {
       if (typeof document !== 'undefined') {
+        document.documentElement.dataset['theme'] = nextTheme;
         document.body.dataset['theme'] = nextTheme;
       }
       if (typeof localStorage !== 'undefined') {
@@ -75,6 +76,7 @@ export class UiStore {
     this._theme.set(v);
     try {
       if (typeof document !== 'undefined') {
+        document.documentElement.dataset['theme'] = v;
         document.body.dataset['theme'] = v;
       }
     } catch {}

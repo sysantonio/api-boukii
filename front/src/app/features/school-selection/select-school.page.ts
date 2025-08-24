@@ -23,7 +23,7 @@ interface PaginationState {
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
-    <div class="select-school-page">
+    <div class="select-school-page" data-cy="school-selection">
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <span class="breadcrumb-text">{{ 'schools.selectSchool.breadcrumb' | translate }}</span>
@@ -101,7 +101,7 @@ interface PaginationState {
           <!-- Schools Grid -->
           <div class="schools-grid">
             @for (school of schools(); track school.id) {
-              <article class="school-card" data-testid="school-card" [class.selecting]="isSelecting() === school.id">
+              <article class="school-card" data-testid="school-card" data-cy="school-item" [class.selecting]="isSelecting() === school.id">
                 <div class="school-header">
                   <h3 class="school-name">{{ school.name }}</h3>
                   @if (school.slug) {

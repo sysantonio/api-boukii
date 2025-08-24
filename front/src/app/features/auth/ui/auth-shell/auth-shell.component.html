@@ -1,20 +1,25 @@
-<section class="auth-shell" cdkTrapFocus data-testid="auth-layout">
+<section class="auth auth-shell" cdkTrapFocus data-testid="auth-layout">
   <div class="row">
-    <div class="col col-12 col-xl-6" data-testid="auth-left"></div>
-    <div class="col col-12 col-xl-6">
-      <article class="auth-card" role="region" aria-labelledby="auth-title" data-testid="auth-card">
+    <div class="col col-12 col-xl-6 auth__hero" data-testid="auth-left">
+      <div class="brand">
+        <div class="brand__logo"></div>
+        <div class="brand__tag">V5</div>
+      </div>
+      <ul class="features" *ngIf="features?.length" data-testid="auth-features">
+        <li class="features__item" *ngFor="let f of features">
+          <i [class]="f.icon" aria-hidden="true"></i>
+          <div><strong>{{ f.title }}</strong><small>{{ f.subtitle }}</small></div>
+        </li>
+      </ul>
+    </div>
+    <div class="col col-12 col-xl-6 auth__card">
+      <article class="card auth-card" role="region" aria-labelledby="auth-title" data-testid="auth-card">
         <header>
           <span class="brand-line" data-testid="auth-brand">{{ brandLine }}</span>
-          <h1 id="auth-title" data-testid="auth-title">{{ title }}</h1>
+          <h1 id="auth-title" class="card-title" data-testid="auth-title">{{ title }}</h1>
           <p class="subtitle" data-testid="auth-subtitle">{{ subtitle }}</p>
         </header>
         <ng-content select="[auth-form]"></ng-content>
-        <ul class="features" *ngIf="features?.length" data-testid="auth-features">
-          <li *ngFor="let f of features">
-            <i [class]="f.icon" aria-hidden="true"></i>
-            <div><strong>{{ f.title }}</strong><small>{{ f.subtitle }}</small></div>
-          </li>
-        </ul>
       </article>
     </div>
   </div>

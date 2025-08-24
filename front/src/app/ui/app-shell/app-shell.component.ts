@@ -97,6 +97,7 @@ interface Notification {
           <!-- Theme Toggle -->
           <button
             class="icon-btn"
+            data-cy="theme-toggle"
             (click)="ui.toggleTheme()"
             [attr.aria-label]="ui.isDark() ? translationService.instant('theme.switchToLight') : translationService.instant('theme.switchToDark')"
             [attr.title]="translationService.instant('theme.toggle')"
