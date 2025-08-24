@@ -8,8 +8,7 @@ describe('Authentication Flow', () => {
   });
 
   it('should display login form correctly', () => {
-    cy.visit('/login');
-    cy.wait('@runtime'); // crítico en CI
+    cy.visitAndWait('/login');
 
     cy.get('[data-testid="auth-layout"]').should('be.visible');
     cy.get('[data-testid="auth-card"]').should('be.visible');
@@ -22,8 +21,7 @@ describe('Authentication Flow', () => {
   });
 
   it('should show validation errors for empty form', () => {
-    cy.visit('/login');
-    cy.wait('@runtime');
+    cy.visitAndWait('/login');
 
     // Try to submit empty form - button should be disabled for invalid form
     cy.get('[data-cy=login-button]').should('be.disabled');
@@ -36,8 +34,7 @@ describe('Authentication Flow', () => {
   });
 
   it('should handle form input correctly', () => {
-    cy.visit('/login');
-    cy.wait('@runtime');
+    cy.visitAndWait('/login');
 
     // Fill form
     cy.get('#loginEmail').type('test@boukii.com');

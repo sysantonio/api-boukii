@@ -15,6 +15,8 @@ jobs:
     env:
       TZ: Europe/Madrid
       LANG: en_US.UTF-8
+      DISPLAY: ':99'
+      CI: true
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +33,12 @@ jobs:
       - name: Install Cypress binary
         run: npx cypress install
 
+      - name: Start virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1280x1024x24 &
+
       - name: E2E run (Chrome headless)
         uses: cypress-io/github-action@v6
         with:
@@ -44,6 +52,8 @@ jobs:
           command: npm run cypress:run:ci
         env:
           CI: true
+          CYPRESS_CI: true
+          DISPLAY: ':99'
 
       - name: Upload videos on fail
         if: failure()

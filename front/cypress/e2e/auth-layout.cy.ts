@@ -4,8 +4,7 @@
 describe('Auth Layout Integration', () => {
   describe('Login Page', () => {
     it('should display unified auth layout', () => {
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
 
       cy.get('[data-testid="auth-layout"]').should('be.visible');
       cy.get('[data-testid="auth-card"]').should('be.visible');
@@ -15,8 +14,7 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should handle form validation', () => {
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
 
       // Form should be disabled initially
       cy.get('button[type="submit"]').should('be.disabled');
@@ -30,8 +28,7 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should toggle password visibility', () => {
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
 
       cy.get('#loginPassword').type('mypassword');
 
@@ -50,8 +47,7 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should have proper accessibility attributes', () => {
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
 
       // Check basic form elements exist
       cy.get('#loginEmail').should('exist');
@@ -67,8 +63,7 @@ describe('Auth Layout Integration', () => {
 
   describe('Register Page', () => {
     it('should display register form', () => {
-      cy.visit('/register');
-      cy.wait('@runtime');
+      cy.visitAndWait('/register');
 
       cy.get('[data-testid="auth-layout"]').should('be.visible');
       cy.get('[data-testid="auth-card"]').should('be.visible');
@@ -81,8 +76,7 @@ describe('Auth Layout Integration', () => {
 
   describe('Forgot Password Page', () => {
     it('should display forgot password form', () => {
-      cy.visit('/forgot-password');
-      cy.wait('@runtime');
+      cy.visitAndWait('/forgot-password');
 
       // Check if translation is loaded or use translation key
       cy.get('.card-title').should(($title) => {
@@ -96,8 +90,7 @@ describe('Auth Layout Integration', () => {
 
   describe('Theme Adaptation', () => {
     it('should adapt to theme changes', () => {
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
 
       // Set theme and check it applies
       cy.window().then((win) => {
@@ -114,16 +107,13 @@ describe('Auth Layout Integration', () => {
   describe('Navigation Between Pages', () => {
     it('should navigate between auth pages', () => {
       // Test direct navigation
-      cy.visit('/login');
-      cy.wait('@runtime');
+      cy.visitAndWait('/login');
       cy.url().should('include', '/login');
 
-      cy.visit('/register');
-      cy.wait('@runtime');
+      cy.visitAndWait('/register');
       cy.url().should('include', '/register');
 
-      cy.visit('/forgot-password');
-      cy.wait('@runtime');
+      cy.visitAndWait('/forgot-password');
       cy.url().should('include', '/forgot-password');
       
       // Basic page loads work
