@@ -6,6 +6,30 @@ Cypress.on('uncaught:exception', (err) => {
   return true;
 });
 beforeEach(() => {
+  // Patch console methods for CI visibility
+  if (Cypress.env('CI')) {
+    cy.window().then((win) => {
+      const originalLog = win.console.log;
+      const originalError = win.console.error;
+      const originalWarn = win.console.warn;
+      
+      win.console.log = (...args) => {
+        cy.task('log', `[LOG] ${args.join(' ')}`);
+        originalLog.apply(win.console, args);
+      };
+      
+      win.console.error = (...args) => {
+        cy.task('log', `[ERROR] ${args.join(' ')}`);
+        originalError.apply(win.console, args);
+      };
+      
+      win.console.warn = (...args) => {
+        cy.task('log', `[WARN] ${args.join(' ')}`);
+        originalWarn.apply(win.console, args);
+      };
+    });
+  }
+
   // Configuration
   cy.intercept('GET','/assets/config/runtime-config.json',{fixture:'config/runtime-config.json'}).as('runtime');
   
