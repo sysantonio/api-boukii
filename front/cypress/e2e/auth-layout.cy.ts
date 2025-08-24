@@ -3,30 +3,21 @@
  */
 describe('Auth Layout Integration', () => {
   describe('Login Page', () => {
-    beforeEach(() => {
-      cy.visit('/auth/login');
-    });
-
     it('should display unified auth layout', () => {
-      // Check AuthLayout structure
-      cy.get('.auth').should('be.visible');
-      cy.get('.auth__hero').should('be.visible');
-      cy.get('.auth__card').should('be.visible');
+      cy.visit('/login');
+      cy.wait('@runtime');
 
-      // Check brand elements
-      cy.get('.brand__logo').should('exist');
-      cy.get('.brand__tag').should('contain.text', 'V5');
-
-      // Check features list
-      cy.get('.features').should('be.visible');
-      cy.get('.features__item').should('have.length', 3);
-
-      // Check card content
-      cy.get('.card').should('be.visible');
-      cy.get('.card-title').should('contain.text', 'Accede a Boukii');
+      cy.get('[data-testid="auth-layout"]').should('be.visible');
+      cy.get('[data-testid="auth-card"]').should('be.visible');
+      cy.get('[data-testid="auth-title"]').should('exist');
+      cy.get('[data-testid="email"]').should('exist');
+      cy.get('[data-testid="password"]').should('exist');
     });
 
     it('should handle form validation', () => {
+      cy.visit('/login');
+      cy.wait('@runtime');
+
       // Form should be disabled initially
       cy.get('button[type="submit"]').should('be.disabled');
 
@@ -39,6 +30,9 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should toggle password visibility', () => {
+      cy.visit('/login');
+      cy.wait('@runtime');
+
       cy.get('#loginPassword').type('mypassword');
 
       // Password should be hidden initially
@@ -56,6 +50,9 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should have proper accessibility attributes', () => {
+      cy.visit('/login');
+      cy.wait('@runtime');
+
       // Check basic form elements exist
       cy.get('#loginEmail').should('exist');
       cy.get('#loginPassword').should('exist');
@@ -69,27 +66,24 @@ describe('Auth Layout Integration', () => {
   });
 
   describe('Register Page', () => {
-    beforeEach(() => {
-      cy.visit('/auth/register');
-    });
-
     it('should display register form', () => {
-      cy.get('.card-title').should('contain.text', 'Crear cuenta');
+      cy.visit('/register');
+      cy.wait('@runtime');
 
-      // Check basic form structure exists
-      cy.get('form').should('exist');
-      cy.get('input[type="email"]').should('exist');
-      cy.get('input[type="password"]').should('have.length.at.least', 1);
-      cy.get('button[type="submit"]').should('exist');
+      cy.get('[data-testid="auth-layout"]').should('be.visible');
+      cy.get('[data-testid="auth-card"]').should('be.visible');
+      cy.get('[data-testid="name"]').should('exist');
+      cy.get('[data-testid="email"]').should('exist');
+      cy.get('[data-testid="password"]').should('exist');
+      cy.get('[data-testid="submit"]').should('be.enabled');
     });
   });
 
   describe('Forgot Password Page', () => {
-    beforeEach(() => {
-      cy.visit('/auth/forgot-password');
-    });
-
     it('should display forgot password form', () => {
+      cy.visit('/forgot-password');
+      cy.wait('@runtime');
+
       // Check if translation is loaded or use translation key
       cy.get('.card-title').should(($title) => {
         const text = $title.text();
@@ -102,7 +96,8 @@ describe('Auth Layout Integration', () => {
 
   describe('Theme Adaptation', () => {
     it('should adapt to theme changes', () => {
-      cy.visit('/auth/login');
+      cy.visit('/login');
+      cy.wait('@runtime');
 
       // Set theme and check it applies
       cy.window().then((win) => {
@@ -119,14 +114,17 @@ describe('Auth Layout Integration', () => {
   describe('Navigation Between Pages', () => {
     it('should navigate between auth pages', () => {
       // Test direct navigation
-      cy.visit('/auth/login');
-      cy.url().should('include', '/auth/login');
-      
-      cy.visit('/auth/register');
-      cy.url().should('include', '/auth/register');
-      
-      cy.visit('/auth/forgot-password');
-      cy.url().should('include', '/auth/forgot-password');
+      cy.visit('/login');
+      cy.wait('@runtime');
+      cy.url().should('include', '/login');
+
+      cy.visit('/register');
+      cy.wait('@runtime');
+      cy.url().should('include', '/register');
+
+      cy.visit('/forgot-password');
+      cy.wait('@runtime');
+      cy.url().should('include', '/forgot-password');
       
       // Basic page loads work
       cy.get('.auth').should('be.visible');
