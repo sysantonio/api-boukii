@@ -9,7 +9,6 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    continue-on-error: true
     defaults:
       run:
         working-directory: front
@@ -20,24 +19,38 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: front/package-lock.json
+          cache: 'npm'
+          cache-dependency-path: 'front/package-lock.json'
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
-      - name: E2E tests
-        run: npm run test:e2e:ci
+      - name: Install Cypress binary
+        run: npx cypress install
 
-      - name: Upload Cypress videos
-        if: always()
+      - name: E2E run (Chrome headless)
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: front
+          start: npm run start
+          wait-on: 'http://localhost:4200'
+          wait-on-timeout: 180
+          browser: chrome
+          headless: true
+          install: false
+          command: npm run cypress:run:ci
+        env:
+          CI: true
+
+      - name: Upload videos on fail
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos
           path: front/cypress/videos
 
-      - name: Upload Cypress screenshots
-        if: always()
+      - name: Upload screenshots on fail
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
