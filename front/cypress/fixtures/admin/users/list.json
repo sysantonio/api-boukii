@@ -1,0 +1,50 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Admin Principal",
+      "email": "admin@boukii.dev",
+      "status": "active",
+      "roles": ["admin"],
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Manager Operaciones",
+      "email": "manager@boukii.dev",
+      "status": "active",
+      "roles": ["manager"],
+      "createdAt": "2024-02-01T14:20:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Staff Recepción",
+      "email": "staff@boukii.dev",
+      "status": "inactive",
+      "roles": ["staff"],
+      "createdAt": "2024-01-20T09:15:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Maria González",
+      "email": "maria.gonzalez@boukii.dev",
+      "status": "pending",
+      "roles": ["staff"],
+      "createdAt": "2024-08-20T16:45:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Carlos Rodríguez",
+      "email": "carlos.rodriguez@boukii.dev",
+      "status": "active",
+      "roles": ["manager", "staff"],
+      "createdAt": "2024-07-10T11:30:00Z"
+    }
+  ],
+  "meta": {
+    "total": 5,
+    "page": 1,
+    "perPage": 20,
+    "lastPage": 1
+  }
+}

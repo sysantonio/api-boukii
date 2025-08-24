@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "admin",
+      "description": "Acceso completo al sistema",
+      "permissions": ["*"]
+    },
+    {
+      "id": 2,
+      "name": "manager",
+      "description": "Gestión de operaciones",
+      "permissions": ["bookings:*", "clients:*", "reports:view", "users:view", "schools:view"]
+    },
+    {
+      "id": 3,
+      "name": "staff",
+      "description": "Personal operativo",
+      "permissions": ["bookings:view", "bookings:create", "clients:view", "reports:view"]
+    }
+  ]
+}

@@ -22,18 +22,18 @@ Cypress.Commands.add('login', () => {
     body:{access_token:'fake',token_type:'Bearer',expires_in:3600,
       user:{id:1,name:'Test User',email:'test@boukii.dev'}}
   }).as('loginApi');
-  cy.visit('/login');
-  cy.get('[data-testid="email"]').type('test@boukii.dev');
-  cy.get('[data-testid="password"]').type('Password_123!');
-  cy.get('[data-testid="submit"]').click();
+  cy.visitAndWait('/auth/login');
+  cy.get('[data-testid="email"]').type('test@boukii.dev', { force: true });
+  cy.get('[data-testid="password"]').type('Password_123!', { force: true });
+  cy.get('[data-testid="submit"]').click({ force: true });
   cy.wait('@loginApi');
 });
 Cypress.Commands.add('selectSchoolAndSeason', () => {
-  cy.visit('/select-school');
+  cy.visitAndWait('/select-school');
   cy.wait(['@schools','@seasons']);
-  cy.get('[data-testid="school-card"]').first().click();
+  cy.get('[data-testid="school-card"]').first().click({ force: true });
   cy.url().should('include','/select-season');
-  cy.get('[data-testid="season-card"]').first().click();
+  cy.get('[data-testid="season-card"]').first().click({ force: true });
 });
 Cypress.Commands.add('setTheme',(theme:'light'|'dark')=>{
   window.localStorage.setItem('theme',theme);

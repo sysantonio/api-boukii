@@ -1,0 +1,9 @@
+{
+  "id": 2,
+  "name": "Manager Operaciones",
+  "email": "manager@boukii.dev",
+  "phone": "+34 666 555 444",
+  "status": "active",
+  "roles": ["manager"],
+  "permissions": ["bookings:*", "clients:*", "reports:view", "users:view"]
+}

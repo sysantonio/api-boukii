@@ -56,6 +56,16 @@ export const routes: Routes = [
     canActivate: [authV5Guard]
   },
   {
+    path: 'admin/users',
+    canActivate: [authV5Guard, schoolSelectionGuard],
+    loadChildren: () => import('./features/admin/users/users.routes').then(m => m.USERS_ROUTES)
+  },
+  {
+    path: 'admin/roles',
+    loadComponent: () => import('./features/admin/roles/roles-list.page').then(m => m.RolesListPageComponent),
+    canActivate: [authV5Guard, schoolSelectionGuard]
+  },
+  {
     path: 'unauthorized',
     loadComponent: () =>
       import('./shared/components/unauthorized/unauthorized.component').then(c => c.UnauthorizedComponent)
