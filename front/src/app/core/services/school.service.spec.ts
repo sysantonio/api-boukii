@@ -131,10 +131,11 @@ describe('SchoolService', () => {
       mockApiHttp.get.and.returnValue(of(mockSchool));
     });
 
-    it('should call API with correct school ID', () => {
+    it('should fetch a school via /schools/{id}', () => {
       service.getSchoolById(123).subscribe();
 
-      expect(mockApiHttp.get).toHaveBeenCalledWith('/schools/123');
+      const expectedPath = '/schools/123';
+      expect(mockApiHttp.get).toHaveBeenCalledWith(expectedPath);
     });
 
     it('should return school data', (done) => {
