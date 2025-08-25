@@ -5,17 +5,18 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
 
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
-import { SchoolService, GetSchoolsParams } from '@core/services/school.service';
-import { ContextService, School } from '@core/services/context.service';
+import { AuthV5Service } from '@core/services/auth-v5.service';
+import { ToastService } from '@core/services/toast.service';
 import { TranslationService } from '@core/services/translation.service';
 
-interface PaginationState {
-  current: number;
-  total: number;
-  perPage: number;
-  from: number;
-  to: number;
-  totalResults: number;
+interface School {
+  id: number;
+  name: string;
+  slug?: string;
+  logo?: string;
+  active?: boolean;
+  user_role?: string;
+  can_administer?: boolean;
 }
 
 @Component({
@@ -78,11 +79,11 @@ interface PaginationState {
             </svg>
             <h2 class="error-title">{{ 'schools.selectSchool.errorLoading' | translate }}</h2>
             <p class="error-message">{{ errorMessage() || ('common.error' | translate) }}</p>
-            <button class="retry-button" (click)="loadSchools()" [disabled]="isLoading()">
+            <button class="retry-button" (click)="loadStoredSchools()" [disabled]="isLoading()">
               {{ 'common.retry' | translate }}
             </button>
           </div>
-        } @else if (schools().length === 0) {
+        } @else if (filteredSchools().length === 0) {
           <!-- Empty State -->
           <div class="empty-state">
             <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" [attr.stroke-width]="'2'">
@@ -100,7 +101,7 @@ interface PaginationState {
         } @else {
           <!-- Schools Grid -->
           <div class="schools-grid">
-            @for (school of schools(); track school.id) {
+            @for (school of filteredSchools(); track school.id) {
               <article class="school-card" data-testid="school-card" data-cy="school-item" [class.selecting]="isSelecting() === school.id">
                 <div class="school-header">
                   <h3 class="school-name">{{ school.name }}</h3>
@@ -140,68 +141,6 @@ interface PaginationState {
               </article>
             }
           </div>
-
-          <!-- Pagination -->
-          @if (pagination().total > 1) {
-            <nav class="pagination" aria-label="Schools pagination">
-              <div class="pagination-info">
-                <span class="pagination-text">
-                  {{ 'schools.pagination.showing' | translate }}
-                  <strong>{{ pagination().from }}</strong>
-                  {{ 'schools.pagination.to' | translate }}
-                  <strong>{{ pagination().to }}</strong>
-                  {{ 'schools.pagination.of' | translate }}
-                  <strong>{{ pagination().totalResults }}</strong>
-                  {{ 'schools.pagination.results' | translate }}
-                </span>
-              </div>
-
-              <div class="pagination-controls">
-                <button
-                  class="pagination-button"
-                  [disabled]="pagination().current === 1 || isLoading()"
-                  (click)="goToPage(pagination().current - 1)"
-                  [attr.aria-label]="'schools.pagination.previous' | translate"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" [attr.stroke-width]="'2'">
-                    <polyline points="15,18 9,12 15,6"></polyline>
-                  </svg>
-                  {{ 'schools.pagination.previous' | translate }}
-                </button>
-
-                <div class="page-numbers">
-                  @for (page of getPageNumbers(); track page) {
-                    @if (page === '...') {
-                      <span class="page-ellipsis">...</span>
-                    } @else {
-                      <button
-                        class="page-button"
-                        [class.active]="page === pagination().current"
-                        [disabled]="isLoading()"
-                        (click)="onPageClick(page)"
-                        [attr.aria-label]="getPageAriaLabel(page)"
-                        [attr.aria-current]="page === pagination().current ? 'page' : null"
-                      >
-                        {{ page }}
-                      </button>
-                    }
-                  }
-                </div>
-
-                <button
-                  class="pagination-button"
-                  [disabled]="pagination().current === pagination().total || isLoading()"
-                  (click)="goToPage(pagination().current + 1)"
-                  [attr.aria-label]="'schools.pagination.next' | translate"
-                >
-                  {{ 'schools.pagination.next' | translate }}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" [attr.stroke-width]="'2'">
-                    <polyline points="9,18 15,12 9,6"></polyline>
-                  </svg>
-                </button>
-              </div>
-            </nav>
-          }
         }
       </main>
     </div>
@@ -210,30 +149,23 @@ interface PaginationState {
 })
 export class SelectSchoolPageComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
-  private readonly schoolService = inject(SchoolService);
-  private readonly contextService = inject(ContextService);
+  private readonly authV5 = inject(AuthV5Service);
+  private readonly toast = inject(ToastService);
   private readonly translationService = inject(TranslationService);
   private readonly router = inject(Router);
 
   // Component state
-  private readonly _isLoading = signal(true);
+  private readonly _isLoading = signal(false);
   private readonly _isSearching = signal(false);
   private readonly _isSelecting = signal<number | null>(null);
   private readonly _hasError = signal(false);
   private readonly _errorMessage = signal<string | null>(null);
   private readonly _schools = signal<School[]>([]);
-  private readonly _pagination = signal<PaginationState>({
-    current: 1,
-    total: 1,
-    perPage: 20,
-    from: 0,
-    to: 0,
-    totalResults: 0
-  });
 
   // Search state
   searchQuery = '';
   private searchSubject = new Subject<string>();
+  private tempToken = '';
 
   // Public computed signals
   readonly isLoading = computed(() => this._isLoading());
@@ -242,11 +174,21 @@ export class SelectSchoolPageComponent implements OnInit, OnDestroy {
   readonly hasError = computed(() => this._hasError());
   readonly errorMessage = computed(() => this._errorMessage());
   readonly schools = computed(() => this._schools());
-  readonly pagination = computed(() => this._pagination());
+  
+  // Computed filtered schools based on search
+  readonly filteredSchools = computed(() => {
+    const query = this.searchQuery.toLowerCase().trim();
+    if (!query) return this.schools();
+    
+    return this.schools().filter(school =>
+      school.name.toLowerCase().includes(query) ||
+      (school.slug && school.slug.toLowerCase().includes(query))
+    );
+  });
 
   ngOnInit(): void {
     this.setupSearch();
-    this.loadSchools();
+    this.loadStoredSchools();
   }
 
   ngOnDestroy(): void {
@@ -262,7 +204,8 @@ export class SelectSchoolPageComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        this.loadSchools(1);
+        // For stored schools, we just filter on the client side
+        this._isSearching.set(false);
       });
   }
 
@@ -271,132 +214,80 @@ export class SelectSchoolPageComponent implements OnInit, OnDestroy {
     this.searchSubject.next(this.searchQuery);
   }
 
-  loadSchools(page: number = 1): void {
-    this._isLoading.set(true);
-    this._hasError.set(false);
-    this._errorMessage.set(null);
-
-    const params: GetSchoolsParams = {
-      page,
-      perPage: 20,
-      search: this.searchQuery.trim(),
-      active: true,
-      orderBy: 'name',
-      orderDirection: 'asc'
-    };
-
-    this.schoolService.getMySchools(params)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          console.error('Error loading schools:', error);
-          this._hasError.set(true);
-          this._errorMessage.set(error.message || 'Unknown error');
-          return of(null);
-        })
-      )
-      .subscribe((response) => {
-        this._isLoading.set(false);
-        this._isSearching.set(false);
-
-        if (response) {
-          this._schools.set(response.data);
-          this._pagination.set({
-            current: response.meta.page,
-            total: response.meta.lastPage,
-            perPage: response.meta.perPage,
-            from: response.meta.from,
-            to: response.meta.to,
-            totalResults: response.meta.total
-          });
-        }
-      });
+  loadStoredSchools(): void {
+    try {
+      // Get temporary token and schools from localStorage
+      this.tempToken = localStorage.getItem('boukii_temp_token') || '';
+      const schoolsData = localStorage.getItem('boukii_temp_schools');
+      
+      if (!this.tempToken) {
+        console.error('No temporary token found - redirecting to login');
+        this._hasError.set(true);
+        this._errorMessage.set('Session expired. Please login again.');
+        this.router.navigate(['/auth/login']);
+        return;
+      }
+      
+      if (schoolsData) {
+        const schools = JSON.parse(schoolsData);
+        this._schools.set(schools);
+        console.log('📚 Schools loaded from storage:', schools);
+      } else {
+        console.error('No schools data found - redirecting to login');
+        this._hasError.set(true);
+        this._errorMessage.set('No schools found. Please login again.');
+        this.router.navigate(['/auth/login']);
+      }
+    } catch (error) {
+      console.error('Error loading stored schools:', error);
+      this._hasError.set(true);
+      this._errorMessage.set('Error loading schools data');
+      this.router.navigate(['/auth/login']);
+    }
   }
 
-  async selectSchool(school: School): Promise<void> {
-    if (!school.active || this._isSelecting() !== null) {
+  selectSchool(school: School): void {
+    if (this._isSelecting() !== null) {
       return;
     }
 
     this._isSelecting.set(school.id);
+    console.log('🏫 Selecting school:', school.name, 'with token:', this.tempToken.substring(0, 20) + '...');
 
-    try {
-      await this.contextService.setSchool(school.id);
-      
-      // Navigate to season selection
-      this.router.navigate(['/select-season']);
-    } catch (error) {
-      console.error('Error selecting school:', error);
-      
-      // Show error to user
-      this._errorMessage.set(
-        this.translationService.get('schools.selectSchool.errorSelecting')
-      );
-      this._hasError.set(true);
-      this._isSelecting.set(null);
-    }
-  }
+    this.authV5.selectSchool(school.id, this.tempToken).subscribe({
+      next: (response) => {
+        if (!response.success || !response.data) {
+          this.handleSelectionError('School selection failed');
+          return;
+        }
 
-  goToPage(page: number): void {
-    if (page === this.pagination().current || page < 1 || page > this.pagination().total) {
-      return;
-    }
+        console.log('✅ School selection successful:', response.data);
 
-    this.loadSchools(page);
-  }
+        // Process the login success using the auth service
+        this.authV5.handleLoginSuccess(response.data);
 
-  getPageNumbers(): Array<number | '...'> {
-    const current = this.pagination().current;
-    const total = this.pagination().total;
-    const pages: Array<number | '...'> = [];
+        // Clean up temporary storage
+        localStorage.removeItem('boukii_temp_token');
+        localStorage.removeItem('boukii_temp_schools');
 
-    if (total <= 7) {
-      // Show all pages if 7 or fewer
-      for (let i = 1; i <= total; i++) {
-        pages.push(i);
+        // Show success message
+        this.toast.success(this.translationService.get('auth.login.success'));
+        
+        // Navigate to dashboard
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        console.error('❌ School selection failed:', error);
+        this.handleSelectionError(`School selection failed: ${error.message}`);
       }
-    } else {
-      // Always show first page
-      pages.push(1);
-
-      if (current <= 4) {
-        // Show 1, 2, 3, 4, 5, ..., last
-        for (let i = 2; i <= 5; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(total);
-      } else if (current >= total - 3) {
-        // Show 1, ..., last-4, last-3, last-2, last-1, last
-        pages.push('...');
-        for (let i = total - 4; i <= total; i++) {
-          pages.push(i);
-        }
-      } else {
-        // Show 1, ..., current-1, current, current+1, ..., last
-        pages.push('...');
-        for (let i = current - 1; i <= current + 1; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(total);
-      }
-    }
-
-    return pages;
+    });
   }
 
-  onPageClick(page: number | '...'): void {
-    if (typeof page === 'number') {
-      this.goToPage(page);
-    }
+  private handleSelectionError(message: string): void {
+    this._isSelecting.set(null);
+    this._hasError.set(true);
+    this._errorMessage.set(message);
+    this.toast.error(message);
   }
 
-  getPageAriaLabel(page: number | '...'): string {
-    if (typeof page === 'number') {
-      const pageText = this.translationService.get('schools.pagination.page');
-      return `${pageText} ${page}`;
-    }
-    return '';
-  }
 }

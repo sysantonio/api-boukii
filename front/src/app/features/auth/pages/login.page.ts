@@ -235,14 +235,20 @@ export class LoginPage implements OnInit {
           return;
         }
 
-        const { available_seasons, access_token } = response.data;
-
-        if (available_seasons && available_seasons.length > 0) {
-          const firstSeason = available_seasons[0];
-          this.handleSingleSeason(firstSeason, response.data.school.id, access_token);
-        } else {
-          this.handleLoginError('No seasons available for this school');
-        }
+        // The API already returns everything we need: user, school, season, access_token
+        // No need for additional selectSeason call
+        console.log('✅ School selection successful:', response.data);
+        
+        // Process the login success using the auth service
+        this.authV5.handleLoginSuccess(response.data);
+        
+        // Complete the login flow
+        this.isSubmitting.set(false);
+        this.statusMessage.set(this.translationService.get('auth.login.success'));
+        this.toast.success(this.translationService.get('auth.login.success'));
+        
+        // Navigate to dashboard
+        this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.handleLoginError(`School selection failed: ${error.message}`);
@@ -258,22 +264,6 @@ export class LoginPage implements OnInit {
     this.router.navigate(['/select-school']);
   }
 
-  private handleSingleSeason(season: any, schoolId: number, accessToken: string): void {
-    this.statusMessage.set(this.translationService.get('auth.login.selectingSeason'));
-
-    this.authV5.selectSeason(season.id, schoolId, accessToken).subscribe({
-      next: (_response) => {
-        this.isSubmitting.set(false);
-        this.statusMessage.set(this.translationService.get('auth.login.success'));
-
-        this.toast.success(this.translationService.get('auth.login.success'));
-        this.router.navigate(['/dashboard']);
-      },
-      error: (error) => {
-        this.handleLoginError(`Season selection failed: ${error.message}`);
-      }
-    });
-  }
 
   private handleLoginError(message: string): void {
     this.isSubmitting.set(false);

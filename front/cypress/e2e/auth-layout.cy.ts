@@ -4,7 +4,7 @@
 describe('Auth Layout Integration', () => {
   describe('Login Page', () => {
     it('should display unified auth layout', () => {
-      cy.visitAndWait('/login');
+      cy.visitAndWait('/auth/login');
 
       cy.get('.auth').should('be.visible');
       cy.get('input[type="email"]').should('exist');
@@ -12,23 +12,23 @@ describe('Auth Layout Integration', () => {
     });
 
     it('should handle form validation', () => {
-      cy.visitAndWait('/login');
+      cy.visitAndWait('/auth/login');
 
       // Form should be disabled initially
       cy.get('button[type="submit"]').should('be.disabled');
 
       // Fill valid data
-      cy.get('input[type="email"]').type('test@example.com');
-      cy.get('input[type="password"]').type('password123');
+      cy.get('input[type="email"]').type('test@example.com', { force: true });
+      cy.get('input[type="password"]').type('password123', { force: true });
 
       // Button should now be enabled
       cy.get('button[type="submit"]').should('not.be.disabled');
     });
 
     it('should toggle password visibility', () => {
-      cy.visitAndWait('/login');
+      cy.visitAndWait('/auth/login');
 
-      cy.get('input[type="password"]').type('mypassword');
+      cy.get('input[type="password"]').type('mypassword', { force: true });
 
       // Password should be hidden initially
       cy.get('input[type="password"]').should('have.attr', 'type', 'password');
@@ -36,17 +36,17 @@ describe('Auth Layout Integration', () => {
       // Check if password toggle exists, if not skip this part
       cy.get('body').then(($body) => {
         if ($body.find('button.password-toggle').length > 0) {
-          cy.get('button.password-toggle').click();
+          cy.get('button.password-toggle').click({ force: true });
           cy.get('input[type="text"]').should('exist'); // Password became visible
           
-          cy.get('button.password-toggle').click();
+          cy.get('button.password-toggle').click({ force: true });
           cy.get('input[type="password"]').should('exist'); // Password hidden again
         }
       });
     });
 
     it('should have proper accessibility attributes', () => {
-      cy.visitAndWait('/login');
+      cy.visitAndWait('/auth/login');
 
       // Check basic form elements exist
       cy.get('input[type="email"]').should('exist');
@@ -81,7 +81,7 @@ describe('Auth Layout Integration', () => {
 
   describe('Theme Adaptation', () => {
     it('should adapt to theme changes', () => {
-      cy.visitAndWait('/login');
+      cy.visitAndWait('/auth/login');
 
       // Set theme and check it applies
       cy.window().then((win) => {

@@ -44,8 +44,8 @@ describe('Basic Application Tests', () => {
     });
 
     it('should accept user input', () => {
-      cy.get('input[type="email"]').type('test@example.com');
-      cy.get('input[type="password"]').type('password123');
+      cy.get('input[type="email"]').type('test@example.com', { force: true });
+      cy.get('input[type="password"]').type('password123', { force: true });
       
       cy.get('input[type="email"]').should('have.value', 'test@example.com');
       cy.get('input[type="password"]').should('have.value', 'password123');

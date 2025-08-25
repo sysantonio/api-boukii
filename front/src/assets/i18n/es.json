@@ -1,4 +1,7 @@
 {
+  "admin": {
+    "title": "Administración"
+  },
   "common": {
     "loading": "Cargando...",
     "save": "Guardar",
@@ -436,5 +439,271 @@
     "page": "Página",
     "previous": "Anterior",
     "next": "Siguiente"
+  },
+  "permissions": {
+    "title": "Permisos por Escuela",
+    "description": "Gestiona los permisos y roles de los usuarios por cada escuela del sistema",
+    "matrix": {
+      "title": "Matriz de Permisos",
+      "subtitle": "Vista general de permisos asignados por usuario y escuela",
+      "filters": {
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar usuarios...",
+        "school": "Escuela",
+        "role": "Rol",
+        "status": "Estado",
+        "allSchools": "Todas las escuelas",
+        "allRoles": "Todos los roles",
+        "allStatuses": "Todos los estados",
+        "clearFilters": "Limpiar filtros"
+      },
+      "table": {
+        "user": "Usuario",
+        "schools": "Escuelas",
+        "totalAssignments": "Asignaciones",
+        "lastModified": "Última modificación",
+        "actions": "Acciones",
+        "viewPermissions": "Ver permisos",
+        "editPermissions": "Editar permisos",
+        "permissionHistory": "Historial"
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "pending": "Pendiente",
+        "expired": "Expirado"
+      },
+      "actions": {
+        "bulkAssign": "Asignación Masiva",
+        "export": "Exportar",
+        "import": "Importar",
+        "refresh": "Actualizar"
+      },
+      "empty": {
+        "title": "No hay asignaciones de permisos",
+        "message": "No se encontraron asignaciones de permisos que coincidan con los filtros aplicados.",
+        "createFirst": "Crear primera asignación"
+      },
+      "loading": "Cargando matriz de permisos..."
+    },
+    "assignment": {
+      "title": "Asignar Permisos",
+      "editTitle": "Editar Permisos",
+      "subtitle": "Configura los roles y permisos específicos para el usuario",
+      "user": "Usuario",
+      "school": "Escuela",
+      "roles": {
+        "title": "Roles del Sistema",
+        "subtitle": "Selecciona los roles principales que deseas asignar",
+        "selectAll": "Seleccionar todos",
+        "clearAll": "Limpiar selección",
+        "noRoles": "No hay roles disponibles"
+      },
+      "permissions": {
+        "title": "Permisos Específicos",
+        "subtitle": "Permisos adicionales granulares (opcional)",
+        "categories": {
+          "users": "Gestión de Usuarios",
+          "courses": "Gestión de Cursos",
+          "bookings": "Gestión de Reservas",
+          "reports": "Reportes y Analytics",
+          "settings": "Configuración del Sistema"
+        },
+        "actions": {
+          "read": "Leer",
+          "create": "Crear",
+          "update": "Actualizar",
+          "delete": "Eliminar"
+        }
+      },
+      "dateRange": {
+        "title": "Período de Validez",
+        "subtitle": "Define el período durante el cual estos permisos están activos",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de finalización",
+        "noExpiration": "Sin fecha de expiración",
+        "permanent": "Permanente"
+      },
+      "status": {
+        "title": "Estado de la Asignación",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "activeDescription": "Los permisos están activos y en uso",
+        "inactiveDescription": "Los permisos están deshabilitados temporalmente"
+      },
+      "validation": {
+        "userRequired": "Debe seleccionar un usuario",
+        "schoolRequired": "Debe seleccionar una escuela",
+        "rolesRequired": "Debe asignar al menos un rol",
+        "dateRangeInvalid": "La fecha de inicio debe ser anterior a la fecha de finalización",
+        "duplicateAssignment": "Ya existe una asignación para este usuario y escuela"
+      },
+      "warnings": {
+        "highPrivileges": "Los roles seleccionados tienen privilegios elevados",
+        "conflictingRoles": "Algunos roles pueden tener permisos conflictivos",
+        "temporaryAssignment": "Esta asignación tiene fecha de expiración"
+      },
+      "actions": {
+        "save": "Guardar Asignación",
+        "saving": "Guardando...",
+        "cancel": "Cancelar",
+        "validate": "Validar Permisos"
+      },
+      "success": "Permisos asignados correctamente",
+      "error": "Error al asignar permisos"
+    },
+    "bulk": {
+      "title": "Asignación Masiva de Permisos",
+      "subtitle": "Asigna permisos a múltiples usuarios de forma eficiente",
+      "steps": {
+        "users": {
+          "title": "Seleccionar Usuarios",
+          "subtitle": "Elige los usuarios que recibirán los permisos",
+          "modes": {
+            "manual": "Selección Manual",
+            "filter": "Por Filtros",
+            "import": "Importar Lista"
+          },
+          "search": "Buscar usuarios...",
+          "selectAll": "Seleccionar todos",
+          "clearAll": "Limpiar selección",
+          "selected": "{{count}} usuarios seleccionados",
+          "filterBy": {
+            "title": "Filtrar usuarios por:",
+            "currentRole": "Rol actual",
+            "department": "Departamento",
+            "status": "Estado",
+            "lastLogin": "Último acceso"
+          },
+          "preview": "Vista previa de usuarios seleccionados"
+        },
+        "schools": {
+          "title": "Seleccionar Escuelas",
+          "subtitle": "Define en qué escuelas se aplicarán los permisos",
+          "selectAll": "Todas las escuelas",
+          "specificSchools": "Escuelas específicas",
+          "selected": "{{count}} escuelas seleccionadas"
+        },
+        "permissions": {
+          "title": "Configurar Permisos",
+          "subtitle": "Define los roles y permisos a asignar",
+          "action": {
+            "title": "Acción a Realizar",
+            "assign": "Asignar (añadir roles)",
+            "replace": "Reemplazar (sustituir roles existentes)",
+            "remove": "Remover (quitar roles específicos)"
+          },
+          "roles": "Roles a asignar",
+          "dateRange": "Período de validez",
+          "applyToAll": "Aplicar a todos los usuarios seleccionados"
+        },
+        "review": {
+          "title": "Revisar y Confirmar",
+          "subtitle": "Verifica la configuración antes de aplicar los cambios",
+          "summary": {
+            "users": "Usuarios afectados",
+            "schools": "Escuelas",
+            "action": "Acción",
+            "roles": "Roles"
+          },
+          "warnings": {
+            "title": "Advertencias",
+            "highImpact": "Esta operación afectará a un gran número de usuarios",
+            "privilegeEscalation": "Algunos usuarios obtendrán privilegios elevados",
+            "roleConflicts": "Posibles conflictos entre roles detectados"
+          },
+          "confirmation": {
+            "title": "Confirmación",
+            "message": "¿Estás seguro de que deseas aplicar estos cambios?",
+            "understand": "Entiendo que esta acción afectará a {{count}} usuarios",
+            "proceed": "Proceder con la asignación"
+          }
+        },
+        "execution": {
+          "title": "Ejecutando Asignación",
+          "subtitle": "Aplicando los cambios de permisos",
+          "progress": "{{completed}} de {{total}} usuarios procesados",
+          "currentUser": "Procesando: {{userName}}",
+          "success": "{{count}} usuarios procesados correctamente",
+          "errors": "{{count}} errores encontrados",
+          "completed": "Asignación masiva completada"
+        }
+      },
+      "navigation": {
+        "next": "Siguiente",
+        "back": "Anterior",
+        "finish": "Finalizar",
+        "cancel": "Cancelar"
+      }
+    },
+    "history": {
+      "title": "Historial de Permisos",
+      "subtitle": "Registro de cambios de permisos del usuario",
+      "filters": {
+        "action": "Acción",
+        "dateRange": "Período",
+        "allActions": "Todas las acciones",
+        "allTime": "Todo el tiempo",
+        "today": "Hoy",
+        "thisWeek": "Esta semana",
+        "thisMonth": "Este mes",
+        "thisQuarter": "Este trimestre"
+      },
+      "actions": {
+        "assigned": "Asignado",
+        "removed": "Removido",
+        "modified": "Modificado"
+      },
+      "details": {
+        "roles": "Roles",
+        "permissions": "Permisos",
+        "reason": "Motivo"
+      },
+      "empty": {
+        "title": "Sin historial",
+        "message": "No se encontraron cambios de permisos para este usuario."
+      },
+      "error": {
+        "title": "Error al cargar el historial",
+        "message": "No se pudo cargar el historial de permisos. Inténtalo de nuevo."
+      },
+      "loadMore": "Cargar más registros"
+    },
+    "export": {
+      "title": "Exportar Matriz de Permisos",
+      "formats": {
+        "csv": "CSV (valores separados por comas)",
+        "xlsx": "Excel (formato .xlsx)",
+        "pdf": "PDF (documento portable)"
+      },
+      "options": {
+        "includeInactive": "Incluir usuarios inactivos",
+        "includeHistory": "Incluir historial de cambios",
+        "groupBySchool": "Agrupar por escuela"
+      },
+      "generating": "Generando archivo...",
+      "success": "Archivo exportado correctamente",
+      "error": "Error al generar el archivo de exportación"
+    },
+    "import": {
+      "title": "Importar Permisos",
+      "subtitle": "Carga permisos masivamente desde un archivo",
+      "uploadFile": "Subir archivo",
+      "supportedFormats": "Formatos soportados: CSV, XLSX",
+      "template": "Descargar plantilla",
+      "preview": "Vista previa de datos",
+      "validation": {
+        "title": "Validación de Datos",
+        "valid": "{{count}} registros válidos",
+        "invalid": "{{count}} registros con errores",
+        "duplicates": "{{count}} registros duplicados"
+      },
+      "errors": {
+        "invalidFormat": "Formato de archivo no válido",
+        "emptyFile": "El archivo está vacío",
+        "missingColumns": "Faltan columnas requeridas",
+        "invalidData": "Datos inválidos en la fila {{row}}"
+      }
+    }
   }
 }

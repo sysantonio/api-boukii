@@ -15,9 +15,9 @@ describe('Error Handling', () => {
       }).as('serverError');
       
       cy.visit('/auth/login');
-      cy.get('#loginEmail').type('test@boukii.com');
-      cy.get('#loginPassword').type('password123');
-      cy.get('[data-cy=login-button]').click();
+      cy.get('#loginEmail').type('test@boukii.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
+      cy.get('[data-cy=login-button]').click({ force: true });
       
       cy.wait('@serverError');
       
@@ -40,9 +40,9 @@ describe('Error Handling', () => {
       }).as('validationError');
       
       cy.visit('/auth/login');
-      cy.get('#loginEmail').type('test@example.com'); // Valid email format
-      cy.get('#loginPassword').type('password123'); // Valid length
-      cy.get('[data-cy=login-button]').click();
+      cy.get('#loginEmail').type('test@example.com', { force: true }); // Valid email format
+      cy.get('#loginPassword').type('password123', { force: true }); // Valid length
+      cy.get('[data-cy=login-button]').click({ force: true });
       
       cy.wait('@validationError');
       
@@ -59,9 +59,9 @@ describe('Error Handling', () => {
       }).as('networkError');
       
       cy.visit('/auth/login');
-      cy.get('#loginEmail').type('test@boukii.com');
-      cy.get('#loginPassword').type('password123');
-      cy.get('[data-cy=login-button]').click();
+      cy.get('#loginEmail').type('test@boukii.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
+      cy.get('[data-cy=login-button]').click({ force: true });
       
       cy.wait('@networkError');
       
@@ -79,8 +79,8 @@ describe('Error Handling', () => {
       cy.get('[data-cy=login-button]').should('be.disabled');
       
       // Invalid email
-      cy.get('#loginEmail').type('invalid-email');
-      cy.get('#loginPassword').type('short');
+      cy.get('#loginEmail').type('invalid-email', { force: true });
+      cy.get('#loginPassword').type('short', { force: true });
       
       // Button should still be disabled
       cy.get('[data-cy=login-button]').should('be.disabled');

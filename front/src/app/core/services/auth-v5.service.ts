@@ -352,14 +352,21 @@ export class AuthV5Service {
       return;
     }
 
-    this.tokenSignal.set(data.token);
+    // Handle both 'token' and 'access_token' from different API responses
+    const token = data.token || data.access_token;
+    if (!token) {
+      console.log('❌ handleLoginSuccess: No token found in response');
+      return;
+    }
+
+    this.tokenSignal.set(token);
     this.userSignal.set(data.user);
     
     // Handle both 'schools' (array) and 'school' (single object) cases
     const schools = data.schools || (data.school ? [data.school] : []);
     this.schoolsSignal.set(schools);
 
-    this.storeToken(data.token);
+    this.storeToken(token);
     this.storeUser(data.user);
     this.storeSchools(schools);
 

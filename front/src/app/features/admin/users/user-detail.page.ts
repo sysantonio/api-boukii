@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap, catchError, finalize } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { AdminNavComponent } from '../../../shared/components/admin-nav/admin-nav.component';
 import { UsersService } from './services/users.service';
 import { RolesService } from '../roles/services/roles.service';
 import { UserDetail } from './types/user.types';
@@ -13,9 +14,12 @@ import { Role } from '../roles/types/role.types';
 @Component({
   selector: 'app-user-detail-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, AdminNavComponent],
   template: `
     <div class="page" data-testid="user-detail-page">
+      <!-- Admin Navigation -->
+      <app-admin-nav></app-admin-nav>
+      
       <!-- Loading State -->
       <div *ngIf="loading()" class="loading-state">
         <div class="skeleton-header"></div>
@@ -87,7 +91,7 @@ import { Role } from '../roles/types/role.types';
               </div>
 
               <!-- User Permissions (if available) -->
-              <div class="permissions-section" *ngIf="user()?.permissions && user()?.permissions.length">
+              <div class="permissions-section" *ngIf="user()?.permissions && user()?.permissions?.length">
                 <h4>{{ 'users.detail.permissions' | translate }}</h4>
                 <div class="permissions-list">
                   <span 
@@ -114,7 +118,7 @@ import { Role } from '../roles/types/role.types';
                     *ngFor="let role of roles(); trackBy: trackByRoleId" 
                     class="role-item"
                   >
-                    <label class="role-checkbox" [data-testid]="'role-checkbox-' + role.id">
+                    <label class="role-checkbox" [attr.data-testid]="'role-checkbox-' + role.id">
                       <input 
                         type="checkbox" 
                         [value]="role.id"

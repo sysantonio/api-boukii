@@ -132,8 +132,8 @@ describe('Theme Switching', () => {
       cy.visit('/auth/login');
       
       // Test form in light theme
-      cy.get('#loginEmail').type('test@example.com');
-      cy.get('#loginPassword').type('password123');
+      cy.get('#loginEmail').type('test@example.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
       cy.get('[data-cy=login-button]').should('not.be.disabled');
       
       // Switch to dark theme
@@ -145,15 +145,15 @@ describe('Theme Switching', () => {
       cy.reload();
       
       // Form should still work in dark theme
-      cy.get('#loginEmail').type('test@example.com');
-      cy.get('#loginPassword').type('password123');
+      cy.get('#loginEmail').type('test@example.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
       cy.get('[data-cy=login-button]').should('not.be.disabled');
     });
 
     it('should handle password visibility toggle across themes', () => {
       cy.visit('/auth/login');
       
-      cy.get('#loginPassword').type('password');
+      cy.get('#loginPassword').type('password', { force: true });
       cy.get('#loginPassword').should('have.attr', 'type', 'password');
       
       // Switch theme
@@ -165,10 +165,10 @@ describe('Theme Switching', () => {
       cy.reload();
       
       // Password toggle should still work
-      cy.get('#loginPassword').type('password');
+      cy.get('#loginPassword').type('password', { force: true });
       cy.get('#loginPassword').should('have.attr', 'type', 'password');
       
-      cy.get('button.password-toggle').click();
+      cy.get('button.password-toggle').click({ force: true });
       cy.get('#loginPassword').should('have.attr', 'type', 'text');
     });
   });

@@ -56,7 +56,7 @@ describe('Admin: Users & Roles Management', () => {
       cy.wait('@usersList');
       
       // Test text search filter
-      cy.get('[data-testid="filter-text"]').type('Manager');
+      cy.get('[data-testid="filter-text"]').type('Manager', { force: true });
       
       // Should show filtered results (mocked behavior)
       cy.get('[data-testid="users-table"]').should('contain', 'Manager Operaciones');

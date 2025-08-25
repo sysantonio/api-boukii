@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::table('schools', function (Blueprint $table) {
             $table->json('feature_flags')->nullable()->after('settings');
             $table->timestamp('feature_flags_updated_at')->nullable()->after('feature_flags');
-            $table->boolean('is_test_school')->default(false)->after('is_active');
+            $table->boolean('is_test_school')->default(false)->after('active');
             $table->boolean('has_microgate_integration')->default(false)->after('is_test_school');
             $table->json('whatsapp_config')->nullable()->after('has_microgate_integration');
             $table->string('webhook_url')->nullable()->after('whatsapp_config');

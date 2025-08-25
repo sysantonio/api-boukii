@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, startWith, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { AdminNavComponent } from '../../../shared/components/admin-nav/admin-nav.component';
 import { UsersService } from './services/users.service';
 import { RolesService } from '../roles/services/roles.service';
 import { UserListItem, UsersFilters } from './types/user.types';
@@ -13,9 +14,12 @@ import { Role } from '../roles/types/role.types';
 @Component({
   selector: 'app-users-list-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, AdminNavComponent],
   template: `
     <div class="page" data-testid="users-page">
+      <!-- Admin Navigation -->
+      <app-admin-nav></app-admin-nav>
+      
       <!-- Page Header -->
       <div class="page-header" data-testid="page-header">
         <div class="page-header-content">
@@ -97,7 +101,7 @@ import { Role } from '../roles/types/role.types';
               *ngFor="let user of users()" 
               (click)="viewUser(user.id)"
               class="table-row clickable"
-              [data-testid]="'user-row-' + user.id"
+              [attr.data-testid]="'user-row-' + user.id"
             >
               <td>
                 <div class="user-info">
@@ -123,7 +127,7 @@ import { Role } from '../roles/types/role.types';
                 <span 
                   class="status-badge"
                   [class]="'status-' + user.status"
-                  [data-testid]="'user-status-' + user.id"
+                  [attr.data-testid]="'user-status-' + user.id"
                 >
                   {{ 'users.status.' + user.status | translate }}
                 </span>
@@ -134,7 +138,7 @@ import { Role } from '../roles/types/role.types';
                   <button 
                     (click)="viewUser(user.id); $event.stopPropagation()" 
                     class="btn btn-sm btn-outline"
-                    [data-testid]="'view-user-' + user.id"
+                    [attr.data-testid]="'view-user-' + user.id"
                   >
                     {{ 'common.view' | translate }}
                   </button>
@@ -145,7 +149,7 @@ import { Role } from '../roles/types/role.types';
           
           <!-- Loading State -->
           <tbody *ngIf="loading()">
-            <tr *ngFor="let _ of skeletonRows" class="skeleton-row">
+            <tr *ngFor="let _ of skeletonRows()" class="skeleton-row">
               <td colspan="6">
                 <div class="skeleton-content"></div>
               </td>

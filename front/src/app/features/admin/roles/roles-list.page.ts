@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { AdminNavComponent } from '../../../shared/components/admin-nav/admin-nav.component';
 import { RolesService } from './services/roles.service';
 import { Role } from './types/role.types';
 import { catchError, finalize } from 'rxjs/operators';
@@ -9,9 +10,12 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-roles-list-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, AdminNavComponent],
   template: `
     <div class="page" data-testid="roles-page">
+      <!-- Admin Navigation -->
+      <app-admin-nav></app-admin-nav>
+      
       <!-- Page Header -->
       <div class="page-header" data-testid="page-header">
         <div class="page-header-content">
@@ -27,7 +31,7 @@ import { of } from 'rxjs';
         <div 
           *ngFor="let role of roles(); trackBy: trackByRoleId" 
           class="role-card"
-          [data-testid]="'role-card-' + role.id"
+          [attr.data-testid]="'role-card-' + role.id"
         >
           <div class="role-header">
             <h3 class="role-name">{{ role.description }}</h3>

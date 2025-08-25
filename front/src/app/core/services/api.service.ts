@@ -107,6 +107,20 @@ export class ApiService {
   }
 
   /**
+   * Get blob data for file downloads/exports
+   */
+  public async getBlob(
+    url: string,
+    params?: Record<string, string | number | boolean>
+  ): Promise<Blob> {
+    const httpParams = params ? new HttpParams({ fromObject: params }) : undefined;
+    return firstValueFrom(this.http.get(this.join(url), { 
+      params: httpParams,
+      responseType: 'blob'
+    }));
+  }
+
+  /**
    * Download file helper
    */
   public async downloadFile(url: string, filename?: string): Promise<void> {

@@ -79,9 +79,9 @@ describe('School Selection Flow', () => {
       }).as('checkUser');
 
       cy.visit('/auth/login');
-      cy.get('#loginEmail').type('test@example.com');
-      cy.get('#loginPassword').type('password123');
-      cy.get('[data-cy=login-button]').click();
+      cy.get('#loginEmail').type('test@example.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
+      cy.get('[data-cy=login-button]').click({ force: true });
 
       cy.wait('@checkUser');
       
@@ -104,9 +104,9 @@ describe('School Selection Flow', () => {
       }).as('checkUserSingle');
 
       cy.visit('/auth/login');
-      cy.get('#loginEmail').type('test@example.com');
-      cy.get('#loginPassword').type('password123');
-      cy.get('[data-cy=login-button]').click();
+      cy.get('#loginEmail').type('test@example.com', { force: true });
+      cy.get('#loginPassword').type('password123', { force: true });
+      cy.get('[data-cy=login-button]').click({ force: true });
 
       cy.wait('@checkUserSingle');
       

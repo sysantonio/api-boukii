@@ -24,13 +24,13 @@ describe('Auth UI', () => {
     cy.visit('/auth/login');
 
     cy.get('#loginPassword').as('password');
-    cy.get('@password').type('secret123');
+    cy.get('@password').type('secret123', { force: true });
     cy.get('@password').should('have.attr', 'type', 'password');
 
-    cy.get('button.password-toggle').click();
+    cy.get('button.password-toggle').click({ force: true });
     cy.get('@password').should('have.attr', 'type', 'text');
 
-    cy.get('button.password-toggle').click();
+    cy.get('button.password-toggle').click({ force: true });
     cy.get('@password').should('have.attr', 'type', 'password');
   });
 

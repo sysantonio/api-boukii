@@ -41,7 +41,7 @@ interface Notification {
     @if (shouldShowFullLayout()) {
       {{ logFullLayoutRender() }}
       <div class="app-shell">
-        
+
         <!-- NAVBAR -->
         <header class="app-navbar" role="banner">
           <!-- Search (flex:1) -->
@@ -57,22 +57,14 @@ interface Notification {
           <div class="language-menu">
             <button
               #languageButton
-              class="icon-btn language-toggle"
+              class="icon-btn language-toggle only-flag"
               (click)="toggleLanguageDropdown()"
               [attr.aria-expanded]="languageDropdownOpen() ? 'true' : 'false'"
               aria-haspopup="menu"
               [attr.aria-controls]="'language-menu'"
-              [attr.title]="translationService.instant('language.title')"
+              [attr.title]="label(translationService.currentLanguage())"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              <span class="language-text">{{ getCurrentLanguage() }}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6,9 12,15 18,9"></polyline>
-              </svg>
+              <img class="flag" [src]="flag(translationService.currentLanguage())" alt="" aria-hidden="true" />
             </button>
 
             @if (languageDropdownOpen()) {
@@ -93,7 +85,6 @@ interface Notification {
               </div>
             }
           </div>
-
           <!-- Theme Toggle -->
           <button
             class="icon-btn"
@@ -138,11 +129,7 @@ interface Notification {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
               @if (unreadNotificationsCount() > 0) {
-                <span
-                  class="badge badge--red"
-                  [attr.data-count]="unreadNotificationsCount()"
-                  [attr.aria-label]="translationService.instant('nav.notifications', { count: unreadNotificationsCount() })"
-                ></span>
+                <span class="badge badge--red">{{ unreadNotificationsCount() }}</span>
               }
             </button>
 
@@ -259,9 +246,9 @@ interface Notification {
                     <span class="user-role-badge">{{ getUserRole() }}</span>
                   </div>
                 </div>
-                
+
                 <div class="dropdown-divider"></div>
-                
+
                 <button class="dropdown-option" role="menuitem" tabindex="-1">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -276,9 +263,9 @@ interface Notification {
                   </svg>
                   {{ translationService.instant('userMenu.settings') }}
                 </button>
-                
+
                 <div class="dropdown-divider"></div>
-                
+
                 <button class="dropdown-option danger" (click)="logout()" [disabled]="loggingOut()" role="menuitem" tabindex="-1">
                   @if (loggingOut()) {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loading-spinner">
@@ -310,13 +297,17 @@ interface Notification {
               (click)="ui.toggleSidebar()"
               [attr.aria-expanded]="!ui.sidebarCollapsed()"
               [attr.aria-label]="ui.sidebarCollapsed() ? translationService.instant('nav.expand') : translationService.instant('nav.collapse')"
+              aria-controls="app-sidebar"
             >
-              <i class="chev" [class.rot]="ui.sidebarCollapsed()"></i>
+              <!-- flecha izquierda; rota al colapsar -->
+              <svg class="chev" [class.rot]="ui.sidebarCollapsed()" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <polyline points="15 6 9 12 15 18" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
             </button>
           </div>
 
           <!-- Navigation Menu -->
-          <nav class="sidebar-nav">              
+          <nav class="sidebar-nav">
             <!-- Dashboard -->
             <a href="#" class="nav-item item active" role="menuitem" aria-current="page" [title]="ui.sidebarCollapsed() ? translationService.instant('nav.dashboard') : null">
               <div class="nav-icon">
@@ -498,7 +489,7 @@ interface Notification {
             <div class="loading-spinner"></div>
           </div>
         }
-        
+
         <!-- Environment Badge -->
         @if (!environmentService.isProduction()) {
           <div class="env-badge">
@@ -588,14 +579,14 @@ export class AppShellComponent implements OnInit {
   protected readonly shouldShowFullLayout = computed(() => {
     const isAuthenticated = this.authV5.isAuthenticated();
     const currentSchool = this.authV5.currentSchool();
-    
+
     console.log('🏠 AppShell shouldShowFullLayout check:', {
       isAuthenticated,
       currentSchool,
       schoolId: this.authV5.currentSchoolIdSignal(),
       result: isAuthenticated && !!currentSchool
     });
-    
+
     return isAuthenticated && !!currentSchool;
   });
 
@@ -726,14 +717,15 @@ export class AppShellComponent implements OnInit {
 
   getRelativeTime(date: Date): string {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const diffMs = now.getTime() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMs / 3600000);
+    const days = Math.floor(diffMs / 86400000);
 
     if (minutes < 1) return this.translationService.instant('notifications.justNow');
-    if (minutes < 60) return this.translationService.instant('notifications.minutesAgo');
-    if (hours < 24) return this.translationService.instant('notifications.hoursAgo');
-    return this.translationService.instant('notifications.daysAgo');
+    if (minutes < 60) return this.translationService.instant('notifications.minutesAgo', { count: minutes });
+    if (hours < 24)   return this.translationService.instant('notifications.hoursAgo', { count: hours });
+    return this.translationService.instant('notifications.daysAgo', { count: days });
   }
 
   getUserAvatar(): string {
@@ -743,7 +735,7 @@ export class AppShellComponent implements OnInit {
 
   getUserRole(): string {
     const permissions = this.authV5.permissions();
-    
+
     // Determine role based on permissions
     if (permissions.includes('admin') || permissions.includes('super-admin')) {
       return this.translationService.instant('roles.admin');

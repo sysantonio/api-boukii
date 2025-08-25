@@ -12,6 +12,22 @@
    --red, --yellow, --blue, --green
 */
 
+/* === utils (deben ir antes de usarse) === */
+@mixin icon-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+/* si tenías .icon-btn como clase reutilizable, déjala como wrapper del mixin */
+.icon-btn { @include icon-btn(); }
+
 /* APP SHELL LAYOUT */
 .app-shell {
   display: grid;
@@ -52,6 +68,44 @@
   cursor: pointer;
   transition: background-color 150ms;
   &:hover { background-color: var(--surface-2); }
+}
+.collapse-icon {
+  transition: transform 0.2s ease;
+  &.rot {
+    transform: rotate(180deg);
+  }
+}
+.language-dropdown,
+.notifications-dropdown,
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .5rem;
+  min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  z-index: 2000; // siempre encima
+  max-height: 400px;
+  overflow-y: auto;
+}
+.language-dropdown .dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .4rem .8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  &:hover, &.active {
+    background: var(--hover);
+  }
+  img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+  }
 }
 
 /* Search */
@@ -292,4 +346,235 @@
   .app-sidebar.mobile-open { transform: translateX(0); }
 
   .user-info, .language-text { display: none; }
+
+  /* tokens z-index locales (si no existen) */
+  :root {
+    --z-navbar: 50;
+    --z-sidebar: 40;
+    --z-dropdown: 1050;
+    --z-overlay: 1100;
+    --z-env-badge: 1200;
+  }
+
+  /* Sidebar base/colapsado */
+  .app-sidebar {
+    position: relative;
+    z-index: var(--z-sidebar);
+    width: 260px;
+    transition: width .2s ease;
+  }
+  .app-sidebar.collapsed { width: 72px; }
+
+  .sidebar-header {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: .75rem .75rem .5rem .75rem;
+  }
+
+  .collapse {
+    position: relative; /* que nunca desaparezca */
+    display: inline-grid;
+    place-items: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #e5e7eb);
+    background: var(--surface, #fff);
+  }
+  .collapse:focus-visible { outline: 2px solid var(--primary, #6366f1); outline-offset: 2px; }
+
+  .chev { transition: transform .2s ease; }
+  .chev.rot { transform: rotate(180deg); }
+
+  /* Cuando está colapsado ocultamos textos pero nunca el botón */
+  .app-sidebar.collapsed .nav-text,
+  .app-sidebar.collapsed .sidebar-support .support-text { display: none; }
+
+
 }
+/* ===== LAYOUT NAVBAR ===== */
+.app-navbar{
+  position: sticky; top: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto; /* search + lang + theme + notifs + user */
+  gap: .5rem;
+  align-items: center;
+  padding: .5rem .75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Search más corto (clamp) */
+.app-navbar .search{
+  min-width: 260px;
+  max-width: clamp(360px, 40vw, 520px);
+}
+.app-navbar .search input{
+  width: 100%;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 0 .75rem;
+  background: var(--surface);
+}
+
+/* Botones icono base */
+.icon-btn{
+  position: relative;
+  display: inline-grid; place-items: center;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-1);
+}
+.icon-btn svg{ stroke: currentColor; }
+
+/* ===== SIDEBAR collapse (chevron visible) ===== */
+.app-sidebar .collapse{
+  @extend .icon-btn;
+  width: 32px; height: 32px;
+}
+.app-sidebar .collapse .chev{ transition: transform .2s ease; color: var(--text-1); }
+.app-sidebar.collapsed .collapse .chev{ transform: rotate(180deg); }
+
+/* ===== WRAPPERS RELATIVOS para anclar dropdowns ===== */
+.language-menu, .notifications-container, .user-menu{ position: relative; }
+
+/* ===== DROPDOWNS UNIFICADOS ===== */
+.language-dropdown, .notifications-dropdown, .user-dropdown{
+  position: absolute; top: calc(100% + 8px); right: 0;
+  min-width: 240px;
+  max-width: min(92vw, 420px);
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+  z-index: 1050;
+  animation: dd-in .12s ease;
+}
+@keyframes dd-in{ from{transform: translateY(-4px); opacity:0} to{transform: none; opacity:1} }
+
+/* ===== IDIOMAS ===== */
+.language-toggle { gap: .25rem; }
+.language-toggle .flag{ width: 20px; height: 20px; border-radius: 50%; display:block; }
+.language-toggle .chev{ opacity: .7; }
+.language-dropdown .dropdown-option{
+  display:flex; align-items:center; gap:.5rem;
+  width:100%; padding:.45rem .75rem; border-radius:8px;
+}
+.language-dropdown .dropdown-option img{ width:20px; height:20px; border-radius:50%; }
+.language-dropdown .dropdown-option:hover,
+.language-dropdown .dropdown-option.active{ background: var(--hover, #f3f4f6); }
+
+/* ===== NOTIFICACIONES (campana + badge + lista) ===== */
+.notifications-btn .badge{
+  position:absolute; top:-6px; right:-6px;
+  min-width: 18px; height: 18px; border-radius: 999px;
+  background:#ef4444; box-shadow: 0 0 0 2px var(--surface-elev);
+}
+.notifications-btn .badge::after{
+  content: attr(data-count);
+  display:block; text-align:center; color:#fff;
+  font: 700 11px/18px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
+}
+.badge--red{ background: #ef4444; }
+
+.notifications-list{ display:grid; gap:.5rem; padding:.5rem; }
+.notification-item{
+  display:grid; grid-template-columns: 24px 1fr auto; gap:.5rem;
+  padding:.5rem; border-radius:10px;
+}
+.notification-item.unread{ background: var(--hover, #f9fafb); }
+.notification-icon{ display:grid; place-items:center; width:24px; height:24px; border-radius:8px; color:#6b7280; }
+.notification-time{ font-size:12px; color:#6b7280; }
+.unread-indicator{ width:8px; height:8px; border-radius:999px; background:#ef4444; align-self:center; }
+
+/* ===== MENÚ DE USUARIO ===== */
+.user-trigger{
+  display:flex; align-items:center; gap:.5rem; padding:0 .5rem;
+  height:36px; border-radius:10px; border:1px solid var(--border, #e5e7eb);
+  background: var(--surface, #fff);
+}
+.user-trigger .user-avatar{ width:24px; height:24px; border-radius:50%; object-fit:cover; }
+.user-trigger .user-info{ display:flex; flex-direction:column; line-height:1.05; }
+.user-trigger .user-name{ font-weight:600; font-size:12px; }
+.user-trigger .user-role{ font-size:11px; color:#6b7280; }
+
+.user-dropdown{ min-width: 320px; }
+.user-dropdown-header{ display:flex; gap:.75rem; padding:.75rem; }
+.user-avatar-large{ width:56px; height:56px; border-radius:14px; object-fit:cover; }
+.user-name-large{ margin:0; font-size:14px; font-weight:700; }
+.user-email{ margin:0; font-size:12px; color:#6b7280; }
+.user-role-badge{ font-size:11px; background:#eef2ff; color:#4338ca; padding:.15rem .4rem; border-radius:999px; }
+.dropdown-divider{ height:1px; background: var(--border, #e5e7eb); margin:.25rem 0; }
+.user-dropdown .dropdown-option{
+  width:100%; display:flex; align-items:center; gap:.5rem;
+  padding:.6rem .75rem; border-radius:10px; background:transparent; border:none; text-align:left;
+}
+.user-dropdown .dropdown-option:hover{ background: var(--hover, #f3f4f6); }
+.user-dropdown .dropdown-option.danger{ color:#b91c1c; }
+.user-dropdown .loading-spinner{ animation: spin 1s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* ===== SIDEBAR VISUAL ===== */
+.app-sidebar{ position:relative; z-index:40; width:260px; transition:width .2s ease; }
+.app-sidebar.collapsed{ width:72px; }
+.sidebar-header{ display:grid; grid-template-columns:1fr auto; gap:.5rem; padding:.5rem .5rem 0 .5rem; }
+.app-sidebar.collapsed .nav-text, .app-sidebar.collapsed .support-text{ display:none; }
+
+/* ===== ENV BADGE ===== */
+.env-badge{ position:fixed; right:10px; bottom:10px; z-index:1200; }
+.language-toggle.only-flag { width: 36px; padding: 0; }
+.language-toggle.only-flag .flag { width: 20px; height: 20px; border-radius: 50%; display:block; }
+/* Píldoras/contadores del sidebar */
+.badge.counter{
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 999px; display:inline-grid; place-items:center;
+  font: 700 11px/20px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto; color:#fff;
+}
+.counter--blue{background:#2563eb;} .counter--green{background:#16a34a;}
+.counter--yellow{background:#ca8a04;} .counter--red{background:#dc2626;}
+
+:root[data-theme="dark"] .counter--blue{background:#3b82f6;}
+:root[data-theme="dark"] .counter--green{background:#22c55e;}
+:root[data-theme="dark"] .counter--yellow{background:#eab308;}
+:root[data-theme="dark"] .counter--red{background:#ef4444;}
+
+.app-sidebar .collapse { @include icon-btn(); width: 32px; height: 32px; }
+.app-sidebar .collapse .chev{
+  width: 20px; height: 20px;
+  stroke: var(--color-text-primary);
+  stroke-width: 2.25;
+  transition: transform .2s ease, color .2s ease;
+}
+.app-sidebar.collapsed .collapse .chev { transform: rotate(180deg); }
+
+.app-sidebar .collapse:hover { background: var(--color-background); }
+.app-sidebar .collapse:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* dark: evita que se “pierda” */
+:root[data-theme="dark"] .app-sidebar .collapse{
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+sidebar-support{
+  margin:.5rem; padding:.5rem;
+  border:1px solid var(--border); border-radius:12px;
+  background:var(--surface-2);
+  display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+}
+.sidebar-support .support-content{ display:flex; align-items:center; gap:.5rem; }
+.sidebar-support .support-icon{ display:grid; place-items:center; width:28px; height:28px; border-radius:8px; color:var(--text-muted);}
+.sidebar-support .support-title{ font-weight:600; font-size:12px; color:var(--text-strong);}
+.sidebar-support .support-subtitle{ font-size:11px; color:var(--text-muted); }
+
+.sidebar-support .support-btn{ @include icon-btn(); width:32px; height:32px; padding:0; }
+
+.app-sidebar.collapsed .sidebar-support{ justify-content:center; }
+.app-sidebar.collapsed .sidebar-support .support-content .support-text{ display:none; }

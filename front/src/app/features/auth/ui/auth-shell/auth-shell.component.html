@@ -1,26 +1,78 @@
-<section class="auth auth-shell" cdkTrapFocus data-testid="auth-layout">
-  <div class="row">
-    <div class="col col-12 col-xl-6 auth__hero" data-testid="auth-left">
-      <div class="brand">
-        <div class="brand__logo"></div>
-        <div class="brand__tag">V5</div>
+<div class="auth-shell" data-testid="auth-layout">
+  <!-- Main Grid Container -->
+  <div class="auth-grid">
+    
+    <!-- Left Hero Section -->
+    <div class="auth-hero" data-testid="auth-hero">
+      <div class="hero-inner">
+        
+        <!-- Brand Section -->
+        <div class="brand-section">
+          <div class="brand-logo">
+            <div class="logo-icon">B</div>
+            <div class="brand-text">
+              <h1 class="brand-name">Boukii</h1>
+              <span class="brand-version">V5</span>
+            </div>
+          </div>
+          <p class="brand-tagline">{{ brandLine }}</p>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-section" *ngIf="features?.length">
+          <h3 class="features-title">Plataforma Profesional</h3>
+          <div class="features-list">
+            <div class="feature" *ngFor="let feature of features">
+              <div class="feature-icon">
+                <span class="icon-placeholder">✓</span>
+              </div>
+              <div class="feature-content">
+                <h4>{{ feature.title }}</h4>
+                <p>{{ feature.subtitle }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-      <ul class="features" *ngIf="features?.length" data-testid="auth-features">
-        <li class="features__item" *ngFor="let f of features">
-          <i [class]="f.icon" aria-hidden="true"></i>
-          <div><strong>{{ f.title }}</strong><small>{{ f.subtitle }}</small></div>
-        </li>
-      </ul>
     </div>
-    <div class="col col-12 col-xl-6 auth__card">
-      <article class="card auth-card" role="region" aria-labelledby="auth-title" data-testid="auth-card">
-        <header>
-          <span class="brand-line" data-testid="auth-brand">{{ brandLine }}</span>
-          <h1 id="auth-title" class="card-title" data-testid="auth-title">{{ title }}</h1>
-          <p class="subtitle" data-testid="auth-subtitle">{{ subtitle }}</p>
-        </header>
-        <ng-content select="[auth-form]"></ng-content>
-      </article>
+
+    <!-- Right Form Section -->
+    <div class="auth-form" data-testid="auth-form-container">
+      <div class="form-container">
+        
+        <!-- Header -->
+        <div class="form-header">
+          <h2 class="form-title">{{ title }}</h2>
+          <p class="form-subtitle">{{ subtitle }}</p>
+        </div>
+
+        <!-- Form Content -->
+        <div class="form-content">
+          <ng-content select="[auth-form]"></ng-content>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="form-footer">
+          <!-- Login Page Links -->
+          <div class="footer-links" *ngIf="title.includes('Accede')">
+            <a routerLink="/auth/register" class="footer-link">¿No tienes cuenta? Crear cuenta</a>
+            <a routerLink="/auth/forgot-password" class="footer-link">¿Olvidaste tu contraseña?</a>
+          </div>
+          
+          <!-- Register Page Links -->
+          <div class="footer-links" *ngIf="title.includes('Crear')">
+            <a routerLink="/auth/login" class="footer-link">¿Ya tienes cuenta? Iniciar sesión</a>
+          </div>
+          
+          <!-- Forgot Password Links -->
+          <div class="footer-links" *ngIf="title.includes('Recuperar')">
+            <a routerLink="/auth/login" class="footer-link">Volver a iniciar sesión</a>
+          </div>
+        </div>
+
+      </div>
     </div>
+
   </div>
-</section>
+</div>

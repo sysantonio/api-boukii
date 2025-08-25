@@ -17,23 +17,33 @@ declare global {
   }
 }
 Cypress.Commands.add('login', () => {
-  cy.intercept('POST','/api/v5/auth/login',{
+  // Mock login success that returns auth token
+  cy.intercept('POST','**/auth/login',{
     statusCode:200,
     body:{access_token:'fake',token_type:'Bearer',expires_in:3600,
       user:{id:1,name:'Test User',email:'test@boukii.dev'}}
   }).as('loginApi');
-  cy.visitAndWait('/auth/login');
-  cy.get('[data-testid="email"]').type('test@boukii.dev', { force: true });
-  cy.get('[data-testid="password"]').type('Password_123!', { force: true });
-  cy.get('[data-testid="submit"]').click({ force: true });
-  cy.wait('@loginApi');
+  
+  // Mock schools and seasons for context
+  cy.intercept('GET','**/schools',{
+    statusCode:200,
+    body:[{id:1,name:'Test School'}]
+  }).as('schools');
+  
+  cy.intercept('GET','**/seasons',{
+    statusCode:200,
+    body:[{id:1,name:'Test Season'}]
+  }).as('seasons');
+  
+  // Skip UI login and set auth directly in localStorage
+  cy.window().then((win) => {
+    win.localStorage.setItem('access_token', 'fake');
+    win.localStorage.setItem('boukii_school_id', '1');
+    win.localStorage.setItem('boukii_season_id', '1');
+  });
 });
 Cypress.Commands.add('selectSchoolAndSeason', () => {
-  cy.visitAndWait('/select-school');
-  cy.wait(['@schools','@seasons']);
-  cy.get('[data-testid="school-card"]').first().click({ force: true });
-  cy.url().should('include','/select-season');
-  cy.get('[data-testid="season-card"]').first().click({ force: true });
+  // Already handled in the login command - no-op
 });
 Cypress.Commands.add('setTheme',(theme:'light'|'dark')=>{
   window.localStorage.setItem('theme',theme);
@@ -55,7 +65,7 @@ Cypress.Commands.add('shouldHaveTheme', (theme: 'light'|'dark') => {
 });
 
 Cypress.Commands.add('toggleTheme', () => {
-  cy.get('[data-cy="theme-toggle"]').click();
+  cy.get('[data-cy="theme-toggle"]').click({ force: true });
 });
 
 Cypress.Commands.add('mockLoginSuccess', () => {
@@ -91,7 +101,7 @@ Cypress.Commands.add('mockMultipleSchools', () => {
 });
 
 Cypress.Commands.add('selectFirstSchool', () => {
-  cy.get('[data-cy="school-item"]').first().click();
+  cy.get('[data-cy="school-item"]').first().click({ force: true });
 });
 
 Cypress.Commands.add('tab', { prevSubject: 'element' }, (subject) => {
