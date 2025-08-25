@@ -21,63 +21,63 @@ export class SchoolPermissionsService {
    */
   getPermissionMatrix(filters?: PermissionAssignmentFilters): Observable<PermissionMatrixResponse> {
     const params = this.buildParams(filters);
-    return from(this.api.get<PermissionMatrixResponse>('/api/v5/admin/permissions/matrix', params));
+    return from(this.api.get<PermissionMatrixResponse>('/admin/permissions/matrix', params));
   }
 
   /**
    * Get user permissions across all schools
    */
   getUserSchoolPermissions(userId: number): Observable<UserPermissionMatrix> {
-    return from(this.api.get<UserPermissionMatrix>(`/api/v5/admin/users/${userId}/school-permissions`));
+    return from(this.api.get<UserPermissionMatrix>(`/admin/users/${userId}/school-permissions`));
   }
 
   /**
    * Get all role assignments for a specific school
    */
   getSchoolRoleAssignments(schoolId: number): Observable<SchoolRoleAssignment> {
-    return from(this.api.get<SchoolRoleAssignment>(`/api/v5/admin/schools/${schoolId}/role-assignments`));
+    return from(this.api.get<SchoolRoleAssignment>(`/admin/schools/${schoolId}/role-assignments`));
   }
 
   /**
    * Assign roles to user in specific school
    */
   assignUserSchoolRoles(assignment: Omit<UserSchoolRole, 'id'>): Observable<UserSchoolRole> {
-    return from(this.api.post<UserSchoolRole>('/api/v5/admin/permissions/assign', assignment));
+    return from(this.api.post<UserSchoolRole>('/admin/permissions/assign', assignment));
   }
 
   /**
    * Update user school roles
    */
   updateUserSchoolRoles(assignmentId: number, assignment: Partial<UserSchoolRole>): Observable<UserSchoolRole> {
-    return from(this.api.put<UserSchoolRole>(`/api/v5/admin/permissions/${assignmentId}`, assignment));
+    return from(this.api.put<UserSchoolRole>(`/admin/permissions/${assignmentId}`, assignment));
   }
 
   /**
    * Remove user school roles
    */
   removeUserSchoolRoles(assignmentId: number): Observable<void> {
-    return from(this.api.delete<void>(`/api/v5/admin/permissions/${assignmentId}`));
+    return from(this.api.delete<void>(`/admin/permissions/${assignmentId}`));
   }
 
   /**
    * Bulk assign roles to multiple users
    */
   bulkAssignRoles(assignment: BulkPermissionAssignment): Observable<{ successful: number; failed: number; errors: string[] }> {
-    return from(this.api.post<{ successful: number; failed: number; errors: string[] }>('/api/v5/admin/permissions/bulk-assign', assignment));
+    return from(this.api.post<{ successful: number; failed: number; errors: string[] }>('/admin/permissions/bulk-assign', assignment));
   }
 
   /**
    * Get effective permissions for user in school context
    */
   getUserEffectivePermissions(userId: number, schoolId: number): Observable<string[]> {
-    return from(this.api.get<string[]>(`/api/v5/admin/users/${userId}/effective-permissions?school_id=${schoolId}`));
+    return from(this.api.get<string[]>(`/admin/users/${userId}/effective-permissions?school_id=${schoolId}`));
   }
 
   /**
    * Validate permission assignment
    */
   validatePermissionAssignment(assignment: Omit<UserSchoolRole, 'id'>): Observable<{ valid: boolean; warnings: string[]; errors: string[] }> {
-    return from(this.api.post<{ valid: boolean; warnings: string[]; errors: string[] }>('/api/v5/admin/permissions/validate', assignment));
+    return from(this.api.post<{ valid: boolean; warnings: string[]; errors: string[] }>('/admin/permissions/validate', assignment));
   }
 
   /**
@@ -109,7 +109,7 @@ export class SchoolPermissionsService {
         changedAt: string;
         reason?: string;
       }>;
-    }>(`/api/v5/admin/users/${userId}/permission-history`, params));
+    }>(`/admin/users/${userId}/permission-history`, params));
   }
 
   /**
@@ -117,7 +117,7 @@ export class SchoolPermissionsService {
    */
   exportPermissionMatrix(filters?: PermissionAssignmentFilters, format: 'csv' | 'xlsx' = 'xlsx'): Observable<Blob> {
     const params = { ...this.buildParams(filters), format };
-    return from(this.api.getBlob('/api/v5/admin/permissions/export', params));
+    return from(this.api.getBlob('/admin/permissions/export', params));
   }
 
   /**
