@@ -52,4 +52,12 @@ class SchoolController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Show a single school.
+     */
+    public function show(School $school): JsonResponse
+    {
+        return SchoolResource::make($school)->response();
+    }
 }

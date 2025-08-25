@@ -92,10 +92,11 @@ describe('ContextService', () => {
       expect(localStorage.getItem('context_seasonId')).toBeNull();
     });
 
-    it('should load school details', async () => {
+    it('should load school details via /schools/{id}', async () => {
       await service.setSchool(1);
 
-      expect(mockApiHttp.get).toHaveBeenCalledWith('/api/v5/schools/1');
+      const expectedPath = '/api/v5/schools/1';
+      expect(mockApiHttp.get).toHaveBeenCalledWith(expectedPath);
       expect(service.school()).toEqual(mockSchool);
     });
 

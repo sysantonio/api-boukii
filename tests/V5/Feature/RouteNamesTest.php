@@ -3,6 +3,7 @@
 namespace Tests\V5\Feature;
 
 use Tests\TestCase;
+use App\Models\School;
 
 class RouteNamesTest extends TestCase
 {
@@ -21,6 +22,14 @@ class RouteNamesTest extends TestCase
     public function test_schools_index_route_requires_authentication(): void
     {
         $response = $this->getJson(route('v5.schools.index'));
+        $response->assertStatus(401);
+    }
+
+    public function test_schools_show_route_requires_authentication(): void
+    {
+        $school = School::factory()->create();
+
+        $response = $this->getJson(route('v5.schools.show', $school));
         $response->assertStatus(401);
     }
 }
