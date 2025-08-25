@@ -5,6 +5,7 @@ import { tap, catchError, switchMap } from 'rxjs/operators';
 
 import { ApiService, ApiResponse } from './api.service';
 import { LoggingService } from './logging.service';
+import { ContextService } from './context.service';
 import {
   LoginRequest,
   RegisterRequest,
@@ -20,6 +21,7 @@ export class AuthV5Service {
   private readonly apiService = inject(ApiService);
   private readonly logger = inject(LoggingService);
   private readonly router = inject(Router);
+  private readonly contextService = inject(ContextService);
 
   // Reactive state using signals
   readonly tokenSignal = signal<string | null>(null);
@@ -143,7 +145,7 @@ export class AuthV5Service {
         if (response.success && response.data) {
           // Update current season
           this.currentSeasonIdSignal.set(seasonId);
-          this.storeSeasonId(seasonId);
+          this.contextService.setSelectedSeason({ id: seasonId });
           
           // Update any additional context data
           if (response.data.permissions) {
@@ -391,7 +393,7 @@ export class AuthV5Service {
     }
 
     this.currentSchoolIdSignal.set(schoolId);
-    this.storeSchoolId(schoolId);
+    this.contextService.setSelectedSchool(school);
 
     // Auto-select season if only one active (check if seasons exists)
     const seasons = school.seasons || [];
@@ -415,7 +417,7 @@ export class AuthV5Service {
    */
   public setCurrentSeason(seasonId: number): Observable<unknown> {
     this.currentSeasonIdSignal.set(seasonId);
-    this.storeSeasonId(seasonId);
+    this.contextService.setSelectedSeason({ id: seasonId });
 
     this.logger.logInfo('AuthV5Service: Season selected', { seasonId });
     this.router.navigate(['/dashboard']);
@@ -454,15 +456,15 @@ export class AuthV5Service {
     if (data.school) {
       console.log('🏫 Setting current school:', data.school);
       this.currentSchoolIdSignal.set(data.school.id);
-      this.storeSchoolId(data.school.id);
+      this.contextService.setSelectedSchool(data.school);
     } else {
       console.log('❌ No school data in response');
     }
-    
+
     if (data.season) {
       console.log('🗓️ Setting current season:', data.season);
       this.currentSeasonIdSignal.set(data.season.id);
-      this.storeSeasonId(data.season.id);
+      this.contextService.setSelectedSeason(data.season);
     } else {
       console.log('❌ No season data in response');
     }
@@ -514,15 +516,15 @@ export class AuthV5Service {
       const token = localStorage.getItem('boukii_auth_token');
       const user = localStorage.getItem('boukii_user');
       const schools = localStorage.getItem('boukii_schools');
-      const schoolId = localStorage.getItem('boukii_school_id');
-      const seasonId = localStorage.getItem('boukii_season_id');
       const permissions = localStorage.getItem('boukii_permissions');
+      const schoolId = this.contextService.getSelectedSchoolId();
+      const seasonId = this.contextService.getSelectedSeasonId();
 
       if (token) this.tokenSignal.set(token);
       if (user) this.userSignal.set(JSON.parse(user));
       if (schools) this.schoolsSignal.set(JSON.parse(schools));
-      if (schoolId) this.currentSchoolIdSignal.set(parseInt(schoolId));
-      if (seasonId) this.currentSeasonIdSignal.set(parseInt(seasonId));
+      if (schoolId !== null) this.currentSchoolIdSignal.set(schoolId);
+      if (seasonId !== null) this.currentSeasonIdSignal.set(seasonId);
       if (permissions) this.permissionsSignal.set(JSON.parse(permissions));
     } catch (error) {
       this.logger.logError('AuthV5Service: Failed to load stored data', error as any, {});
@@ -554,30 +556,13 @@ export class AuthV5Service {
     }
   }
 
-  private storeSchoolId(schoolId: number): void {
-    try {
-      localStorage.setItem('boukii_school_id', schoolId.toString());
-    } catch (error) {
-      this.logger.logError('AuthV5Service: Failed to store school ID', error as any, {});
-    }
-  }
-
-  private storeSeasonId(seasonId: number): void {
-    try {
-      localStorage.setItem('boukii_season_id', seasonId.toString());
-    } catch (error) {
-      this.logger.logError('AuthV5Service: Failed to store season ID', error as any, {});
-    }
-  }
-
   private clearStoredData(): void {
     try {
       localStorage.removeItem('boukii_auth_token');
       localStorage.removeItem('boukii_user');
       localStorage.removeItem('boukii_schools');
-      localStorage.removeItem('boukii_school_id');
-      localStorage.removeItem('boukii_season_id');
       localStorage.removeItem('boukii_permissions');
+      this.contextService.clearContext();
     } catch (error) {
       this.logger.logError('AuthV5Service: Failed to clear stored data', error as any, {});
     }
