@@ -1,12 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V5\SchoolController;
 
-Route::middleware('auth:sanctum')
-    ->prefix('schools')
+Route::prefix('schools')
     ->name('v5.schools.')
     ->group(function () {
-        Route::get('/', function () {
-            return response()->json([]);
-        })->name('index');
+        Route::get('/', [SchoolController::class, 'index'])->name('index');
     });
