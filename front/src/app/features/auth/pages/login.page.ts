@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthV5Service } from '../../../core/services/auth-v5.service';
 import { TranslationService } from '../../../core/services/translation.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthErrorHandlerService } from '../../../core/services/auth-error-handler.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { AuthShellComponent } from '@features/auth/ui/auth-shell/auth-shell.component';
 import { TextFieldComponent } from '../../../ui/atoms/text-field.component';
@@ -113,6 +114,7 @@ export class LoginPage implements OnInit {
   private readonly authV5 = inject(AuthV5Service);
   private readonly translationService = inject(TranslationService);
   private readonly toast = inject(ToastService);
+  private readonly errorHandler = inject(AuthErrorHandlerService);
 
   t = (k: string) => this.translationService.instant(k);
   pageTitleKey = 'auth.login.title';
@@ -220,7 +222,9 @@ export class LoginPage implements OnInit {
         }
       },
       error: (error) => {
-        this.handleLoginError(error?.message || 'Login failed');
+        const authError = this.errorHandler.handleLoginError(error);
+        this.isSubmitting.set(false);
+        this.statusMessage.set(authError.message);
       }
     });
   }
@@ -251,7 +255,9 @@ export class LoginPage implements OnInit {
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
-        this.handleLoginError(`School selection failed: ${error.message}`);
+        const authError = this.errorHandler.handleSchoolSelectionError(error);
+        this.isSubmitting.set(false);
+        this.statusMessage.set(authError.message);
       }
     });
   }

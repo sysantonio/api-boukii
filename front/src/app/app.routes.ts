@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authV5Guard } from './core/guards/auth-v5.guard';
-import { schoolSelectionGuard } from './core/guards/school-selection.guard';
+import { schoolSelectionGuard, requireCompleteContextGuard } from './core/guards/school-selection.guard';
+import { seasonSelectionGuard, requireCompleteAuthGuard } from './core/guards/season-selection.guard';
 
 export const routes: Routes = [
   {
@@ -8,7 +9,8 @@ export const routes: Routes = [
     redirectTo: '/dashboard',
     pathMatch: 'full',
   },
-  // All auth routes use AuthShellComponent directly (no auth-layout wrapper)
+  
+  // Auth routes - standalone without shell
   {
     path: 'auth/login',
     loadComponent: () => import('./features/auth/pages/login.page').then(m => m.LoginPage)
@@ -21,28 +23,8 @@ export const routes: Routes = [
     path: 'auth/forgot-password',
     loadComponent: () => import('./features/auth/pages/forgot-password.page').then(m => m.ForgotPasswordPage)
   },
-  {
-    path: 'dashboard',
-    loadComponent: () =>
-      import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent),
-    canActivate: [authV5Guard]
-  },
-  {
-    path: 'clients',
-    canActivate: [authV5Guard],
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./features/clients/clients-list.page').then(c => c.ClientsListPageComponent)
-      },
-      {
-        path: ':id',
-        loadComponent: () =>
-          import('./features/clients/client-detail.page').then(c => c.ClientDetailPageComponent)
-      }
-    ]
-  },
+  
+  // Auth context selection routes - standalone without shell
   {
     path: 'select-school',
     loadComponent: () =>
@@ -52,24 +34,56 @@ export const routes: Routes = [
   {
     path: 'select-season',
     loadComponent: () => 
-      import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent), // TODO: Replace with actual SeasonSelectionPage
-    canActivate: [authV5Guard]
+      import('./features/seasons/select-season.page').then(c => c.SelectSeasonPageComponent),
+    canActivate: [authV5Guard, seasonSelectionGuard]
   },
+  
+  // Admin routes - wrapped in AppShell
   {
-    path: 'admin/users',
-    canActivate: [authV5Guard, schoolSelectionGuard],
-    loadChildren: () => import('./features/admin/users/users.routes').then(m => m.USERS_ROUTES)
+    path: '',
+    loadComponent: () => import('./ui/app-shell/app-shell.component').then(c => c.AppShellComponent),
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page.component').then(c => c.DashboardPageComponent),
+        canActivate: [requireCompleteAuthGuard]
+      },
+      {
+        path: 'clients',
+        canActivate: [requireCompleteAuthGuard],
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/clients/clients-list.page').then(c => c.ClientsListPageComponent)
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./features/clients/client-detail.page').then(c => c.ClientDetailPageComponent)
+          }
+        ]
+      },
+      {
+        path: 'admin/users',
+        canActivate: [requireCompleteAuthGuard],
+        loadChildren: () => import('./features/admin/users/users.routes').then(m => m.USERS_ROUTES)
+      },
+      {
+        path: 'admin/roles',
+        loadComponent: () => import('./features/admin/roles/roles-list.page').then(m => m.RolesListPageComponent),
+        canActivate: [requireCompleteAuthGuard]
+      },
+      {
+        path: 'admin/permissions',
+        canActivate: [requireCompleteAuthGuard],
+        loadChildren: () => import('./features/admin/permissions/permissions.routes').then(m => m.permissionsRoutes)
+      }
+    ]
   },
-  {
-    path: 'admin/roles',
-    loadComponent: () => import('./features/admin/roles/roles-list.page').then(m => m.RolesListPageComponent),
-    canActivate: [authV5Guard, schoolSelectionGuard]
-  },
-  {
-    path: 'admin/permissions',
-    canActivate: [authV5Guard, schoolSelectionGuard],
-    loadChildren: () => import('./features/admin/permissions/permissions.routes').then(m => m.permissionsRoutes)
-  },
+  
+  // Utility routes - standalone
   {
     path: 'unauthorized',
     loadComponent: () =>

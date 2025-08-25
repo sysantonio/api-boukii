@@ -13,10 +13,16 @@ export interface School {
 export interface Season {
   id: number;
   name: string;
-  startDate: string;
-  endDate: string;
-  active: boolean;
-  schoolId: number;
+  slug: string;
+  startDate?: string;
+  endDate?: string;
+  start_date?: string;
+  end_date?: string;
+  active?: boolean;
+  is_active?: boolean;
+  is_current?: boolean;
+  schoolId?: number;
+  school_id?: number;
 }
 
 export interface ContextData {
@@ -71,7 +77,7 @@ export class ContextService {
   async setSchool(schoolId: number): Promise<void> {
     try {
       // Call API to set school context
-      await this.apiHttp.post('/api/v5/context/school', { schoolId });
+      await this.apiHttp.post('/context/school', { schoolId });
 
       // Update local state
       this._schoolId.set(schoolId);
@@ -98,7 +104,7 @@ export class ContextService {
   async setSeason(seasonId: number): Promise<void> {
     try {
       // Call API to set season context
-      await this.apiHttp.post('/api/v5/context/season', { seasonId });
+      await this.apiHttp.post('/context/season', { seasonId });
 
       // Update local state
       this._seasonId.set(seasonId);
@@ -134,7 +140,7 @@ export class ContextService {
    */
   private async loadSchoolDetails(schoolId: number): Promise<void> {
     try {
-      const school = await this.apiHttp.get<School>(`/api/v5/schools/${schoolId}`);
+      const school = await this.apiHttp.get<School>(`/schools/${schoolId}`);
       this._school.set(school);
     } catch (error) {
       console.error('Failed to load school details:', error);
@@ -146,7 +152,7 @@ export class ContextService {
    */
   private async loadSeasonDetails(seasonId: number): Promise<void> {
     try {
-      const season = await this.apiHttp.get<Season>(`/api/v5/seasons/${seasonId}`);
+      const season = await this.apiHttp.get<Season>(`/seasons/${seasonId}`);
       this._season.set(season);
     } catch (error) {
       console.error('Failed to load season details:', error);
@@ -186,6 +192,56 @@ export class ContextService {
   }
 
   /**
+   * Get selected school ID
+   */
+  getSelectedSchoolId(): number | null {
+    return this._schoolId();
+  }
+
+  /**
+   * Get selected season ID
+   */
+  getSelectedSeasonId(): number | null {
+    return this._seasonId();
+  }
+
+  /**
+   * Set selected season (simpler interface for Select Season page)
+   */
+  setSelectedSeason(season: Partial<Season>): void {
+    if (season.id) {
+      this._seasonId.set(season.id);
+      this._season.set(season as Season);
+      localStorage.setItem('context_seasonId', season.id.toString());
+    }
+  }
+
+  /**
+   * Set selected school (simpler interface for Select School page)
+   */
+  setSelectedSchool(school: Partial<School>): void {
+    if (school.id) {
+      this._schoolId.set(school.id);
+      this._school.set(school as School);
+      localStorage.setItem('context_schoolId', school.id.toString());
+    }
+  }
+
+  /**
+   * Check if user needs to select school
+   */
+  needsSchoolSelection(): boolean {
+    return this._schoolId() === null;
+  }
+
+  /**
+   * Check if user needs to select season
+   */
+  needsSeasonSelection(): boolean {
+    return this._schoolId() !== null && this._seasonId() === null;
+  }
+
+  /**
    * Validate current context with server
    */
   async validateContext(): Promise<boolean> {
@@ -194,7 +250,7 @@ export class ContextService {
         return false;
       }
 
-      const response = await this.apiHttp.get<{ valid: boolean }>('/api/v5/context/validate');
+      const response = await this.apiHttp.get<{ valid: boolean }>('/context/validate');
 
       if (!response.valid) {
         this.clearContext();

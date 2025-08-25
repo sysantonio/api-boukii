@@ -39,6 +39,34 @@
       "next": "Nächste"
     }
   },
+  "seasons": {
+    "selectSeason": {
+      "title": "Saison auswählen",
+      "subtitle": "Wählen Sie die Saison aus, mit der Sie arbeiten möchten",
+      "breadcrumb": "Konto / Saison auswählen",
+      "searchPlaceholder": "Saisons suchen...",
+      "useThisSeason": "Diese Saison verwenden",
+      "noSeasons": "Keine Saisons gefunden",
+      "noSeasonsMessage": "Keine Saisons für diese Schule verfügbar.",
+      "loadingSeasons": "Saisons laden...",
+      "errorLoading": "Fehler beim Laden der Saisons",
+      "selectionFailed": "Fehler bei der Saisonauswahl",
+      "success": "Saison ausgewählt: {{seasonName}}",
+      "noSchoolSelected": "Keine Schule ausgewählt",
+      "noPermission": "Sie haben keine Berechtigung für den Zugriff auf Saisons",
+      "notFound": "Keine Saisons für diese Schule gefunden",
+      "inactiveSeason": "Sie können keine inaktive Saison auswählen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "current": "Aktuell"
+    },
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "courses": "Kurse",
+    "bookings": "Buchungen"
+  },
   "auth": {
     "login": {
       "title": "Anmelden",
@@ -88,6 +116,29 @@
           "title": "Professionalisierung",
           "description": "Erweiterte Werkzeuge für moderne und effiziente Sportschulen."
         }
+      }
+    },
+    "errors": {
+      "requiredEmail": "E-Mail ist erforderlich",
+      "invalidEmail": "Bitte geben Sie eine gültige E-Mail ein",
+      "requiredPassword": "Passwort ist erforderlich",
+      "passwordsNoMatch": "Passwörter stimmen nicht überein",
+      "networkError": "Verbindungsfehler. Überprüfen Sie Ihre Internetverbindung.",
+      "invalidCredentials": "Ungültige E-Mail oder Passwort",
+      "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "invalidToken": "Ungültiges Sitzungstoken",
+      "unauthorized": "Sie sind nicht berechtigt, darauf zuzugreifen",
+      "forbidden": "Sie haben keine Berechtigung für diese Aktion",
+      "validationFailed": "Die bereitgestellten Daten sind ungültig",
+      "invalidRequest": "Die Anfrage ist ungültig",
+      "rateLimited": "Zu viele Versuche. Bitte warten Sie einige Minuten.",
+      "serverError": "Serverfehler. Versuchen Sie es später erneut.",
+      "unknownError": "Ein unerwarteter Fehler ist aufgetreten",
+      "actions": {
+        "checkConnection": "Überprüfen Sie Ihre Internetverbindung",
+        "checkInput": "Überprüfen Sie die eingegebenen Daten",
+        "tryLogin": "Versuchen Sie sich erneut anzumelden",
+        "tryLater": "Versuchen Sie es später erneut"
       }
     },
     "forgotPassword": {

@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { AppShellComponent } from '@ui/app-shell/app-shell.component';
+import { RouterOutlet } from '@angular/router';
 import { AuthStore } from '@core/stores/auth.store';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [AppShellComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -19,28 +19,28 @@ export class UsersService {
    */
   getUsers(filters?: UsersFilters): Observable<UsersListResponse> {
     const params = this.buildParams(filters);
-    return from(this.api.get<UsersListResponse>('/api/v5/users', params));
+    return from(this.api.get<UsersListResponse>('/users', params));
   }
 
   /**
    * Get user details by ID
    */
   getUserById(id: number): Observable<UserDetail> {
-    return from(this.api.get<UserDetail>(`/api/v5/users/${id}`));
+    return from(this.api.get<UserDetail>(`/users/${id}`));
   }
 
   /**
    * Update user roles
    */
   updateUserRoles(userId: number, roleIds: number[]): Observable<void> {
-    return from(this.api.put<void>(`/api/v5/users/${userId}/roles`, { roleIds }));
+    return from(this.api.put<void>(`/users/${userId}/roles`, { roleIds }));
   }
 
   /**
    * Update user status
    */
   updateUserStatus(userId: number, status: 'active' | 'inactive'): Observable<UserDetail> {
-    return from(this.api.patch<UserDetail>(`/api/v5/users/${userId}`, { status }));
+    return from(this.api.patch<UserDetail>(`/users/${userId}`, { status }));
   }
 
   /**

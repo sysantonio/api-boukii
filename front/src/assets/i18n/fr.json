@@ -39,6 +39,34 @@
       "next": "Suivant"
     }
   },
+  "seasons": {
+    "selectSeason": {
+      "title": "Sélectionner la Saison",
+      "subtitle": "Choisissez la saison avec laquelle vous souhaitez travailler",
+      "breadcrumb": "Compte / Sélectionner la saison",
+      "searchPlaceholder": "Rechercher des saisons...",
+      "useThisSeason": "Utiliser cette saison",
+      "noSeasons": "Aucune saison trouvée",
+      "noSeasonsMessage": "Aucune saison disponible pour cette école.",
+      "loadingSeasons": "Chargement des saisons...",
+      "errorLoading": "Erreur lors du chargement des saisons",
+      "selectionFailed": "Erreur lors de la sélection de la saison",
+      "success": "Saison sélectionnée : {{seasonName}}",
+      "noSchoolSelected": "Aucune école sélectionnée",
+      "noPermission": "Vous n'avez pas l'autorisation d'accéder aux saisons",
+      "notFound": "Aucune saison trouvée pour cette école",
+      "inactiveSeason": "Vous ne pouvez pas sélectionner une saison inactive"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "current": "Actuelle"
+    },
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "courses": "Cours",
+    "bookings": "Réservations"
+  },
   "auth": {
     "brandLine": "All-in-one sports management (FR)",
     "features": {
@@ -70,7 +98,24 @@
       "requiredEmail": "L'email est requis",
       "invalidEmail": "Veuillez entrer un email valide",
       "requiredPassword": "Le mot de passe est requis",
-      "passwordsNoMatch": "Les mots de passe ne correspondent pas"
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas",
+      "networkError": "Erreur de connexion. Vérifiez votre connexion internet.",
+      "invalidCredentials": "Email ou mot de passe incorrect",
+      "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+      "invalidToken": "Token de session invalide",
+      "unauthorized": "Vous n'êtes pas autorisé à accéder à ceci",
+      "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+      "validationFailed": "Les données fournies ne sont pas valides",
+      "invalidRequest": "La demande n'est pas valide",
+      "rateLimited": "Trop de tentatives. Veuillez attendre quelques minutes.",
+      "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
+      "unknownError": "Une erreur inattendue s'est produite",
+      "actions": {
+        "checkConnection": "Vérifiez votre connexion internet",
+        "checkInput": "Vérifiez les données saisies",
+        "tryLogin": "Essayez de vous reconnecter",
+        "tryLater": "Réessayez plus tard"
+      }
     },
     "hero": {
       "welcomeBack": "Bon retour",

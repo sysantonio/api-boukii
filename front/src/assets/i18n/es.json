@@ -46,6 +46,34 @@
       "next": "Siguiente"
     }
   },
+  "seasons": {
+    "selectSeason": {
+      "title": "Seleccionar Temporada",
+      "subtitle": "Elige la temporada con la que deseas trabajar",
+      "breadcrumb": "Cuenta / Seleccionar temporada",
+      "searchPlaceholder": "Buscar temporadas...",
+      "useThisSeason": "Usar esta temporada",
+      "noSeasons": "No se encontraron temporadas",
+      "noSeasonsMessage": "No hay temporadas disponibles para esta escuela.",
+      "loadingSeasons": "Cargando temporadas...",
+      "errorLoading": "Error al cargar las temporadas",
+      "selectionFailed": "Error al seleccionar la temporada",
+      "success": "Temporada seleccionada: {{seasonName}}",
+      "noSchoolSelected": "No se ha seleccionado ninguna escuela",
+      "noPermission": "No tienes permisos para acceder a las temporadas",
+      "notFound": "No se encontraron temporadas para esta escuela",
+      "inactiveSeason": "No puedes seleccionar una temporada inactiva"
+    },
+    "status": {
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "current": "Actual"
+    },
+    "startDate": "Fecha inicio",
+    "endDate": "Fecha fin",
+    "courses": "Cursos",
+    "bookings": "Reservas"
+  },
   "auth": {
     "brandLine": "Gestión deportiva integral",
     "features": {
@@ -137,7 +165,24 @@
       "requiredEmail": "El email es requerido",
       "invalidEmail": "Introduce un email válido",
       "requiredPassword": "La contraseña es requerida",
-      "passwordsNoMatch": "Las contraseñas no coinciden"
+      "passwordsNoMatch": "Las contraseñas no coinciden",
+      "networkError": "Error de conexión. Verifica tu conexión a internet.",
+      "invalidCredentials": "Email o contraseña incorrectos",
+      "sessionExpired": "Tu sesión ha expirado. Inicia sesión de nuevo.",
+      "invalidToken": "Token de sesión inválido",
+      "unauthorized": "No estás autorizado para acceder",
+      "forbidden": "No tienes permisos para realizar esta acción",
+      "validationFailed": "Los datos proporcionados no son válidos",
+      "invalidRequest": "La solicitud no es válida",
+      "rateLimited": "Demasiados intentos. Espera unos minutos.",
+      "serverError": "Error del servidor. Intenta más tarde.",
+      "unknownError": "Ha ocurrido un error inesperado",
+      "actions": {
+        "checkConnection": "Verifica tu conexión a internet",
+        "checkInput": "Revisa los datos ingresados",
+        "tryLogin": "Intenta iniciar sesión nuevamente",
+        "tryLater": "Intenta más tarde"
+      }
     },
     "hero": {
       "welcomeBack": "Bienvenido de vuelta",

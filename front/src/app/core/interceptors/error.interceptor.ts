@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { LoggingService } from '../services/logging.service';
-import { AuthStore } from '../stores/auth.store';
+import { AuthV5Service } from '../services/auth-v5.service';
 import {
   ProblemDetails,
   HttpError,
@@ -24,7 +24,7 @@ import {
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const logger = inject(LoggingService);
-  const auth = inject(AuthStore);
+  const auth = inject(AuthV5Service);
   const router = inject(Router);
 
   return next(req).pipe(
@@ -213,7 +213,7 @@ function getUserFriendlyMessage(
  */
 function handleSpecificErrors(
   error: HttpError,
-  auth: AuthStore,
+  auth: AuthV5Service,
   router: Router,
   logger: LoggingService
 ): void {
@@ -222,7 +222,7 @@ function handleSpecificErrors(
       // Only sign out if user was previously authenticated
       if (auth.isAuthenticated()) {
         logger.logWarning('User session expired, signing out');
-        auth.signOut();
+        auth.logout();
         router.navigate(['/auth/login'], {
           queryParams: {
             returnUrl: router.url !== '/auth/login' ? router.url : null,

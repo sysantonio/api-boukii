@@ -55,14 +55,14 @@ export class SchoolService {
       }
     });
 
-    return from(this.apiHttp.get<SchoolsResponse>('/api/v5/schools', queryParams));
+    return from(this.apiHttp.get<SchoolsResponse>('/schools', queryParams));
   }
 
   /**
    * Get a specific school by ID
    */
   getSchoolById(id: number): Observable<School> {
-    return from(this.apiHttp.get<School>(`/api/v5/schools/${id}`));
+    return from(this.apiHttp.get<School>(`/schools/${id}`));
   }
 
   /**
@@ -70,7 +70,7 @@ export class SchoolService {
    * Useful for simple lists and school selection
    */
   getAllMySchools(): Observable<School[]> {
-    return from(this.apiHttp.get<School[]>('/api/v5/schools/all'));
+    return from(this.apiHttp.get<School[]>('/schools/all'));
   }
 
   /**
@@ -83,6 +83,6 @@ export class SchoolService {
       active: true
     };
 
-    return from(this.apiHttp.get<School[]>('/api/v5/schools/search', queryParams));
+    return from(this.apiHttp.get<School[]>('/schools/search', queryParams));
   }
 }

@@ -58,7 +58,7 @@ describe('SchoolService', () => {
       service.getMySchools().subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -75,7 +75,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=2&perPage=10&search=test&active=false&orderBy=createdAt&orderDirection=desc'
+        '/schools?page=2&perPage=10&search=test&active=false&orderBy=createdAt&orderDirection=desc'
       );
     });
 
@@ -88,7 +88,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -101,7 +101,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=1&perPage=5&search=swimming&active=true&orderBy=name&orderDirection=asc'
+        '/schools?page=1&perPage=5&search=swimming&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -121,7 +121,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
   });
@@ -134,7 +134,7 @@ describe('SchoolService', () => {
     it('should call API with correct school ID', () => {
       service.getSchoolById(123).subscribe();
 
-      expect(mockApiHttp.get).toHaveBeenCalledWith('/api/v5/schools/123');
+      expect(mockApiHttp.get).toHaveBeenCalledWith('/schools/123');
     });
 
     it('should return school data', (done) => {
@@ -153,7 +153,7 @@ describe('SchoolService', () => {
     it('should call API without parameters', () => {
       service.getAllMySchools().subscribe();
 
-      expect(mockApiHttp.get).toHaveBeenCalledWith('/api/v5/schools/all');
+      expect(mockApiHttp.get).toHaveBeenCalledWith('/schools/all');
     });
 
     it('should return schools array', (done) => {
@@ -173,7 +173,7 @@ describe('SchoolService', () => {
       service.searchSchools('swimming').subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools/search?search=swimming&perPage=10&active=true'
+        '/schools/search?search=swimming&perPage=10&active=true'
       );
     });
 
@@ -181,7 +181,7 @@ describe('SchoolService', () => {
       service.searchSchools('tennis', 5).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools/search?search=tennis&perPage=5&active=true'
+        '/schools/search?search=tennis&perPage=5&active=true'
       );
     });
 
@@ -196,7 +196,7 @@ describe('SchoolService', () => {
       service.searchSchools('').subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools/search?search=&perPage=10&active=true'
+        '/schools/search?search=&perPage=10&active=true'
       );
     });
   });
@@ -261,7 +261,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/api/v5/schools?page=1&perPage=20&search=test%20%26%20school&active=true&orderBy=name&orderDirection=asc'
+        '/schools?page=1&perPage=20&search=test%20%26%20school&active=true&orderBy=name&orderDirection=asc'
       );
     });
 

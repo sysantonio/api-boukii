@@ -16,12 +16,42 @@ export interface ResetPasswordRequest {
   email: string;
 }
 
+export interface Role {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  permissions: Permission[];
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  resource: string;
+  action: string;
+}
+
+export interface UserRole {
+  user_id: number;
+  role_id: number;
+  school_id: number;
+  granted_at: string;
+  granted_by: number;
+  role: Role;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
+  email_verified_at?: string;
+  is_active: boolean;
+  last_login_at?: string;
   created_at: string;
   updated_at: string;
+  roles?: UserRole[];
 }
 
 export interface School {
@@ -77,10 +107,20 @@ export interface MeResponse {
   };
 }
 
+export interface SchoolPermission {
+  school_id: number;
+  user_roles: UserRole[];
+  effective_permissions: string[];
+  can_manage: boolean;
+  can_administrate: boolean;
+}
+
 export interface AuthContext {
   school_id: number;
   season_id: number;
   permissions: string[];
+  user_school_permissions: SchoolPermission;
+  effective_roles: Role[];
 }
 
 export interface ApiResponse<T = unknown> {

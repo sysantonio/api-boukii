@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, from } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, switchMap } from 'rxjs/operators';
 
 import { ApiService, ApiResponse } from './api.service';
 import { LoggingService } from './logging.service';
@@ -94,19 +94,62 @@ export class AuthV5Service {
   }
 
   /**
-   * Step 3: Select season and complete login
+   * Get seasons for selected school
    */
-  public selectSeason(seasonId: number, schoolId: number, tempToken: string): Observable<ApiResponse<any>> {
+  public getSeasons(schoolId: number): Observable<any[]> {
+    this.logger.logInfo('AuthV5Service: Getting seasons for school', { schoolId });
+
+    return from(this.apiService.get<ApiResponse<any[]>>(`/seasons?school_id=${schoolId}`)).pipe(
+      tap(response => {
+        this.logger.logInfo('AuthV5Service: Seasons loaded successfully', { 
+          schoolId,
+          seasonsCount: response.data?.length || 0
+        });
+      }),
+      catchError(error => {
+        console.error('AuthV5Service: Failed to load seasons', { schoolId, error });
+        throw error;
+      })
+    ).pipe(
+      // Extract data from API response
+      tap((response: ApiResponse<any[]>) => {
+        if (response.success && response.data) {
+          return response.data;
+        }
+        throw new Error('Invalid seasons response');
+      }),
+      // Return just the data array
+      switchMap((response: ApiResponse<any[]>) => of(response.data || []))
+    );
+  }
+
+  /**
+   * Step 3: Select season and complete login (updated signature)
+   */
+  public selectSeason(seasonId: number): Observable<ApiResponse<any>> {
+    const schoolId = this.currentSchoolIdSignal();
+    
+    if (!schoolId) {
+      throw new Error('No school selected');
+    }
+
     this.logger.logInfo('AuthV5Service: Selecting season', { seasonId, schoolId });
 
-    return from(this.apiService.postWithHeaders<ApiResponse<any>>('/auth/select-season', 
-      { season_id: seasonId, school_id: schoolId },
-      { 'Authorization': `Bearer ${tempToken}` }
+    return from(this.apiService.post<ApiResponse<any>>('/auth/select-season', 
+      { season_id: seasonId, school_id: schoolId }
     )).pipe(
       tap(response => {
         this.logger.logInfo('AuthV5Service: Season selection successful', { seasonId });
         if (response.success && response.data) {
-          this.handleLoginSuccess(response.data);
+          // Update current season
+          this.currentSeasonIdSignal.set(seasonId);
+          this.storeSeasonId(seasonId);
+          
+          // Update any additional context data
+          if (response.data.permissions) {
+            this.permissionsSignal.set(response.data.permissions);
+            localStorage.setItem('boukii_permissions', JSON.stringify(response.data.permissions));
+          }
         }
       }),
       catchError(error => {
@@ -246,12 +289,27 @@ export class AuthV5Service {
     const schoolId = this.currentSchoolIdSignal();
     const seasonId = this.currentSeasonIdSignal();
     const permissions = this.permissionsSignal();
+    const user = this.userSignal();
 
-    if (schoolId && seasonId) {
+    if (schoolId && seasonId && user) {
+      // Get school-specific roles and permissions
+      const schoolRoles = user.roles?.filter(userRole => userRole.school_id === schoolId) || [];
+      const effectiveRoles = schoolRoles.map(userRole => userRole.role);
+      
+      const schoolPermission = {
+        school_id: schoolId,
+        user_roles: schoolRoles,
+        effective_permissions: permissions,
+        can_manage: this.hasAnyRole(['admin', 'manager', 'owner']) || this.hasPermission('school.manage'),
+        can_administrate: this.hasAnyRole(['admin', 'owner']) || this.hasPermission('school.administrate')
+      };
+
       return {
         school_id: schoolId,
         season_id: seasonId,
-        permissions
+        permissions,
+        user_school_permissions: schoolPermission,
+        effective_roles: effectiveRoles
       };
     }
 
@@ -278,6 +336,28 @@ export class AuthV5Service {
   public hasAnyPermission(permissions: string[]): boolean {
     const userPermissions = this.permissionsSignal();
     return permissions.some(permission => userPermissions.includes(permission));
+  }
+
+  /**
+   * Check if user has any of the specified roles in current school
+   */
+  public hasAnyRole(rolesSlugs: string[]): boolean {
+    const user = this.userSignal();
+    const schoolId = this.currentSchoolIdSignal();
+    
+    if (!user?.roles || !schoolId) return false;
+    
+    const schoolRoles = user.roles.filter(userRole => userRole.school_id === schoolId);
+    return rolesSlugs.some(roleSlug => 
+      schoolRoles.some(userRole => userRole.role.slug === roleSlug)
+    );
+  }
+
+  /**
+   * Check if user has specific role in current school
+   */
+  public hasRole(roleSlug: string): boolean {
+    return this.hasAnyRole([roleSlug]);
   }
 
   /**

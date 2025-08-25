@@ -180,7 +180,7 @@ export class FeatureFlagService {
     this._loading.set(true);
     this._error.set(null);
     
-    return this.http.get<FeatureFlagResponse>(`/api/v5/feature-flags`, {
+    return this.http.get<FeatureFlagResponse>(`/feature-flags`, {
       params: { school_id: targetSchoolId.toString() }
     }).pipe(
       retry(3),

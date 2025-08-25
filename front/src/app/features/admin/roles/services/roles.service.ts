@@ -13,21 +13,21 @@ export class RolesService {
    * Get all available roles
    */
   getRoles(): Observable<RolesListResponse> {
-    return from(this.api.get<RolesListResponse>('/api/v5/roles'));
+    return from(this.api.get<RolesListResponse>('/roles'));
   }
 
   /**
    * Get role by ID
    */
   getRoleById(id: number): Observable<Role> {
-    return from(this.api.get<Role>(`/api/v5/roles/${id}`));
+    return from(this.api.get<Role>(`/roles/${id}`));
   }
 
   /**
    * Create new role (optional for v1)
    */
   createRole(role: Omit<Role, 'id'>): Observable<Role> {
-    return from(this.api.post<Role>('/api/v5/roles', role));
+    return from(this.api.post<Role>('/roles', role));
   }
 
   /**
@@ -41,6 +41,6 @@ export class RolesService {
    * Delete role (optional for v1)
    */
   deleteRole(id: number): Observable<void> {
-    return from(this.api.delete<void>(`/api/v5/roles/${id}`));
+    return from(this.api.delete<void>(`/roles/${id}`));
   }
 }

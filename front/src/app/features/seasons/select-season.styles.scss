@@ -1,0 +1,560 @@
+/* =============================================
+   SELECT SEASON PAGE STYLES
+   Using design tokens for theme support
+   ============================================= */
+
+.select-season-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: var(--space-6, 24px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* =============================================
+   BREADCRUMB
+   ============================================= */
+.breadcrumb {
+  margin-bottom: var(--space-4, 16px);
+}
+
+.breadcrumb-text {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* =============================================
+   PAGE HEADER
+   ============================================= */
+.page-header {
+  margin-bottom: var(--space-8, 32px);
+  text-align: center;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 var(--space-2, 8px) 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: var(--text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* =============================================
+   SEARCH SECTION
+   ============================================= */
+.search-section {
+  margin-bottom: var(--space-8, 32px);
+}
+
+.search-input-wrapper {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 48px 0 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-1);
+  font-size: 16px;
+  transition: border-color 150ms ease;
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 15%, transparent);
+  }
+}
+
+.search-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* =============================================
+   CONTENT STATES
+   ============================================= */
+.content-area {
+  min-height: 400px;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12, 48px);
+  text-align: center;
+}
+
+/* Loading State */
+.loading-spinner {
+  margin-bottom: var(--space-4, 16px);
+}
+
+.loading-text {
+  color: var(--text-2);
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Error State */
+.error-icon {
+  color: var(--red);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.error-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--space-2, 8px) 0;
+}
+
+.error-message {
+  color: var(--text-2);
+  margin: 0 0 var(--space-6, 24px) 0;
+}
+
+.retry-button {
+  background: var(--brand-500);
+  color: var(--active-contrast);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--brand-600);
+  }
+
+  &:disabled {
+    background: var(--muted);
+    cursor: not-allowed;
+  }
+}
+
+/* Empty State */
+.empty-icon {
+  color: var(--muted);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--space-2, 8px) 0;
+}
+
+.empty-message {
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* =============================================
+   SEASONS GRID
+   ============================================= */
+.seasons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-6, 24px);
+  margin-bottom: var(--space-8, 32px);
+}
+
+.season-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: var(--space-6, 24px);
+  transition: all 150ms ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elev-2);
+  }
+
+  &.selecting {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 1px var(--brand-500);
+  }
+
+  &.current {
+    background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--brand-500) 5%, var(--surface)) 100%);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--brand-500);
+    }
+  }
+
+  &.active:not(.current) {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--success-500);
+    }
+  }
+}
+
+.season-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-4, 16px);
+  gap: var(--space-3, 12px);
+}
+
+.season-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.season-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 var(--space-1, 4px) 0;
+  line-height: 1.3;
+}
+
+.season-slug {
+  font-size: 14px;
+  color: var(--muted);
+  font-family: var(--font-family-mono, monospace);
+}
+
+.season-badges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  align-items: flex-end;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  &.badge-current {
+    background: var(--brand-500);
+    color: var(--active-contrast);
+  }
+
+  &.badge-status {
+    &.badge-active {
+      background: color-mix(in srgb, var(--success-500) 15%, transparent);
+      color: var(--success-600);
+    }
+
+    &.badge-inactive {
+      background: color-mix(in srgb, var(--muted) 15%, transparent);
+      color: var(--muted);
+    }
+  }
+}
+
+.season-description {
+  margin-bottom: var(--space-4, 16px);
+  
+  p {
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+.season-details {
+  margin-bottom: var(--space-6, 24px);
+}
+
+.season-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-4, 16px);
+  padding: var(--space-3, 12px);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.date-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.date-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.season-stats {
+  display: flex;
+  gap: var(--space-4, 16px);
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.season-actions {
+  margin-top: auto;
+}
+
+.select-season-button {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+
+  &.primary {
+    background: var(--brand-500);
+    color: var(--active-contrast);
+
+    &:hover:not(:disabled) {
+      background: var(--brand-600);
+    }
+  }
+
+  &.secondary {
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  &:disabled {
+    background: var(--muted);
+    color: var(--text-2);
+    cursor: not-allowed;
+  }
+
+  .button-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hidden {
+    opacity: 0;
+  }
+}
+
+/* =============================================
+   SPINNERS
+   ============================================= */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  &.small {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &.large {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 768px) {
+  .select-season-page {
+    padding: var(--space-4, 16px);
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .seasons-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4, 16px);
+  }
+
+  .search-input-wrapper {
+    max-width: none;
+  }
+
+  .season-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2, 8px);
+  }
+
+  .season-badges {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .season-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .season-stats {
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 480px) {
+  .season-card {
+    padding: var(--space-4, 16px);
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .season-stats {
+    flex-direction: column;
+    gap: var(--space-2, 8px);
+  }
+}
+
+/* =============================================
+   ACCESSIBILITY & HIGH CONTRAST
+   ============================================= */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .season-card {
+    border-width: 2px;
+  }
+
+  .badge {
+    border: 1px solid currentColor;
+  }
+
+  .select-season-button:focus {
+    outline: 3px solid var(--text-1);
+    outline-offset: 2px;
+  }
+}
+
+/* Focus management */
+.season-card:focus-within {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .season-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid var(--text-3);
+  }
+
+  .select-season-button,
+  .search-section {
+    display: none;
+  }
+}

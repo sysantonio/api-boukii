@@ -190,7 +190,7 @@ export class ClientsV5Service {
       }
     });
 
-    return from(this.apiHttp.get<ClientsResponse>('/api/v5/clients', queryParams)).pipe(
+    return from(this.apiHttp.get<ClientsResponse>('/clients', queryParams)).pipe(
       catchError(err => {
         if (err?.status === 404) {
           return from(this.apiHttp.get<any>('/api/v4/clients', queryParams)).pipe(
@@ -220,7 +220,7 @@ export class ClientsV5Service {
    * GET /api/v5/clients/{id}
    */
   getClient(clientId: number): Observable<ClientDetail> {
-    return from(this.apiHttp.get<{ data: ClientDetail }>(`/api/v5/clients/${clientId}`)).pipe(
+    return from(this.apiHttp.get<{ data: ClientDetail }>(`/clients/${clientId}`)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error fetching client:', err);
@@ -234,7 +234,7 @@ export class ClientsV5Service {
    * PATCH /api/v5/clients/{id}
    */
   updateClient(clientId: number, data: UpdateClientRequest): Observable<ClientDetail> {
-    return from(this.apiHttp.patch<{ data: ClientDetail }>(`/api/v5/clients/${clientId}`, data)).pipe(
+    return from(this.apiHttp.patch<{ data: ClientDetail }>(`/clients/${clientId}`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error updating client:', err);
@@ -252,7 +252,7 @@ export class ClientsV5Service {
    * POST /api/v5/clients/{id}/utilizadores
    */
   createUtilizador(clientId: number, data: CreateUtilizadorRequest): Observable<ClientUtilizador> {
-    return from(this.apiHttp.post<{ data: ClientUtilizador }>(`/api/v5/clients/${clientId}/utilizadores`, data)).pipe(
+    return from(this.apiHttp.post<{ data: ClientUtilizador }>(`/clients/${clientId}/utilizadores`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error creating utilizador:', err);
@@ -266,7 +266,7 @@ export class ClientsV5Service {
    * PATCH /api/v5/clients/{clientId}/utilizadores/{utilizadorId}
    */
   updateUtilizador(clientId: number, utilizadorId: number, data: UpdateUtilizadorRequest): Observable<ClientUtilizador> {
-    return from(this.apiHttp.patch<{ data: ClientUtilizador }>(`/api/v5/clients/${clientId}/utilizadores/${utilizadorId}`, data)).pipe(
+    return from(this.apiHttp.patch<{ data: ClientUtilizador }>(`/clients/${clientId}/utilizadores/${utilizadorId}`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error updating utilizador:', err);
@@ -280,7 +280,7 @@ export class ClientsV5Service {
    * DELETE /api/v5/clients/{clientId}/utilizadores/{utilizadorId}
    */
   deleteUtilizador(clientId: number, utilizadorId: number): Observable<void> {
-    return from(this.apiHttp.delete(`/api/v5/clients/${clientId}/utilizadores/${utilizadorId}`)).pipe(
+    return from(this.apiHttp.delete(`/clients/${clientId}/utilizadores/${utilizadorId}`)).pipe(
       map(() => void 0),
       catchError(err => {
         console.error('Error deleting utilizador:', err);
@@ -298,7 +298,7 @@ export class ClientsV5Service {
    * GET /api/v5/school-sports
    */
   getSchoolSports(): Observable<SchoolSport[]> {
-    return from(this.apiHttp.get<{ data: SchoolSport[] }>('/api/v5/school-sports')).pipe(
+    return from(this.apiHttp.get<{ data: SchoolSport[] }>('/school-sports')).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error fetching school sports:', err);
@@ -312,7 +312,7 @@ export class ClientsV5Service {
    * GET /api/v5/degrees?sport_id={sportId}
    */
   getSportDegrees(sportId: number): Observable<SportDegree[]> {
-    return from(this.apiHttp.get<{ data: SportDegree[] }>('/api/v5/degrees', { sport_id: sportId })).pipe(
+    return from(this.apiHttp.get<{ data: SportDegree[] }>('/degrees', { sport_id: sportId })).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error fetching sport degrees:', err);
@@ -326,7 +326,7 @@ export class ClientsV5Service {
    * POST /api/v5/clients/{id}/sports
    */
   createClientSport(clientId: number, data: CreateClientSportRequest): Observable<ClientSport> {
-    return from(this.apiHttp.post<{ data: ClientSport }>(`/api/v5/clients/${clientId}/sports`, data)).pipe(
+    return from(this.apiHttp.post<{ data: ClientSport }>(`/clients/${clientId}/sports`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error creating client sport:', err);
@@ -340,7 +340,7 @@ export class ClientsV5Service {
    * PATCH /api/v5/clients/{clientId}/sports/{sportId}
    */
   updateClientSport(clientId: number, sportId: number, data: UpdateClientSportRequest): Observable<ClientSport> {
-    return from(this.apiHttp.patch<{ data: ClientSport }>(`/api/v5/clients/${clientId}/sports/${sportId}`, data)).pipe(
+    return from(this.apiHttp.patch<{ data: ClientSport }>(`/clients/${clientId}/sports/${sportId}`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error updating client sport:', err);
@@ -354,7 +354,7 @@ export class ClientsV5Service {
    * DELETE /api/v5/clients/{clientId}/sports/{sportId}
    */
   deleteClientSport(clientId: number, sportId: number): Observable<void> {
-    return from(this.apiHttp.delete(`/api/v5/clients/${clientId}/sports/${sportId}`)).pipe(
+    return from(this.apiHttp.delete(`/clients/${clientId}/sports/${sportId}`)).pipe(
       map(() => void 0),
       catchError(err => {
         console.error('Error deleting client sport:', err);
@@ -372,7 +372,7 @@ export class ClientsV5Service {
    * POST /api/v5/clients/{id}/observations
    */
   createObservation(clientId: number, data: CreateObservationRequest): Observable<ClientObservation> {
-    return from(this.apiHttp.post<{ data: ClientObservation }>(`/api/v5/clients/${clientId}/observations`, data)).pipe(
+    return from(this.apiHttp.post<{ data: ClientObservation }>(`/clients/${clientId}/observations`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error creating observation:', err);
@@ -386,7 +386,7 @@ export class ClientsV5Service {
    * PATCH /api/v5/clients/{clientId}/observations/{observationId}
    */
   updateObservation(clientId: number, observationId: number, data: UpdateObservationRequest): Observable<ClientObservation> {
-    return from(this.apiHttp.patch<{ data: ClientObservation }>(`/api/v5/clients/${clientId}/observations/${observationId}`, data)).pipe(
+    return from(this.apiHttp.patch<{ data: ClientObservation }>(`/clients/${clientId}/observations/${observationId}`, data)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error updating observation:', err);
@@ -400,7 +400,7 @@ export class ClientsV5Service {
    * DELETE /api/v5/clients/{clientId}/observations/{observationId}
    */
   deleteObservation(clientId: number, observationId: number): Observable<void> {
-    return from(this.apiHttp.delete(`/api/v5/clients/${clientId}/observations/${observationId}`)).pipe(
+    return from(this.apiHttp.delete(`/clients/${clientId}/observations/${observationId}`)).pipe(
       map(() => void 0),
       catchError(err => {
         console.error('Error deleting observation:', err);
@@ -418,7 +418,7 @@ export class ClientsV5Service {
    * GET /api/v5/clients/{id}/history
    */
   getClientHistory(clientId: number): Observable<BookingHistoryItem[]> {
-    return from(this.apiHttp.get<{ data: BookingHistoryItem[] }>(`/api/v5/clients/${clientId}/history`)).pipe(
+    return from(this.apiHttp.get<{ data: BookingHistoryItem[] }>(`/clients/${clientId}/history`)).pipe(
       map(response => response.data),
       catchError(err => {
         console.error('Error fetching client history:', err);
