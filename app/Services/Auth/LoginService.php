@@ -46,6 +46,7 @@ class LoginService
             switch ($user->type) {
                 case 'superadmin':
                 case '4':
+                    $user->load('schools');
                     $token = $user->createToken('Boukii', ['permissions:all'])->plainTextToken;
                     break;
                 case 'admin':
