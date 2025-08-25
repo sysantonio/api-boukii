@@ -11,6 +11,7 @@ use Tests\TestCase;
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
 class LoginTest extends TestCase
 {
@@ -19,6 +20,10 @@ class LoginTest extends TestCase
         parent::setUp();
 
         config(['activitylog.enabled' => false]);
+
+        Schema::disableForeignKeyConstraints();
+        Schema::dropAllTables();
+        Schema::enableForeignKeyConstraints();
 
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id();
@@ -112,6 +117,19 @@ class LoginTest extends TestCase
             'active' => 1,
         ]);
 
+        $school = School::create([
+            'name' => 'Admin School',
+            'description' => 'desc',
+            'slug' => 'admin-school',
+            'active' => 1,
+        ]);
+
+        DB::table('school_users')->insert([
+            'id' => 1,
+            'school_id' => $school->id,
+            'user_id' => $user->id,
+        ]);
+
         $response = $this->postJson('/api/admin/login', [
             'email' => 'admin@test.com',
             'password' => 'password',
@@ -119,12 +137,46 @@ class LoginTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.user.id', $user->id);
+        $response->assertJsonPath('data.user.schools.0.id', $school->id);
+    }
+
+    public function test_superadmin_login()
+    {
+        $user = User::create([
+            'id' => 2,
+            'email' => 'superadmin@test.com',
+            'password' => Hash::make('password'),
+            'type' => 'superadmin',
+            'active' => 1,
+        ]);
+
+        $school = School::create([
+            'name' => 'Super School',
+            'description' => 'desc',
+            'slug' => 'super-school',
+            'active' => 1,
+        ]);
+
+        DB::table('school_users')->insert([
+            'id' => 1,
+            'school_id' => $school->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->postJson('/api/admin/login', [
+            'email' => 'superadmin@test.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.user.id', $user->id);
+        $response->assertJsonPath('data.user.schools.0.id', $school->id);
     }
 
     public function test_teach_login()
     {
         $user = User::create([
-            'id' => 2,
+            'id' => 3,
             'email' => 'monitor@test.com',
             'password' => Hash::make('password'),
             'type' => 'monitor',
@@ -151,7 +203,7 @@ class LoginTest extends TestCase
         ]);
 
         $user = User::create([
-            'id' => 3,
+            'id' => 4,
             'email' => 'client@test.com',
             'password' => Hash::make('password'),
             'type' => 'client',
@@ -160,7 +212,7 @@ class LoginTest extends TestCase
 
         $client = Client::withoutEvents(function () use ($user) {
             return Client::create([
-                'id' => 4,
+                'id' => 5,
                 'first_name' => 'Name',
                 'last_name' => 'Surname',
                 'birth_date' => '1990-01-01',
@@ -170,7 +222,7 @@ class LoginTest extends TestCase
         });
 
         ClientsSchool::create([
-            'id' => 5,
+            'id' => 6,
             'client_id' => $client->id,
             'school_id' => $school->id,
         ]);
