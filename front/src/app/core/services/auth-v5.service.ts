@@ -78,15 +78,20 @@ export class AuthV5Service {
   public selectSchool(schoolId: number, tempToken: string): Observable<ApiResponse<any>> {
     this.logger.logInfo('AuthV5Service: Selecting school', { schoolId });
 
-    return from(this.apiService.postWithHeaders<ApiResponse<any>>('/auth/select-school', 
+    return from(this.apiService.postWithHeaders<ApiResponse<any>>('/auth/select-school',
       { school_id: schoolId },
       { 'Authorization': `Bearer ${tempToken}` }
     )).pipe(
       tap(response => {
-        this.logger.logInfo('AuthV5Service: School selection successful', { 
+        this.logger.logInfo('AuthV5Service: School selection successful', {
           schoolId,
           seasonsCount: response.data?.seasons?.length || 0
         });
+
+        if (response.success && response.data) {
+          // Handle login success to ensure user and token are stored
+          this.handleLoginSuccess(response.data);
+        }
       }),
       catchError(error => {
         console.error('AuthV5Service: School selection failed', { schoolId, error });
@@ -180,16 +185,6 @@ export class AuthV5Service {
         throw error;
       })
     );
-  }
-
-  /**
-   * Legacy login method (for backward compatibility)
-   */
-  public login(credentials: LoginRequest): Observable<ApiResponse<any>> {
-    this.logger.logInfo('AuthV5Service: Using legacy login, switching to V5 flow');
-    
-    // Start with checkUser for V5 flow
-    return this.checkUser(credentials);
   }
 
   /**
