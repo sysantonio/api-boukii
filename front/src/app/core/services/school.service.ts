@@ -55,7 +55,7 @@ export class SchoolService {
       }
     });
 
-    return from(this.apiHttp.get<SchoolsResponse>('/schools', queryParams));
+    return from(this.apiHttp.get<SchoolsResponse>('/me/schools', queryParams));
   }
 
   /**

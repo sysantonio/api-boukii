@@ -58,7 +58,7 @@ describe('SchoolService', () => {
       service.getMySchools().subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/me/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -75,7 +75,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=2&perPage=10&search=test&active=false&orderBy=createdAt&orderDirection=desc'
+        '/me/schools?page=2&perPage=10&search=test&active=false&orderBy=createdAt&orderDirection=desc'
       );
     });
 
@@ -88,7 +88,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/me/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -101,7 +101,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=1&perPage=5&search=swimming&active=true&orderBy=name&orderDirection=asc'
+        '/me/schools?page=1&perPage=5&search=swimming&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
@@ -121,7 +121,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
+        '/me/schools?page=1&perPage=20&active=true&orderBy=name&orderDirection=asc'
       );
     });
   });
@@ -261,7 +261,7 @@ describe('SchoolService', () => {
       service.getMySchools(params).subscribe();
 
       expect(mockApiHttp.get).toHaveBeenCalledWith(
-        '/schools?page=1&perPage=20&search=test%20%26%20school&active=true&orderBy=name&orderDirection=asc'
+        '/me/schools?page=1&perPage=20&search=test%20%26%20school&active=true&orderBy=name&orderDirection=asc'
       );
     });
 
