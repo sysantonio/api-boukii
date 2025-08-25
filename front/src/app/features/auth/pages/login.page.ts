@@ -239,18 +239,14 @@ export class LoginPage implements OnInit {
           return;
         }
 
-        // The API already returns everything we need: user, school, season, access_token
-        // No need for additional selectSeason call
+        // The API returns user, school, season and final access token
         console.log('✅ School selection successful:', response.data);
-        
-        // Process the login success using the auth service
-        this.authV5.handleLoginSuccess(response.data);
-        
+
         // Complete the login flow
         this.isSubmitting.set(false);
         this.statusMessage.set(this.translationService.get('auth.login.success'));
         this.toast.success(this.translationService.get('auth.login.success'));
-        
+
         // Navigate to dashboard
         this.router.navigate(['/dashboard']);
       },

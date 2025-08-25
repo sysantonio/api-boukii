@@ -66,8 +66,8 @@ describe.skip('AuthV5Service', () => {
     });
   });
 
-  describe('login', () => {
-    it('should call login with correct credentials', (done) => {
+  describe('checkUser', () => {
+    it('should call checkUser with correct credentials', (done) => {
       const credentials = { email: 'test@example.com', password: 'password123' };
       const mockResponse = {
         success: true,
@@ -77,19 +77,18 @@ describe.skip('AuthV5Service', () => {
           schools: []
         }
       };
-      
+
       // Mock the API service to return a promise
       mockApiService.post.mockReturnValue(Promise.resolve(mockResponse));
-      
-      service.login(credentials).subscribe(response => {
+
+      service.checkUser(credentials).subscribe(response => {
         expect(response.success).toBe(true);
         expect(response.data?.user.email).toBe(credentials.email);
-        expect(service.isAuthenticated()).toBe(true);
         done();
       });
     });
 
-    it('should log login attempt', (done) => {
+    it('should log checkUser attempt', (done) => {
       const credentials = { email: 'test@example.com', password: 'password123' };
       const mockResponse = {
         success: true,
@@ -99,13 +98,13 @@ describe.skip('AuthV5Service', () => {
           schools: []
         }
       };
-      
+
       // Mock the API service to return a promise
       mockApiService.post.mockReturnValue(Promise.resolve(mockResponse));
-      
-      service.login(credentials).subscribe(() => {
+
+      service.checkUser(credentials).subscribe(() => {
         expect(mockLoggingService.logInfo).toHaveBeenCalledWith(
-          'AuthV5Service: Attempting login',
+          'AuthV5Service: Checking user credentials',
           { email: credentials.email }
         );
         done();
