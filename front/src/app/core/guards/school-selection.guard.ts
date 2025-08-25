@@ -30,7 +30,7 @@ export const schoolSelectionGuard: CanActivateFn = () => {
     return false;
   }
 
-  // Get user's schools and apply logic
+  // Get user's schools using /me/schools?all=true and apply logic
   return schoolService.getAllMySchools().pipe(
     switchMap(async (schools) => {
       console.log('🏫 SchoolSelectionGuard: Found schools:', schools.length);

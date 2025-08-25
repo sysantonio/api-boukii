@@ -22,6 +22,12 @@ paths:
             minimum: 1
             default: 15
           description: Items per page
+        - in: query
+          name: all
+          schema:
+            type: boolean
+            default: false
+          description: Return all schools without pagination
       responses:
         '200':
           description: Paginated list of schools
