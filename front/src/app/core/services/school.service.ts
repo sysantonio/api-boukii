@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { School } from './context.service';
 
@@ -70,7 +70,9 @@ export class SchoolService {
    * Useful for simple lists and school selection
    */
   getAllMySchools(): Observable<School[]> {
-    return from(this.apiHttp.get<School[]>('/schools/all'));
+    return from(
+      this.apiHttp.get<SchoolsResponse>('/me/schools', { all: true })
+    ).pipe(map(response => response.data));
   }
 
   /**

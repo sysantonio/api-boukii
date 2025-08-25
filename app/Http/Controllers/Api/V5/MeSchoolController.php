@@ -17,7 +17,14 @@ class MeSchoolController extends Controller
     {
         $this->authorize('viewAny', School::class);
 
-        $schools = $request->user()->schools()->paginate();
+        if ($request->boolean('all')) {
+            $schools = $request->user()->schools()->get();
+
+            return SchoolResource::collection($schools)->response();
+        }
+
+        $perPage = $request->integer('perPage', 15);
+        $schools = $request->user()->schools()->paginate($perPage);
 
         return SchoolResource::collection($schools)->response();
     }

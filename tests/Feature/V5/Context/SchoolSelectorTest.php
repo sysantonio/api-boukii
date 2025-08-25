@@ -55,6 +55,19 @@ class SchoolSelectorTest extends TestCase
     }
 
     /** @test */
+    public function lista_todas_las_schools_sin_paginacion_cuando_all_true()
+    {
+        $response = $this->getJson('/api/v5/me/schools?all=true', [
+            'Authorization' => 'Bearer ' . $this->token,
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertArrayNotHasKey('meta', $response->json());
+    }
+
+    /** @test */
     public function retorna_403_si_intenta_cambiar_a_una_school_sin_pertenencia()
     {
         $response = $this->postJson('/api/v5/context/school', [

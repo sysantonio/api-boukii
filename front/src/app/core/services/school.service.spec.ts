@@ -147,13 +147,13 @@ describe('SchoolService', () => {
 
   describe('getAllMySchools', () => {
     beforeEach(() => {
-      mockApiHttp.get.and.returnValue(of([mockSchool]));
+      mockApiHttp.get.and.returnValue(of({ data: [mockSchool] }));
     });
 
-    it('should call API without parameters', () => {
+    it('should call API with all flag', () => {
       service.getAllMySchools().subscribe();
 
-      expect(mockApiHttp.get).toHaveBeenCalledWith('/schools/all');
+      expect(mockApiHttp.get).toHaveBeenCalledWith('/me/schools', { all: true });
     });
 
     it('should return schools array', (done) => {
